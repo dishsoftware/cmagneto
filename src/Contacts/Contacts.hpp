@@ -16,27 +16,53 @@
 #define ENOWSW_CONTACTS_HPP
 
 
-#if defined WIN32
-#  if defined CONTACTS_EXPORTS || defined contacts_EXPORTS
-#    define CONTACTS_EXPORT __declspec( dllexport )
-#  else
-#    define CONTACTS_EXPORT __declspec( dllimport )
-#  endif
-#else
-#  define CONTACTS_EXPORT
+#if defined(CONTACTS_EXPORTS) || defined(contacts_EXPORTS)
+#   if defined(_WIN32)
+#       if defined(__GNUC__)
+#           define CONTACTS_EXPORT __attribute__((visibility("default")))
+#       elif defined(_MSC_VER)
+#           define CONTACTS_EXPORT __declspec(dllexport)
+#       else
+#           define CONTACTS_EXPORT
+#       endif
+#   else // Not Windows.
+#       if defined(__GNUC__)
+#           define CONTACTS_EXPORT __attribute__((visibility("default")))
+#       else
+#           define CONTACTS_EXPORT
+#       endif
+#   endif
+#else // Import case.
+#   if defined(_WIN32)
+#       if defined(__GNUC__)
+#           define CONTACTS_EXPORT
+#       elif defined(_MSC_VER)
+#           define CONTACTS_EXPORT __declspec(dllimport)
+#       else
+#           define CONTACTS_EXPORT
+#       endif
+#   else // Not Windows.
+#       if defined(__GNUC__)
+#           define CONTACTS_EXPORT
+#       else
+#           define CONTACTS_EXPORT
+#       endif
+#   endif
 #endif
 
-#if defined WIN32
-#pragma warning ( disable: 4251 )
+
+#if defined(_MSC_VER)
+#   pragma warning ( disable: 4251 )
 #endif
 
-#if defined ( _DEBUG ) || defined ( DEBUG )
-#include <assert.h>
-#define CONTACTS_VERIFY(x) assert( x );
-#define CONTACTS_ASSERT(x) assert( x );
+
+#if defined(_DEBUG) || defined(DEBUG)
+#   include <assert.h>
+#   define CONTACTS_VERIFY(x) assert( x );
+#   define CONTACTS_ASSERT(x) assert( x );
 #else
-#define CONTACTS_VERIFY(x) x
-#define CONTACTS_ASSERT(x)
+#   define CONTACTS_VERIFY(x) x
+#   define CONTACTS_ASSERT(x)
 #endif
 
 #endif  // ENOWSW_CONTACTS_HPP

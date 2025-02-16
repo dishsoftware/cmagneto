@@ -255,9 +255,6 @@ class MinGWMakefilesMinGWRunner(BuiildRunnerSingleConfig):
     def __init__(self, iBuildTypes: set):
         super().__init__("MinGW", "MinGW Makefiles", None, iBuildTypes)
 
-    def _set_cmake_environment(self) -> None:
-        os.environ["CMAKE_PREFIX_PATH"] = "C:\\msys64\\mingw64\\lib\\cmake"
-
 
 class VisualStudioMSVCRunner(BuildRunnerMultiConfig):
     def __init__(self, iBuildTypes: set):
