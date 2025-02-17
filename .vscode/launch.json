@@ -1,0 +1,50 @@
+{
+    "configurations": [
+        {
+            "name": "Windows MinGW UCRT. GDB Launch. Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/install/MinGW/Debug",
+            "program": "${workspaceFolder}/install/MinGW/Debug/bin/contacts_gui.exe",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Windows MinGW UCRT. GDB Launch. RelWithDebInfo",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/install/MinGW/RelWithDebInfo",
+            "program": "${workspaceFolder}/install/MinGW/RelWithDebInfo/bin/contacts_gui.exe",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

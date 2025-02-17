@@ -1,10 +1,11 @@
 {
+    "version": 4,
     "configurations": [
         {
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/x86_64-linux-gnu/qt6/**"
+                "/usr/include/x86_64-linux-gnu/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
@@ -24,6 +25,5 @@
             "cppStandard": "gnu++17",
             "intelliSenseMode": "windows-gcc-x64"
         }
-    ],
-    "version": 4
+    ]
 }

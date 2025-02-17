@@ -1,0 +1,53 @@
+{
+    "version": "2.0.0", // Schema version of VS Code’s Task Runner configuration.
+    "tasks": [
+        {
+            "label": "Build MinGW Debug",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build.py",
+                "--toolset", "MinGWMakefiles_MinGW",
+                "--build_types", "Debug",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build MinGW Release",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build.py",
+                "--toolset", "MinGWMakefiles_MinGW",
+                "--build_types", "Release",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build MinGW RelWithDebInfo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build.py",
+                "--toolset", "MinGWMakefiles_MinGW",
+                "--build_types", "RelWithDebInfo",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}
