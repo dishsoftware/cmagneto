@@ -2,6 +2,56 @@
     "version": "2.0.0", // Schema version of VS Code’s Task Runner configuration.
     "tasks": [
         {
+            "label": "Build Linux GCC Debug",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/build.py",
+                "--toolset", "UnixMakefiles_GCC",
+                "--build_types", "Debug",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Linux GCC Release",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/build.py",
+                "--toolset", "UnixMakefiles_GCC",
+                "--build_types", "Release",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Linux GCC RelWithDebInfo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/build.py",
+                "--toolset", "UnixMakefiles_GCC",
+                "--build_types", "RelWithDebInfo",
+                "--run_type", "Full"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+
+
+        {
             "label": "Build MinGW Debug",
             "type": "shell",
             "command": "python",

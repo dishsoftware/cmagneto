@@ -1,10 +1,57 @@
 {
     "configurations": [
         {
+            "name": "Linux GCC. GDB Launch. Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd":     "${workspaceFolder}/install/UnixMakefiles_GCC/Debug",
+            "program": "${workspaceFolder}/install/UnixMakefiles_GCC/Debug/bin/contacts_gui",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Linux GCC. GDB Launch. RelWithDebInfo",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd":     "${workspaceFolder}/install/UnixMakefiles_GCC/RelWithDebInfo",
+            "program": "${workspaceFolder}/install/UnixMakefiles_GCC/RelWithDebInfo/bin/contacts_gui",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
             "name": "Windows MinGW UCRT. GDB Launch. Debug",
             "type": "cppdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/install/MinGW/Debug",
+            "cwd":     "${workspaceFolder}/install/MinGW/Debug",
             "program": "${workspaceFolder}/install/MinGW/Debug/bin/contacts_gui.exe",
             "stopAtEntry": false,
             "externalConsole": false,
@@ -27,7 +74,7 @@
             "name": "Windows MinGW UCRT. GDB Launch. RelWithDebInfo",
             "type": "cppdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/install/MinGW/RelWithDebInfo",
+            "cwd":     "${workspaceFolder}/install/MinGW/RelWithDebInfo",
             "program": "${workspaceFolder}/install/MinGW/RelWithDebInfo/bin/contacts_gui.exe",
             "stopAtEntry": false,
             "externalConsole": false,
