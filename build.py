@@ -98,6 +98,37 @@ class BuildRunner:
 
         os.makedirs(iDir, exist_ok=True)
 
+    @staticmethod
+    def _ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: str | None) -> None:
+        """
+        If environment variable `iVarName` does not exist - exits.
+        Otherwise appends {`iVarName`}/`iCMakePathPostfix` to CMAKE_PREFIX_PATH, if the new path is not in CMAKE_PREFIX_PATH already.
+
+        :param iCMakePathPostfix must be formatted as "subdir_1/.../subdir_N.
+        """
+        varPath = os.environ.get(iVarName)
+        if (not varPath):
+            if (varPath is None):
+                print(f"\"{iVarName}\" environment variable is not set.")
+            else:
+                print(f"\"{iVarName}\" environment variable is empty string.")
+            sys.exit(1)
+
+        pathToAdd = None
+        if (iCMakePathPostfix):
+            pathToAdd = os.path.join(varPath, *iCMakePathPostfix.split("/"))
+        else:
+            pathToAdd = os.path.join(varPath)
+
+        cmakePrefixPaths = os.environ.get("CMAKE_PREFIX_PATH")
+        if (cmakePrefixPaths is None):
+            os.environ["CMAKE_PREFIX_PATH"] = pathToAdd
+            return
+
+        # Append only if not already in the path
+        if pathToAdd not in cmakePrefixPaths.split(os.pathsep):
+            os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, pathToAdd])
+
 
 class BuiildRunnerSingleConfig(BuildRunner):
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
@@ -127,7 +158,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         print(text + " finished.")
 
-    def __compose_generate_command(self, iBuildType: BuildType) -> list:
+    def __compose_generate_command(self, iBuildType: BuildType) -> list[str]:
         command = [
             "cmake",
             "-G", self.generatorName()
@@ -146,7 +177,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         return command
 
-    def _extra_args_for_generate_command(self, iBuildType: BuildType) -> list:
+    def _extra_args_for_generate_command(self, iBuildType: BuildType) -> list[str]:
         return []
 
     def __compile(self, iBuildType: BuildType) -> None:
@@ -195,7 +226,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         print(text + " finished.")
 
-    def __compose_generate_command(self) -> list:
+    def __compose_generate_command(self) -> list[str]:
         command = [
             "cmake",
             "-G", self.generatorName()
@@ -215,7 +246,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         return command
 
-    def _extra_args_for_generate_command(self) -> list:
+    def _extra_args_for_generate_command(self) -> list[str]:
         return []
 
     def __compile(self, iBuildType: BuildType) -> None:
@@ -256,11 +287,15 @@ class MinGWMakefilesMinGWRunner(BuiildRunnerSingleConfig):
         super().__init__("MinGW", "MinGW Makefiles", None, iBuildTypes)
 
 
-class VisualStudioMSVCRunner(BuildRunnerMultiConfig):
+class VS2022MSVCRunner(BuildRunnerMultiConfig):
     def __init__(self, iBuildTypes: set):
         super().__init__("VS2022_MSVC", "Visual Studio 17 2022", None, iBuildTypes)
 
-    def _extra_args_for_generate_command(self) -> list:
+    def _set_cmake_environment(self) -> None:
+        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", "lib/cmake")
+        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", "cmake")
+
+    def _extra_args_for_generate_command(self) -> list[str]:
         return [
             "-A", "x64"
         ]
@@ -276,11 +311,11 @@ def main():
 
     class WindowsToolset(Enum):
         MinGWMakefiles_MinGW = 0
-        VisualStudio_MSVC = 1
+        VS2022_MSVC = 1
 
     WINDOWS_BUILD_RUNNERS = {
         WindowsToolset.MinGWMakefiles_MinGW: MinGWMakefilesMinGWRunner,
-        WindowsToolset.VisualStudio_MSVC: VisualStudioMSVCRunner
+        WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
     }
 
     class AppleToolset(Enum):
@@ -305,7 +340,7 @@ def main():
 
     if len(ToolsetEnum) == 0:
         print("No toolsets are supportted for the OS. Exiting.")
-        sys.exit()
+        sys.exit(1)
 
     parser = argparse.ArgumentParser(description="Builds and compiles (optionally) the project.")
     toolsetChoices = [toolset.name for toolset in ToolsetEnum]
@@ -337,7 +372,7 @@ def main():
     toolset = ToolsetEnum[args.toolset]
     if toolset not in BUILD_RUNNERS:
         print(f"{toolset} is not supported yet.")
-        sys.exit()
+        sys.exit(1)
 
     buildTypes = {BuildType[buildType] for buildType in args.build_types}
     runType = RunType[args.run_type]
