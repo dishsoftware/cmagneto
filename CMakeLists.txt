@@ -28,6 +28,16 @@ else()
     message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
+
+option(LIB_CONTACTS_SHARED "Build Contacts as a shared library." OFF)
+if(LIB_CONTACTS_SHARED)
+    message(STATUS "Contacts library will be built as SHARED.")
+    add_definitions(-DLIB_CONTACTS_SHARED) # Define preproceccor macro LIB_CONTACTS_SHARED.
+else()
+    message(STATUS "Contacts library will be built as STATIC.")
+endif()
+
+
 find_package(Qt6 REQUIRED COMPONENTS Core)
 include(QtWrappers)
 

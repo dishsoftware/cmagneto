@@ -4,9 +4,6 @@
 #include "Contacts.hpp"
 
 
-class QString;
-
-
 namespace enowsw::contacts {
 class CONTACTS_EXPORT Contact {
 private:

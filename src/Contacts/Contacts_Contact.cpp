@@ -1,5 +1,4 @@
 #include "Contacts_Contact.hpp"
-#include <QString>
 
 
 namespace enowsw::contacts {

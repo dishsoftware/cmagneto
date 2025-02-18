@@ -61,9 +61,18 @@ set(contacts_SOURCES ${_other_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
 
 
 # Target
-add_library(contacts ${contacts_SOURCES})
+if(LIB_CONTACTS_SHARED)
+    set(_LIB_TYPE SHARED)
+else()
+    set(_LIB_TYPE STATIC)
+endif()
+
+add_library(contacts ${_LIB_TYPE} ${contacts_SOURCES})
+# If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when compiling target.
+# No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.
+
 target_include_directories(contacts PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(contacts Qt6::Core)
+target_link_libraries(contacts PUBLIC Qt6::Core)
 ####################################################################
 
 

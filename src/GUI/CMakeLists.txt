@@ -15,7 +15,7 @@ set(_gui_SOURCES
 
 # Target
 add_executable(contacts_gui ${_gui_SOURCES})
-target_link_libraries(contacts_gui Qt6::Core Qt6::Gui Qt6::Widgets contacts)
+target_link_libraries(contacts_gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets contacts)
 ####################################################################
 
 

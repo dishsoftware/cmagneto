@@ -18,6 +18,7 @@ Tested with
 
 Define environment variable QT6_MSVC2022_DIR,   which refers to a directory with compatible binaries. E.g. QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64.
 Define environment variable BOOST_MSVC2022_DIR, which refers to a directory with compatible binaries. E.g. BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3.
+If compiled application does not run, add dll of dependencies to the same folder, as contacts_gui.exe, or add paths to dependecies to PATH variable.
 
 # How to build
 `python ./build.py --help`

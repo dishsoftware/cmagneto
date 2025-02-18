@@ -70,7 +70,9 @@
 			"variant": "cpp",
 			"set": "cpp",
 			"qstring": "cpp",
-			"qtglobal": "cpp"
+			"qtglobal": "cpp",
+			"*.ipp": "cpp",
+			"future": "cpp"
 		}
 	}
 }

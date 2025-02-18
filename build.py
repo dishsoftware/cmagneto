@@ -82,6 +82,13 @@ class BuildRunner:
         """Returns the absolute path to the install directory for the specified build type."""
         return os.path.join(self.__installDir, iBuildType.name)
 
+    def setCMakeFlags(self, iFlags: list[str]) -> None:
+        """These flags are passed to CMake on generation stage."""
+        self.__cmakeFlags = iFlags
+
+    def cmakeFlags(self) -> list[str] | None:
+        return self.__cmakeFlags
+
     def run(self, iRunType: RunType) -> None:
         print(self)
         print(f"{self.__class__.__name__}.run() is not implemented.")
@@ -159,10 +166,11 @@ class BuiildRunnerSingleConfig(BuildRunner):
         print(text + " finished.")
 
     def __compose_generate_command(self, iBuildType: BuildType) -> list[str]:
-        command = [
-            "cmake",
-            "-G", self.generatorName()
-        ]
+        command = [ "cmake" ]
+        if self.cmakeFlags() is not None:
+            command.extend(self.cmakeFlags())
+
+        command.extend([ "-G", self.generatorName()])
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
@@ -227,10 +235,11 @@ class BuildRunnerMultiConfig(BuildRunner):
         print(text + " finished.")
 
     def __compose_generate_command(self) -> list[str]:
-        command = [
-            "cmake",
-            "-G", self.generatorName()
-        ]
+        command = [ "cmake" ]
+        if self.cmakeFlags() is not None:
+            command.extend(self.cmakeFlags())
+
+        command.extend([ "-G", self.generatorName()])
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
@@ -366,7 +375,7 @@ def main():
         default=RunType.Full.name,
         help=f"Specifies run type. Full is default and triggers both generation and compilation."
     )
-
+    parser.add_argument("--lib-contacts-shared", action="store_true", help="Build Contacts library as shared.")
     args = parser.parse_args()
 
     toolset = ToolsetEnum[args.toolset]
@@ -376,8 +385,11 @@ def main():
 
     buildTypes = {BuildType[buildType] for buildType in args.build_types}
     runType = RunType[args.run_type]
+    lib_contacts_shared_flag = "-DLIB_CONTACTS_SHARED=ON" if args.lib_contacts_shared else "-DLIB_CONTACTS_SHARED=OFF"
+    cmakeFlags = [lib_contacts_shared_flag]
 
     buildRunner = BUILD_RUNNERS[toolset](buildTypes)
+    buildRunner.setCMakeFlags(cmakeFlags)
     buildRunner.run(runType)
 
 

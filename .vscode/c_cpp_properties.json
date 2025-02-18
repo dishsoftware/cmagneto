@@ -24,6 +24,19 @@
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "windows-gcc-x64"
+        },
+        {
+            "name": "Windows_MSVC2022",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${QT6_MSVC2022_DIR}/include/**",
+                "${BOOST_MSVC2022_DIR}/../"
+            ],
+            "defines": [],
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.42.34433/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
         }
     ]
 }
