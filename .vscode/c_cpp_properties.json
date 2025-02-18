@@ -17,10 +17,10 @@
             "name": "Windows_MinGW_UCRT",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/msys64/ucrt64/include/**"
+                "${MSYS2_HOME}/ucrt64/include/**"
             ],
             "defines": [],
-            "compilerPath": "C:/msys64/ucrt64/bin/c++.exe",
+            "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "windows-gcc-x64"
@@ -33,7 +33,7 @@
                 "${BOOST_MSVC2022_DIR}/../"
             ],
             "defines": [],
-            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.42.34433/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "${VC2022ToolsInstallDir}/bin/Hostx64/x64/cl.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x64"

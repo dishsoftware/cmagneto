@@ -71,7 +71,6 @@
         #endif
     #endif
 #else // LIB_CONTACTS is static.
-    COMPILE_TIME_MESSAGE("Contacts is static")
     #define CONTACTS_EXPORT
 #endif
 
