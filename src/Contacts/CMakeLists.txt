@@ -67,18 +67,45 @@ else()
     set(_LIB_TYPE STATIC)
 endif()
 
-add_library(contacts ${_LIB_TYPE} ${contacts_SOURCES})
-# If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when compiling target.
+add_library(contacts ${_LIB_TYPE})
+# If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
 # No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.
 
-target_include_directories(contacts PRIVATE ${Boost_INCLUDE_DIRS})
+target_sources(contacts PRIVATE ${contacts_SOURCES})
+
+target_include_directories(contacts PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include/contacts>
+)
+
+target_include_directories(contacts PRIVATE
+  ${Boost_INCLUDE_DIRS}
+)
+
 target_link_libraries(contacts PUBLIC Qt6::Core)
 ####################################################################
 
 
 # Installation
-install(TARGETS contacts EXPORT ${PROJECT_NAME}TargetGroup DESTINATION bin)
-install(FILES ${contacts_HEADERS} DESTINATION include)
-qt_install_ts_resources("${_ts_RESOURCES}" resources/translations)
-install(FILES ${_other_RESOURCES} DESTINATION resources/other)
+install(
+  TARGETS contacts
+  EXPORT ${PROJECT_NAME}TargetGroup
+  LIBRARY DESTINATION bin
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/contacts
+  # If uncommented, a generated contactsConfig.cmake will have INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/include/contacts",
+  # because the target_include_directories(contacts PUBLIC $<INSTALL_INTERFACE:include/contacts>) is already set.
+)
+
+install(FILES ${contacts_HEADERS} DESTINATION include/contacts)
+qt_install_ts_resources("${_ts_RESOURCES}" resources/contacts/translations)
+install(FILES ${_other_RESOURCES} DESTINATION resources/contacts/other)
+
+# Generate contactsConfig.cmake
+install(EXPORT ${PROJECT_NAME}TargetGroup
+    FILE contactsConfig.cmake
+    NAMESPACE contacts::
+    DESTINATION lib/cmake/contacts
+)
 ####################################################################
