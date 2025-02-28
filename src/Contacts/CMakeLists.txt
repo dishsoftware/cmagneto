@@ -71,7 +71,7 @@ add_library(contacts ${_LIB_TYPE})
 # If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
 # No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.
 
-target_sources(contacts PRIVATE ${contacts_SOURCES})
+target_sources(contacts PRIVATE ${contacts_SOURCES} ${contacts_HEADERS}) # Headers are added to make them appear in IDEs like Visual Studio.
 
 target_include_directories(contacts PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>

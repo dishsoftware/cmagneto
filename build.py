@@ -82,6 +82,26 @@ class BuildRunner:
         """Returns the absolute path to the install directory for the specified build type."""
         return os.path.join(self.__installDir, iBuildType.name)
 
+    __subDirStaticLibs = "lib"
+    @staticmethod
+    def subDirStaticLibs() -> str:
+        return BuildRunner.__subDirStaticLibs
+
+    __subDirSharedLibs = "bin"
+    @staticmethod
+    def subDirSharedLibs() -> str:
+        return BuildRunner.__subDirSharedLibs
+
+    __subDirExecutables = "bin"
+    @staticmethod
+    def subDirExecutables() -> str:
+        return BuildRunner.__subDirExecutables
+
+    __subDirSharedIncludes = "include"
+    @staticmethod
+    def subDirSharedIncludes() -> str:
+        return BuildRunner.__subDirSharedIncludes
+
     def setCMakeFlags(self, iFlags: list[str]) -> None:
         """These flags are passed to CMake on generation stage."""
         self.__cmakeFlags = iFlags
@@ -170,7 +190,12 @@ class BuiildRunnerSingleConfig(BuildRunner):
         if self.cmakeFlags() is not None:
             command.extend(self.cmakeFlags())
 
-        command.extend([ "-G", self.generatorName()])
+        command.extend([
+            "-G", self.generatorName(),
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirStaticLibs(),
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirSharedLibs(),
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirExecutables()
+        ])
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
@@ -239,7 +264,12 @@ class BuildRunnerMultiConfig(BuildRunner):
         if self.cmakeFlags() is not None:
             command.extend(self.cmakeFlags())
 
-        command.extend([ "-G", self.generatorName()])
+        command.extend([
+            "-G", self.generatorName(),
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirStaticLibs(),
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirSharedLibs(),
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirExecutables()
+        ])
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
