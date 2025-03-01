@@ -70,6 +70,37 @@ endfunction()
 
 
 #[[
+    install_executable
+
+    Parameters:
+    iExeHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
+    iExeSources - regular sources (_regular_SOURCES), Qt MOC sources (qt_wrap_moc(_moc_SOURCES ${_moc_HEADERS})) and RCC sources (qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})).
+    iTSResources - TS resources (*.ts files).
+    iOtherResources - other resources (icons. jsons etc.).
+]]
+function(install_executable iExeName iExeHeaders iExeSources iTSResources iOtherResources)
+    target_sources(${iExeName} PRIVATE ${iExeSources} ${iExeHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
+
+    target_include_directories(${iExeName} PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    )
+    ####################################################################
+
+
+    install(TARGETS ${iExeName}
+        EXPORT ${PROJECT_NAME}TargetGroup
+        DESTINATION ${SUBDIR_EXECUTABLE}
+    )
+    ####################################################################
+
+
+    get_property(_installedTargets GLOBAL PROPERTY INSTALLED_TARGETS)
+    list(APPEND _installedTargets ${iExeName})
+    set_property(GLOBAL PROPERTY INSTALLED_TARGETS "${_installedTargets}")
+endfunction()
+
+
+#[[
     generate__set_shared_lib_dirs__script
 
     Must be called after all install_library(iLibName) and install_executable are called.

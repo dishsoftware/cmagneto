@@ -7,24 +7,21 @@ include_directories(
 
 
 # Sources
-set(_gui_SOURCES
+set(_regular_SOURCES
     main.cpp
 )
 ####################################################################
 
 
 # Target
-add_executable(contacts_gui ${_gui_SOURCES})
-target_link_libraries(contacts_gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets contacts)
+add_executable(gui)
+target_link_libraries(gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets contacts)
 ####################################################################
 
 
 # Installation
-install(TARGETS contacts_gui
-  EXPORT ${PROJECT_NAME}TargetGroup
-  DESTINATION ${SUBDIR_EXECUTABLE}
-)
+install_executable(gui "${_regular_HEADERS}" "${_regular_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
 ####################################################################
 
 # Make contacts_gui the startup project in Visual Studio.
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT contacts_gui)
+set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gui)

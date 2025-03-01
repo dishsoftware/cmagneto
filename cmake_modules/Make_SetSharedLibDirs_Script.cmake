@@ -47,7 +47,8 @@ endfunction()
 #[[
     generate__set_shared_lib_dirs__script_content
 
-    Generates content of a script, which adds directories, containing shared libraries linked to iTargets, to the environment variable LD_LIBRARY_PATH (Linux) or PATH (Windows).
+    Generates content of a script, which adds directories, containing shared libraries linked to iTargets,
+    to the environment variable LD_LIBRARY_PATH (Linux) or PATH (Windows).
 ]]
 function(generate__set_shared_lib_dirs__script_content oScriptContent iTargets)
     set(_scriptContent "#!/bin/bash\n")
@@ -76,7 +77,7 @@ endfunction()
 #[[
     make_shared_lib_paths_script
 
-    Generates a script named ${SET_SHARED_LIB_DIRS__SCRIPT_NAME} that sets the environment variable
+    Generates a script, named ${SET_SHARED_LIB_DIRS__SCRIPT_NAME}, that sets the environment variable
     LD_LIBRARY_PATH (Linux) or PATH (Windows) to the directories containing the libraries linked to the targets in iTargets.
 ]]
 function(make_shared_lib_paths_script iTargets iDirectory)
