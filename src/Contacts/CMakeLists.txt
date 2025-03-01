@@ -8,8 +8,8 @@ set(_moc_HEADERS
 
 )
 
-## Other/static headers.
-set(_other_HEADERS
+## Regular/static headers.
+set(_regular_HEADERS
   Contacts.hpp
   Contacts_Contact.hpp
   Contacts_FieldType.hpp
@@ -17,7 +17,7 @@ set(_other_HEADERS
 )
 
 ## All headers.
-set(contacts_HEADERS ${_moc_HEADERS} ${_other_HEADERS})
+set(contacts_HEADERS ${_moc_HEADERS} ${_regular_HEADERS})
 ####################################################################
 
 
@@ -34,7 +34,7 @@ set(_ts_RESOURCES
   #resources/contacts_txt_images.ts
 )
 
-## Other/static resource files.
+## Regular/static resource files.
 set(_other_RESOURCES
   #resources/icon.png
   #resources/action_assets.json
@@ -49,14 +49,14 @@ qt_wrap_moc(_moc_SOURCES ${_moc_HEADERS})
 # RCC wrappings.
 qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})
 
-## Other/static sources.
-set(_other_SOURCES
+## Regular/static sources.
+set(_regular_SOURCES
   Contacts_Contact.cpp
   Contacts_FieldTypeExtension.cpp
 )
 
 ## All sources.
-set(contacts_SOURCES ${_other_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
+set(contacts_SOURCES ${_regular_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
 ####################################################################
 
 
@@ -71,13 +71,6 @@ add_library(contacts ${_LIB_TYPE})
 # If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
 # No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.
 
-target_sources(contacts PRIVATE ${contacts_SOURCES} ${contacts_HEADERS}) # Headers are added to make them appear in IDEs like Visual Studio.
-
-target_include_directories(contacts PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include/contacts>
-)
-
 target_include_directories(contacts PRIVATE
   ${Boost_INCLUDE_DIRS}
 )
@@ -87,25 +80,4 @@ target_link_libraries(contacts PUBLIC Qt6::Core)
 
 
 # Installation
-install(
-  TARGETS contacts
-  EXPORT ${PROJECT_NAME}TargetGroup
-  LIBRARY DESTINATION bin
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include/contacts
-  # If uncommented, a generated contactsConfig.cmake will have INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/include/contacts",
-  # because the target_include_directories(contacts PUBLIC $<INSTALL_INTERFACE:include/contacts>) is already set.
-)
-
-install(FILES ${contacts_HEADERS} DESTINATION include/contacts)
-qt_install_ts_resources("${_ts_RESOURCES}" resources/contacts/translations)
-install(FILES ${_other_RESOURCES} DESTINATION resources/contacts/other)
-
-# Generate contactsConfig.cmake
-install(EXPORT ${PROJECT_NAME}TargetGroup
-    FILE contactsConfig.cmake
-    NAMESPACE contacts::
-    DESTINATION lib/cmake/contacts
-)
-####################################################################
+install_library(contacts "${contacts_HEADERS}" "${contacts_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")

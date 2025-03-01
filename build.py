@@ -82,26 +82,6 @@ class BuildRunner:
         """Returns the absolute path to the install directory for the specified build type."""
         return os.path.join(self.__installDir, iBuildType.name)
 
-    __subDirStaticLibs = "lib"
-    @staticmethod
-    def subDirStaticLibs() -> str:
-        return BuildRunner.__subDirStaticLibs
-
-    __subDirSharedLibs = "bin"
-    @staticmethod
-    def subDirSharedLibs() -> str:
-        return BuildRunner.__subDirSharedLibs
-
-    __subDirExecutables = "bin"
-    @staticmethod
-    def subDirExecutables() -> str:
-        return BuildRunner.__subDirExecutables
-
-    __subDirSharedIncludes = "include"
-    @staticmethod
-    def subDirSharedIncludes() -> str:
-        return BuildRunner.__subDirSharedIncludes
-
     def setCMakeFlags(self, iFlags: list[str]) -> None:
         """These flags are passed to CMake on generation stage."""
         self.__cmakeFlags = iFlags
@@ -114,7 +94,7 @@ class BuildRunner:
         print(f"{self.__class__.__name__}.run() is not implemented.")
         sys.exit(1)
 
-    def _set_cmake_environment(self) -> None:
+    def _set_dependency_paths(self) -> None:
         pass
 
     @staticmethod
@@ -179,7 +159,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         buildDir = self.buildDirForBuildType(iBuildType)
         BuildRunner._PREPARE_DIR(buildDir)
         os.chdir(buildDir)
-        self._set_cmake_environment()
+        self._set_dependency_paths()
         subprocess.run(self.__compose_generate_command(iBuildType), check=True)
         os.chdir(self.srcDir())
 
@@ -191,10 +171,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
             command.extend(self.cmakeFlags())
 
         command.extend([
-            "-G", self.generatorName(),
-            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirStaticLibs(),
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirSharedLibs(),
-            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + self.buildDirForBuildType(iBuildType) + "/" + BuildRunner.subDirExecutables()
+            "-G", self.generatorName()
         ])
 
         if self.cppCompilerName() is not None:
@@ -253,7 +230,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         BuildRunner._PREPARE_DIR(self.buildDir())
         os.chdir(self.buildDir())
-        self._set_cmake_environment()
+        self._set_dependency_paths()
         subprocess.run(self.__compose_generate_command(), check=True)
         os.chdir(self.srcDir())
 
@@ -265,10 +242,7 @@ class BuildRunnerMultiConfig(BuildRunner):
             command.extend(self.cmakeFlags())
 
         command.extend([
-            "-G", self.generatorName(),
-            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirStaticLibs(),
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirSharedLibs(),
-            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + self.buildDir() + "/" + BuildRunner.subDirExecutables()
+            "-G", self.generatorName()
         ])
 
         if self.cppCompilerName() is not None:
@@ -278,8 +252,8 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         command.extend([
             # Install directory is overriden in __install.
-            # It is set here in case "cmake --install" is called without "--prefix" arguments.
-            "-DCMAKE_INSTALL_PREFIX=" + self.installDir(),
+            # It is set here in case installation is started not using "cmake --install", but from IDE's UI.
+            "-DCMAKE_INSTALL_PREFIX=" + self.installDir() + "/INSTALLED_USING_IDE",
             self.srcDir()
         ])
 
@@ -330,7 +304,7 @@ class VS2022MSVCRunner(BuildRunnerMultiConfig):
     def __init__(self, iBuildTypes: set):
         super().__init__("VS2022_MSVC", "Visual Studio 17 2022", None, iBuildTypes)
 
-    def _set_cmake_environment(self) -> None:
+    def _set_dependency_paths(self) -> None:
         BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", "lib/cmake")
         BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", "cmake")
 

@@ -39,7 +39,14 @@ endif()
 
 
 find_package(Qt6 REQUIRED COMPONENTS Core)
+
+
+# Include custom CMake modules.
 include(QtWrappers)
+include(InstallTargets)
 
 
 add_subdirectory(src)
+
+
+generate__set_shared_lib_dirs__script()

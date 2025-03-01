@@ -20,7 +20,10 @@ target_link_libraries(contacts_gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets conta
 
 
 # Installation
-install(TARGETS contacts_gui EXPORT ${PROJECT_NAME}TargetGroup DESTINATION bin)
+install(TARGETS contacts_gui
+  EXPORT ${PROJECT_NAME}TargetGroup
+  DESTINATION ${SUBDIR_EXECUTABLE}
+)
 ####################################################################
 
 # Make contacts_gui the startup project in Visual Studio.
