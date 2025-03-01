@@ -38,12 +38,12 @@ else()
 endif()
 
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
-
-
 # Include custom CMake modules.
 include(QtWrappers)
 include(InstallTargets)
+
+
+set_IS_MULTTCONFIG_property()
 
 
 add_subdirectory(src)

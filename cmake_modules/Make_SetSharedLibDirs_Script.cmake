@@ -17,17 +17,17 @@ function(get_shared_library_dirs oLibraryDirs iTargets)
 
         # Collect library paths for each linked shared library.
         foreach(_lib ${_targetLinkLibraries})
-            if (NOT TARGET ${_lib})
+            if(NOT TARGET ${_lib})
                 continue()
             endif()
 
             get_target_property(_libType ${_lib} TYPE)
-            if (NOT (_libType STREQUAL "SHARED_LIBRARY"))
+            if(NOT (_libType STREQUAL "SHARED_LIBRARY"))
                 continue()
             endif()
 
             get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
-            if (NOT (_libPath AND EXISTS ${_libPath}))
+            if(NOT (_libPath AND EXISTS ${_libPath}))
                 message(WARNING "get_shared_library_dirs: Shared library of \"${_lib}\" is not found.")
                 continue()
             endif()

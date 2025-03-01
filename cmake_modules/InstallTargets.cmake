@@ -19,6 +19,45 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}")
 set_property(GLOBAL PROPERTY INSTALLED_TARGETS "")
 
 
+function(set_IS_MULTTCONFIG_property)
+    get_property(_isSet GLOBAL PROPERTY IS_MULTTCONFIG SET)
+    if(_isSet)
+        return()
+    endif()
+
+    if(CMAKE_VERSION VERSION_LESS "3.3.0")
+        # Bug https://cmake.org/Bug/view.php?id=15577 .
+        if(CMAKE_BUILD_TYPE)
+            message(STATUS "Single-configuration generator")
+            set_property(GLOBAL PROPERTY IS_MULTTCONFIG FALSE)
+        else()
+            message(STATUS "Multi-configuration generator")
+            set_property(GLOBAL PROPERTY IS_MULTTCONFIG TRUE)
+        endif()
+    else()
+        if(CMAKE_CONFIGURATION_TYPES)
+            message(STATUS "Multi-configuration generator")
+            set_property(GLOBAL PROPERTY IS_MULTTCONFIG TRUE)
+        else()
+            message(STATUS "Single-configuration generator")
+            set_property(GLOBAL PROPERTY IS_MULTTCONFIG FALSE)
+        endif()
+    endif()
+endfunction()
+
+
+function(is_multiconfig oIsMulticonfig)
+    get_property(_isSet GLOBAL PROPERTY IS_MULTTCONFIG SET)
+    if(NOT _isSet)
+        set_IS_MULTTCONFIG_property()
+    endif()
+
+    get_property(_isMulticonfig GLOBAL PROPERTY IS_MULTTCONFIG)
+    set(${oIsMulticonfig} ${_isMulticonfig} PARENT_SCOPE)
+endfunction()
+
+
+
 #[[
     install_library
 
@@ -110,6 +149,11 @@ function(generate__set_shared_lib_dirs__script)
     message(STATUS "INSTALLED_TARGETS: ${_installedTargets}")
     generate__set_shared_lib_dirs__script_content(_scriptContent "${_installedTargets}")
     message(STATUS "\n${SET_SHARED_LIB_DIRS__SCRIPT_NAME}:\n ${_scriptContent}")
-    #file(GENERATE OUTPUT ${SET_SHARED_LIB_DIRS__SCRIPT_NAME} CONTENT "${_scriptContent}")
-    file(WRITE "${CMAKE_BINARY_DIR}/${SET_SHARED_LIB_DIRS__SCRIPT_NAME}" "${_scriptContent}")
+
+    set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${SET_SHARED_LIB_DIRS__SCRIPT_NAME}")
+    # file(GENERATE OUTPUT "${_scriptPath}" CONTENT "${_scriptContent}")
+    file(WRITE "${_scriptPath}" "${_scriptContent}")
+    if(UNIX)
+        execute_process(COMMAND chmod +x ${_scriptPath})
+    endif()
 endfunction()

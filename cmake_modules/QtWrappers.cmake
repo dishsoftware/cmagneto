@@ -12,8 +12,13 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #
-if (NOT Qt6_FOUND)
-  message(FATAL_ERROR "Qt6 is required. Stopping CMake.")
+if (NOT DEFINED Qt6_FOUND)
+  find_package(Qt6 REQUIRED COMPONENTS Core)
+  if (NOT Qt6_FOUND)
+    message(FATAL_ERROR "Qt6 is required. Stopping CMake.")
+  else()
+    message(STATUS "Qt6 found. Version: ${Qt6_VERSION}. Path: ${Qt6_DIR}")
+  endif()
 endif()
 
 
