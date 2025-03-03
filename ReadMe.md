@@ -1,3 +1,9 @@
+# Build tools
+- CMake
+- C++ 17 compiler (GCC, or MinGW, or MSVC)
+- Python 3
+- Graphviz (optional)
+
 # Dependecies
 - Qt6
 - Boost
@@ -33,3 +39,7 @@ These IDE files refer to `VC2022ToolsInstallDir` environment variable. E.g. `VC2
 
 # How to build
 `python ./build.py --help`
+
+If target dependency graph picture is desired, Graphviz must be installed.
+Output picture is generated at `./build/{platform_name}/[{build_type}]/graphviz`.
+If Graphviz is installed, but there is no picture, define environment variable `GRAPHVIZ_DIR`. E.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.

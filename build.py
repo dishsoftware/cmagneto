@@ -136,6 +136,55 @@ class BuildRunner:
         if pathToAdd not in cmakePrefixPaths.split(os.pathsep):
             os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, pathToAdd])
 
+    @staticmethod
+    def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir) -> None:
+        GRAPHS_DIR = "graphviz"
+        GRAPH_NAME = "targets"
+        GRAPH_SRC_SUBDIR = GRAPH_NAME + "_src"
+        DOT_FILE_NAME = GRAPH_NAME + ".dot"
+        PICTURE_FORMAT = "svg"
+
+        graphSrcDir = os.path.join(iBuildDir, GRAPHS_DIR, GRAPH_SRC_SUBDIR)
+        pictureFilePath = os.path.join(iBuildDir, GRAPHS_DIR, GRAPH_NAME + "." + PICTURE_FORMAT)
+
+        # Delete existing {GRAPH_NAME} graph files.
+        BuildRunner._PREPARE_DIR(graphSrcDir)
+        if os.path.exists(pictureFilePath):
+            os.remove(pictureFilePath)
+
+        # Create dot files.
+        dotFilePath = os.path.join(graphSrcDir, DOT_FILE_NAME)
+        try:
+            subprocess.run([
+                "cmake",
+                "--graphviz=" + dotFilePath,
+                iBuildDir
+            ], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Can't create Graphviz target dependency graph: {e}")
+            return
+
+        # Set path to Graphviz binaries.
+        graphvizDir = os.environ.get("GRAPHVIZ_DIR")
+        if (graphvizDir):
+            graphvizDir = os.path.join(graphvizDir, "bin")
+
+        # Create picture from dot files.
+        try:
+            subprocess.run([
+                os.path.join(graphvizDir, "dot"),
+                "-T" + PICTURE_FORMAT.lower(),
+                dotFilePath,
+                "-o",
+                pictureFilePath
+            ], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Graphviz can't create target dependency graph picture: {e}")
+            return
+        except FileNotFoundError:
+            print("Graphviz is not found. Target dependency graph picture is not created.")
+            return
+
 
 class BuiildRunnerSingleConfig(BuildRunner):
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
@@ -162,6 +211,8 @@ class BuiildRunnerSingleConfig(BuildRunner):
         self._set_dependency_paths()
         subprocess.run(self.__compose_generate_command(iBuildType), check=True)
         os.chdir(self.srcDir())
+
+        BuildRunner.CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(buildDir)
 
         print(text + " finished.")
 
@@ -234,6 +285,8 @@ class BuildRunnerMultiConfig(BuildRunner):
         subprocess.run(self.__compose_generate_command(), check=True)
         os.chdir(self.srcDir())
 
+        BuildRunner.CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(self.buildDir())
+
         print(text + " finished.")
 
     def __compose_generate_command(self) -> list[str]:
@@ -266,7 +319,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         text = f"Compiling ({iBuildType.name})"
         print(text + "...")
 
-        # It does not matter from which folder "cmmake --build" is called, because the build directory is absolute.
+        # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
         subprocess.run([
             "cmake",
             "--build", self.buildDir(),
