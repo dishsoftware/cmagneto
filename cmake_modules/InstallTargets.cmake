@@ -192,6 +192,12 @@ function(get_shared_library_dirs oLibraryDirs iTargets)
                 continue()
             endif()
 
+            # Skip if linked library is a target, created in this project.
+            list(FIND iTargets ${_lib} _index)
+            if (${_index} GREATER -1)
+                continue()
+            endif()
+
             get_target_property(_libType ${_lib} TYPE)
             if(NOT (_libType STREQUAL "SHARED_LIBRARY"))
                 continue()
