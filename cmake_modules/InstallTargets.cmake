@@ -241,6 +241,7 @@ function(install__run__script)
     message(STATUS "REGISTERED_TARGETS: ${_registeredTargets}")
     ####################################################################
 
+    set(_templateScriptPath "${CMAKE_SOURCE_DIR}/cmake_modules/${RUN__TEMPLATE_SCRIPT_NAME}")
     is_multiconfig(IS_MULTICONFIG)
     if (IS_MULTICONFIG)
         set(_libraryDirs "")
@@ -248,7 +249,6 @@ function(install__run__script)
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
 
-        set(_templateScriptPath "${CMAKE_SOURCE_DIR}/cmake_modules/${RUN__TEMPLATE_SCRIPT_NAME}")
         file(READ "${_templateScriptPath}" _scriptContent)
         string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")
         string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
@@ -273,7 +273,6 @@ function(install__run__script)
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
 
-        set(_templateScriptPath "${CMAKE_SOURCE_DIR}/cmake_modules/${RUN__TEMPLATE_SCRIPT_NAME}")
         message(DEBUG "Template script path: ${_templateScriptPath}")
         file(READ "${_templateScriptPath}" _scriptContent)
         string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")

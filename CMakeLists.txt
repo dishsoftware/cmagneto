@@ -41,7 +41,6 @@ endif()
 
 
 # Include custom CMake modules.
-include(QtWrappers)
 include(InstallTargets)
 
 
