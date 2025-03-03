@@ -21,7 +21,5 @@ target_link_libraries(gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets contacts)
 
 # Installation
 install_executable(gui "${_regular_HEADERS}" "${_regular_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
+set_project_entrypoint(gui)
 ####################################################################
-
-# Make contacts_gui the startup project in Visual Studio.
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gui)

@@ -59,6 +59,7 @@ endfunction()
 
 #[[
     install_library
+    Also registers iLibName in the global property REGISTERED_TARGETS.
 
     Parameters:
     iLibHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
@@ -109,6 +110,7 @@ endfunction()
 
 #[[
     install_executable
+    Also registers iExeName in the global property REGISTERED_TARGETS.
 
     Parameters:
     iExeHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
@@ -135,6 +137,38 @@ function(install_executable iExeName iExeHeaders iExeSources iTSResources iOther
     get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
     list(APPEND _registeredTargets ${iExeName})
     set_property(GLOBAL PROPERTY REGISTERED_TARGETS "${_registeredTargets}")
+endfunction()
+
+
+#[[
+    set_project_entrypoint
+
+    Sets the project entry point executable.
+
+    The entry point is run by "run.py" script. The script is generated and installed by install__run__script().
+    The entry point executable is run when the project is started in Visual Studio.
+
+    Parameters:
+    iExeName - the name of the executable that is the project entry point.
+]]
+function(set_project_entrypoint iExeName)
+    get_property(_isSet GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
+    if(_isSet)
+        get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
+        if(NOT (_exeName STREQUAL iExeName))
+            message(FATAL_ERROR "set_project_entrypoint: The project entry point executable is already set to \"${_exeName}\".")
+        endif()
+    endif()
+
+    get_target_property(_targetType ${iExeName} TYPE)
+    if(NOT (${_targetType} STREQUAL "EXECUTABLE"))
+        message(FATAL_ERROR "set_project_entrypoint: The target type must be EXECUTABLE.")
+    endif()
+
+    set_property(GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE ${iExeName})
+
+    # Make ${iExeName} the startup project in Visual Studio.
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
 endfunction()
 
 
@@ -186,7 +220,9 @@ set(RUN__TEMPLATE_SCRIPT_NAME "run_TEMPLATE.py")
 #[[
     install__run__script
 
-    Must be called after all install_library(iLibName) and install_executable are called.
+    The function must be called after all install_library(iLibName) and install_executable(iExeName) are called.
+    The script sets paths to shared libraries and runs the project entry point executable.
+    The shared library paths are collected from the all registered targets.
 ]]
 function(install__run__script)
     # Strings to replace in the template script.
@@ -194,8 +230,16 @@ function(install__run__script)
     set(PARAM__EXECUTABLE_NAME_WE "param:EXECUTABLE_NAME_WE:param")
     ####################################################################
 
+    # Values to replace the param-strings with.
+    get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
+    if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
+        message(FATAL_ERROR "install__run__script: The project entry point executable is not set.")
+    endif()
+    get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
+
     get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
     message(STATUS "REGISTERED_TARGETS: ${_registeredTargets}")
+    ####################################################################
 
     is_multiconfig(IS_MULTICONFIG)
     if (IS_MULTICONFIG)
@@ -204,12 +248,10 @@ function(install__run__script)
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
 
-        set(_mainExeName "gui") #TODO Get the main executable name from the project.
-
         set(_templateScriptPath "${CMAKE_SOURCE_DIR}/cmake_modules/${RUN__TEMPLATE_SCRIPT_NAME}")
         file(READ "${_templateScriptPath}" _scriptContent)
         string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")
-        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_mainExeName}" _scriptContent "${_scriptContent}")
+        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
 
         set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${RUN__SCRIPT_NAME}")
 
@@ -231,13 +273,11 @@ function(install__run__script)
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
 
-        set(_mainExeName "gui") #TODO Get the main executable name from the project.
-
         set(_templateScriptPath "${CMAKE_SOURCE_DIR}/cmake_modules/${RUN__TEMPLATE_SCRIPT_NAME}")
         message(DEBUG "Template script path: ${_templateScriptPath}")
         file(READ "${_templateScriptPath}" _scriptContent)
         string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")
-        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_mainExeName}" _scriptContent "${_scriptContent}")
+        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
 
         # Add the script to build dir.
         set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${RUN__SCRIPT_NAME}")
