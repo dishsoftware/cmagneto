@@ -1,3 +1,5 @@
+set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
+
 cmake_minimum_required(VERSION 3.28)
 
 project(EnowSWContacts
@@ -49,4 +51,4 @@ set_IS_MULTTCONFIG_property()
 add_subdirectory(src)
 
 
-generate__set_shared_lib_dirs__script()
+install__run__script()

@@ -4,12 +4,13 @@
             "name": "Linux GCC. GDB Launch. Debug",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/install/UnixMakefiles_GCC/Debug",
-            "program": "${workspaceFolder}/install/UnixMakefiles_GCC/Debug/bin/gui",
+            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/Debug",
+            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/Debug/bin/gui",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "Run ./build/UnixMakefiles_GCC/Debug/bin/run.py",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -27,12 +28,13 @@
             "name": "Linux GCC. GDB Launch. RelWithDebInfo",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/install/UnixMakefiles_GCC/RelWithDebInfo",
-            "program": "${workspaceFolder}/install/UnixMakefiles_GCC/RelWithDebInfo/bin/gui",
+            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo",
+            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo/bin/gui",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "Run ./build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -51,12 +53,13 @@
             "name": "Windows MinGW UCRT. GDB Launch. Debug",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/install/MinGW/Debug",
-            "program": "${workspaceFolder}/install/MinGW/Debug/bin/gui.exe",
+            "cwd":     "${workspaceFolder}/build/MinGW/Debug",
+            "program": "${workspaceFolder}/build/MinGW/Debug/bin/gui.exe",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "${env:MSYS2_HOME}/ucrt64/bin/gdb.exe",
+            "preLaunchTask": "Run ./build/MinGW/Debug/bin/run.py",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -74,12 +77,13 @@
             "name": "Windows MinGW UCRT. GDB Launch. RelWithDebInfo",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/install/MinGW/RelWithDebInfo",
-            "program": "${workspaceFolder}/install/MinGW/RelWithDebInfo/bin/gui.exe",
+            "cwd":     "${workspaceFolder}/build/MinGW/RelWithDebInfo",
+            "program": "${workspaceFolder}/build/MinGW/RelWithDebInfo/bin/gui.exe",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "${env:MSYS2_HOME}/ucrt64/bin/gdb.exe",
+            "preLaunchTask": "Run ./build/MinGW/RelWithDebInfo/bin/run.py",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

@@ -49,6 +49,24 @@
             },
             "problemMatcher": []
         },
+        {
+            "label": "Run ./build/UnixMakefiles_GCC/Debug/bin/run.py",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/build/UnixMakefiles_GCC/Debug/bin/run.py"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run ./build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py"
+            ],
+            "problemMatcher": []
+        },
 
 
         {
@@ -97,6 +115,24 @@
                 "kind": "build",
                 "isDefault": false
             },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run ./build/MinGW/Debug/bin/run.py",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build\\MinGW\\Debug\\bin\\run.py"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run ./build/MinGW/RelWithDebInfo/bin/run.py",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build\\MinGW\\RelWithDebInfo\\bin\\run.py"
+            ],
             "problemMatcher": []
         }
     ]

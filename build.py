@@ -253,7 +253,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         command.extend([
             # Install directory is overriden in __install.
             # It is set here in case installation is started not using "cmake --install", but from IDE's UI.
-            "-DCMAKE_INSTALL_PREFIX=" + self.installDir() + "/INSTALLED_USING_IDE",
+            "-DCMAKE_INSTALL_PREFIX=" +  os.path.join(self.installDir(), "/INSTALLED_USING_IDE"),
             self.srcDir()
         ])
 
