@@ -1,137 +1,80 @@
 {
     "version": "2.0.0", // Schema version of VS Code’s Task Runner configuration.
+    "inputs": [
+        {
+            "id": "buildType",
+            "type": "pickString",
+            "description": "Select build type for tasks.json",
+            "options": [
+                "Debug",
+                "Release",
+                "RelWithDebInfo",
+                "MinSizeRel"
+            ],
+            "default": "Debug",
+        }
+    ],
     "tasks": [
         {
-            "label": "Build Linux GCC Debug",
+            "label": "Linux GCC. Build",
+            "detail": "Build with GCC on Linux",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
             "type": "shell",
             "command": "python",
             "args": [
                 "${workspaceFolder}/build.py",
                 "--toolset", "UnixMakefiles_GCC",
-                "--build_types", "Debug",
-                "--run_type", "Full"
+                "--build_types", "${input:buildType}",
+                "--run_type", "Build"
             ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Linux GCC. Run",
+            "detail": "Run binaries, compiled with GCC on Linux",
             "group": {
-                "kind": "build",
+                "kind": "none",
                 "isDefault": false
             },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build Linux GCC Release",
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/build.py",
-                "--toolset", "UnixMakefiles_GCC",
-                "--build_types", "Release",
-                "--run_type", "Full"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build Linux GCC RelWithDebInfo",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}/build.py",
-                "--toolset", "UnixMakefiles_GCC",
-                "--build_types", "RelWithDebInfo",
-                "--run_type", "Full"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Run ./build/UnixMakefiles_GCC/Debug/bin/run.py",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}/build/UnixMakefiles_GCC/Debug/bin/run.py"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "Run ./build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py"
+                "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}/bin/run.py"
             ],
             "problemMatcher": []
         },
 
-
         {
-            "label": "Build MinGW Debug",
+            "label": "Windows MinGW. Build",
+            "detail": "Build with MinGW on Windows",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
             "type": "shell",
             "command": "python",
             "args": [
                 "${workspaceFolder}\\build.py",
                 "--toolset", "MinGWMakefiles_MinGW",
-                "--build_types", "Debug",
-                "--run_type", "Full"
+                "--build_types", "${input:buildType}",
+                "--run_type", "Build"
             ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Windows MinGW. Run",
+            "detail": "Run binaries, compiled with MinGW on Windows",
             "group": {
-                "kind": "build",
+                "kind": "none",
                 "isDefault": false
             },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build MinGW Release",
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}\\build.py",
-                "--toolset", "MinGWMakefiles_MinGW",
-                "--build_types", "Release",
-                "--run_type", "Full"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build MinGW RelWithDebInfo",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}\\build.py",
-                "--toolset", "MinGWMakefiles_MinGW",
-                "--build_types", "RelWithDebInfo",
-                "--run_type", "Full"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Run ./build/MinGW/Debug/bin/run.py",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}\\build\\MinGW\\Debug\\bin\\run.py"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "Run ./build/MinGW/RelWithDebInfo/bin/run.py",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}\\build\\MinGW\\RelWithDebInfo\\bin\\run.py"
+                "${workspaceFolder}\\build\\MinGW\\${input:buildType}\\bin\\run.py"
             ],
             "problemMatcher": []
         }

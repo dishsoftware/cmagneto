@@ -1,40 +1,29 @@
 {
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "buildType",
+            "type": "pickString",
+            "description": "Select build type for launch.json",
+            "options": [
+                "Debug",
+                "RelWithDebInfo"
+            ],
+            "default": "Debug",
+        }
+    ],
     "configurations": [
         {
-            "name": "Linux GCC. GDB Launch. Debug",
+            "name": "Linux GCC. GDB Launch",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/Debug",
-            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/Debug/bin/gui",
+            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}",
+            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}/bin/gui",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
-            "preLaunchTask": "Run ./build/UnixMakefiles_GCC/Debug/bin/run.py",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Linux GCC. GDB Launch. RelWithDebInfo",
-            "type": "cppdbg",
-            "request": "launch",
-            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo",
-            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/RelWithDebInfo/bin/gui",
-            "stopAtEntry": false,
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb",
-            "preLaunchTask": "Run ./build/UnixMakefiles_GCC/RelWithDebInfo/bin/run.py",
+            "preLaunchTask": "Linux GCC. Run",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -50,40 +39,16 @@
         },
 
         {
-            "name": "Windows MinGW UCRT. GDB Launch. Debug",
+            "name": "Windows MinGW. GDB Launch",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/build/MinGW/Debug",
-            "program": "${workspaceFolder}/build/MinGW/Debug/bin/gui.exe",
+            "cwd": "${workspaceFolder}/build/MinGW/${input:buildType}",
+            "program": "${workspaceFolder}/build/MinGW/${input:buildType}/bin/gui.exe",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "${env:MSYS2_HOME}/ucrt64/bin/gdb.exe",
-            "preLaunchTask": "Run ./build/MinGW/Debug/bin/run.py",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Windows MinGW UCRT. GDB Launch. RelWithDebInfo",
-            "type": "cppdbg",
-            "request": "launch",
-            "cwd":     "${workspaceFolder}/build/MinGW/RelWithDebInfo",
-            "program": "${workspaceFolder}/build/MinGW/RelWithDebInfo/bin/gui.exe",
-            "stopAtEntry": false,
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "${env:MSYS2_HOME}/ucrt64/bin/gdb.exe",
-            "preLaunchTask": "Run ./build/MinGW/RelWithDebInfo/bin/run.py",
+            "preLaunchTask": "Windows MinGW. Run",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

@@ -15,9 +15,9 @@ class BuildType(Enum):
 
 
 class RunType(Enum):
-    Full = 0, # Generate and compile.
-    Generate = 1
-    Compile = 2
+    Full = 0 # Build and install.
+    Build = 1
+    Install = 2
 
 
 class BuildRunner:
@@ -193,12 +193,13 @@ class BuiildRunnerSingleConfig(BuildRunner):
     def run(self, iRunType: RunType) -> None:
         for buildType in self.buildTypes():
             if (
-                iRunType == RunType.Full or iRunType == RunType.Generate or
-                iRunType == RunType.Compile and not os.path.exists(self.buildDirForBuildType(buildType))
+                iRunType == RunType.Full or iRunType == RunType.Build or
+                iRunType == RunType.Install and not os.path.exists(self.buildDirForBuildType(buildType))
             ):
                 self.__generate(buildType)
-            if (iRunType == RunType.Full or iRunType == RunType.Compile):
                 self.__compile(buildType)
+
+            if (iRunType == RunType.Full or iRunType == RunType.Install):
                 self.__install(buildType)
 
     def __generate(self, iBuildType: BuildType) -> None:
@@ -251,8 +252,10 @@ class BuiildRunnerSingleConfig(BuildRunner):
         print(text + " finished.")
 
     def __install(self, iBuildType: BuildType) -> None:
-        text = f"Installation ({iBuildType.name})"
+        text = f"Installing ({iBuildType.name})"
         print(text + "...")
+
+        BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
         # It does not matter from which folder "cmake --install" is called, because the build directory is absolute.
         subprocess.run(["cmake", "--install", self.buildDirForBuildType(iBuildType)], check=True)
@@ -266,13 +269,15 @@ class BuildRunnerMultiConfig(BuildRunner):
 
     def run(self, iRunType: RunType) -> None:
         if (
-            iRunType == RunType.Full or iRunType == RunType.Generate or
-            iRunType == RunType.Compile and not os.path.exists(self.buildDirForBuildType(buildType))
+            iRunType == RunType.Full or iRunType == RunType.Build or
+            iRunType == RunType.Install and not os.path.exists(self.buildDirForBuildType(buildType))
         ):
             self.__generate()
-        if (iRunType == RunType.Full or iRunType == RunType.Compile):
             for buildType in self.buildTypes():
                 self.__compile(buildType)
+
+        if (iRunType == RunType.Full or iRunType == RunType.Install):
+            for buildType in self.buildTypes():
                 self.__install(buildType)
 
     def __generate(self) -> None:
@@ -305,7 +310,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         command.extend([
             # Install directory is overriden in __install.
-            # It is set here in case installation is started not using "cmake --install", but from IDE's UI.
+            # It is set here in case installing is started not using "cmake --install", but from IDE's UI.
             "-DCMAKE_INSTALL_PREFIX=" +  os.path.join(self.installDir(), "/INSTALLED_USING_IDE"),
             self.srcDir()
         ])
@@ -329,8 +334,10 @@ class BuildRunnerMultiConfig(BuildRunner):
         print(text + " finished.")
 
     def __install(self, iBuildType: BuildType) -> None:
-        text = f"Installation ({iBuildType.name})"
+        text = f"Installing ({iBuildType.name})"
         print(text + "...")
+
+        BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
         # It does not matter from which folder "cmake --install" is called, because the build directory is absolute.
         subprocess.run([
@@ -430,7 +437,7 @@ def main():
         type=str,
         choices=[runType.name for runType in RunType],
         default=RunType.Full.name,
-        help=f"Specifies run type. Full is default and triggers both generation and compilation."
+        help=f"Specifies run type. Full is default and triggers both build (generation and compiling) and installing."
     )
     parser.add_argument("--lib-contacts-shared", action="store_true", help="Build Contacts library as shared.")
     args = parser.parse_args()
