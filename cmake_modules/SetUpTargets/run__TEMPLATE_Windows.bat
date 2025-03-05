@@ -2,7 +2,7 @@
 
 rem If you found this file in ./build or ./install directory or subdirectories: don't distrubute it.
 rem The file contains variables in the section "Template parameters".
-rem Values of these variables are specific to the machine the project was built on and set during the process (look into InstallTargets.cmake).
+rem Values of these variables are specific to the machine the project was built on and set during the process (look into SetUpTargets.cmake).
 rem Replaced values of these variables must not contain `\n`. The character is reserved to mark strings to replace.
 
 
