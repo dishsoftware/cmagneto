@@ -172,7 +172,7 @@ class BuildRunner:
         # Create picture from dot files.
         try:
             subprocess.run([
-                os.path.join(graphvizDir, "dot"),
+                os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
                 "-T" + PICTURE_FORMAT.lower(),
                 dotFilePath,
                 "-o",
