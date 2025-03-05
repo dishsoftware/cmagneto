@@ -1,6 +1,3 @@
-include(${CMAKE_CURRENT_LIST_DIR}/QtWrappers.cmake)
-
-
 set(SUBDIR_STATIC "lib")
 set(SUBDIR_SHARED "bin")
 set(SUBDIR_EXECUTABLE "bin")
@@ -14,11 +11,23 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_SHARED}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}")
 
 
-# Appended every time install_library(iLibName) or install_executable(iExeName) is called.
-set_property(GLOBAL PROPERTY REGISTERED_TARGETS "")
+function(print_platform_and_compiler)
+    message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
+    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+    message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+    message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+endfunction()
 
 
-function(set_IS_MULTTCONFIG_property)
+#[[
+    set__IS_MULTTCONFIG__property
+
+    Defines IS_MULTTCONFIG global boolean property as TRUE, if generator supports multi-config, and FALSE otherwise.
+    Calling it directly is not necessary, if IS_MULTTCONFIG is only retrieved using is_multiconfig(oIsMulticonfig).
+    However, it is better to call it as early as possible to avoid errors,
+    if get_property(oIsMulticonfig GLOBAL PROPERTY IS_MULTTCONFIG) is used and called earlier, than is_multiconfig(oIsMulticonfig).
+]]
+function(set__IS_MULTTCONFIG__property)
     get_property(_isSet GLOBAL PROPERTY IS_MULTTCONFIG SET)
     if(_isSet)
         return()
@@ -48,7 +57,7 @@ endfunction()
 function(is_multiconfig oIsMulticonfig)
     get_property(_isSet GLOBAL PROPERTY IS_MULTTCONFIG SET)
     if(NOT _isSet)
-        set_IS_MULTTCONFIG_property()
+        set__IS_MULTTCONFIG__property()
     endif()
 
     get_property(_isMulticonfig GLOBAL PROPERTY IS_MULTTCONFIG)
@@ -56,9 +65,17 @@ function(is_multiconfig oIsMulticonfig)
 endfunction()
 
 
+include(${CMAKE_CURRENT_LIST_DIR}/QtWrappers.cmake)
+
+
+# Appended every time set_up_library(iLibName) or set_up_executable(iExeName) is called.
+set_property(GLOBAL PROPERTY REGISTERED_TARGETS "")
+
 
 #[[
-    install_library
+    set_up_library
+
+    Sets up building and installation of a library-target iLibName.
     Also registers iLibName in the global property REGISTERED_TARGETS.
 
     Parameters:
@@ -67,7 +84,7 @@ endfunction()
     iTSResources - TS resources (*.ts files).
     iOtherResources - other resources (icons. jsons etc.).
 ]]
-function(install_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
+function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
     target_sources(${iLibName} PRIVATE ${iLibSources} ${iLibHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iLibName} PUBLIC
@@ -109,7 +126,9 @@ endfunction()
 
 
 #[[
-    install_executable
+    set_up_executable
+
+    Sets up building and installation of a executable-target iExeName.
     Also registers iExeName in the global property REGISTERED_TARGETS.
 
     Parameters:
@@ -118,7 +137,7 @@ endfunction()
     iTSResources - TS resources (*.ts files).
     iOtherResources - other resources (icons. jsons etc.).
 ]]
-function(install_executable iExeName iExeHeaders iExeSources iTSResources iOtherResources)
+function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherResources)
     target_sources(${iExeName} PRIVATE ${iExeSources} ${iExeHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iExeName} PRIVATE
@@ -145,7 +164,7 @@ endfunction()
 
     Sets the project entry point executable.
 
-    The entry point is run by "run.py" script. The script is generated and installed by install__run__script().
+    The entry point is run by "run" script, which is set up by set_up__run__script().
     The entry point executable is run when the project is started in Visual Studio.
 
     Parameters:
@@ -173,11 +192,12 @@ endfunction()
 
 
 #[[
-    get_shared_library_dirs
+    get_linked_shared_library_dirs
 
-    Appends directories, containing shared libraries linked to iTargets, to oLibraryDirs.
+    Returns directories, containing shared libraries, which iTargets are linked to.
+    If a shared library is in iTargets, it's path is not returned.
 ]]
-function(get_shared_library_dirs oLibraryDirs iTargets)
+function(get_linked_shared_library_dirs oLibraryDirs iTargets)
     set(_libraryDirs "")
 
     foreach(target ${iTargets})
@@ -192,7 +212,7 @@ function(get_shared_library_dirs oLibraryDirs iTargets)
                 continue()
             endif()
 
-            # Skip if linked library is a target, created in this project.
+            # Skip, if the linked library is in iTargets.
             list(FIND iTargets ${_lib} _index)
             if (${_index} GREATER -1)
                 continue()
@@ -205,7 +225,7 @@ function(get_shared_library_dirs oLibraryDirs iTargets)
 
             get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
             if(NOT (_libPath AND EXISTS ${_libPath}))
-                message(WARNING "get_shared_library_dirs: Shared library of \"${_lib}\" is not found.")
+                message(WARNING "get_linked_shared_library_dirs: Shared library of \"${_lib}\" is not found.")
                 continue()
             endif()
 
@@ -219,81 +239,154 @@ function(get_shared_library_dirs oLibraryDirs iTargets)
 endfunction()
 
 
-set(RUN__SCRIPT_NAME "run.py")
-set(RUN__TEMPLATE_SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/run_TEMPLATE.py")
+set(SCRIPT_EXTENSION_UNIX "sh")
+set(SCRIPT_EXTENSION_WINDOWS "bat")
+
+set(SCRIPT_NAME_SUFFIX_UNIX "_Unix")
+# The differentiation is required, because Unix_standard scripts can't be run on Unix or don't do what they are intented for.
+# E.g. Android is also Unix, but not Unix-standard: some variables and functions are not available or restricted.
+set(SCRIPT_NAME_SUFFIX_UNIX_STANDARD "_Unix_standard")
+set(SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
+
+set(SET_ENV__SCRIPT_NAME_WE "set_env")
+set(SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/InstallTargets/${SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
+
+set(RUN__SCRIPT_NAME_WE "run")
+set(RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/InstallTargets/${RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 #[[
-    install__run__script
+    set_up__set_env__script
 
-    The function must be called after all install_library(iLibName) and install_executable(iExeName) are called.
-    The script sets paths to shared libraries and runs the project entry point executable.
-    The shared library paths are collected from the all registered targets.
+    Generates, places to build directory and installs "set_env" script.
+    The script sets paths to 3rd-party shared libraries, which registered targets are linked to.
+
+    The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
-function(install__run__script)
+function(set_up__set_env__script)
     # Strings to replace in the template script.
-    set(PARAM__SHARED_LIB_DIRS_STRING "param:SHARED_LIB_DIRS_STRING:param")
-    set(PARAM__EXECUTABLE_NAME_WE "param:EXECUTABLE_NAME_WE:param")
+    set(PARAM__SHARED_LIB_DIRS_STRING "param\\nSHARED_LIB_DIRS_STRING\\nparam")
+    ####################################################################
+
+    # Values to replace the param-strings with.
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+    message(STATUS "REGISTERED_TARGETS: ${_registeredTargets}")
+    ####################################################################
+
+    # Generate script content.
+    is_multiconfig(IS_MULTICONFIG)
+    if (IS_MULTICONFIG)
+        set(_libraryDirs "")
+        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}") #TODO Get shared library paths with respect to $<CONFIG>.
+        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
+        cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
+
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_template_script_path "${SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${SET_ENV__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_WINDOWS}")
+        else()
+            set(_template_script_path "${SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_UNIX_STANDARD}.${SCRIPT_EXTENSION_UNIX}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${SET_ENV__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_UNIX}")
+        endif()
+    else()
+        set(_libraryDirs "")
+        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}")
+        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
+        cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
+
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_template_script_path "${SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${SET_ENV__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_WINDOWS}")
+        else()
+            set(_template_script_path "${SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_UNIX_STANDARD}.${SCRIPT_EXTENSION_UNIX}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${SET_ENV__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_UNIX}")
+        endif()
+    endif()
+
+    file(READ "${_template_script_path}" _scriptContent)
+    string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsNative}" _scriptContent "${_scriptContent}")
+
+    # Add the script to build dir(s).
+    file(GENERATE OUTPUT "${_scriptPath}" CONTENT "${_scriptContent}")
+    if(UNIX)
+        add_custom_command(
+            OUTPUT "${_scriptPath}"
+            COMMAND chmod +x "${_scriptPath}"
+            DEPENDS "${_scriptPath}"
+            COMMENT "Setting execute permission on ${_scriptPath}"
+        )
+    endif()
+
+    # Install the script.
+    install(
+        FILES "${_scriptPath}"
+        DESTINATION "${SUBDIR_EXECUTABLE}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    )
+endfunction()
+
+
+#[[
+    set_up__run__script
+
+    Generates, places to build directory and installs "run" script.
+    If a project entrypoint executable is set (look at set_project_entrypoint(iExeName)), "run" script is generated.
+    The script runs "set_env" script and the project entrypoint executable.
+
+    The function must be called after set_up__set_env__script() is called.
+]]
+function(set_up__run__script)
+    # Strings to replace in the template script.
+    set(EXECUTABLE_NAME_WE "param\\nEXECUTABLE_NAME_WE\\nparam")
     ####################################################################
 
     # Values to replace the param-strings with.
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        message(FATAL_ERROR "install__run__script: The project entry point executable is not set.")
+        message(WARNING "set_up__run__script: The project entrypoint executable is not set.")
+        return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
-
-    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
-    message(STATUS "REGISTERED_TARGETS: ${_registeredTargets}")
     ####################################################################
 
+    # Generate script content.
     is_multiconfig(IS_MULTICONFIG)
     if (IS_MULTICONFIG)
-        set(_libraryDirs "")
-        get_shared_library_dirs(_libraryDirs "${_registeredTargets}") #TODO Get shared library paths with respect to $<CONFIG>.
-        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
-        string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
-
-        file(READ "${RUN__TEMPLATE_SCRIPT_PATH}" _scriptContent)
-        string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")
-        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
-
-        set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${RUN__SCRIPT_NAME}")
-
-        # Add the script to build dirs.
-        file(GENERATE OUTPUT "${_scriptPath}" CONTENT "${_scriptContent}")
-        if(UNIX)
-            execute_process(COMMAND chmod +x "${_scriptPath}")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${RUN__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_WINDOWS}")
+        else()
+            set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_UNIX}.${SCRIPT_EXTENSION_UNIX}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${RUN__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_UNIX}")
         endif()
-
-        # Install the script.
-        install(
-            FILES "${_scriptPath}"
-            DESTINATION ${SUBDIR_EXECUTABLE}
-            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        )
     else()
-        set(_libraryDirs "")
-        get_shared_library_dirs(_libraryDirs "${_registeredTargets}")
-        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
-        string(JOIN "\\n" _libraryDirsString ${_libraryDirs})
-
-        file(READ "${RUN__TEMPLATE_SCRIPT_PATH}" _scriptContent)
-        string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsString}" _scriptContent "${_scriptContent}")
-        string(REPLACE "${PARAM__EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
-
-        # Add the script to build dir.
-        set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${RUN__SCRIPT_NAME}")
-        file(GENERATE OUTPUT "${_scriptPath}" CONTENT "${_scriptContent}")
-        if(UNIX)
-            execute_process(COMMAND chmod +x ${_scriptPath})
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${RUN__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_WINDOWS}")
+        else()
+            set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_UNIX}.${SCRIPT_EXTENSION_UNIX}")
+            set(_scriptPath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${RUN__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_UNIX}")
         endif()
+    endif()
 
-        # Install the script.
-        install(
-            FILES "${_scriptPath}"
-            DESTINATION ${SUBDIR_EXECUTABLE}
-            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    file(READ "${_template_script_path}" _scriptContent)
+    string(REPLACE "${EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
+
+    # Add the script to build dir(s).
+    file(GENERATE OUTPUT "${_scriptPath}" CONTENT "${_scriptContent}")
+    if(UNIX)
+        add_custom_command(
+            OUTPUT "${_scriptPath}"
+            COMMAND chmod +x "${_scriptPath}"
+            DEPENDS "${_scriptPath}"
+            COMMENT "Setting execute permission on ${_scriptPath}"
         )
     endif()
+
+    # Install the script.
+    install(
+        FILES "${_scriptPath}"
+        DESTINATION "${SUBDIR_EXECUTABLE}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    )
 endfunction()

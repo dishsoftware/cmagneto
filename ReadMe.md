@@ -44,7 +44,8 @@ Output picture is generated at `./build/{platform_name}/[{build_type}]/graphviz`
 If Graphviz is installed, but there is no picture, define environment variable `GRAPHVIZ_DIR`. E.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
 
 # How to run
-If the project is built using "Ubuntu 24.04 GCC" or "Windows MinGW UCRT", ouput executables can be run without any additional steps.
-On other platforms paths to shared libraries of dependecies must be set before execution.
-`./cmake_modules/InstallTargets.cmake` generates `run.py` script to "bin" subdirectories, with list of linked shared libraries, created outside of the project.
-The script sets up environment and runs an entrypoint executable, which is set with `set_project_entrypoint(iExeName)`, where `iExeName` is name of executable target.
+If the project is built using "Ubuntu 24.04 GCC" or "Windows MinGW UCRT", and all dependecies are installed using corresponding package managers,
+output executables can be run without any additional steps.
+Otherwise it may be required to set paths to shared libraries of the dependecies before execution.
+`./cmake_modules/InstallTargets.cmake` creates "set_env" and "run" script in "bin" subdirectories of ./build and ./install.
+Look for `set_up__set_env__script()` and `set_up__run__script()` functions.

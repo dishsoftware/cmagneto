@@ -79,6 +79,6 @@ target_link_libraries(contacts PUBLIC Qt6::Core)
 ####################################################################
 
 
-# Installation
-install_library(contacts "${contacts_HEADERS}" "${contacts_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
+# Building and installation
+set_up_library(contacts "${contacts_HEADERS}" "${contacts_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
 ####################################################################

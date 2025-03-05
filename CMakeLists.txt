@@ -1,8 +1,8 @@
 set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
 
-project(EnowSWContacts
+project(EnowSW_Contacts
     VERSION 1.0.0
     LANGUAGES CXX
 )
@@ -10,25 +10,12 @@ project(EnowSWContacts
 set(CMAKE_CXX_STANDARD 17)
 
 
+# Include custom CMake modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
+include(InstallTargets)
 
 
-if(WIN32)
-    message(STATUS "Building on Windows")
-    if (MSVC)
-        message(STATUS "Compiler: MSVC")
-    elseif (MINGW)
-        message(STATUS "Compiler: MinGW")
-    else()
-        message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-    endif()
-elseif(APPLE)
-    message(STATUS "Building on macOS")
-    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-else()
-    message(STATUS "Building on Linux")
-    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-endif()
+print_platform_and_compiler()
 
 
 option(LIB_CONTACTS_SHARED "Build Contacts as a shared library." OFF)
@@ -40,14 +27,11 @@ else()
 endif()
 
 
-# Include custom CMake modules.
-include(InstallTargets)
-
-
-set_IS_MULTTCONFIG_property()
+set__IS_MULTTCONFIG__property()
 
 
 add_subdirectory(src)
 
 
-install__run__script()
+set_up__set_env__script()
+set_up__run__script()
