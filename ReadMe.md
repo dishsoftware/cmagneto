@@ -47,5 +47,5 @@ If Graphviz is installed, but there is no picture, define environment variable `
 If the project is built using "Ubuntu 24.04 GCC" or "Windows MinGW UCRT", and all dependecies are installed using corresponding package managers,
 output executables can be run without any additional steps.
 Otherwise it may be required to set paths to shared libraries of the dependecies before execution.
-`./cmake_modules/SetUpTargets.cmake` creates "set_env" and "run" script in "bin" subdirectories of ./build and ./install.
+`./cmake_modules/SetUpTargets.cmake` creates "set_env" and "run" scripts in "bin" subdirectories of ./build and ./install.
 Look for `set_up__set_env__script()` and `set_up__run__script()` functions.
