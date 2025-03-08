@@ -248,11 +248,64 @@ set(SCRIPT_NAME_SUFFIX_UNIX "_Unix")
 set(SCRIPT_NAME_SUFFIX_UNIX_STANDARD "_Unix_standard")
 set(SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
 
+set(ENV_VSCODE__SCRIPT_NAME ".env.vscode")
+
 set(SET_ENV__SCRIPT_NAME_WE "set_env")
 set(SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
 
 set(RUN__SCRIPT_NAME_WE "run")
 set(RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN__SCRIPT_NAME_WE}__TEMPLATE")
+
+
+#[[
+    set_up__env_vscode__file
+
+    Generates and places to build directory ".env.vscode" file.
+    The file sets Path/LD_LIBRARY_PATH equal to list of dirs to 3rd-party shared libraries, which registered targets are linked to.
+
+    The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
+    an executable for debugging.
+
+    The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
+]]
+function(set_up__env_vscode__file)
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+
+    # Generate file content.
+    is_multiconfig(IS_MULTICONFIG)
+    if (IS_MULTICONFIG)
+        set(_libraryDirs "")
+        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}") #TODO Get shared library paths with respect to $<CONFIG>.
+        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
+        cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
+
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_fileContent "Path=\"${_libraryDirsNative}\"")
+            set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${ENV_VSCODE__SCRIPT_NAME}")
+        else()
+            set(_fileContent "LD_LIBRARY_PATH=\"${_libraryDirsNative}\"")
+            set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${ENV_VSCODE__SCRIPT_NAME}")
+        endif()
+    else()
+        set(_libraryDirs "")
+        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}")
+        message(DEBUG "Shared lib dirs: ${_libraryDirs}")
+        cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
+
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set(_fileContent "Path=\"${_libraryDirsNative}\"")
+            set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${ENV_VSCODE__SCRIPT_NAME}")
+        else()
+            set(_fileContent "LD_LIBRARY_PATH=\"${_libraryDirsNative}\"")
+            set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${ENV_VSCODE__SCRIPT_NAME}")
+        endif()
+    endif()
+
+    string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsNative}" _fileContent "${_fileContent}")
+
+    # Add the file to build dir(s).
+    file(GENERATE OUTPUT "${_filePath}" CONTENT "${_fileContent}")
+endfunction()
 
 
 #[[

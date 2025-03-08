@@ -32,20 +32,6 @@
             ],
             "problemMatcher": []
         },
-        {
-            "label": "Linux GCC. Run",
-            "detail": "Run binaries, compiled with GCC on Linux",
-            "group": {
-                "kind": "none",
-                "isDefault": false
-            },
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}/bin/run.py"
-            ],
-            "problemMatcher": []
-        },
 
         {
             "label": "Windows MinGW. Build",
@@ -64,17 +50,21 @@
             ],
             "problemMatcher": []
         },
+
         {
-            "label": "Windows MinGW. Run",
-            "detail": "Run binaries, compiled with MinGW on Windows",
+            "label": "Windows VS2022 MSVC. Build",
+            "detail": "Build with VS2022 MSVC on Windows",
             "group": {
-                "kind": "none",
+                "kind": "build",
                 "isDefault": false
             },
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}\\build\\MinGW\\${input:buildType}\\bin\\run.py"
+                "${workspaceFolder}\\build.py",
+                "--toolset", "VS2022_MSVC",
+                "--build_types", "${input:buildType}",
+                "--run_type", "Build"
             ],
             "problemMatcher": []
         }
