@@ -1,3 +1,6 @@
+include_guard(GLOBAL)  # Ensures this file is included only once
+
+
 set(SUBDIR_STATIC "lib")
 set(SUBDIR_SHARED "bin")
 set(SUBDIR_EXECUTABLE "bin")
@@ -73,10 +76,84 @@ set_property(GLOBAL PROPERTY REGISTERED_TARGETS "")
 
 
 #[[
+    create_list_of_paths_to_shared_libs
+
+    The method collects paths to 3rd-party shared libraries, which iTargetName is linked to, and stores them in a global property PATHS_TO_SHARED_LIBS__${iTargetName}.
+    Should be called from the same folder where iTargetName is declared after libraries are linked to iTargetName.
+
+    The method was written to overcome the following limitation:
+        "get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)" does not return all linked libraries, if called from not the same folder where iTargetName is declared.
+
+    Parameters:
+    iTargetName - name of a target in the project.
+]]
+function(create_list_of_paths_to_shared_libs iTargetName)
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+    set(_libraryPaths "")
+
+    get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)
+    if(_targetLinkLibraries STREQUAL "NOTFOUND")
+        set_property(GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} "")
+        return()
+    endif()
+
+    # Collect library paths for each linked shared library.
+    foreach(_lib ${_targetLinkLibraries})
+        if(NOT TARGET ${_lib})
+            continue()
+        endif()
+
+        # Skip, if the linked library is a target of the project.
+        list(FIND _registeredTargets ${_lib} _index)
+        if (${_index} GREATER -1)
+            continue()
+        endif()
+
+        get_target_property(_libType ${_lib} TYPE)
+        if(NOT (_libType STREQUAL "SHARED_LIBRARY"))
+            continue()
+        endif()
+
+        get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
+        if(NOT (_libPath AND EXISTS ${_libPath}))
+            message(WARNING "create_list_of_paths_to_shared_libs: shared library \"${_libPath}\" of \"${_lib}\" is not found.")
+            continue()
+        endif()
+
+        list(APPEND _libraryPaths ${_libPath})
+    endforeach()
+
+    list(REMOVE_DUPLICATES _libraryPaths)
+    set_property(GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} "${_libraryPaths}")
+endfunction()
+
+
+#[[
+    get_paths_to_shared_libs
+
+    Parameters:
+    iTargetName - name of a target in the project.
+
+    Paths to shared libs for iTargetName are filled when set_up_library(iTargetName) or set_up_executable(iTargetName) are called.
+]]
+function(get_paths_to_shared_libs iTargetName oPaths)
+    get_property(_isSet GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} SET)
+    if(NOT _isSet)
+        set(${oPaths} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    get_property(_paths GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName})
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
     set_up_library
 
     Sets up building and installation of a library-target iLibName.
     Also registers iLibName in the global property REGISTERED_TARGETS.
+    Must be called after linking libraries to iLibName.
 
     Parameters:
     iLibHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
@@ -122,6 +199,8 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
     list(APPEND _registeredTargets ${iLibName})
     set_property(GLOBAL PROPERTY REGISTERED_TARGETS "${_registeredTargets}")
+
+    create_list_of_paths_to_shared_libs(${iLibName})
 endfunction()
 
 
@@ -130,6 +209,7 @@ endfunction()
 
     Sets up building and installation of a executable-target iExeName.
     Also registers iExeName in the global property REGISTERED_TARGETS.
+    Must be called after linking libraries to iExeName.
 
     Parameters:
     iExeHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
@@ -156,6 +236,8 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
     get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
     list(APPEND _registeredTargets ${iExeName})
     set_property(GLOBAL PROPERTY REGISTERED_TARGETS "${_registeredTargets}")
+
+    create_list_of_paths_to_shared_libs(${iExeName})
 endfunction()
 
 
@@ -195,40 +277,24 @@ endfunction()
     get_linked_shared_library_dirs
 
     Returns directories, containing shared libraries, which iTargets are linked to.
-    If a shared library is in iTargets, it's path is not returned.
+    If a shared library is in iTargets or defined in the project, it's path is not returned.
 ]]
 function(get_linked_shared_library_dirs oLibraryDirs iTargets)
     set(_libraryDirs "")
 
-    foreach(target ${iTargets})
-        get_target_property(_targetLinkLibraries ${target} LINK_LIBRARIES)
+    foreach(_target ${iTargets})
+        if(NOT TARGET ${_target})
+            continue()
+        endif()
+
+        get_target_property(_targetLinkLibraries ${_target} LINK_LIBRARIES)
         if(_targetLinkLibraries STREQUAL "NOTFOUND")
             continue()
         endif()
 
-        # Collect library paths for each linked shared library.
-        foreach(_lib ${_targetLinkLibraries})
-            if(NOT TARGET ${_lib})
-                continue()
-            endif()
-
-            # Skip, if the linked library is in iTargets.
-            list(FIND iTargets ${_lib} _index)
-            if (${_index} GREATER -1)
-                continue()
-            endif()
-
-            get_target_property(_libType ${_lib} TYPE)
-            if(NOT (_libType STREQUAL "SHARED_LIBRARY"))
-                continue()
-            endif()
-
-            get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
-            if(NOT (_libPath AND EXISTS ${_libPath}))
-                message(WARNING "get_linked_shared_library_dirs: Shared library of \"${_lib}\" is not found.")
-                continue()
-            endif()
-
+        get_paths_to_shared_libs(${_target} _libPaths)
+        message(DEBUG "get_linked_shared_library_dirs: target " ${_target} " shared lib paths: ${_libPaths}")
+        foreach(_libPath ${_libPaths})
             get_filename_component(_libDir ${_libPath} DIRECTORY)
             list(APPEND _libraryDirs ${_libDir})
         endforeach()
