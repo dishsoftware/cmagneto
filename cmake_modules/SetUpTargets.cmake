@@ -1,4 +1,6 @@
 include_guard(GLOBAL)  # Ensures this file is included only once
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 
 set(SUBDIR_STATIC "lib")
@@ -7,6 +9,8 @@ set(SUBDIR_EXECUTABLE "bin")
 set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
+set(PACKAGE_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${SUBDIR_INCLUDE}")
+set(PACKAGE_LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${SUBDIR_SHARED}")
 
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
@@ -148,6 +152,22 @@ function(get_paths_to_shared_libs iTargetName oPaths)
 endfunction()
 
 
+function(set_up_project)
+    # Generate the ${PROJECT_NAME}Config.cmake
+    configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        INSTALL_DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+    )
+
+    # Install the package configuration file
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+    )
+endfunction()
+
+
 #[[
     set_up_library
 
@@ -162,6 +182,8 @@ endfunction()
     iOtherResources - other resources (icons. jsons etc.).
 ]]
 function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
+    add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
+
     target_sources(${iLibName} PRIVATE ${iLibSources} ${iLibHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iLibName} PUBLIC
@@ -191,7 +213,7 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     install(EXPORT ${PROJECT_NAME}TargetGroup
         FILE ${iLibName}Config.cmake
         NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${SUBDIR_CMAKE}/${iLibName}
+        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}/${iLibName}
     )
     ####################################################################
 

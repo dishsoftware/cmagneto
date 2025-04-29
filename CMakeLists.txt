@@ -32,7 +32,7 @@ set__IS_MULTTCONFIG__property()
 
 add_subdirectory(src)
 
-
+set_up_project()
 set_up__set_env__script()
 set_up__env_vscode__file()
 set_up__run__script()
