@@ -1,11 +1,3 @@
 @PACKAGE_INIT@
 
-set_and_check(EnowSW_Contacts_INCLUDE_DIR "C:/Data/Work/PetProjects/EnowSW_Contacts/install/VS2022_MSVC/Release/include")
-set_and_check(EnowSW_Contacts_LIB_DIR "C:/Data/Work/PetProjects/EnowSW_Contacts/install/VS2022_MSVC/Release/lib")
-
-if(NOT TARGET EnowSW_Contacts::contacts)
-    include("${CMAKE_CURRENT_LIST_DIR}/contacts/contactsConfig.cmake")
-    include("${CMAKE_CURRENT_LIST_DIR}/contacts/contactsConfig-release.cmake")
-endif()
-
-check_required_components(EnowSW_Contacts)
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")

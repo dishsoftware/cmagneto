@@ -1,6 +1,5 @@
 include_guard(GLOBAL)  # Ensures this file is included only once
 include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
 
 
 set(SUBDIR_STATIC "lib")
@@ -153,16 +152,30 @@ endfunction()
 
 
 function(set_up_project)
-    # Generate the ${PROJECT_NAME}Config.cmake
+    # Export all targets to a single export set.
+    install(EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+    )
+
+    # Generate the ${PROJECT_NAME}Config.cmake using the template .in file.
     configure_package_config_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         INSTALL_DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
     )
 
-    # Install the package configuration file
+    # Create the ${PROJECT_NAME}ConfigVersion.cmake file.
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    # Install the package configuration files.
     install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
         DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
     )
 endfunction()
@@ -195,7 +208,7 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
 
     # Installation
     install(TARGETS ${iLibName}
-        EXPORT ${PROJECT_NAME}TargetGroup
+        EXPORT ${PROJECT_NAME}Targets
         ARCHIVE DESTINATION ${SUBDIR_STATIC}
         LIBRARY DESTINATION ${SUBDIR_SHARED}
         RUNTIME DESTINATION ${SUBDIR_EXECUTABLE}
@@ -208,13 +221,6 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     install(FILES ${iLibHeaders} DESTINATION ${SUBDIR_INCLUDE}/${iLibName})
     qt_install_ts_resources("${iTSResources}" ${SUBDIR_RESOURCES}/${iLibName}/translations)
     install(FILES ${iOtherResources} DESTINATION ${SUBDIR_RESOURCES}/${iLibName}/other)
-
-    # Generate ${iLibName}Config.cmake
-    install(EXPORT ${PROJECT_NAME}TargetGroup
-        FILE ${iLibName}Config.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}/${iLibName}
-    )
     ####################################################################
 
 
@@ -249,7 +255,7 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
 
 
     install(TARGETS ${iExeName}
-        EXPORT ${PROJECT_NAME}TargetGroup
+        EXPORT ${PROJECT_NAME}Targets
         DESTINATION ${SUBDIR_EXECUTABLE}
     )
     ####################################################################
