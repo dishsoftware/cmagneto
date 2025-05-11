@@ -3,7 +3,7 @@ include(CMakePackageConfigHelpers)
 
 
 set(SUBDIR_STATIC "lib")
-set(SUBDIR_SHARED "bin")
+set(SUBDIR_SHARED "lib")
 set(SUBDIR_EXECUTABLE "bin")
 set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
@@ -119,7 +119,7 @@ function(create_list_of_paths_to_shared_libs iTargetName)
 
         get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
         if(NOT (_libPath AND EXISTS ${_libPath}))
-            message(WARNING "create_list_of_paths_to_shared_libs: shared library \"${_libPath}\" of \"${_lib}\" is not found.")
+            message(WARNING "create_list_of_paths_to_shared_libs: shared library path \"${_libPath}\" of \"${_lib}\" is not found.")
             continue()
         endif()
 
