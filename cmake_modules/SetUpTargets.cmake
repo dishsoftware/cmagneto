@@ -197,7 +197,7 @@ endfunction()
 function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
-    target_sources(${iLibName} PRIVATE ${iLibSources} ${iLibHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
+    target_sources(${iLibName} PRIVATE ${iLibSources} $<BUILD_INTERFACE:${iLibHeaders}>) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iLibName} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
