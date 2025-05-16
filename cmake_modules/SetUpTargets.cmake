@@ -197,11 +197,22 @@ endfunction()
 function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
-    target_sources(${iLibName} PRIVATE ${iLibSources} $<BUILD_INTERFACE:${iLibHeaders}>) # Headers are added to make them appear in IDEs like Visual Studio.
+    target_sources(${iLibName}
+        PRIVATE
+            ${iLibSources}
+            $<BUILD_INTERFACE:${iLibHeaders}> # Headers are added to make them appear in IDEs like Visual Studio.
+    )
 
-    target_include_directories(${iLibName} PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>
+    target_include_directories(${iLibName}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+            $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>
+    )
+
+    set_target_properties(${iLibName}
+        PROPERTIES
+            EXPORT_NAME ${iLibName}
+            PUBLIC_HEADER "${iLibHeaders}"
     )
     ####################################################################
 
@@ -212,13 +223,13 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         ARCHIVE DESTINATION ${SUBDIR_STATIC}
         LIBRARY DESTINATION ${SUBDIR_SHARED}
         RUNTIME DESTINATION ${SUBDIR_EXECUTABLE}
-        INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} # TODO Remove this line if not needed.
-        # If ^ uncommented, a generated ${iLibName}Config.cmake will have
+        PUBLIC_HEADER DESTINATION ${SUBDIR_INCLUDE}/${iLibName}
+        # INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} is unnecessary.
+        # If ^ line is uncommented, a generated ${iLibName}Config.cmake will have
         # INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/${SUBDIR_INCLUDE}/${iLibName}",
         # because the target_include_directories(${iLibName} PUBLIC $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>) is already set.
     )
 
-    install(FILES ${iLibHeaders} DESTINATION ${SUBDIR_INCLUDE}/${iLibName})
     qt_install_ts_resources("${iTSResources}" ${SUBDIR_RESOURCES}/${iLibName}/translations)
     install(FILES ${iOtherResources} DESTINATION ${SUBDIR_RESOURCES}/${iLibName}/other)
     ####################################################################
