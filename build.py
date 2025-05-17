@@ -136,6 +136,61 @@ class BuildRunner:
         if pathToAdd not in cmakePrefixPaths.split(os.pathsep):
             os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, pathToAdd])
 
+    class _GraphvizTargetDependencyGraph:
+        __GRAPHS_DIR = "graphviz"
+        __GRAPH_NAME = "targets"
+        __GRAPH_SRC_SUBDIR = __GRAPH_NAME + "_src"
+        __DOT_FILE_NAME = __GRAPH_NAME + ".dot"
+        __PICTURE_FORMAT = "svg"
+
+        @staticmethod
+        def GRAPH_SRC_DIR(iBuildDir: str) -> str:
+            """
+            Returns path to the directory where Graphviz source files are generated.
+            """
+            return os.path.join(iBuildDir, BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR, BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_SRC_SUBDIR)
+
+        @staticmethod
+        def DOT_FILE_PATH(iBuildDir: str) -> str:
+            """
+            Returns path to the generated dot file.
+            """
+            return os.path.join(BuildRunner._GraphvizTargetDependencyGraph.GRAPH_SRC_DIR(iBuildDir), BuildRunner._GraphvizTargetDependencyGraph.__DOT_FILE_NAME)
+
+        @staticmethod
+        def ARGS_TO_CMAKE_GENERATE_CMD(iBuildDir: str) -> str:
+            """
+            Returns arguments for CMake's "generate" command to generate Graphviz dependency graph.
+            """
+            return "--graphviz=" + BuildRunner._GraphvizTargetDependencyGraph.DOT_FILE_PATH(iBuildDir)
+
+        @staticmethod
+        def CREATE_PICTURE(iBuildDir: str) -> None:
+            """
+            Creates graph picture using existing dot files.
+            """
+            # Set path to Graphviz binaries.
+            graphvizDir = os.environ.get("GRAPHVIZ_DIR")
+            if (graphvizDir):
+                graphvizDir = os.path.join(graphvizDir, "bin")
+
+            # Create picture from dot files.
+            pictureFilePath = os.path.join(iBuildDir, BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR, BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_NAME + "." + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT)
+            try:
+                subprocess.run([
+                    os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
+                    "-T" + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT.lower(),
+                    BuildRunner._GraphvizTargetDependencyGraph.DOT_FILE_PATH(iBuildDir),
+                    "-o",
+                    pictureFilePath
+                ], check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Graphviz can't create target dependency graph picture: {e}")
+                return
+            except FileNotFoundError:
+                print("Graphviz is not found. Target dependency graph picture is not created.")
+                return
+
     @staticmethod
     def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir) -> None:
         GRAPHS_DIR = "graphviz"
@@ -213,7 +268,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         subprocess.run(self.__compose_generate_command(iBuildType), check=True)
         os.chdir(self.srcDir())
 
-        BuildRunner.CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(buildDir)
+        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
 
         print(text + " finished.")
 
@@ -225,6 +280,8 @@ class BuiildRunnerSingleConfig(BuildRunner):
         command.extend([
             "-G", self.generatorName()
         ])
+
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARGS_TO_CMAKE_GENERATE_CMD(self.buildDirForBuildType(iBuildType)))
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
@@ -290,7 +347,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         subprocess.run(self.__compose_generate_command(), check=True)
         os.chdir(self.srcDir())
 
-        BuildRunner.CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(self.buildDir())
+        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
 
         print(text + " finished.")
 
@@ -302,6 +359,8 @@ class BuildRunnerMultiConfig(BuildRunner):
         command.extend([
             "-G", self.generatorName()
         ])
+
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARGS_TO_CMAKE_GENERATE_CMD(self.buildDir()))
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
