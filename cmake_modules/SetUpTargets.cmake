@@ -79,28 +79,87 @@ set_property(GLOBAL PROPERTY REGISTERED_TARGETS "")
 
 
 #[[
-    create_list_of_paths_to_shared_libs
+    add_path_to_shared_libs
 
-    The method collects paths to 3rd-party shared libraries, which iTargetName is linked to, and stores them in a global property PATHS_TO_SHARED_LIBS__${iTargetName}.
+    Parameters:
+    iTargetName - name of a target created in the project.
+
+    iBuildType - build type (e.g. Debug, Release, etc.). To get non-build-type-specific paths, set it to "NonSpecific". Case doesn't matter.
+
+    iPath - path to a binary of a shared lib, which iTargetName is linked to.
+]]
+function(add_path_to_shared_libs iTargetName iBuildType iPath)
+    string(TOUPPER "{$iBuildType}" _buildType)
+    if (_buildType STREQUAL "NONSPECIFIC")
+        set(_propName "PATHS_TO_SHARED_LIBS__${iTargetName}")
+    else()
+        set(_propName "PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
+    endif()
+
+    get_property(_paths GLOBAL PROPERTY "${_propName}")
+    if(NOT _paths)
+        set(_paths "")
+    endif()
+
+    list(APPEND _paths ${iPath})
+    list(REMOVE_DUPLICATES _paths)
+
+    set_property(GLOBAL PROPERTY "${_propName}" "${_paths}")
+endfunction()
+
+
+#[[
+    get_paths_to_shared_libs
+
+    Returns paths to binaries of shared libraries, which iTargetName is linked to.
+
+    Parameters:
+    iTargetName - name of a target created in the project.
+
+    iBuildType - build type (e.g. Debug, Release, etc.). To get non-build-type-specific paths, set it to "NonSpecific". Case doesn't matter.
+
+    Paths to shared libs for iTargetName are filled when set_up_library(iTargetName) or set_up_executable(iTargetName) are called.
+]]
+function(get_paths_to_shared_libs iTargetName iBuildType oPaths)
+    string(TOUPPER "{$iBuildType}" _buildType)
+    if (_buildType STREQUAL "NONSPECIFIC")
+        set(_propName "PATHS_TO_SHARED_LIBS__${iTargetName}")
+    else()
+        set(_propName "PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
+    endif()
+
+    get_property(_isSet GLOBAL PROPERTY "${_propName}" SET)
+    if(NOT _isSet)
+        set(${oPaths} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    get_property(_paths GLOBAL PROPERTY "${_propName}")
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    collect_paths_to_shared_libs
+
+    The method collects paths to binaries of 3rd-party shared libraries, which iTargetName is linked to,
+    and stores them in a global properties PATHS_TO_SHARED_LIBS__${iTargetName} and PATHS_TO_${BUILD_TYPE}_SHARED_LIBS__${iTargetName}.
     Should be called from the same folder where iTargetName is declared after libraries are linked to iTargetName.
 
     The method was written to overcome the following limitation:
         "get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)" does not return all linked libraries, if called from not the same folder where iTargetName is declared.
 
     Parameters:
-    iTargetName - name of a target in the project.
+    iTargetName - name of a target created in the project.
 ]]
-function(create_list_of_paths_to_shared_libs iTargetName)
-    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
-    set(_libraryPaths "")
-
+function(collect_paths_to_shared_libs iTargetName)
     get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)
     if(_targetLinkLibraries STREQUAL "NOTFOUND")
-        set_property(GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} "")
         return()
     endif()
 
-    # Collect library paths for each linked shared library.
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+
     foreach(_lib ${_targetLinkLibraries})
         if(NOT TARGET ${_lib})
             continue()
@@ -117,37 +176,37 @@ function(create_list_of_paths_to_shared_libs iTargetName)
             continue()
         endif()
 
-        get_target_property(_libPath ${_lib} IMPORTED_LOCATION)
-        if(NOT (_libPath AND EXISTS ${_libPath}))
-            message(WARNING "create_list_of_paths_to_shared_libs: shared library path \"${_libPath}\" of \"${_lib}\" is not found.")
-            continue()
+        get_target_property(_nonBuildSpecificLibPath ${_lib} IMPORTED_LOCATION)
+        if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
+            add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
         endif()
 
-        list(APPEND _libraryPaths ${_libPath})
+        if(IS_MULTICONFIG)
+            set(_buildConfigs ${CMAKE_CONFIGURATION_TYPES})
+        else()
+            list(APPEND _buildConfigs "${CMAKE_BUILD_TYPE}")
+        endif()
+
+        foreach(_config ${_buildConfigs})
+            string(TOUPPER "${_config}" _config)
+
+            get_target_property(_libPath ${_lib} IMPORTED_LOCATION_${_config})
+            if(NOT (_libPath AND EXISTS ${_libPath}))
+                message(STATUS "collect_paths_to_shared_libs: path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
+                get_target_property(_libPath ${_lib} IMPORTED_LOCATION_RELEASE)
+                if(NOT (_libPath AND EXISTS ${_libPath}))
+                    if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
+                        set(_libPath ${_nonBuildSpecificLibPath})
+                    else()
+                        message(WARNING "collect_paths_to_shared_libs: path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
+                        continue()
+                    endif()
+                endif()
+            endif()
+
+            add_path_to_shared_libs(${iTargetName} ${_config} ${_libPath})
+        endforeach()
     endforeach()
-
-    list(REMOVE_DUPLICATES _libraryPaths)
-    set_property(GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} "${_libraryPaths}")
-endfunction()
-
-
-#[[
-    get_paths_to_shared_libs
-
-    Parameters:
-    iTargetName - name of a target in the project.
-
-    Paths to shared libs for iTargetName are filled when set_up_library(iTargetName) or set_up_executable(iTargetName) are called.
-]]
-function(get_paths_to_shared_libs iTargetName oPaths)
-    get_property(_isSet GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName} SET)
-    if(NOT _isSet)
-        set(${oPaths} "" PARENT_SCOPE)
-        return()
-    endif()
-
-    get_property(_paths GLOBAL PROPERTY PATHS_TO_SHARED_LIBS__${iTargetName})
-    set(${oPaths} "${_paths}" PARENT_SCOPE)
 endfunction()
 
 
@@ -213,6 +272,12 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         PROPERTIES
             EXPORT_NAME ${iLibName}
             PUBLIC_HEADER "${iLibHeaders}"
+            # POSITION_INDEPENDENT_CODE ON
+            # OUTPUT_NAME
+            # ARCHIVE_OUTPUT_NAME
+            # LIBRARY_OUTPUT_NAME
+            # RUNTIME_OUTPUT_NAME
+            # RUNTIME_OUTPUT_NAME_DEBUG
     )
     ####################################################################
 
@@ -239,7 +304,7 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     list(APPEND _registeredTargets ${iLibName})
     set_property(GLOBAL PROPERTY REGISTERED_TARGETS "${_registeredTargets}")
 
-    create_list_of_paths_to_shared_libs(${iLibName})
+    collect_paths_to_shared_libs(${iLibName})
 endfunction()
 
 
@@ -276,7 +341,7 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
     list(APPEND _registeredTargets ${iExeName})
     set_property(GLOBAL PROPERTY REGISTERED_TARGETS "${_registeredTargets}")
 
-    create_list_of_paths_to_shared_libs(${iExeName})
+    collect_paths_to_shared_libs(${iExeName})
 endfunction()
 
 
@@ -313,12 +378,12 @@ endfunction()
 
 
 #[[
-    get_linked_shared_library_dirs
+    get_shared_library_dirs
 
-    Returns directories, containing shared libraries, which iTargets are linked to.
+    Returns directories, containing 3rd-party shared libraries, which iTargets are linked to.
     If a shared library is in iTargets or defined in the project, it's path is not returned.
 ]]
-function(get_linked_shared_library_dirs oLibraryDirs iTargets)
+function(get_shared_library_dirs oLibraryDirs iTargets iBuildType)
     set(_libraryDirs "")
 
     foreach(_target ${iTargets})
@@ -331,8 +396,8 @@ function(get_linked_shared_library_dirs oLibraryDirs iTargets)
             continue()
         endif()
 
-        get_paths_to_shared_libs(${_target} _libPaths)
-        message(DEBUG "get_linked_shared_library_dirs: target " ${_target} " shared lib paths: ${_libPaths}")
+        get_paths_to_shared_libs(${_target} ${iBuildType} _libPaths)
+        message(DEBUG "get_shared_library_dirs: target " ${_target} " shared lib paths: ${_libPaths}")
         foreach(_libPath ${_libPaths})
             get_filename_component(_libDir ${_libPath} DIRECTORY)
             list(APPEND _libraryDirs ${_libDir})
@@ -380,7 +445,7 @@ function(set_up__env_vscode__file)
     is_multiconfig(IS_MULTICONFIG)
     if (IS_MULTICONFIG)
         set(_libraryDirs "")
-        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}") #TODO Get shared library paths with respect to $<CONFIG>.
+        get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "$<CONFIG>")
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
@@ -393,7 +458,7 @@ function(set_up__env_vscode__file)
         endif()
     else()
         set(_libraryDirs "")
-        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}")
+        get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${CMAKE_BUILD_TYPE}")
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
@@ -435,7 +500,7 @@ function(set_up__set_env__script)
     is_multiconfig(IS_MULTICONFIG)
     if (IS_MULTICONFIG)
         set(_libraryDirs "")
-        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}") #TODO Get shared library paths with respect to $<CONFIG>.
+        get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "$<CONFIG>")
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
@@ -448,7 +513,7 @@ function(set_up__set_env__script)
         endif()
     else()
         set(_libraryDirs "")
-        get_linked_shared_library_dirs(_libraryDirs "${_registeredTargets}")
+        get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${CMAKE_BUILD_TYPE}")
         message(DEBUG "Shared lib dirs: ${_libraryDirs}")
         cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
