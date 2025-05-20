@@ -1,4 +1,24 @@
-include_guard(GLOBAL)  # Ensures this file is included only once
+include_guard(GLOBAL)  # Ensures this file is included only once.
+
+#[[
+    This file contains functions and variables to set up targets, install them and generate scripts and auxilliary files.
+    Dictionary:
+        - configure time:
+            CMake processes the top-level CMakeLists.txt and all subdirectories to understand your project structure, options, and dependencies.
+        - generation time:
+            CMake generates the build system files (e.g., Makefiles, Visual Studio project files) based on the configuration.
+            Dependencies and build rules are created.
+        - build time:
+            CMake builds the project using the generated build system files.
+            This is when the actual compilation and linking of the code happens.
+        - install time:
+            CMake installs the built targets to the specified locations.
+            This is when the final binaries, libraries, and resources are copied to their installation directories.
+
+        Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
+]]
+
+
 include(CMakePackageConfigHelpers)
 
 
@@ -9,8 +29,6 @@ set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
-set(PACKAGE_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${SUBDIR_INCLUDE}") #TODO Remove
-set(PACKAGE_LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${SUBDIR_SHARED}") #TODO Remove
 
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
@@ -416,12 +434,12 @@ endfunction()
     Places to build directory and installs to ${SUBDIR_EXECUTABLE} a file with name and content,
     which are returned by fileNameGetter(oFileName) and contentGetter(iConfig oContent) functions.
     If a generator supports multi-config, temporary files are generated for every configuration (Debug, Release, etc.) during
-    configuration and copied to ${SUBDIR_EXECUTABLE} during build of corresponding $<CONFIG>.
+    configure/generation time and copied to ${SUBDIR_EXECUTABLE} during build of corresponding $<CONFIG>.
     oFileName - is also a name of an utility target (created within the function) that depends on the output file, if multi-config generator is used.
     It must not contain characters that are not allowed in target names; dots are replaced with underscores.
 
     parameters:
-        iAddExeRights - if TRUE, the file is given execute permission (Unix only).
+        iAddExePermission - if TRUE, the file is given execute permission (Unix only).
 ]]
 function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission)
     is_multiconfig(IS_MULTICONFIG)
@@ -465,7 +483,7 @@ function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission)
         cmake_language(CALL ${iContentGetterName} "${CMAKE_BUILD_TYPE}" _fileContent)
         set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${_fileName}")
 
-        # Add the file to build dir(s).
+        # Add the file to build dir(s) at configire time.
         file(WRITE "${_filePath}" "${_fileContent}")
         if (UNIX AND iAddExePermission)
             execute_process(COMMAND chmod +x "${_filePath}")
@@ -687,16 +705,13 @@ function(generate__run__script_content iBuildType oScriptContent)
     set(EXECUTABLE_NAME_WE "param\\nEXECUTABLE_NAME_WE\\nparam")
     ####################################################################
 
-    # Values to replace the param-strings with.
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
         message(WARNING "set_up__run__script: The project entrypoint executable is not set.")
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
-    ####################################################################
 
-    # Generate script content.
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
     else()
