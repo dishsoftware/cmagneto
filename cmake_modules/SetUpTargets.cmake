@@ -35,6 +35,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_SHARED}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}")
 
+# These postfixes do not affect on executable target output names.
+set(CMAKE_DEBUG_POSTFIX "_D")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_RDI")
+set(CMAKE_MINSIZEREL_POSTFIX "_MSR")
+
 
 function(print_platform_and_compiler)
     message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
@@ -331,13 +336,10 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     set_target_properties(${iLibName}
         PROPERTIES
             EXPORT_NAME ${iLibName}
+            OUTPUT_NAME ${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iLibName}
             PUBLIC_HEADER "${iLibHeaders}"
-            # POSITION_INDEPENDENT_CODE ON
-            # OUTPUT_NAME
-            # ARCHIVE_OUTPUT_NAME
-            # LIBRARY_OUTPUT_NAME
-            # RUNTIME_OUTPUT_NAME
-            # RUNTIME_OUTPUT_NAME_DEBUG
+            # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
+            # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.
     )
     ####################################################################
 
@@ -386,6 +388,12 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
 
     target_include_directories(${iExeName} PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    )
+
+    set_target_properties(${iExeName}
+        PROPERTIES
+            EXPORT_NAME ${iExeName}
+            OUTPUT_NAME ${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iExeName}
     )
     ####################################################################
 
