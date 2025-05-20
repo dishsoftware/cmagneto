@@ -268,9 +268,18 @@ function(set_up_project)
         DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
     )
 
-    # Generate the ${PROJECT_NAME}Config.cmake using the template .in file.
+    # Create a template "${PROJECT_NAME}Config.cmake.in" file.
+    set(_cmake_in__content [[
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+    ]])
+    set(_cmake_in__path "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
+    file(WRITE "${_cmake_in__path}" "${_cmake_in__content}")
+
+    # Generate the ${PROJECT_NAME}Config.cmake using the template file.
     configure_package_config_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+        "${_cmake_in__path}"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         INSTALL_DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
     )
