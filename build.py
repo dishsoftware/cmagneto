@@ -20,6 +20,13 @@ class RunType(Enum):
     Install = 2
 
 
+class ConstMetaClass(type):
+    def __setattr__(cls, key, value):
+        if key in cls.__dict__:
+            raise AttributeError(f"Cannot modify const member '{key}'")
+        super().__setattr__(key, value)
+
+
 class BuildRunner:
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
         if (iToolsetName is None) or (iToolsetName.isspace()):
@@ -136,7 +143,7 @@ class BuildRunner:
         if pathToAdd not in cmakePrefixPaths.split(os.pathsep):
             os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, pathToAdd])
 
-    class _GraphvizTargetDependencyGraph:
+    class _GraphvizTargetDependencyGraph(metaclass=ConstMetaClass):
         __GRAPHS_DIR = "graphviz"
         __GRAPH_NAME = "targets"
         __GRAPH_SRC_SUBDIR = __GRAPH_NAME + "_src"
