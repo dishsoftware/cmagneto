@@ -61,12 +61,7 @@ set(contacts_SOURCES ${_regular_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
 
 
 # Target
-if(LIB_CONTACTS_SHARED)
-    set(_LIB_TYPE SHARED)
-else()
-    set(_LIB_TYPE STATIC)
-endif()
-
+get_library_type(contacts _LIB_TYPE)
 add_library(contacts ${_LIB_TYPE})
 # If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
 # No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.

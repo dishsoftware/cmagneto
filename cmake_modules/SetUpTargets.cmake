@@ -306,6 +306,44 @@ endfunction()
 
 
 #[[
+    get_library_type
+
+    Defines cache variable LIB_<iLibName>_SHARED.
+    Returns the type of a library (STATIC or SHARED) according to value of LIB_<iLibName>_SHARED or BUILD_SHARED_LIBS is the LIB_<iLibName>_SHARED is DEFAULT.
+    If iLibName is shared, -DLIB_<iLibName>_SHARED define flag is added to compilation.
+]]
+function(get_library_type iLibName oLibType)
+    string(TOUPPER "${iLibName}" _libNameUC)
+    set(_cacheVarName "LIB_${_libNameUC}_SHARED")
+    get_property(_cachedVarVal CACHE "${_cacheVarName}" PROPERTY VALUE)
+
+    # Create a cache variable with string input.
+    set("${_cacheVarName}" "DEFAULT" CACHE STRING "Build \"${iLibName}\" as a shared library. Can be ON, OFF, or DEFAULT.")
+
+    # Restrict allowed values in GUIs like CMake GUI or ccmake.
+    set_property(CACHE "${_cacheVarName}" PROPERTY STRINGS ON OFF DEFAULT)
+
+    if("${_cachedVarVal}" STREQUAL "ON")
+        set(_libType "SHARED")
+    elseif("${_cachedVarVal}" STREQUAL "OFF")
+        set(_libType "STATIC")
+    else()
+        if(BUILD_SHARED_LIBS)
+            set(_libType "SHARED")
+        else()
+            set(_libType "STATIC")
+        endif()
+    endif()
+
+    set(${oLibType} ${_libType} PARENT_SCOPE)
+    if(${_libType} STREQUAL "SHARED")
+        add_definitions(-D${_cacheVarName}) # Define preproceccor macro LIB_LIBNAME_SHARED.
+    endif()
+    message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
+endfunction()
+
+
+#[[
     set_up_library
 
     Sets up building and installation of a library-target iLibName.
@@ -323,7 +361,7 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
 
     target_sources(${iLibName}
         PRIVATE
-            ${iLibSources}
+            ${iLibSources} # TODO Check if it works with INTERFACE library and empty iLibSources.
             $<BUILD_INTERFACE:${iLibHeaders}> # Headers are added to make them appear in IDEs like Visual Studio.
     )
 

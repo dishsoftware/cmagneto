@@ -4,6 +4,7 @@ import subprocess
 import shutil
 import platform
 import argparse
+import re
 from enum import Enum
 
 
@@ -505,8 +506,43 @@ def main():
         default=RunType.Full.name,
         help=f"Specifies run type. Full is default and triggers both build (generation and compiling) and installing."
     )
-    parser.add_argument("--lib-contacts-shared", action="store_true", help="Build Contacts library as shared.")
-    args = parser.parse_args()
+    parser.add_argument("--BUILD_SHARED_LIBS", action="store_true", help="Build implicit type (DEFAULT) libraries as shared. " \
+    "It is possible to override this option for each library using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase.")
+
+    args, unknownArgs = parser.parse_known_args()
+    # Parse unknown arguments that are in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+    libSharedOptions = {}
+    for arg in unknownArgs:
+        if not arg.startswith("--"):
+            continue
+
+        # Remove leading "--".
+        processedArg = arg[2:]
+
+        # Check if the argument is in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+        optionAndVal = processedArg.split("=")
+        if len(optionAndVal) != 2:
+            continue
+
+        option = optionAndVal[0]
+        optionVal = optionAndVal[1]
+
+        if not option.startswith("LIB_") or not option.endswith("_SHARED"):
+            continue
+
+        if optionVal not in ["ON", "OFF", "DEFAULT"]:
+            continue
+
+        # Remove "LIB_" prefix and "_SHARED" suffix.
+        libName = option[4:-7]
+
+        # Check if the library name is valid.
+        if not re.match(r"^(?=.*[A-Z])[A-Z0-9_]+$", libName):
+            print(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. At least one letter is required.")
+            continue
+
+        libSharedOptions[libName] = optionVal
+        unknownArgs.remove(arg)
 
     toolset = ToolsetEnum[args.toolset]
     if toolset not in BUILD_RUNNERS:
@@ -515,8 +551,23 @@ def main():
 
     buildTypes = {BuildType[buildType] for buildType in args.build_types}
     runType = RunType[args.run_type]
-    lib_contacts_shared_flag = "-DLIB_CONTACTS_SHARED=ON" if args.lib_contacts_shared else "-DLIB_CONTACTS_SHARED=OFF"
-    cmakeFlags = [lib_contacts_shared_flag]
+
+    flag__BUILD_SHARED_LIBS = "-DBUILD_SHARED_LIBS=ON" if args.BUILD_SHARED_LIBS else "-DBUILD_SHARED_LIBS=OFF"
+    cmakeFlags = [flag__BUILD_SHARED_LIBS]
+
+    for lib, sharedOption in libSharedOptions.items():
+        if sharedOption == "ON":
+            cmakeFlags.append(f"-DLIB_{lib}_SHARED=ON")
+        elif sharedOption == "OFF":
+            cmakeFlags.append(f"-DLIB_{lib}_SHARED=OFF")
+        elif sharedOption == "DEFAULT":
+            # Do nothing.
+            pass
+        else:
+            print(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
+
+    for processedArg in unknownArgs:
+        print(f"Unknown argument: \"{processedArg}\". Ignored.")
 
     buildRunner = BUILD_RUNNERS[toolset](buildTypes)
     buildRunner.setCMakeFlags(cmakeFlags)

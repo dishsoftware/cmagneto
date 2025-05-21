@@ -14,19 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
 include(SetUpTargets)
 
-
 print_platform_and_compiler()
-
-
-option(LIB_CONTACTS_SHARED "Build Contacts as a shared library." OFF)
-if(LIB_CONTACTS_SHARED)
-    message(STATUS "Contacts library will be built as SHARED.")
-    add_definitions(-DLIB_CONTACTS_SHARED) # Define preproceccor macro LIB_CONTACTS_SHARED.
-else()
-    message(STATUS "Contacts library will be built as STATIC.")
-endif()
-
-
 set__IS_MULTTCONFIG__property()
 
 
