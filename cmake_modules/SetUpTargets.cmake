@@ -103,6 +103,43 @@ set_property(GLOBAL PROPERTY REGISTERED_TARGETS "")
 
 
 #[[
+    check_target_name_validity
+
+    Checks if a target name is valid and not already registered. Registered target names are compared case-insensitively.
+    Valid target names:
+        * must start with a letter or underscore;
+        * must contain only letters, digits, and underscores;
+        * must not be made only of underscores.
+]]
+function(check_target_name_validity iTargetName)
+    # Reject names made only of underscores
+    string(REGEX MATCH "^_+$" _only_underscores "${iTargetName}")
+    if(_only_underscores)
+        message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must not be composed only of underscores.")
+    endif()
+
+    string(REGEX MATCH "^[a-zA-Z_][a-zA-Z0-9_]*$" _isValid "${iTargetName}")
+    if(NOT _isValid)
+        message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
+    endif()
+
+    # Check if the target name is already registered.
+    string(TOUPPER "${iTargetName}" _targetNameUC)
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+    foreach(_registeredTarget IN LISTS _registeredTargets)
+        string(TOUPPER "${_registeredTarget}" _registeredTargetUC)
+        if(_targetNameUC STREQUAL _registeredTargetUC)
+            if(iTargetName STREQUAL _registeredTarget)
+                message(FATAL_ERROR "Target name \"${iTargetName}\" is already registered.")
+            else()
+                message(FATAL_ERROR "Target name \"${iTargetName}\" conflicts with previosly registered \"${_registeredTarget}\".")
+            endif()
+        endif()
+    endforeach()
+endfunction()
+
+
+#[[
     add_path_to_shared_libs
 
     Parameters:
@@ -357,6 +394,7 @@ endfunction()
     iOtherResources - other resources (icons. jsons etc.).
 ]]
 function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherResources)
+    check_target_name_validity(${iLibName})
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
     target_sources(${iLibName}
@@ -422,6 +460,7 @@ endfunction()
     iOtherResources - other resources (icons. jsons etc.).
 ]]
 function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherResources)
+    check_target_name_validity(${iExeName})
     target_sources(${iExeName} PRIVATE ${iExeSources} ${iExeHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iExeName} PRIVATE

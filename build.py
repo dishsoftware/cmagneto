@@ -531,7 +531,7 @@ def main():
     args, unknownArgs = parser.parse_known_args()
     # Parse unknown arguments that are in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
     libSharedOptions = {}
-    for arg in unknownArgs:
+    for arg in unknownArgs[:]:
         if not arg.startswith("--"):
             continue
 
@@ -556,8 +556,12 @@ def main():
         libName = option[4:-7]
 
         # Check if the library name is valid.
-        if not re.match(r"^(?=.*[A-Z])[A-Z0-9_]+$", libName):
-            print(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. At least one letter is required.")
+        if re.match(r"^_+$", libName):
+            print(f"Invalid library name \"{libName}\". It must not be composed only of underscores.")
+            continue
+
+        if not re.match(r"^[A-Z_][A-Z0-9_]*$", libName):
+            print(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
             continue
 
         libSharedOptions[libName] = optionVal
