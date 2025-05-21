@@ -5,6 +5,7 @@ import shutil
 import platform
 import argparse
 import re
+import shlex
 from enum import Enum
 
 
@@ -185,13 +186,15 @@ class BuildRunner:
             # Create picture from dot files.
             pictureFilePath = os.path.join(iBuildDir, BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR, BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_NAME + "." + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT)
             try:
-                subprocess.run([
+                command = [
                     os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
                     "-T" + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT.lower(),
                     BuildRunner._GraphvizTargetDependencyGraph.DOT_FILE_PATH(iBuildDir),
                     "-o",
                     pictureFilePath
-                ], check=True)
+                ]
+                print("Running command:", shlex.join(command))
+                subprocess.run(command, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"Graphviz can't create target dependency graph picture: {e}")
                 return
@@ -218,11 +221,13 @@ class BuildRunner:
         # Create dot files.
         dotFilePath = os.path.join(graphSrcDir, DOT_FILE_NAME)
         try:
-            subprocess.run([
+            command = [
                 "cmake",
                 "--graphviz=" + dotFilePath,
                 iBuildDir
-            ], check=True)
+            ]
+            print("Running command:", shlex.join(command))
+            subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Can't create Graphviz target dependency graph: {e}")
             return
@@ -234,13 +239,15 @@ class BuildRunner:
 
         # Create picture from dot files.
         try:
-            subprocess.run([
+            command = [
                 os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
                 "-T" + PICTURE_FORMAT.lower(),
                 dotFilePath,
                 "-o",
                 pictureFilePath
-            ], check=True)
+            ]
+            print("Running command:", shlex.join(command))
+            subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Graphviz can't create target dependency graph picture: {e}")
             return
@@ -273,7 +280,9 @@ class BuiildRunnerSingleConfig(BuildRunner):
         BuildRunner._PREPARE_DIR(buildDir)
         os.chdir(buildDir)
         self._set_dependency_paths()
-        subprocess.run(self.__compose_generate_command(iBuildType), check=True)
+        command = self.__compose_generate_command(iBuildType)
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
         os.chdir(self.srcDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
@@ -312,7 +321,9 @@ class BuiildRunnerSingleConfig(BuildRunner):
         print(text + "...")
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
-        subprocess.run(["cmake", "--build", self.buildDirForBuildType(iBuildType)], check=True)
+        command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
 
         print(text + " finished.")
 
@@ -323,7 +334,9 @@ class BuiildRunnerSingleConfig(BuildRunner):
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
         # It does not matter from which folder "cmake --install" is called, because the build directory is absolute.
-        subprocess.run(["cmake", "--install", self.buildDirForBuildType(iBuildType)], check=True)
+        command = ["cmake", "--install", self.buildDirForBuildType(iBuildType)]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
 
         print(text + " finished.")
 
@@ -352,7 +365,9 @@ class BuildRunnerMultiConfig(BuildRunner):
         BuildRunner._PREPARE_DIR(self.buildDir())
         os.chdir(self.buildDir())
         self._set_dependency_paths()
-        subprocess.run(self.__compose_generate_command(), check=True)
+        command = self.__compose_generate_command()
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
         os.chdir(self.srcDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
@@ -392,11 +407,13 @@ class BuildRunnerMultiConfig(BuildRunner):
         print(text + "...")
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
-        subprocess.run([
+        command = [
             "cmake",
             "--build", self.buildDir(),
             "--config", iBuildType.name
-        ], check=True)
+        ]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
 
         print(text + " finished.")
 
@@ -407,12 +424,14 @@ class BuildRunnerMultiConfig(BuildRunner):
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
         # It does not matter from which folder "cmake --install" is called, because the build directory is absolute.
-        subprocess.run([
+        command = [
             "cmake",
             "--install", self.buildDir(),
             "--config", iBuildType.name,
             "--prefix", self.installDirForBuildType(iBuildType)
-        ], check=True)
+        ]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
 
         print(text + " finished.")
 
