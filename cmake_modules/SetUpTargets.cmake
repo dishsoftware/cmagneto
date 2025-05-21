@@ -495,8 +495,9 @@ endfunction()
 
     parameters:
         iAddExePermission - if TRUE, the file is given execute permission (Unix only).
+        iInstall - if TRUE, the file is installed to ${SUBDIR_EXECUTABLE}.
 ]]
-function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission)
+function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall)
     is_multiconfig(IS_MULTICONFIG)
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
@@ -546,18 +547,20 @@ function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission)
     endif()
 
     # Install the file.
-    if (UNIX AND iAddExePermission)
-        install(
-            FILES "${_filePath}"
-            DESTINATION "${SUBDIR_EXECUTABLE}"
-            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        )
-    else()
-        install(
-            FILES "${_filePath}"
-            DESTINATION "${SUBDIR_EXECUTABLE}"
-            PERMISSIONS OWNER_READ OWNER_WRITE
-        )
+    if(iInstall)
+        if(UNIX AND iAddExePermission)
+            install(
+                FILES "${_filePath}"
+                DESTINATION "${SUBDIR_EXECUTABLE}"
+                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+            )
+        else()
+            install(
+                FILES "${_filePath}"
+                DESTINATION "${SUBDIR_EXECUTABLE}"
+                PERMISSIONS OWNER_READ OWNER_WRITE
+            )
+        endif()
     endif()
 endfunction()
 
@@ -614,7 +617,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__3rd_party_shared_libs__list)
-    set_up_file("get__3rd_party_shared_libs__file_name" "generate__3rd_party_shared_libs__content" FALSE)
+    set_up_file("get__3rd_party_shared_libs__file_name" "generate__3rd_party_shared_libs__content" FALSE TRUE)
 endfunction()
 
 
@@ -685,7 +688,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__set_env__script)
-    set_up_file("get__set_env__script_file_name" "generate__set_env__script_content" TRUE)
+    set_up_file("get__set_env__script_file_name" "generate__set_env__script_content" TRUE TRUE)
 endfunction()
 
 
@@ -733,7 +736,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__env_vscode__file)
-    set_up_file("get__env_vscode__file_name" "generate__env_vscode__file_content" FALSE)
+    set_up_file("get__env_vscode__file_name" "generate__env_vscode__file_content" FALSE FALSE)
 endfunction()
 
 
@@ -789,5 +792,5 @@ endfunction()
     The function must be called after set_up__set_env__script() is called.
 ]]
 function(set_up__run__script)
-    set_up_file("get__run__script_file_name" "generate__run__script_content" TRUE)
+    set_up_file("get__run__script_file_name" "generate__run__script_content" TRUE TRUE)
 endfunction()
