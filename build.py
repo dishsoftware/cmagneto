@@ -369,7 +369,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
     def run(self, iRunType: RunType) -> None:
         buildRequired = iRunType == RunType.Full or iRunType == RunType.Build or \
-            (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDirForBuildType(buildType))
+            (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDir())
 
         if (buildRequired):
             self.__generate()

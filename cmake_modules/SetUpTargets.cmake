@@ -555,6 +555,7 @@ function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission iI
             # Write contents to temporary files at configure time to copy them lately at build time.
             # Reason: there is no way to write $<CONFIG>-dependent generic contents to files at build time,
             # because CMake treats, for example, commas in JSONs as delimiters between arguments of generator expressions.
+            # UPDATE: It is probably possible to escape commas with $<COMMA> (and other generator expression special characters) in contents.
             file(WRITE "${_TMP_FILE_DIR}/${_config}/${_fileName}" "${_fileContent}")
         endforeach()
 
