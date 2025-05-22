@@ -19,7 +19,8 @@ class BuildType(Enum):
 class RunType(Enum):
     Full = 0 # Build and install.
     Build = 1
-    Install = 2
+    RunTests = 2
+    Install = 3
 
 
 class ConstMetaClass(type):
@@ -82,6 +83,10 @@ class BuildRunner:
             return self.__buildDir
         else:
             return os.path.join(self.__buildDir, iBuildType.name)
+
+    def testBuildDir(self, iBuildType) -> str:
+        """Returns the absolute path to the directory with CMake build files for tests for the specified build type."""
+        return os.path.join(self.buildDirForBuildType(iBuildType), "tests")
 
     def installDir(self) -> str:
         """Returns the absolute path to the install directory."""
@@ -264,10 +269,13 @@ class BuiildRunnerSingleConfig(BuildRunner):
         for buildType in self.buildTypes():
             if (
                 iRunType == RunType.Full or iRunType == RunType.Build or
-                iRunType == RunType.Install and not os.path.exists(self.buildDirForBuildType(buildType))
+                (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDirForBuildType(buildType))
             ):
                 self.__generate(buildType)
                 self.__compile(buildType)
+
+            if (iRunType == RunType.Full or iRunType == RunType.RunTests):
+                self._runTests(buildType)
 
             if (iRunType == RunType.Full or iRunType == RunType.Install):
                 self.__install(buildType)
@@ -327,6 +335,20 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         print(text + " finished.")
 
+    def _runTests(self, iBuildType: BuildType) -> None:
+        text = f"Running tests ({iBuildType.name})"
+        print(text + "...")
+
+        command = [
+            "ctest",
+            "--test-dir", self.testBuildDir(iBuildType),
+            "--output-on-failure" # Print the output of tests that fail, directly to a terminal. {testBuildDir(iBuildType)}/Testing/Temporary/LastTest.log is still created.
+        ]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
+
+        print(text + " finished.")
+
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
         print(text + "...")
@@ -346,16 +368,20 @@ class BuildRunnerMultiConfig(BuildRunner):
         super().__init__(iToolsetName, iGeneratorName, iCPPCompilerName, True, iBuildTypes)
 
     def run(self, iRunType: RunType) -> None:
-        if (
-            iRunType == RunType.Full or iRunType == RunType.Build or
-            iRunType == RunType.Install and not os.path.exists(self.buildDirForBuildType(buildType))
-        ):
+        buildRequired = iRunType == RunType.Full or iRunType == RunType.Build or \
+            (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDirForBuildType(buildType))
+
+        if (buildRequired):
             self.__generate()
-            for buildType in self.buildTypes():
+
+        for buildType in self.buildTypes():
+            if (buildRequired):
                 self.__compile(buildType)
 
-        if (iRunType == RunType.Full or iRunType == RunType.Install):
-            for buildType in self.buildTypes():
+            if (iRunType == RunType.Full or iRunType == RunType.RunTests):
+                self._runTests(buildType)
+
+            if (iRunType == RunType.Full or iRunType == RunType.Install):
                 self.__install(buildType)
 
     def __generate(self) -> None:
@@ -411,6 +437,20 @@ class BuildRunnerMultiConfig(BuildRunner):
             "cmake",
             "--build", self.buildDir(),
             "--config", iBuildType.name
+        ]
+        print("Running command:", shlex.join(command))
+        subprocess.run(command, check=True)
+
+        print(text + " finished.")
+
+    def _runTests(self, iBuildType: BuildType) -> None:
+        text = f"Running tests ({iBuildType.name})"
+        print(text + "...")
+
+        command = [
+            "ctest",
+            "--test-dir", self.testBuildDir(iBuildType),
+            "--output-on-failure" # Print the output of tests that fail, directly to a terminal. {testBuildDir(iBuildType)}/Testing/Temporary/LastTest.log is still created.
         ]
         print("Running command:", shlex.join(command))
         subprocess.run(command, check=True)
