@@ -40,6 +40,11 @@ set(CMAKE_DEBUG_POSTFIX "_D")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "_RDI")
 set(CMAKE_MINSIZEREL_POSTFIX "_MSR")
 
+function(compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
+    set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
+endfunction()
+
+
 
 function(print_platform_and_compiler)
     message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
@@ -409,10 +414,11 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
             $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>
     )
 
+    compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
     set_target_properties(${iLibName}
         PROPERTIES
             EXPORT_NAME ${iLibName}
-            OUTPUT_NAME ${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iLibName}
+            OUTPUT_NAME ${_binaryOutputName}
             PUBLIC_HEADER "${iLibHeaders}"
             # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
             # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.
@@ -467,10 +473,11 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
+    compose_binary_OUTPUT_NAME(${iExeName} _binaryOutputName)
     set_target_properties(${iExeName}
         PROPERTIES
             EXPORT_NAME ${iExeName}
-            OUTPUT_NAME ${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iExeName}
+            OUTPUT_NAME ${_binaryOutputName}
     )
     ####################################################################
 
@@ -803,10 +810,11 @@ function(generate__run__script_content iBuildType oScriptContent)
 
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        message(WARNING "set_up__run__script: The project entrypoint executable is not set.")
+        message(WARNING "generate__run__script_content: The project entrypoint executable is not set.")
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
+    compose_binary_OUTPUT_NAME(${_exeName} _exeName)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(_template_script_path "${RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
