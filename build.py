@@ -84,10 +84,6 @@ class BuildRunner:
         else:
             return os.path.join(self.__buildDir, iBuildType.name)
 
-    def testBuildDir(self, iBuildType) -> str:
-        """Returns the absolute path to the directory with CMake build files for tests for the specified build type."""
-        return os.path.join(self.buildDirForBuildType(iBuildType), "tests")
-
     def installDir(self) -> str:
         """Returns the absolute path to the install directory."""
         return self.__installDir
@@ -107,6 +103,25 @@ class BuildRunner:
         print(self)
         print(f"{self.__class__.__name__}.run() is not implemented.")
         sys.exit(1)
+
+    def _runTests(self, iBuildType: BuildType) -> None:
+        text = f"Running tests ({iBuildType.name})"
+        print(text + "...")
+
+        run_tests__scriptDir = os.path.join(self.buildDirForBuildType(iBuildType), BuildRunner.SUBDIR_EXECUTABLE)
+        if (self.supportsMultiConfig()):
+            run_tests__scriptDir = os.path.join(run_tests__scriptDir, iBuildType.name)
+
+        print(f"Searching for \"{BuildRunner.RUN_TESTS__FILE_NAME}\" in \"{run_tests__scriptDir}\"...")
+        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME)
+        if run_tests__scriptName is None:
+            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME}\" not found in \"{run_tests__scriptDir}\". Tests are not run.")
+            sys.exit(1)
+
+        run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
+        BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
+
+        print(text + " finished.")
 
     def _set_dependency_paths(self) -> None:
         pass
@@ -260,6 +275,40 @@ class BuildRunner:
             print("Graphviz is not found. Target dependency graph picture is not created.")
             return
 
+    @staticmethod
+    def FIND_IN_DIR_FILE_WITH_NAME(iDir: str, iFileNameWE: str) -> str | None:
+        """
+        Returns file_name_with_extension of a file with the name_without_extension iFileNameWE in the directory iDir. Search is non-recursive.
+        """
+        for fileName in os.listdir(iDir):
+            fileNameWE, ext = os.path.splitext(fileName)
+            if fileNameWE == iFileNameWE and os.path.isfile(os.path.join(iDir, fileName)):
+                return fileName
+
+        return None
+
+    @staticmethod
+    def RUN_SCRIPT(iScriptPath: str) -> None:
+        OS_NAME = platform.system()
+        filePathWE, ext = os.path.splitext(iScriptPath)
+        command = None
+        if OS_NAME == "Windows":
+            if ext == ".bat":
+                command = [iScriptPath]
+        else: # Linux, MacOS
+            if ext == ".sh":
+                command = [iScriptPath]
+
+        if command is None:
+            print(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            sys.exit(1)
+        else:
+            print(f"Running command: {shlex.join(command)}")
+            subprocess.run(command, check=True)
+
+    RUN_TESTS__FILE_NAME = "run_tests"
+    SUBDIR_EXECUTABLE = "bin"
+
 
 class BuiildRunnerSingleConfig(BuildRunner):
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
@@ -330,20 +379,6 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
         command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
-
-        print(text + " finished.")
-
-    def _runTests(self, iBuildType: BuildType) -> None:
-        text = f"Running tests ({iBuildType.name})"
-        print(text + "...")
-
-        command = [
-            "ctest",
-            "--test-dir", self.testBuildDir(iBuildType),
-            "--output-on-failure" # Print the output of tests that fail, directly to a terminal. {testBuildDir(iBuildType)}/Testing/Temporary/LastTest.log is still created.
-        ]
         print("Running command:", shlex.join(command))
         subprocess.run(command, check=True)
 
@@ -437,20 +472,6 @@ class BuildRunnerMultiConfig(BuildRunner):
             "cmake",
             "--build", self.buildDir(),
             "--config", iBuildType.name
-        ]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
-
-        print(text + " finished.")
-
-    def _runTests(self, iBuildType: BuildType) -> None:
-        text = f"Running tests ({iBuildType.name})"
-        print(text + "...")
-
-        command = [
-            "ctest",
-            "--test-dir", self.testBuildDir(iBuildType),
-            "--output-on-failure" # Print the output of tests that fail, directly to a terminal. {testBuildDir(iBuildType)}/Testing/Temporary/LastTest.log is still created.
         ]
         print("Running command:", shlex.join(command))
         subprocess.run(command, check=True)

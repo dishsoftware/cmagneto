@@ -29,6 +29,7 @@ set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
+set(SUBDIR_CTESTTESTFILE "tests")
 
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
@@ -696,6 +697,27 @@ endfunction()
 
 
 #[[
+    generate__shared_lib_dirs__string_value
+
+    Call "set "%{oEnvString}"" on Windows or "export ${oEnvString}" on Unix to set the paths to 3rd-party shared libs.
+
+    TODO Check if the function is required.
+]]
+function(generate__shared_lib_dirs__string_value iDirs oEnvString)
+    cmake_path(CONVERT "${iDirs}" TO_NATIVE_PATH_LIST _dirsNative)
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(_envString "Path=${_dirsNative};%Path%")
+    else()
+        set(_envString "LD_LIBRARY_PATH=\"${_dirsNative}:${LD_LIBRARY_PATH}\"")
+    endif()
+
+    set(${oEnvString} "${_envString}" PARENT_SCOPE)
+endfunction()
+
+
+
+#[[
     generate__set_env__script_content
 
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
@@ -841,4 +863,64 @@ endfunction()
 ]]
 function(set_up__run__script)
     set_up_file("get__run__script_file_name" "generate__run__script_content" TRUE TRUE)
+endfunction()
+
+
+set(RUN_TESTS__SCRIPT_NAME_WE "run_tests")
+set(RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
+
+
+#[[
+    generate__run_tests__script_content
+
+    The script runs "set_env" script and "ctest" with proper arguments.
+
+    The function must be called after set_up__set_env__script() is called.
+]]
+function(generate__run_tests__script_content iBuildType oScriptContent)
+# Strings to replace in the template script.
+    set(DIR_WITH_CTESTTESTFILE "param\\nDIR_WITH_CTESTTESTFILE\\nparam")
+    set(BUILD_CONFIG "param\\nBUILD_CONFIG\\nparam")
+    ####################################################################
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(_template_script_path "${RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_WINDOWS}.${SCRIPT_EXTENSION_WINDOWS}")
+    else()
+        set(_template_script_path "${RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${SCRIPT_NAME_SUFFIX_UNIX}.${SCRIPT_EXTENSION_UNIX}")
+    endif()
+
+    is_multiconfig(IS_MULTICONFIG)
+    if(IS_MULTICONFIG)
+        set(_dirWithCtestTestFile "../../${SUBDIR_CTESTTESTFILE}")
+    else()
+        set(_dirWithCtestTestFile "../${SUBDIR_CTESTTESTFILE}")
+    endif()
+
+    file(READ "${_template_script_path}" _scriptContent)
+    string(REPLACE "${DIR_WITH_CTESTTESTFILE}" "${_dirWithCtestTestFile}" _scriptContent "${_scriptContent}")
+    string(REPLACE "${BUILD_CONFIG}" "${iBuildType}" _scriptContent "${_scriptContent}")
+
+    set(${oScriptContent} "${_scriptContent}" PARENT_SCOPE)
+endfunction()
+
+
+function(get__run_tests__script_file_name oFileName)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(${oFileName} "${RUN_TESTS__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
+    else()
+        set(${oFileName} "${RUN_TESTS__SCRIPT_NAME_WE}.${SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+
+#[[
+    set_up__run_tests__script
+
+    Generates, places to build directory and installs "run_tests" script.
+    The script runs "set_env" script and "ctest" with proper arguments.
+
+    The function must be called after set_up__set_env__script() is called.
+]]
+function(set_up__run_tests__script)
+    set_up_file("get__run_tests__script_file_name" "generate__run_tests__script_content" TRUE FALSE)
 endfunction()

@@ -26,6 +26,7 @@ set_up__3rd_party_shared_libs__list()
 set_up__set_env__script()
 set_up__env_vscode__file()
 set_up__run__script()
+set_up__run_tests__script()
 
 
 add_subdirectory(tests)

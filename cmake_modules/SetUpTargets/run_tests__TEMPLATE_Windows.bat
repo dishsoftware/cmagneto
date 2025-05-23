@@ -1,0 +1,30 @@
+@echo off
+
+rem If you found this file in ./build or ./install directory or subdirectories: don't distrubute it.
+rem The file runs "set_env" script, which contains variables in the section "Template parameters".
+rem Values of these variables are specific to the machine the project was built on and set during the process (look into SetUpTargets.cmake).
+rem Replaced values of these variables must not contain `\n`. The character is reserved to mark substrings to replace during build.
+
+
+rem SECTION<Template parameters>START
+set "DIR_WITH_CTESTTESTFILE=param\nDIR_WITH_CTESTTESTFILE\nparam"
+set "BUILD_CONFIG=param\nBUILD_CONFIG\nparam"
+rem SECTION<Template parameters>END
+
+
+rem Check if a template parameter contains '\n'.
+echo %DIR_WITH_CTESTTESTFILE%%BUILD_CONFIG% | findstr "\n" >nul
+if %errorlevel% equ 0 (
+    echo Incorrectly generated script ^(template parameter contains "\n"^): %0
+) else if not defined DIR_WITH_CTESTTESTFILE (
+    echo Incorrectly generated script ^(no test directory specified^): %0
+) else (
+    call "%~dp0/set_env.bat"
+    if defined BUILD_CONFIG (
+        rem Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
+        ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure --build-config %BUILD_CONFIG%
+    ) else (
+        rem Single-config generator, no need to define build config.
+        ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure
+    )
+)
