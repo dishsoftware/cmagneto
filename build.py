@@ -30,6 +30,11 @@ class ConstMetaClass(type):
         super().__setattr__(key, value)
 
 
+def runCommand(iCommand: list[str]) -> None:
+    print(f"Running command: {os.getcwd()}> {shlex.join(iCommand)}")
+    subprocess.run(iCommand, check=True)
+
+
 class BuildRunner:
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
         if (iToolsetName is None) or (iToolsetName.isspace()):
@@ -112,10 +117,9 @@ class BuildRunner:
         if (self.supportsMultiConfig()):
             run_tests__scriptDir = os.path.join(run_tests__scriptDir, iBuildType.name)
 
-        print(f"Searching for \"{BuildRunner.RUN_TESTS__FILE_NAME}\" in \"{run_tests__scriptDir}\"...")
         run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME)
         if run_tests__scriptName is None:
-            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME}\" not found in \"{run_tests__scriptDir}\". Tests are not run.")
+            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME}\" not found in \"{run_tests__scriptDir}\". Tests have not been run.")
             sys.exit(1)
 
         run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
@@ -213,8 +217,7 @@ class BuildRunner:
                     "-o",
                     pictureFilePath
                 ]
-                print("Running command:", shlex.join(command))
-                subprocess.run(command, check=True)
+                runCommand(command)
             except subprocess.CalledProcessError as e:
                 print(f"Graphviz can't create target dependency graph picture: {e}")
                 return
@@ -246,8 +249,7 @@ class BuildRunner:
                 "--graphviz=" + dotFilePath,
                 iBuildDir
             ]
-            print("Running command:", shlex.join(command))
-            subprocess.run(command, check=True)
+            runCommand(command)
         except subprocess.CalledProcessError as e:
             print(f"Can't create Graphviz target dependency graph: {e}")
             return
@@ -266,8 +268,7 @@ class BuildRunner:
                 "-o",
                 pictureFilePath
             ]
-            print("Running command:", shlex.join(command))
-            subprocess.run(command, check=True)
+            runCommand(command)
         except subprocess.CalledProcessError as e:
             print(f"Graphviz can't create target dependency graph picture: {e}")
             return
@@ -303,8 +304,7 @@ class BuildRunner:
             print(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
             sys.exit(1)
         else:
-            print(f"Running command: {shlex.join(command)}")
-            subprocess.run(command, check=True)
+            runCommand(command)
 
     RUN_TESTS__FILE_NAME = "run_tests"
     SUBDIR_EXECUTABLE = "bin"
@@ -338,8 +338,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         os.chdir(buildDir)
         self._set_dependency_paths()
         command = self.__compose_generate_command(iBuildType)
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
         os.chdir(self.srcDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
@@ -379,8 +378,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
         command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
 
         print(text + " finished.")
 
@@ -392,8 +390,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         # It does not matter from which folder "cmake --install" is called, because the build directory is absolute.
         command = ["cmake", "--install", self.buildDirForBuildType(iBuildType)]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
 
         print(text + " finished.")
 
@@ -427,8 +424,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         os.chdir(self.buildDir())
         self._set_dependency_paths()
         command = self.__compose_generate_command()
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
         os.chdir(self.srcDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
@@ -473,8 +469,7 @@ class BuildRunnerMultiConfig(BuildRunner):
             "--build", self.buildDir(),
             "--config", iBuildType.name
         ]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
 
         print(text + " finished.")
 
@@ -491,8 +486,7 @@ class BuildRunnerMultiConfig(BuildRunner):
             "--config", iBuildType.name,
             "--prefix", self.installDirForBuildType(iBuildType)
         ]
-        print("Running command:", shlex.join(command))
-        subprocess.run(command, check=True)
+        runCommand(command)
 
         print(text + " finished.")
 
