@@ -471,6 +471,7 @@ endfunction()
 ]]
 function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherResources)
     check_target_name_validity(${iExeName})
+    add_executable(${PROJECT_NAME}::${iExeName} ALIAS ${iExeName})
     target_sources(${iExeName} PRIVATE ${iExeSources} ${iExeHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iExeName} PRIVATE
