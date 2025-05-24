@@ -12,4 +12,7 @@ string(APPEND _summaryText "C++ Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_C
 string(APPEND _summaryText "C++ Compiler path: ${CMAKE_CXX_COMPILER}\n")
 string(APPEND _summaryText "Build Type: ${CMAKE_BUILD_TYPE}\n")
 
+string(TIMESTAMP _targetCompilationFinishTime "%Y-%m-%d %H:%M:%S" UTC)
+string(APPEND _summaryText "Compilation of targets (test targets are not considered) finished at: ${_targetCompilationFinishTime} UTC\n")
+
 file(WRITE "${OUT}" "${_summaryText}")
