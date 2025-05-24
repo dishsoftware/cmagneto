@@ -15,14 +15,15 @@ SHARED_LIB_DIRS_STRING="param\nSHARED_LIB_DIRS_STRING\nparam"
 # SECTION<Template parameters>END
 
 
-if [[ -n "$SHARED_LIB_DIRS_STRING" && "$SHARED_LIB_DIRS_STRING" != *$"\n"* ]]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -n "$SHARED_LIB_DIRS_STRING" && "$SHARED_LIB_DIRS_STRING" != *$'\n'* ]]; then
     # If SHARED_LIB_DIRS_STRING is not empty and does not contain `\n`.
-    export LD_LIBRARY_PATH="$SHARED_LIB_DIRS_STRING:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="$SCRIPT_DIR/../lib:$SHARED_LIB_DIRS_STRING:${LD_LIBRARY_PATH}"
 elif [[ -z "$SHARED_LIB_DIRS_STRING" ]]; then
     # If SHARED_LIB_DIRS_STRING is empty, do nothing.
     :
 else
-    # SHARED_LIB_DIRS_STRING contains "\n", which is reserved to mark substrings to be replaced during build.
+    # SHARED_LIB_DIRS_STRING contains '\n', which is reserved to mark substrings to be replaced during build.
     SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"
     echo "Incorrectly generated script: $SCRIPT_PATH"
 fi

@@ -11,15 +11,16 @@ EXECUTABLE_NAME_WE="param\nEXECUTABLE_NAME_WE\nparam"
 # SECTION<Template parameters>END
 
 
-if [[ -n "$EXECUTABLE_NAME_WE" && "$EXECUTABLE_NAME_WE" != *$"\n"* ]]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -n "$EXECUTABLE_NAME_WE" && "$EXECUTABLE_NAME_WE" != *$'\n'* ]]; then
     # If EXECUTABLE_NAME_WE is not empty and does not contain `\n`.
-    . set_env.sh
-    ./$EXECUTABLE_NAME_WE "$@"
+    . "$SCRIPT_DIR/set_env.sh"
+    "$SCRIPT_DIR/$EXECUTABLE_NAME_WE" "$@"
 elif [[ -z "$EXECUTABLE_NAME_WE" ]]; then
     # If EXECUTABLE_NAME_WE is empty, do nothing.
     :
 else
-    # EXECUTABLE_NAME_WE contains "\n", which is reserved to mark substrings to be replaced during build.
+    # EXECUTABLE_NAME_WE contains '\n', which is reserved to mark substrings to be replaced during build.
     SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"
     echo "Incorrectly generated script: $SCRIPT_PATH"
 fi

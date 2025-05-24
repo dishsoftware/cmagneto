@@ -13,14 +13,15 @@ REPORT_PATH="param\nREPORT_PATH\nparam"
 # SECTION<Template parameters>END
 
 
-if [[ -n "$DIR_WITH_CTESTTESTFILE" && "$DIR_WITH_CTESTTESTFILE" != *$"\n"* && \
-      -n "$BUILD_CONFIG" && "$BUILD_CONFIG" != *$"\n"* && \
-      -n "$REPORT_PATH" && "$REPORT_PATH" != *$"\n"*]]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -n "$DIR_WITH_CTESTTESTFILE" && "$DIR_WITH_CTESTTESTFILE" != *$'\n'* && \
+      -n "$BUILD_CONFIG" && "$BUILD_CONFIG" != *$'\n'* && \
+      -n "$REPORT_PATH" && "$REPORT_PATH" != *$'\n'* ]]; then
     # If all template parameters are not empty and do not contain `\n`.
-    . set_env.sh
+    . "$SCRIPT_DIR/set_env.sh"
     # Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
     # For single-config generator (e.g. MinGW) it is redundant, but does not affect anything.
-    ctest --test-dir "$DIR_WITH_CTESTTESTFILE" --output-on-failure --build-config "$BUILD_CONFIG" --output-junit "$REPORT_PATH" "$@"
+    ctest --test-dir "$SCRIPT_DIR/$DIR_WITH_CTESTTESTFILE" --output-on-failure --build-config "$BUILD_CONFIG" --output-junit "$SCRIPT_DIR/$REPORT_PATH" "$@"
 else
     # Invalid template parameter value(s).
     SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"
