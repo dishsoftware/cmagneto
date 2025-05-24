@@ -1,45 +1,33 @@
-cmake_minimum_required(VERSION 3.28)
+set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
-project(EnowSWContacts
+cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
+
+project(EnowSW_Contacts
     VERSION 1.0.0
     LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON) # GoogleTest requires at least C++17.
 
 
+# Include custom CMake modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
+include(SetUpTargets)
 
-
-if(WIN32)
-    message(STATUS "Building on Windows")
-    if (MSVC)
-        message(STATUS "Compiler: MSVC")
-    elseif (MINGW)
-        message(STATUS "Compiler: MinGW")
-    else()
-        message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-    endif()
-elseif(APPLE)
-    message(STATUS "Building on macOS")
-    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-else()
-    message(STATUS "Building on Linux")
-    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-endif()
-
-
-option(LIB_CONTACTS_SHARED "Build Contacts as a shared library." OFF)
-if(LIB_CONTACTS_SHARED)
-    message(STATUS "Contacts library will be built as SHARED.")
-    add_definitions(-DLIB_CONTACTS_SHARED) # Define preproceccor macro LIB_CONTACTS_SHARED.
-else()
-    message(STATUS "Contacts library will be built as STATIC.")
-endif()
-
-
-find_package(Qt6 REQUIRED COMPONENTS Core)
-include(QtWrappers)
+print_platform_and_compiler()
+set__IS_MULTTCONFIG__property()
 
 
 add_subdirectory(src)
+
+set_up_project()
+set_up__3rd_party_shared_libs__list()
+set_up__set_env__script()
+set_up__env_vscode__file()
+set_up__run__script()
+set_up__run_tests__script()
+set_up__build_summary__file()
+
+
+add_subdirectory(tests)

@@ -1,3 +1,9 @@
+# Build tools
+- CMake
+- C++ 17 compiler (GCC, or MinGW, or MSVC)
+- Python 3
+- Graphviz (optional)
+
 # Dependecies
 - Qt6
 - Boost
@@ -25,7 +31,6 @@ Tested with
 
 Define environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible binaries. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
 Define environment variable `BOOST_MSVC2022_DIR`, which refers to a directory with compatible binaries. E.g. `BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3`.
-If compiled application does not run, add dll of dependencies to the same folder, as contacts_gui.exe, or add paths to dependecies to PATH variable.
 
 The repo contains VS Code files, which configure intelliSense.
 Select "Windows_MSVC2022" configuration among other options in "C/C++ Configuration" settings.
@@ -33,3 +38,14 @@ These IDE files refer to `VC2022ToolsInstallDir` environment variable. E.g. `VC2
 
 # How to build
 `python ./build.py --help`
+
+If target dependency graph picture is desired, Graphviz must be installed.
+Output picture is generated at `./build/{platform_name}/[{build_type}]/graphviz`.
+If Graphviz is installed, but there is no picture, define environment variable `GRAPHVIZ_DIR`. E.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
+
+# How to run
+If the project is built using "Ubuntu 24.04 GCC" or "Windows MinGW UCRT", and all dependecies are installed using corresponding package managers,
+output executables can be run without any additional steps.
+Otherwise it may be required to set paths to shared libraries of the dependecies before execution.
+`./cmake_modules/SetUpTargets.cmake` creates "set_env" and "run" scripts in "bin" subdirectories of ./build and ./install.
+Look for `set_up__set_env__script()` and `set_up__run__script()` functions.
