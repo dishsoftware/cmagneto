@@ -9,19 +9,18 @@
 # SECTION<Template parameters>START
 DIR_WITH_CTESTTESTFILE="param\nDIR_WITH_CTESTTESTFILE\nparam"
 BUILD_CONFIG="param\nBUILD_CONFIG\nparam"
+REPORT_PATH="param\nREPORT_PATH\nparam"
 # SECTION<Template parameters>END
 
 
-if [[ -n "$DIR_WITH_CTESTTESTFILE" && "$DIR_WITH_CTESTTESTFILE" != *$"\n"* && "$BUILD_CONFIG" != *$"\n"*]]; then
-    # If DIR_WITH_CTESTTESTFILE is not empty, and both DIR_WITH_CTESTTESTFILE and BUILD_CONFIG do not contain `\n`.
+if [[ -n "$DIR_WITH_CTESTTESTFILE" && "$DIR_WITH_CTESTTESTFILE" != *$"\n"* && \
+      -n "$BUILD_CONFIG" && "$BUILD_CONFIG" != *$"\n"* && \
+      -n "$REPORT_PATH" && "$REPORT_PATH" != *$"\n"*]]; then
+    # If all template parameters are not empty and do not contain `\n`.
     . set_env.sh
-    if [[ -n "$BUILD_CONFIG"]]; then
-        # Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
-        ctest --test-dir "$DIR_WITH_CTESTTESTFILE" --output-on-failure --build-config "$BUILD_CONFIG"
-    else
-        # Single-config generator, no need to define build config.
-        ctest --test-dir "$DIR_WITH_CTESTTESTFILE" --output-on-failure
-    fi
+    # Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
+    # For single-config generator (e.g. MinGW) it is redundant, but does not affect anything.
+    ctest --test-dir "$DIR_WITH_CTESTTESTFILE" --output-on-failure --build-config "$BUILD_CONFIG" --output-junit "$REPORT_PATH" "$@"
 else
     # Invalid template parameter value(s).
     SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"

@@ -45,6 +45,7 @@ class BuildRunner:
 
     RUN_TESTS__FILE_NAME_WE = "run_tests"
     BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
+    TEST_REPORT__FILE_NAME = "test_report.xml"
 
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
         if (iToolsetName is None) or (iToolsetName.isspace()):
@@ -323,7 +324,7 @@ class BuildRunner:
         return None
 
     @staticmethod
-    def RUN_SCRIPT(iScriptPath: str) -> None:
+    def RUN_SCRIPT(iScriptPath: str, iArgs: list[str] | None = None) -> None:
         OS_NAME = platform.system()
         filePathWE, ext = os.path.splitext(iScriptPath)
         command = None
@@ -338,6 +339,9 @@ class BuildRunner:
             print(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
             sys.exit(1)
         else:
+            if iArgs is not None:
+                command.extend(iArgs)
+
             runCommand(command)
 
 
@@ -361,7 +365,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
             if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
                 self.__compile(buildType)
 
-            if (iRunType.value >= RunType.RunTests.value):
+            if (iRunType == RunType.RunTests or iRunType == RunType.Full):
                 self._runTests(buildType)
 
             if (iRunType.value >= RunType.Install.value):
@@ -453,7 +457,7 @@ class BuildRunnerMultiConfig(BuildRunner):
             if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
                 self.__compile(buildType)
 
-            if (iRunType.value >= RunType.RunTests.value):
+            if (iRunType == RunType.RunTests or iRunType == RunType.Full):
                 self._runTests(buildType)
 
             if (iRunType.value >= RunType.Install.value):

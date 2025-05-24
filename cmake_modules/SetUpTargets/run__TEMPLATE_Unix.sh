@@ -14,7 +14,7 @@ EXECUTABLE_NAME_WE="param\nEXECUTABLE_NAME_WE\nparam"
 if [[ -n "$EXECUTABLE_NAME_WE" && "$EXECUTABLE_NAME_WE" != *$"\n"* ]]; then
     # If EXECUTABLE_NAME_WE is not empty and does not contain `\n`.
     . set_env.sh
-    ./$EXECUTABLE_NAME_WE
+    ./$EXECUTABLE_NAME_WE "$@"
 elif [[ -z "$EXECUTABLE_NAME_WE" ]]; then
     # If EXECUTABLE_NAME_WE is empty, do nothing.
     :

@@ -18,5 +18,5 @@ if %errorlevel% equ 0 (
     echo Incorrectly generated script: %0
 ) else (
     call "%~dp0/set_env.bat"
-    "%EXECUTABLE_NAME_WE%.exe"
+    "%EXECUTABLE_NAME_WE%.exe" %*
 )

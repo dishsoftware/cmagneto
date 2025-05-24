@@ -9,6 +9,7 @@ rem Replaced values of these variables must not contain `\n`. The character is r
 rem SECTION<Template parameters>START
 set "DIR_WITH_CTESTTESTFILE=param\nDIR_WITH_CTESTTESTFILE\nparam"
 set "BUILD_CONFIG=param\nBUILD_CONFIG\nparam"
+set "REPORT_PATH=param\nREPORT_PATH\nparam"
 rem SECTION<Template parameters>END
 
 
@@ -20,9 +21,11 @@ if %errorlevel% equ 0 (
     echo Incorrectly generated script ^(no test directory specified^): %0
 ) else if not defined BUILD_CONFIG (
     echo Incorrectly generated script ^(no build configuration specified^): %0
+) else if not defined REPORT_PATH (
+    echo Incorrectly generated script ^(no report path specified^): %0
 ) else (
     call "%~dp0/set_env.bat"
     rem Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
     rem For single-config generator (e.g. MinGW) it is redundant, but does not affect anything.
-    ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure --build-config %BUILD_CONFIG%
+    ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure --build-config %BUILD_CONFIG% --output-junit "%~dp0/%REPORT_PATH%" %*
 )

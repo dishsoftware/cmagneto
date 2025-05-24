@@ -850,6 +850,7 @@ endfunction()
 
 set(RUN_TESTS__SCRIPT_NAME_WE "run_tests")
 set(RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
+set(TEST_REPORT__FILE_NAME "test_report.xml")
 
 
 #[[
@@ -863,6 +864,7 @@ function(generate__run_tests__script_content iBuildType oScriptContent)
 # Strings to replace in the template script.
     set(DIR_WITH_CTESTTESTFILE "param\\nDIR_WITH_CTESTTESTFILE\\nparam")
     set(BUILD_CONFIG "param\\nBUILD_CONFIG\\nparam")
+    set(REPORT_PATH "param\\nREPORT_PATH\\nparam")
     ####################################################################
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -874,13 +876,16 @@ function(generate__run_tests__script_content iBuildType oScriptContent)
     is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
         set(_dirWithCtestTestFile "../../${SUBDIR_CTESTTESTFILE}")
+        set(_reportPath "../../${SUBDIR_SUMMARY}/${iBuildType}/${TEST_REPORT__FILE_NAME}")
     else()
         set(_dirWithCtestTestFile "../${SUBDIR_CTESTTESTFILE}")
+        set(_reportPath "../${SUBDIR_SUMMARY}/${TEST_REPORT__FILE_NAME}")
     endif()
 
     file(READ "${_template_script_path}" _scriptContent)
     string(REPLACE "${DIR_WITH_CTESTTESTFILE}" "${_dirWithCtestTestFile}" _scriptContent "${_scriptContent}")
     string(REPLACE "${BUILD_CONFIG}" "${iBuildType}" _scriptContent "${_scriptContent}")
+    string(REPLACE "${REPORT_PATH}" "${_reportPath}" _scriptContent "${_scriptContent}")
 
     set(${oScriptContent} "${_scriptContent}" PARENT_SCOPE)
 endfunction()
