@@ -21,16 +21,19 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CMakePackageConfigHelpers)
 
+# Source directory names.
+set(SOURCE_DIR_AUX "${CMAKE_SOURCE_DIR}/cmake_aux")
 
+# Build/install subdirectory names.
 set(SUBDIR_STATIC "lib")
-set(SUBDIR_SHARED "lib")
+set(SUBDIR_SHARED "lib") # On Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts.
 set(SUBDIR_EXECUTABLE "bin")
 set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
+set(SUBDIR_SUMMARY "summary")
 set(SUBDIR_CTESTTESTFILE "tests")
-
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_SHARED}")
@@ -899,6 +902,7 @@ endfunction()
     The script runs "set_env" script and "ctest" with proper arguments.
 
     The function must be called after set_up__set_env__script() is called.
+    If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
 ]]
 function(set_up__run_tests__script)
     set_up_file("get__run_tests__script_file_name" "generate__run_tests__script_content" TRUE FALSE)
@@ -911,6 +915,8 @@ endfunction()
     Sets test discovery after build time and just before execution of test bodies.
 
     The function must be called after include(GoogleTest).
+    If the function is not called, test discovery may be started during build time,
+    and if paths to 3rd-party shared libraries are not set, build will fail.
 ]]
 function(set_test_discovery iTestTargetName)
     # Triggers test discovery: runs the test executable with the --gtest_list_tests argument after build time just before execution of test bodies.
@@ -918,5 +924,61 @@ function(set_test_discovery iTestTargetName)
     # Parses the list of tests, and adds each one to ctest.
     gtest_discover_tests(${iTestTargetName}
         DISCOVERY_MODE PRE_TEST # Not using of DISCOVERY_MODE POST_BUILD allows to not add ENVIRONMENT argument which is $<CONFIG>-dependent.
+    )
+endfunction()
+
+
+set(BUILD_SUMMARY__FILE_NAME "build_summary.txt")
+
+
+#[[
+    set_up__build_summary__file
+
+    After all registered targets are built, the function composes, places to build directory and installs "build_summary.txt".
+
+    The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
+    If the function is not called, "build.py" will not work correctly:
+    "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
+]]
+function(set_up__build_summary__file)
+    set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
+    set(_summaryCMakePath "${SOURCE_DIR_AUX}/generate_build_summary.cmake")
+
+    is_multiconfig(IS_MULTICONFIG)
+    if(IS_MULTICONFIG)
+        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${BUILD_SUMMARY__FILE_NAME}")
+        set(_buildType $<CONFIG>)
+    else()
+        set(_summaryOutputPath "${_summaryOutputDir}/${BUILD_SUMMARY__FILE_NAME}")
+        set(_buildType "${CMAKE_BUILD_TYPE}")
+    endif()
+
+    add_custom_command(
+        COMMENT "Composing ${BUILD_SUMMARY__FILE_NAME}"
+        OUTPUT "${_summaryOutputPath}"
+        COMMAND ${CMAKE_COMMAND}
+            -DOUT="${_summaryOutputPath}"
+            -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
+            -DCMAKE_SYSTEM_VERSION="${CMAKE_SYSTEM_VERSION}"
+            -DCMAKE_GENERATOR="${CMAKE_GENERATOR}"
+            -DCMAKE_CXX_COMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
+            -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
+            -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
+            -DCMAKE_BUILD_TYPE="${_buildType}"
+            -P "${_summaryCMakePath}"
+    )
+
+    add_custom_target(build_summary ALL
+        DEPENDS "${_summaryOutputPath}"
+    )
+
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+    if(_registeredTargets)
+        add_dependencies(build_summary ${_registeredTargets})
+    endif()
+
+    # Install the file.
+    install(FILES "${_summaryOutputPath}"
+        DESTINATION "${SUBDIR_SUMMARY}"
     )
 endfunction()

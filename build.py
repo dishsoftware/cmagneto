@@ -17,10 +17,11 @@ class BuildType(Enum):
 
 
 class RunType(Enum):
-    Full = 0 # Build and install.
-    Build = 1
+    Generate = 0 # Generate project files.
+    Compile = 1 # Compile the project (populate build directory with artifacts).
     RunTests = 2
-    Install = 3
+    Install = 3 # Install the project (copy artifacts to install directory).
+    Full = 4 # Generate, compile and install the project.
 
 
 class ConstMetaClass(type):
@@ -36,6 +37,15 @@ def runCommand(iCommand: list[str]) -> None:
 
 
 class BuildRunner:
+    # Build/install sibdirectory names.
+    SUBDIR_STATIC = "lib"
+    SUBDIR_SHARED = "lib"
+    SUBDIR_EXECUTABLE = "bin"
+    SUBDIR_SUMMARY = "summary"
+
+    RUN_TESTS__FILE_NAME_WE = "run_tests"
+    BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
+
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
         if (iToolsetName is None) or (iToolsetName.isspace()):
             raise ValueError("Toolset name cannot be None or empty.")
@@ -82,12 +92,39 @@ class BuildRunner:
         """Returns the absolute path to the build directory."""
         return self.__buildDir
 
-    def buildDirForBuildType(self, iBuildType) -> str:
-        """Returns the absolute path to the build directory for the specified build type.."""
-        if self.__supportsMultiConfig:
-            return self.__buildDir
-        else:
-            return os.path.join(self.__buildDir, iBuildType.name)
+    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
+        print(self)
+        print(f"{self.__class__.__name__}.run() is not implemented.")
+        sys.exit(1)
+
+    def buildDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to the build directory for the specified build type."""
+        print(self)
+        print(f"{self.__class__.__name__}.run() is not implemented.")
+        sys.exit(1)
+
+    def exeDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
+        return self.buildSubDirForBuildType(BuildRunner.SUBDIR_EXECUTABLE, iBuildType)
+
+    def sharedLibDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory with shared libs in the build directory for the specified build type.
+           Note: on Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts."""
+        return self.buildSubDirForBuildType(BuildRunner.SUBDIR_SHARED, iBuildType)
+
+    def staticLibDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory with static libs in the build directory for the specified build type."""
+        return self.buildSubDirForBuildType(BuildRunner.SUBDIR_STATIC, iBuildType)
+
+    def summaryDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory with summary files in the build directory for the specified build type."""
+        return self.buildSubDirForBuildType(BuildRunner.SUBDIR_SUMMARY, iBuildType)
+
+    def isBuildSummaryExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the build summary file exists for the specified build type."""
+        buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.BUILD_SUMMARY__FILE_NAME)
+        return os.path.exists(buildSummaryFilePath)
 
     def installDir(self) -> str:
         """Returns the absolute path to the install directory."""
@@ -113,19 +150,16 @@ class BuildRunner:
         text = f"Running tests ({iBuildType.name})"
         print(text + "...")
 
-        run_tests__scriptDir = os.path.join(self.buildDirForBuildType(iBuildType), BuildRunner.SUBDIR_EXECUTABLE)
-        if (self.supportsMultiConfig()):
-            run_tests__scriptDir = os.path.join(run_tests__scriptDir, iBuildType.name)
-
-        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME)
+        run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
+        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME_WE)
         if run_tests__scriptName is None:
-            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME}\" not found in \"{run_tests__scriptDir}\". Tests have not been run.")
-            sys.exit(1)
+            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Use set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            return
 
         run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
         BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
     def _set_dependency_paths(self) -> None:
         pass
@@ -277,7 +311,7 @@ class BuildRunner:
             return
 
     @staticmethod
-    def FIND_IN_DIR_FILE_WITH_NAME(iDir: str, iFileNameWE: str) -> str | None:
+    def FIND_IN_DIR_FILE_WITH_NAME_WE(iDir: str, iFileNameWE: str) -> str | None:
         """
         Returns file_name_with_extension of a file with the name_without_extension iFileNameWE in the directory iDir. Search is non-recursive.
         """
@@ -306,27 +340,31 @@ class BuildRunner:
         else:
             runCommand(command)
 
-    RUN_TESTS__FILE_NAME = "run_tests"
-    SUBDIR_EXECUTABLE = "bin"
-
 
 class BuiildRunnerSingleConfig(BuildRunner):
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
         super().__init__(iToolsetName, iGeneratorName, iCPPCompilerName, False, iBuildTypes)
 
+    def buildDirForBuildType(self, iBuildType) -> str:
+        """Returns the absolute path to the build directory for the specified build type.."""
+        return os.path.join(self.buildDir(), iBuildType.name)
+
+    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
+        return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir)
+
     def run(self, iRunType: RunType) -> None:
         for buildType in self.buildTypes():
-            if (
-                iRunType == RunType.Full or iRunType == RunType.Build or
-                (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDirForBuildType(buildType))
-            ):
+            if (iRunType == RunType.Generate or iRunType.value > RunType.Generate.value and not os.path.exists(self.buildDirForBuildType(buildType))):
                 self.__generate(buildType)
+
+            if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
                 self.__compile(buildType)
 
-            if (iRunType == RunType.Full or iRunType == RunType.RunTests):
+            if (iRunType.value >= RunType.RunTests.value):
                 self._runTests(buildType)
 
-            if (iRunType == RunType.Full or iRunType == RunType.Install):
+            if (iRunType.value >= RunType.Install.value):
                 self.__install(buildType)
 
     def __generate(self, iBuildType: BuildType) -> None:
@@ -343,7 +381,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
     def __compose_generate_command(self, iBuildType: BuildType) -> list[str]:
         command = [ "cmake" ]
@@ -380,7 +418,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
         runCommand(command)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
@@ -392,28 +430,33 @@ class BuiildRunnerSingleConfig(BuildRunner):
         command = ["cmake", "--install", self.buildDirForBuildType(iBuildType)]
         runCommand(command)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
 
 class BuildRunnerMultiConfig(BuildRunner):
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
         super().__init__(iToolsetName, iGeneratorName, iCPPCompilerName, True, iBuildTypes)
 
-    def run(self, iRunType: RunType) -> None:
-        buildRequired = iRunType == RunType.Full or iRunType == RunType.Build or \
-            (iRunType == RunType.RunTests or iRunType == RunType.Install) and not os.path.exists(self.buildDir())
+    def buildDirForBuildType(self, iBuildType) -> str:
+        """Returns the absolute path to the build directory for the specified build type.."""
+        return self.buildDir()
 
-        if (buildRequired):
+    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildType) -> str:
+        """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
+        return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir, iBuildType.name)
+
+    def run(self, iRunType: RunType) -> None:
+        if (iRunType == RunType.Generate or iRunType.value > RunType.Generate.value and not os.path.exists(self.buildDir())):
             self.__generate()
 
         for buildType in self.buildTypes():
-            if (buildRequired):
+            if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
                 self.__compile(buildType)
 
-            if (iRunType == RunType.Full or iRunType == RunType.RunTests):
+            if (iRunType.value >= RunType.RunTests.value):
                 self._runTests(buildType)
 
-            if (iRunType == RunType.Full or iRunType == RunType.Install):
+            if (iRunType.value >= RunType.Install.value):
                 self.__install(buildType)
 
     def __generate(self) -> None:
@@ -429,7 +472,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
     def __compose_generate_command(self) -> list[str]:
         command = [ "cmake" ]
@@ -471,7 +514,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         ]
         runCommand(command)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
@@ -488,7 +531,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         ]
         runCommand(command)
 
-        print(text + " finished.")
+        print(text + " finished.\n")
 
 
 class UnixMakefilesGCCRunner(BuiildRunnerSingleConfig):

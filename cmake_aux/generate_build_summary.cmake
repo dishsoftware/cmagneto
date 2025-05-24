@@ -1,0 +1,15 @@
+# Make sure OUT variable is passed
+if(NOT DEFINED OUT)
+    message(FATAL_ERROR "Missing required variable: OUT")
+endif()
+
+set(_summaryText "")
+string(APPEND _summaryText "Build Summary\n")
+string(APPEND _summaryText "==============\n")
+string(APPEND _summaryText "System: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION}\n")
+string(APPEND _summaryText "CMake Generator: ${CMAKE_GENERATOR}\n")
+string(APPEND _summaryText "C++ Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\n")
+string(APPEND _summaryText "C++ Compiler path: ${CMAKE_CXX_COMPILER}\n")
+string(APPEND _summaryText "Build Type: ${CMAKE_BUILD_TYPE}\n")
+
+file(WRITE "${OUT}" "${_summaryText}")

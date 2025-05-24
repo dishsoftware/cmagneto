@@ -27,6 +27,7 @@ set_up__set_env__script()
 set_up__env_vscode__file()
 set_up__run__script()
 set_up__run_tests__script()
+set_up__build_summary__file()
 
 
 add_subdirectory(tests)

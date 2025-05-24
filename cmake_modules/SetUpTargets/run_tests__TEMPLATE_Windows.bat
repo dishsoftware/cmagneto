@@ -18,13 +18,11 @@ if %errorlevel% equ 0 (
     echo Incorrectly generated script ^(template parameter contains "\n"^): %0
 ) else if not defined DIR_WITH_CTESTTESTFILE (
     echo Incorrectly generated script ^(no test directory specified^): %0
+) else if not defined BUILD_CONFIG (
+    echo Incorrectly generated script ^(no build configuration specified^): %0
 ) else (
     call "%~dp0/set_env.bat"
-    if defined BUILD_CONFIG (
-        rem Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
-        ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure --build-config %BUILD_CONFIG%
-    ) else (
-        rem Single-config generator, no need to define build config.
-        ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure
-    )
+    rem Multi-config generator (e.g. Visual Studio) requires a build configuration to be defined.
+    rem For single-config generator (e.g. MinGW) it is redundant, but does not affect anything.
+    ctest --test-dir "%~dp0/%DIR_WITH_CTESTTESTFILE%" --output-on-failure --build-config %BUILD_CONFIG%
 )
