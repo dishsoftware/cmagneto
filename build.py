@@ -31,8 +31,41 @@ class ConstMetaClass(type):
         super().__setattr__(key, value)
 
 
+class PrintColor(Enum):
+    Red = "\033[91m"
+    Green = "\033[92m"
+    Yellow = "\033[93m"
+    Blue = "\033[94m"
+    Magenta = "\033[95m"
+    Cyan = "\033[96m"
+    White = "\033[97m"
+
+def printColored(iText: str, iColor: PrintColor) -> None:
+    """ Prints text in the specified color."""
+    RESET_STR = "\033[0m"
+    print(f"{iColor.value}{iText}{RESET_STR}")
+
+def makeColored(iText: str, iColor: PrintColor) -> str:
+    """ Returns text in the specified color."""
+    RESET_STR = "\033[0m"
+    return f"{iColor.value}{iText}{RESET_STR}"
+
+def warning(iText: str) -> None:
+    """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
+    printColored(f"Warning: {iText}", PrintColor.Yellow)
+
+def error(iText: str) -> None:
+    """ Prints an error message in red color and exits the program. Adds "Error: " prefix."""
+    printColored(f"Error: {iText}", PrintColor.Red)
+    sys.exit(1)
+
+def status(iText: str) -> None:
+    """ Prints an informational message in green color."""
+    printColored(iText, PrintColor.Green)
+
+
 def runCommand(iCommand: list[str]) -> None:
-    print(f"Running command: {os.getcwd()}> {shlex.join(iCommand)}")
+    print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue))
     subprocess.run(iCommand, check=True)
 
 
@@ -95,15 +128,13 @@ class BuildRunner:
 
     def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildType) -> str:
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
-        print(self)
-        print(f"{self.__class__.__name__}.run() is not implemented.")
-        sys.exit(1)
+        printColored(self, PrintColor.Red)
+        error(f"{self.__class__.__name__}.run() is not implemented.")
 
     def buildDirForBuildType(self, iBuildType: BuildType) -> str:
         """Returns the absolute path to the build directory for the specified build type."""
-        print(self)
-        print(f"{self.__class__.__name__}.run() is not implemented.")
-        sys.exit(1)
+        printColored(self, PrintColor.Red)
+        error(f"{self.__class__.__name__}.run() is not implemented.")
 
     def exeDirForBuildType(self, iBuildType: BuildType) -> str:
         """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
@@ -143,24 +174,22 @@ class BuildRunner:
         return self.__cmakeFlags
 
     def run(self, iRunType: RunType) -> None:
-        print(self)
-        print(f"{self.__class__.__name__}.run() is not implemented.")
-        sys.exit(1)
+        printColored(self, PrintColor.Red)
+        error(f"{self.__class__.__name__}.run() is not implemented.")
 
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
         run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME_WE)
         if run_tests__scriptName is None:
-            print(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Use set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
-            return
+            warning(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Use set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+        else:
+            run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
+            BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
 
-        run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
-        BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
-
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
     def _set_dependency_paths(self) -> None:
         pass
@@ -184,10 +213,9 @@ class BuildRunner:
         varPath = os.environ.get(iVarName)
         if (not varPath):
             if (varPath is None):
-                print(f"\"{iVarName}\" environment variable is not set.")
+                error(f"\"{iVarName}\" environment variable is not set.")
             else:
-                print(f"\"{iVarName}\" environment variable is empty string.")
-            sys.exit(1)
+                error(f"\"{iVarName}\" environment variable is empty string.")
 
         pathToAdd = None
         if (iCMakePathPostfix):
@@ -254,10 +282,10 @@ class BuildRunner:
                 ]
                 runCommand(command)
             except subprocess.CalledProcessError as e:
-                print(f"Graphviz can't create target dependency graph picture: {e}")
+                warning(f"Graphviz can't create target dependency graph picture: {e}")
                 return
             except FileNotFoundError:
-                print("Graphviz is not found. Target dependency graph picture is not created.")
+                warning("Graphviz is not found. Target dependency graph picture is not created.")
                 return
 
     @staticmethod
@@ -286,7 +314,7 @@ class BuildRunner:
             ]
             runCommand(command)
         except subprocess.CalledProcessError as e:
-            print(f"Can't create Graphviz target dependency graph: {e}")
+            warning(f"Can't create Graphviz target dependency graph: {e}")
             return
 
         # Set path to Graphviz binaries.
@@ -305,10 +333,10 @@ class BuildRunner:
             ]
             runCommand(command)
         except subprocess.CalledProcessError as e:
-            print(f"Graphviz can't create target dependency graph picture: {e}")
+            warning(f"Graphviz can't create target dependency graph picture: {e}")
             return
         except FileNotFoundError:
-            print("Graphviz is not found. Target dependency graph picture is not created.")
+            warning("Graphviz is not found. Target dependency graph picture is not created.")
             return
 
     @staticmethod
@@ -336,8 +364,7 @@ class BuildRunner:
                 command = [iScriptPath]
 
         if command is None:
-            print(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
-            sys.exit(1)
+            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)
@@ -373,7 +400,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
     def __generate(self, iBuildType: BuildType) -> None:
         text = f"Project generation ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
         BuildRunner._PREPARE_DIR(buildDir)
@@ -385,7 +412,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
     def __compose_generate_command(self, iBuildType: BuildType) -> list[str]:
         command = [ "cmake" ]
@@ -416,17 +443,17 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
     def __compile(self, iBuildType: BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
         command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
         runCommand(command)
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
@@ -434,7 +461,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         command = ["cmake", "--install", self.buildDirForBuildType(iBuildType)]
         runCommand(command)
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
 
 class BuildRunnerMultiConfig(BuildRunner):
@@ -465,7 +492,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
     def __generate(self) -> None:
         text = "Project generation (multi-config)"
-        print(text + "...")
+        status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.buildDir())
         os.chdir(self.buildDir())
@@ -476,7 +503,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
     def __compose_generate_command(self) -> list[str]:
         command = [ "cmake" ]
@@ -508,7 +535,7 @@ class BuildRunnerMultiConfig(BuildRunner):
 
     def __compile(self, iBuildType: BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
         command = [
@@ -518,11 +545,11 @@ class BuildRunnerMultiConfig(BuildRunner):
         ]
         runCommand(command)
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        print(text + "...")
+        status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
@@ -535,7 +562,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         ]
         runCommand(command)
 
-        print(text + " finished.\n")
+        status(text + " finished.\n")
 
 
 class UnixMakefilesGCCRunner(BuiildRunnerSingleConfig):
@@ -600,8 +627,7 @@ def main():
         BUILD_RUNNERS = APPLE_BUILD_RUNNERS
 
     if len(ToolsetEnum) == 0:
-        print("No toolsets are supportted for the OS. Exiting.")
-        sys.exit(1)
+        error("No toolsets are supportted for the OS. Exiting.")
 
     parser = argparse.ArgumentParser(description="Builds and compiles (optionally) the project.")
     toolsetChoices = [toolset.name for toolset in ToolsetEnum]
@@ -659,11 +685,11 @@ def main():
 
         # Check if the library name is valid.
         if re.match(r"^_+$", libName):
-            print(f"Invalid library name \"{libName}\". It must not be composed only of underscores.")
+            warning(f"Invalid library name \"{libName}\". It must not be composed only of underscores.")
             continue
 
         if not re.match(r"^[A-Z_][A-Z0-9_]*$", libName):
-            print(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
+            warning(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
             continue
 
         libSharedOptions[libName] = optionVal
@@ -671,8 +697,7 @@ def main():
 
     toolset = ToolsetEnum[args.toolset]
     if toolset not in BUILD_RUNNERS:
-        print(f"{toolset} is not supported yet.")
-        sys.exit(1)
+        error(f"{toolset} is not supported yet.")
 
     buildTypes = {BuildType[buildType] for buildType in args.build_types}
     runType = RunType[args.run_type]
@@ -689,10 +714,10 @@ def main():
             # Do nothing.
             pass
         else:
-            print(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
+            error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
 
     for processedArg in unknownArgs:
-        print(f"Unknown argument: \"{processedArg}\". Ignored.")
+        warning(f"Unknown argument: \"{processedArg}\". Ignored.")
 
     buildRunner = BUILD_RUNNERS[toolset](buildTypes)
     buildRunner.setCMakeFlags(cmakeFlags)
