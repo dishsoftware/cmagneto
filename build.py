@@ -542,6 +542,20 @@ class BuildRunnerMultiConfig(BuildRunner):
         os.chdir(self.srcDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
+        # Graphviz creates a target dependecy graph during generation time.
+        # If a single-config generator is used, the graph is unambiguously created for CMAKE_BUILD_TYPE.
+        # But what is going on, if a multi-config generator is used and linking logics depends on $<CONFIG>?
+        #
+        # With Multi-config generator, CMake does not know which configuration will be built during generation.
+        # It generates build rules for all configurations (Debug, Release, etc.).
+        # Generator expressions like $<CONFIG> are preserved as expressions in the generated build system (e.g., in MSBuild).
+        # So, at generation time, CMake cannot fully resolve conditional logics based on $<CONFIG>.
+        # This has a direct impact on --graphviz=... output:
+        # 1) The dependency graph, created by Graphviz, will reflect a union of targets and dependencies across all configurations;
+        # 2) If certain targets or libraries are only linked in some configurations (e.g., $<CONFIG:Debug>), they might:
+        #    appear in the graph as "possible" dependencies,
+        #    or be omitted altogether, depending on how conditional linking logics is and how CMake interprets the generator expressions during graph creation.
+        # The graph may be ambiguous or incomplete, compared to what actually gets built under a specific configuration like Release.
 
         status(text + " finished.\n")
 

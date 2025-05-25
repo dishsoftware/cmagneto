@@ -16,13 +16,14 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
             This is when the final binaries, libraries, and resources are copied to their installation directories.
 
         Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
+
+    Notes of a Fool:
+        If CMAKE_CURRENT_LIST_DIR is evaluated in a function, it is the directory of the file where the function is defined.
+        If CMAKE_CURRENT_LIST_DIR is evaluated in a script (outside of functions), it is the directory of the script.
 ]]
 
 
 include(CMakePackageConfigHelpers)
-
-# Source directory names.
-set(SOURCE_DIR_AUX "${CMAKE_SOURCE_DIR}/cmake_aux")
 
 # Build/install subdirectory names.
 set(SUBDIR_STATIC "lib")
@@ -934,6 +935,7 @@ function(set_test_discovery iTestTargetName)
 endfunction()
 
 
+set(GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/generate_build_summary.cmake")
 set(BUILD_SUMMARY__FILE_NAME "build_summary.txt")
 
 
@@ -948,7 +950,6 @@ set(BUILD_SUMMARY__FILE_NAME "build_summary.txt")
 ]]
 function(set_up__build_summary__file)
     set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
-    set(_summaryCMakePath "${SOURCE_DIR_AUX}/generate_build_summary.cmake")
 
     is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
@@ -971,7 +972,7 @@ function(set_up__build_summary__file)
             -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
             -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
             -DCMAKE_BUILD_TYPE="${_buildType}"
-            -P "${_summaryCMakePath}"
+            -P "${GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
     )
 
     add_custom_target(build_summary ALL
