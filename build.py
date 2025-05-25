@@ -395,7 +395,7 @@ class BuildRunner:
                 command = [iScriptPath]
 
         if command is None:
-            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on platform \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)
@@ -650,18 +650,18 @@ def main():
         ToolsetEnum = WindowsToolset
         BUILD_RUNNERS = WINDOWS_BUILD_RUNNERS
     else: # E.g. "Darwin":
-        error(f"Platform \"{OS_NAME}\" is not supported.")
+        error(f"OS \"{OS_NAME}\" is not supported.")
 
     if len(ToolsetEnum) == 0:
         error("No toolsets are supportted for the OS. Exiting.")
 
-    parser = argparse.ArgumentParser(description=f"Builds the CMake project. Build pipeline consists of the following stages: {", ".join([buildStage.name for buildStage in BuildStage])}. Supported platforms: Linux, Windows.")
+    parser = argparse.ArgumentParser(description=f"Builds the CMake project. Build pipeline consists of the following stages: {", ".join([buildStage.name for buildStage in BuildStage])}. Supported OSes: Linux, Windows.")
     DEFAULT_TOOLSET = list(ToolsetEnum)[0]
     parser.add_argument(
         "--toolset",
         choices=[toolset.name for toolset in ToolsetEnum],
         default=DEFAULT_TOOLSET.name,
-        help=f"Select a toolset. Default is {DEFAULT_TOOLSET.name}. Note: the set of available toolsets depends on the platform the script is run. " \
+        help=f"Select a toolset. Default is {DEFAULT_TOOLSET.name}. Note: the set of available toolsets depends on the OS the script is run on."
     )
     DEFAULT_BUILD_TYPE = BuildType.Release
     parser.add_argument(
