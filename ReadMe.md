@@ -1,7 +1,7 @@
 # Build tools
-- CMake
-- C++ 17 compiler (GCC, or MinGW, or MSVC)
-- Python 3.10
+- CMake 3.28 or later
+- C++ 17 (or later) compiler (GCC, or MinGW, or MSVC)
+- Python 3.10 or later
 - Graphviz (optional)
 
 # Dependecies
