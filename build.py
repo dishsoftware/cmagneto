@@ -16,12 +16,11 @@ class BuildType(Enum):
     MinSizeRel = 3
 
 
-class RunType(Enum):
+class BuildStage(Enum):
     Generate = 0 # Generate project files.
     Compile = 1 # Compile the project (populate build directory with artifacts).
     RunTests = 2
     Install = 3 # Install the project (copy artifacts to install directory).
-    Full = 4 # Generate, compile and install the project.
 
 
 class ConstMetaClass(type):
@@ -153,29 +152,14 @@ class BuildRunner:
         """Returns the absolute path to a subdirectory with summary files in the build directory for the specified build type."""
         return self.buildSubDirForBuildType(BuildRunner.SUBDIR_SUMMARY, iBuildType)
 
+    def isBuildDirExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the build directory exists for the specified build type."""
+        return os.path.exists(self.buildDirForBuildType(iBuildType))
+
     def isBuildSummaryExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the build summary file exists for the specified build type."""
         buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.BUILD_SUMMARY__FILE_NAME)
         return os.path.exists(buildSummaryFilePath)
-
-    def installDir(self) -> str:
-        """Returns the absolute path to the install directory."""
-        return self.__installDir
-
-    def installDirForBuildType(self, iBuildType: BuildType) -> str:
-        """Returns the absolute path to the install directory for the specified build type."""
-        return os.path.join(self.__installDir, iBuildType.name)
-
-    def setCMakeFlags(self, iFlags: list[str]) -> None:
-        """These flags are passed to CMake on generation stage."""
-        self.__cmakeFlags = iFlags
-
-    def cmakeFlags(self) -> list[str] | None:
-        return self.__cmakeFlags
-
-    def run(self, iRunType: RunType) -> None:
-        printColored(self, PrintColor.Red)
-        error(f"{self.__class__.__name__}.run() is not implemented.")
 
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
@@ -190,6 +174,53 @@ class BuildRunner:
             BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
 
         status(text + " finished.\n")
+
+    def isTestReportExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the test report file exists for the specified build type."""
+        testReportFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_REPORT__FILE_NAME)
+        return os.path.exists(testReportFilePath)
+
+    def installDir(self) -> str:
+        """Returns the absolute path to the install directory."""
+        return self.__installDir
+
+    def installDirForBuildType(self, iBuildType: BuildType) -> str:
+        """Returns the absolute path to the install directory for the specified build type."""
+        return os.path.join(self.__installDir, iBuildType.name)
+
+    def isInstallDirExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the install directory exists for the specified build type."""
+        return os.path.exists(self.installDirForBuildType(iBuildType))
+
+    def setCMakeFlags(self, iFlags: list[str]) -> None:
+        """These flags are passed to CMake on generation stage."""
+        self.__cmakeFlags = iFlags
+
+    def cmakeFlags(self) -> list[str] | None:
+        return self.__cmakeFlags
+
+    def isStageRequired(self, iBuildStageOfStage: BuildStage, iBuildType: BuildType, iBuildStage: BuildStage, iRerunPrecedingStages: bool) -> bool:
+        """Checks if the build stage (iBuildStageOfStage) is required to run based on existence of its artifacts for the iBuildType,
+           requested iBuildStage and iRerunPrecedingStages flag."""
+
+        isStageRequiredLambda = lambda iBuildStageOfStage, iArtifactExistenceChecker, iBuildType, iBuildStage: iBuildStage == iBuildStageOfStage or \
+            iBuildStage.value > iBuildStageOfStage.value and (iRerunPrecedingStages or not iArtifactExistenceChecker(iBuildType))
+
+        match iBuildStageOfStage:
+            case BuildStage.Generate:
+                return isStageRequiredLambda(BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
+            case BuildStage.Compile:
+                return isStageRequiredLambda(BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
+            case BuildStage.RunTests:
+                return isStageRequiredLambda(BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
+            case BuildStage.Install:
+                return isStageRequiredLambda(BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
+            case _:
+                error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
+
+    def run(self, iBuildStage: BuildStage, iRerunPrecedingStages: bool) -> None:
+        printColored(self, PrintColor.Red)
+        error(f"{self.__class__.__name__}.run() is not implemented.")
 
     def _set_dependency_paths(self) -> None:
         pass
@@ -384,18 +415,18 @@ class BuiildRunnerSingleConfig(BuildRunner):
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
         return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir)
 
-    def run(self, iRunType: RunType) -> None:
+    def run(self, iBuildStage: BuildStage, iRerunPrecedingStages: bool) -> None:
         for buildType in self.buildTypes():
-            if (iRunType == RunType.Generate or iRunType.value > RunType.Generate.value and not os.path.exists(self.buildDirForBuildType(buildType))):
+            if (self.isStageRequired(BuildStage.Generate, buildType, iBuildStage, iRerunPrecedingStages)):
                 self.__generate(buildType)
 
-            if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
+            if (self.isStageRequired(BuildStage.Compile, buildType, iBuildStage, iRerunPrecedingStages)):
                 self.__compile(buildType)
 
-            if (iRunType == RunType.RunTests or iRunType == RunType.Full):
+            if (self.isStageRequired(BuildStage.RunTests, buildType, iBuildStage, iRerunPrecedingStages)):
                 self._runTests(buildType)
 
-            if (iRunType.value >= RunType.Install.value):
+            if (self.isStageRequired(BuildStage.Install, buildType, iBuildStage, iRerunPrecedingStages)):
                 self.__install(buildType)
 
     def __generate(self, iBuildType: BuildType) -> None:
@@ -476,18 +507,19 @@ class BuildRunnerMultiConfig(BuildRunner):
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
         return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir, iBuildType.name)
 
-    def run(self, iRunType: RunType) -> None:
-        if (iRunType == RunType.Generate or iRunType.value > RunType.Generate.value and not os.path.exists(self.buildDir())):
+    def run(self, iBuildStage: BuildStage, iRerunPrecedingStages: bool) -> None:
+        if (self.isStageRequired(BuildStage.Generate, BuildType.Release, iBuildStage, iRerunPrecedingStages)):
+            # ^ BuildType.Release can be replaced with any build type, because the build directory is the same for all build types in multi-config mode.
             self.__generate()
 
         for buildType in self.buildTypes():
-            if (iRunType == RunType.Compile or iRunType.value > RunType.Compile.value and not self.isBuildSummaryExistForBuildType(buildType)):
+            if (self.isStageRequired(BuildStage.Compile, buildType, iBuildStage, iRerunPrecedingStages)):
                 self.__compile(buildType)
 
-            if (iRunType == RunType.RunTests or iRunType == RunType.Full):
+            if (self.isStageRequired(BuildStage.RunTests, buildType, iBuildStage, iRerunPrecedingStages)):
                 self._runTests(buildType)
 
-            if (iRunType.value >= RunType.Install.value):
+            if (self.isStageRequired(BuildStage.Install, buildType, iBuildStage, iRerunPrecedingStages)):
                 self.__install(buildType)
 
     def __generate(self) -> None:
@@ -605,11 +637,6 @@ def main():
         WindowsToolset.MinGWMakefiles_MinGW: MinGWMakefilesMinGWRunner,
         WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
     }
-
-    class AppleToolset(Enum):
-        pass
-
-    APPLE_BUILD_RUNNERS = {}
     ######################################################################
 
     OS_NAME = platform.system()
@@ -622,39 +649,54 @@ def main():
     elif OS_NAME == "Windows":
         ToolsetEnum = WindowsToolset
         BUILD_RUNNERS = WINDOWS_BUILD_RUNNERS
-    elif OS_NAME == "Darwin":
-        ToolsetEnum = AppleToolset
-        BUILD_RUNNERS = APPLE_BUILD_RUNNERS
+    else: # E.g. "Darwin":
+        error(f"Platform \"{OS_NAME}\" is not supported.")
 
     if len(ToolsetEnum) == 0:
         error("No toolsets are supportted for the OS. Exiting.")
 
-    parser = argparse.ArgumentParser(description="Builds and compiles (optionally) the project.")
-    toolsetChoices = [toolset.name for toolset in ToolsetEnum]
-    defaultToolset = list(ToolsetEnum)[0].name
+    parser = argparse.ArgumentParser(description=f"Builds the CMake project. Build pipeline consists of the following stages: {", ".join([buildStage.name for buildStage in BuildStage])}. Supported platforms: Linux, Windows.")
+    DEFAULT_TOOLSET = list(ToolsetEnum)[0]
     parser.add_argument(
         "--toolset",
-        choices=toolsetChoices,
-        default=defaultToolset,
-        help=f"Select a toolset. Default is {defaultToolset}."
+        choices=[toolset.name for toolset in ToolsetEnum],
+        default=DEFAULT_TOOLSET.name,
+        help=f"Select a toolset. Default is {DEFAULT_TOOLSET.name}. Note: the set of available toolsets depends on the platform the script is run. " \
     )
+    DEFAULT_BUILD_TYPE = BuildType.Release
     parser.add_argument(
         "--build_types",
         type=str,
         choices=[buildType.name for buildType in BuildType],
         nargs="+",  # Allow one or more values
-        default=[BuildType.Release.name],
-        help=f"Specifies the build type(s). Example: \"--build_types Debug Release\". Default is {BuildType.Release.name}."
+        default=[DEFAULT_BUILD_TYPE.name],
+        help=f"Specifies the build type(s). Example: \"--build_types {BuildType.Debug.name} {BuildType.Release.name}\". Default is {DEFAULT_BUILD_TYPE.name}."
+    )
+    DEFAULT_BUILD_STAGE = max(BuildStage, key=lambda e: e.value) # The last stage is the default.
+    parser.add_argument(
+        "--build_stage",
+        type=str,
+        choices=[buildStage.name for buildStage in BuildStage],
+        default=DEFAULT_BUILD_STAGE.name,
+        help=f"Specifies build stage. If artifacts of preceding build stages, left from a previous build, do not exist, the stages are run too. \
+            Artifact of {BuildStage.Generate.name} stage is the build directory. Artifact of {BuildStage.Compile.name} stage is \"{BuildRunner.BUILD_SUMMARY__FILE_NAME}\". \
+            Artifact of {BuildStage.RunTests.name} stage is \"{BuildRunner.TEST_REPORT__FILE_NAME}\". Artifact of {BuildStage.Install.name} stage is the install directory. \
+            Note: only the presence of preceding stage artifacts is checked, not the success of execution of a previous build. \
+            Note: \"{BuildRunner.TEST_REPORT__FILE_NAME}\" is not deleted, if project is recompiled. \
+            If a build stage fails during current build, the next stages are not run. \
+            Default is {DEFAULT_BUILD_STAGE.name}."
     )
     parser.add_argument(
-        "--run_type",
-        type=str,
-        choices=[runType.name for runType in RunType],
-        default=RunType.Full.name,
-        help=f"Specifies run type. Full is default and triggers both build (generation and compiling) and installing."
+        "--rerun_preceding_stages", "--RPS",
+        action="store_true",
+        help="Rerun preceding build stages even if their artifacts exist."
     )
-    parser.add_argument("--BUILD_SHARED_LIBS", action="store_true", help="Build implicit type (DEFAULT) libraries as shared. " \
-    "It is possible to override this option for each library using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase.")
+    parser.add_argument(
+        "--BUILD_SHARED_LIBS",
+        action="store_true",
+        help="Build implicit type (DEFAULT) libraries as shared. It is possible to override this option for each library, using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. " \
+        "Library name must be typed in uppercase."
+    )
 
     args, unknownArgs = parser.parse_known_args()
     # Parse unknown arguments that are in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
@@ -700,7 +742,8 @@ def main():
         error(f"{toolset} is not supported yet.")
 
     buildTypes = {BuildType[buildType] for buildType in args.build_types}
-    runType = RunType[args.run_type]
+    buildStage = BuildStage[args.build_stage]
+    rerunPrecedingStages = args.rerun_preceding_stages
 
     flag__BUILD_SHARED_LIBS = "-DBUILD_SHARED_LIBS=ON" if args.BUILD_SHARED_LIBS else "-DBUILD_SHARED_LIBS=OFF"
     cmakeFlags = [flag__BUILD_SHARED_LIBS]
@@ -721,7 +764,7 @@ def main():
 
     buildRunner = BUILD_RUNNERS[toolset](buildTypes)
     buildRunner.setCMakeFlags(cmakeFlags)
-    buildRunner.run(runType)
+    buildRunner.run(buildStage, rerunPrecedingStages)
 
 
 if __name__ == "__main__":

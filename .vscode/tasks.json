@@ -16,8 +16,8 @@
     ],
     "tasks": [
         {
-            "label": "Linux GCC. Build",
-            "detail": "Build with GCC on Linux",
+            "label": "Linux GCC. Compile",
+            "detail": "Compile with GCC on Linux",
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -28,14 +28,14 @@
                 "${workspaceFolder}/build.py",
                 "--toolset", "UnixMakefiles_GCC",
                 "--build_types", "${input:buildType}",
-                "--run_type", "Build"
+                "--build_stage", "Compile"
             ],
             "problemMatcher": []
         },
 
         {
-            "label": "Windows MinGW. Build",
-            "detail": "Build with MinGW on Windows",
+            "label": "Windows MinGW. Compile",
+            "detail": "Compile with MinGW on Windows",
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -46,14 +46,14 @@
                 "${workspaceFolder}\\build.py",
                 "--toolset", "MinGWMakefiles_MinGW",
                 "--build_types", "${input:buildType}",
-                "--run_type", "Build"
+                "--build_stage", "Compile"
             ],
             "problemMatcher": []
         },
 
         {
-            "label": "Windows VS2022 MSVC. Build",
-            "detail": "Build with VS2022 MSVC on Windows",
+            "label": "Windows VS2022 MSVC. Compile",
+            "detail": "Compile with VS2022 MSVC on Windows",
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -64,7 +64,7 @@
                 "${workspaceFolder}\\build.py",
                 "--toolset", "VS2022_MSVC",
                 "--build_types", "${input:buildType}",
-                "--run_type", "Build"
+                "--build_stage", "Compile"
             ],
             "problemMatcher": []
         }
