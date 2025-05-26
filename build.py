@@ -734,8 +734,9 @@ If a build stage fails during current build, the next stages are not run."
     parser.add_argument(
         "--BUILD_SHARED_LIBS",
         action="store_true",
-        help="Build implicit type (DEFAULT) libraries as shared. It is possible to override this option for each library, using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. " \
-        "Library name must be typed in uppercase."
+        help=\
+"Build implicit type (DEFAULT) libraries as shared.\n\
+It is possible to override this option for each library, using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
     )
 
     args, unknownArgs = parser.parse_known_args()

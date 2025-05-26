@@ -4,6 +4,15 @@
       COMPONENT Development
     )
 * ? Remove "set_env" and ".env.vscode" scripts and copy 3rd-party libraries to "build/.../bin" and "install/.../bin" instead.
+    It can be achieved using
+    ```
+    set_target_properties(iTarget PROPERTIES
+        BUILD_RPATH "$ORIGIN/../lib;$ORIGIN/../other_lib"
+        INSTALL_RPATH ""
+        # On Linux dynamic lins are placed to "lib" and executables into "bin":
+        # Also add "../lib" to both BUILD_RPATH and INSTALL_RPATH of executables.
+    )
+    ```
 * ? Make some variables from "./cmake/modules/SetUpTargets.cmake" accessible only within the file.
 
 * Generate "LibName.h" with exports from a CMake or Python script.
@@ -17,3 +26,5 @@
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
 * Add packaging.
 * Add CI/CD.
+* Use InstallRequiredSystemLibraries CMake module.
+* What if an external shared lib A depends on another shared lib B, A and B are in different dirs? SetUpTargets does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
