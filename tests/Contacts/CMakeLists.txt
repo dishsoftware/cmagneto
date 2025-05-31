@@ -3,8 +3,9 @@ add_executable(TESTS_contacts
 )
 
 target_link_libraries(TESTS_contacts
-    GTest::gtest_main
-    contacts
+    PRIVATE
+        GTest::gtest_main
+        contacts
 )
 
 set_test_discovery(TESTS_contacts)
