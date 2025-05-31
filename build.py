@@ -19,8 +19,9 @@ class BuildType(Enum):
 class BuildStage(Enum):
     Generate = 0 # Generate project files.
     Compile = 1 # Compile the project (populate build directory with artifacts).
-    RunTests = 2
-    Install = 3 # Install the project (copy artifacts to install directory).
+    CompileTests = 2
+    RunTests = 3
+    Install = 4 # Install the project (copy artifacts to install directory).
 
 
 class RunPrecedingStages(Enum):
@@ -84,6 +85,7 @@ class BuildRunner:
 
     RUN_TESTS__FILE_NAME_WE = "run_tests"
     BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
+    TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
     TEST_REPORT__FILE_NAME = "test_report.xml"
 
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
@@ -168,6 +170,11 @@ class BuildRunner:
         buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.BUILD_SUMMARY__FILE_NAME)
         return os.path.exists(buildSummaryFilePath)
 
+    def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the compiled tests file exists for the specified build type."""
+        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME)
+        return os.path.exists(compiledTestsFilePath)
+
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
         status(text + "...")
@@ -186,6 +193,11 @@ class BuildRunner:
         """Returns True if the test report file exists for the specified build type."""
         testReportFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_REPORT__FILE_NAME)
         return os.path.exists(testReportFilePath)
+
+    def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the compiled tests file exists for the specified build type."""
+        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME)
+        return os.path.exists(compiledTestsFilePath)
 
     def installDir(self) -> str:
         """Returns the absolute path to the install directory."""
@@ -219,6 +231,8 @@ class BuildRunner:
                 return isStageRequiredLambda(BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
             case BuildStage.Compile:
                 return isStageRequiredLambda(BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
+            case BuildStage.CompileTests:
+                return isStageRequiredLambda(BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
             case BuildStage.RunTests:
                 return isStageRequiredLambda(BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
             case BuildStage.Install:
@@ -431,6 +445,9 @@ class BuiildRunnerSingleConfig(BuildRunner):
             if (self.isStageRequired(BuildStage.Compile, buildType, iBuildStage, iRunPrecedingStages)):
                 self.__compile(buildType)
 
+            if (self.isStageRequired(BuildStage.CompileTests, buildType, iBuildStage, iRunPrecedingStages)):
+                self.__compileTests(buildType)
+
             if (self.isStageRequired(BuildStage.RunTests, buildType, iBuildStage, iRunPrecedingStages)):
                 self._runTests(buildType)
 
@@ -490,6 +507,16 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         status(text + " finished.\n")
 
+    def __compileTests(self, iBuildType: BuildType) -> None:
+        text = f"Compiling tests ({iBuildType.name})"
+        status(text + "...")
+
+        # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
+        command = ["cmake", "--build", self.buildDirForBuildType(iBuildType), "--target", "build_tests"]
+        runCommand(command)
+
+        status(text + " finished.\n")
+
     def __install(self, iBuildType: BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
         status(text + "...")
@@ -523,6 +550,9 @@ class BuildRunnerMultiConfig(BuildRunner):
         for buildType in self.buildTypes():
             if (self.isStageRequired(BuildStage.Compile, buildType, iBuildStage, iRunPrecedingStages)):
                 self.__compile(buildType)
+
+            if (self.isStageRequired(BuildStage.CompileTests, buildType, iBuildStage, iRunPrecedingStages)):
+                self.__compileTests(buildType)
 
             if (self.isStageRequired(BuildStage.RunTests, buildType, iBuildStage, iRunPrecedingStages)):
                 self._runTests(buildType)
@@ -595,6 +625,21 @@ class BuildRunnerMultiConfig(BuildRunner):
         command = [
             "cmake",
             "--build", self.buildDir(),
+            "--config", iBuildType.name
+        ]
+        runCommand(command)
+
+        status(text + " finished.\n")
+
+    def __compileTests(self, iBuildType: BuildType) -> None:
+        text = f"Compiling tests ({iBuildType.name})"
+        status(text + "...")
+
+        # It does not matter from which folder "cmake --build" is called, because the build directory is absolute.
+        command = [
+            "cmake",
+            "--build", self.buildDir(),
+            "--target", "build_tests",
             "--config", iBuildType.name
         ]
         runCommand(command)
@@ -725,10 +770,11 @@ f"Specifies whether to run preceding build stages. Default is {DEFAULT_RPS.name}
 {RunPrecedingStages.Skip.name}: skip preceding build stages, even if their artifacts do not exist.\n\
 Artifact of {BuildStage.Generate.name} stage is the build directory.\n\
 Artifact of {BuildStage.Compile.name} stage is \"{BuildRunner.BUILD_SUMMARY__FILE_NAME}\".\n\
+Artifact of {BuildStage.CompileTests.name} stage is \"{BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME}\".\n\
 Artifact of {BuildStage.RunTests.name} stage is \"{BuildRunner.TEST_REPORT__FILE_NAME}\".\n\
 Artifact of {BuildStage.Install.name} stage is the install directory.\n\
 Note: only the presence of preceding stage artifacts is checked, not the success of execution of a previous build.\n\
-Note: \"{BuildRunner.TEST_REPORT__FILE_NAME}\" is not deleted, if project is recompiled.\n\
+Note: \"{BuildRunner.TEST_REPORT__FILE_NAME}\" is not deleted, if tests are recompiled.\n\
 If a build stage fails during current build, the next stages are not run."
     )
     parser.add_argument(

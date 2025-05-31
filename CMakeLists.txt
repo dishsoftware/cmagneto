@@ -3,6 +3,7 @@ set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
 
 project(EnowSW_Contacts
+    DESCRIPTION "EnowSW Contacts provides full control on how, when and where contacts contacts are stored and synchronized."
     VERSION 1.0.0
     LANGUAGES CXX
 )
@@ -30,4 +31,5 @@ set_up__run_tests__script()
 set_up__build_summary__file()
 
 
-add_subdirectory(tests)
+add_subdirectory(tests EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
+add__build_tests__target()

@@ -8,4 +8,4 @@ target_link_libraries(TESTS_contacts
         contacts
 )
 
-set_test_discovery(TESTS_contacts)
+register_test_target(TESTS_contacts)

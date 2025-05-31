@@ -850,6 +850,7 @@ function(set_up__run__script)
 endfunction()
 
 
+set(TEST_BUILD_SUMMARY__FILE_NAME "test_build_summary.txt")
 set(RUN_TESTS__SCRIPT_NAME_WE "run_tests")
 set(RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
 set(TEST_REPORT__FILE_NAME "test_report.xml")
@@ -987,5 +988,64 @@ function(set_up__build_summary__file)
     # Install the file.
     install(FILES "${_summaryOutputPath}"
         DESTINATION "${SUBDIR_SUMMARY}"
+    )
+endfunction()
+
+
+# Appended every time register_test_target(iTestTargetName) is called.
+set_property(GLOBAL PROPERTY REGISTERED_TEST_TARGETS "")
+
+
+function(register_test_target iTestTargetName)
+    get_property(_registeredTestTargets GLOBAL PROPERTY REGISTERED_TEST_TARGETS)
+    list(APPEND _registeredTestTargets ${iTestTargetName})
+    set_property(GLOBAL PROPERTY REGISTERED_TEST_TARGETS "${_registeredTestTargets}")
+
+    # Set test discovery for the test target.
+    set_test_discovery(${iTestTargetName})
+endfunction()
+
+
+set(GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/generate_build_tests_summary.cmake")
+
+
+#[[
+    add__build_tests__target
+
+    Creates "build_tests" target that depends on all registered test targets.
+    Allows to build all tests with a single command, e.g.: "cmake --build . --target build_tests".
+]]
+function(add__build_tests__target)
+    get_property(_registeredTestTargets GLOBAL PROPERTY REGISTERED_TEST_TARGETS)
+    if(NOT _registeredTestTargets)
+        message(STATUS "add__build_tests__target: No registered test targets.")
+        return()
+    endif()
+
+    set(fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
+
+    is_multiconfig(IS_MULTICONFIG)
+    if(IS_MULTICONFIG)
+        set(_filePath "${fileDir}/$<CONFIG>/${TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_buildType $<CONFIG>)
+    else()
+        set(_filePath "${fileDir}/${TEST_BUILD_SUMMARY__FILE_NAME}")
+    endif()
+
+    # Add a target that depends on all registered test targets.
+    add_custom_target(build_tests
+        DEPENDS ${_registeredTestTargets}
+        COMMENT "Compiling tests."
+    )
+
+    # Write a file, which will be used by "build.py" to determine whether tests are built.
+    add_custom_command(
+        TARGET build_tests
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -DFILE_PATH="${_filePath}"
+            -DTEST_TARGETS="${_registeredTestTargets}"
+            -P "${GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH}"
+        COMMENT "Composing ${TEST_BUILD_SUMMARY__FILE_NAME}"
     )
 endfunction()
