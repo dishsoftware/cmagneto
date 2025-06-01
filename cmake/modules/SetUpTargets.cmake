@@ -961,9 +961,16 @@ function(set_up__build_summary__file)
         set(_buildType "${CMAKE_BUILD_TYPE}")
     endif()
 
+    add_custom_target(build_summary ALL)
+    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
+    if(_registeredTargets)
+        add_dependencies(build_summary ${_registeredTargets})
+    endif()
+
+    # The file is used by "build.py" to determine whether the project is compiled.
     add_custom_command(
+        TARGET build_summary POST_BUILD
         COMMENT "Composing ${BUILD_SUMMARY__FILE_NAME}"
-        OUTPUT "${_summaryOutputPath}"
         COMMAND ${CMAKE_COMMAND}
             -DOUT="${_summaryOutputPath}"
             -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
@@ -975,15 +982,6 @@ function(set_up__build_summary__file)
             -DCMAKE_BUILD_TYPE="${_buildType}"
             -P "${GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
     )
-
-    add_custom_target(build_summary ALL
-        DEPENDS "${_summaryOutputPath}"
-    )
-
-    get_property(_registeredTargets GLOBAL PROPERTY REGISTERED_TARGETS)
-    if(_registeredTargets)
-        add_dependencies(build_summary ${_registeredTargets})
-    endif()
 
     # Install the file.
     install(FILES "${_summaryOutputPath}"
@@ -1038,10 +1036,9 @@ function(add__build_tests__target)
         COMMENT "Compiling tests."
     )
 
-    # Write a file, which will be used by "build.py" to determine whether tests are built.
+    # The file is used by "build.py" to determine whether tests are compiled.
     add_custom_command(
-        TARGET build_tests
-        POST_BUILD
+        TARGET build_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND}
             -DFILE_PATH="${_filePath}"
             -DTEST_TARGETS="${_registeredTestTargets}"
