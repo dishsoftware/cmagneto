@@ -1,0 +1,8 @@
+Welcome to the EnowContacts Installer
+
+This wizard will guide you through the installation of the EnowContacts library,
+a lightweight and open-source C++ component for managing contact data.
+
+Please review the license and follow the instructions to complete installation.
+
+Thank you for choosing EnowContacts and supporting open-source development!

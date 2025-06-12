@@ -1,0 +1,7 @@
+EnowContacts is an open-source C++ library for managing and organizing contact information.
+It is part of the EnowSW suite and is built with Qt for cross-platform support.
+
+This package installs the EnowContacts library and associated development files for use in C++ projects.
+
+Project URL: https://github.com/your-username/EnowSW_Contacts
+License: MIT
