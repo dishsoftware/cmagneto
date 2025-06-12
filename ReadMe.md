@@ -3,6 +3,7 @@
 - C++ 17 (or later) compiler (GCC, or MinGW, or MSVC)
 - Python 3.10 or later
 - Graphviz (optional)
+- Qt Installer Framework 4.8 or later
 
 # Dependecies
 - Qt6
@@ -35,6 +36,9 @@ Define environment variable `BOOST_MSVC2022_DIR`, which refers to a directory wi
 The repo contains VS Code files, which configure intelliSense.
 Select "Windows_MSVC2022" configuration among other options in "C/C++ Configuration" settings.
 These IDE files refer to `VC2022ToolsInstallDir` environment variable. E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.
+
+## All Windows-based toolsets
+Add path to Qt Installer Framework (e.g. `C:\Qt\Tools\QtInstallerFramework\4.8\bin`) to PATH variable.
 
 # How to build
 `python ./build.py --help`

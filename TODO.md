@@ -1,8 +1,3 @@
-* ? Add to CMake
-    install(
-      ...
-      COMPONENT Development
-    )
 * ? Remove "set_env" and ".env.vscode" scripts and copy 3rd-party libraries to "build/.../bin" and "install/.../bin" instead.
     It can be achieved using
     ```
@@ -14,6 +9,7 @@
     )
     ```
 * ? Make some variables from "./cmake/modules/SetUpTargets.cmake" accessible only within the file.
+* ? Add project name as prefix to all variables in SetUpTargets to support superbuild.
 
 * Generate "LibName.h" with exports from a CMake or Python script.
 * Add a script, which copies 3rd-party shared libraries to "install/.../3rd_party" directory. The script must also copy ".pdb" or analogues, if they exist.
@@ -28,3 +24,4 @@
 * Add CI/CD.
 * Use InstallRequiredSystemLibraries CMake module.
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? SetUpTargets does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
+* Add function set_up_interface_library.

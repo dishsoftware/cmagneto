@@ -35,12 +35,17 @@ set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
 set(SUBDIR_SUMMARY "summary")
 set(SUBDIR_CTESTTESTFILE "tests")
+set(SUBDIR_PACKAGES "packages")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_SHARED}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}")
 
-# These postfixes do not affect on executable target output names.
+set(COMPONENT__RUNTIME "Runtime")
+set(COMPONENT__DEVELOPMENT "Development")
+set(COMPONENT__BUILD_MACHINE_SPECIFIC "BuildMachineSpecific")
+
+# These postfixes do not affect executable target output names.
 set(CMAKE_DEBUG_POSTFIX "_D")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "_RDI")
 set(CMAKE_MINSIZEREL_POSTFIX "_MSR")
@@ -56,6 +61,23 @@ function(print_platform_and_compiler)
     message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
     message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
     message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+endfunction()
+
+
+#[[
+    are_paths_equal
+
+    Resolves variables, "..", ".", etc. and compares paths.
+]]
+function(are_paths_equal iPathA iPathB oAreEqual)
+    file(REAL_PATH "${iPathA}" _pathA)
+    file(REAL_PATH "${iPathB}" _pathB)
+
+    if("${_pathA}" STREQUAL "${_pathB}")
+        set(${oAreEqual} TRUE PARENT_SCOPE)
+    else()
+        set(${oAreEqual} FALSE PARENT_SCOPE)
+    endif()
 endfunction()
 
 
@@ -318,6 +340,7 @@ function(set_up_project)
     install(EXPORT ${PROJECT_NAME}Targets
         NAMESPACE ${PROJECT_NAME}::
         DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${COMPONENT__DEVELOPMENT}
     )
 
     # Create a template "${PROJECT_NAME}Config.cmake.in" file.
@@ -348,6 +371,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
         DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${COMPONENT__DEVELOPMENT}
     )
 endfunction()
 
@@ -434,10 +458,18 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     # Installation
     install(TARGETS ${iLibName}
         EXPORT ${PROJECT_NAME}Targets
-        ARCHIVE DESTINATION ${SUBDIR_STATIC}
-        LIBRARY DESTINATION ${SUBDIR_SHARED}
-        RUNTIME DESTINATION ${SUBDIR_EXECUTABLE}
-        PUBLIC_HEADER DESTINATION ${SUBDIR_INCLUDE}/${iLibName}
+        ARCHIVE
+            DESTINATION ${SUBDIR_STATIC}
+            COMPONENT ${COMPONENT__DEVELOPMENT}
+        LIBRARY
+            DESTINATION ${SUBDIR_SHARED}
+            COMPONENT ${COMPONENT__RUNTIME}
+        RUNTIME
+            DESTINATION ${SUBDIR_EXECUTABLE}
+            COMPONENT ${COMPONENT__RUNTIME}
+        PUBLIC_HEADER
+            DESTINATION ${SUBDIR_INCLUDE}/${iLibName}
+            COMPONENT ${COMPONENT__DEVELOPMENT}
         # INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} is unnecessary.
         # If ^ line is uncommented, a generated ${iLibName}Config.cmake will have
         # INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/${SUBDIR_INCLUDE}/${iLibName}",
@@ -445,7 +477,10 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
     )
 
     qt_install_ts_resources("${iTSResources}" ${SUBDIR_RESOURCES}/${iLibName}/translations)
-    install(FILES ${iOtherResources} DESTINATION ${SUBDIR_RESOURCES}/${iLibName}/other)
+    install(FILES ${iOtherResources}
+        DESTINATION ${SUBDIR_RESOURCES}/${iLibName}/other
+        COMPONENT ${COMPONENT__RUNTIME}
+    )
     ####################################################################
 
 
@@ -491,6 +526,7 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
     install(TARGETS ${iExeName}
         EXPORT ${PROJECT_NAME}Targets
         DESTINATION ${SUBDIR_EXECUTABLE}
+        COMPONENT ${COMPONENT__RUNTIME}
     )
     ####################################################################
 
@@ -548,8 +584,10 @@ endfunction()
     parameters:
         iAddExePermission - if TRUE, the file is given execute permission (Unix only).
         iInstall - if TRUE, the file is installed to ${SUBDIR_EXECUTABLE}.
+        iComponentName - name of the component to which the file is installed.
+            If iInstall is FALSE, this parameter is ignored.
 ]]
-function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall)
+function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
     is_multiconfig(IS_MULTICONFIG)
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
@@ -595,24 +633,44 @@ function(set_up_file iFileNameGetterName iContentGetterName iAddExePermission iI
         # Add the file to build dir(s) at configire time.
         file(WRITE "${_filePath}" "${_fileContent}")
         if (UNIX AND iAddExePermission)
-            execute_process(COMMAND chmod +x "${_filePath}")
+            execute_process(COMMAND chmod u+x "${_filePath}")
         endif()
     endif()
 
     # Install the file.
     if(iInstall)
-        if(UNIX AND iAddExePermission)
-            install(
-                FILES "${_filePath}"
-                DESTINATION "${SUBDIR_EXECUTABLE}"
-                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-            )
+        if(iComponentName)
+            if(UNIX AND iAddExePermission)
+            # Maybe, it is better to use USE_SOURCE_PERMISSIONS.
+            # Explicit setting of permissions only provide a bit of additional security.
+                install(
+                    FILES "${_filePath}"
+                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    COMPONENT "${iComponentName}"
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                )
+            else()
+                install(
+                    FILES "${_filePath}"
+                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    COMPONENT "${iComponentName}"
+                    PERMISSIONS OWNER_READ OWNER_WRITE
+                )
+            endif()
         else()
-            install(
-                FILES "${_filePath}"
-                DESTINATION "${SUBDIR_EXECUTABLE}"
-                PERMISSIONS OWNER_READ OWNER_WRITE
-            )
+            if(UNIX AND iAddExePermission)
+                install(
+                    FILES "${_filePath}"
+                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                )
+            else()
+                install(
+                    FILES "${_filePath}"
+                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    PERMISSIONS OWNER_READ OWNER_WRITE
+                )
+            endif()
         endif()
     endif()
 endfunction()
@@ -670,7 +728,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__3rd_party_shared_libs__list)
-    set_up_file("get__3rd_party_shared_libs__file_name" "generate__3rd_party_shared_libs__content" FALSE TRUE)
+    set_up_file("get__3rd_party_shared_libs__file_name" "generate__3rd_party_shared_libs__content" FALSE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -741,7 +799,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__set_env__script)
-    set_up_file("get__set_env__script_file_name" "generate__set_env__script_content" TRUE TRUE)
+    set_up_file("get__set_env__script_file_name" "generate__set_env__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -789,7 +847,7 @@ endfunction()
     The function must be called after all set_up_library(iLibName) and set_up_executable(iExeName) are called.
 ]]
 function(set_up__env_vscode__file)
-    set_up_file("get__env_vscode__file_name" "generate__env_vscode__file_content" FALSE FALSE)
+    set_up_file("get__env_vscode__file_name" "generate__env_vscode__file_content" FALSE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -846,7 +904,7 @@ endfunction()
     The function must be called after set_up__set_env__script() is called.
 ]]
 function(set_up__run__script)
-    set_up_file("get__run__script_file_name" "generate__run__script_content" TRUE TRUE)
+    set_up_file("get__run__script_file_name" "generate__run__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -913,7 +971,7 @@ endfunction()
     If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
 ]]
 function(set_up__run_tests__script)
-    set_up_file("get__run_tests__script_file_name" "generate__run_tests__script_content" TRUE FALSE)
+    set_up_file("get__run_tests__script_file_name" "generate__run_tests__script_content" TRUE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -986,6 +1044,7 @@ function(set_up__build_summary__file)
     # Install the file.
     install(FILES "${_summaryOutputPath}"
         DESTINATION "${SUBDIR_SUMMARY}"
+        COMPONENT ${COMPONENT__BUILD_MACHINE_SPECIFIC}
     )
 endfunction()
 
@@ -1020,14 +1079,14 @@ function(add__build_tests__target)
         return()
     endif()
 
-    set(fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
+    set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
 
     is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_filePath "${fileDir}/$<CONFIG>/${TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/$<CONFIG>/${TEST_BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
     else()
-        set(_filePath "${fileDir}/${TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/${TEST_BUILD_SUMMARY__FILE_NAME}")
     endif()
 
     # Add a target that depends on all registered test targets.

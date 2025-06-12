@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24
 
 project(EnowSW_Contacts
     DESCRIPTION "EnowSW Contacts provides full control on how, when and where contacts contacts are stored and synchronized."
+    HOMEPAGE_URL "https://enowsw.io/contacts"
     VERSION 1.0.0
     LANGUAGES CXX
 )
@@ -33,3 +34,9 @@ set_up__build_summary__file()
 
 add_subdirectory(tests EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
 add__build_tests__target()
+
+
+# The project only tries to define packaging if it is the top level project.
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/packaging/CPackConfig.cmake)
+endif()
