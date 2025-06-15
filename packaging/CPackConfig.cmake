@@ -7,7 +7,21 @@ if(WIN32)
 # elseif(APPLE)
     # set(_packageGenerators productbuild)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(_packageGenerators "IFW")
+    execute_process(COMMAND which dpkg
+                    RESULT_VARIABLE _hasDPKG
+                    OUTPUT_QUIET ERROR_QUIET)
+
+    execute_process(COMMAND which rpm
+                    RESULT_VARIABLE _hasRPM
+                    OUTPUT_QUIET ERROR_QUIET)
+
+    if(_hasDPKG EQUAL 0)
+        set(_packageGenerators "DEB")
+    elseif(_hasRPM EQUAL 0)
+        set(_packageGenerators "RPM")
+    else()
+        set(_packageGenerators "TGZ")
+    endif()
 else()
     set(_packageGenerators "TGZ")
 endif()

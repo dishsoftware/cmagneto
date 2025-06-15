@@ -1,0 +1,27 @@
+stages:
+  - build_test_package
+#  - upload_package
+
+build__ubuntu24amd:
+  stage: build_test_package
+  image: registry.gitlab.com/enowsw/contacts/v1.0.0__ubuntu24amd__build:1.0.0
+  script:
+    - python3 build.py --LIB_CONTACTS_SHARED=ON --build_types Release
+  artifacts:
+    paths:
+      - build/packages/*.deb
+    expire_in: 1 week
+  rules:
+    - when: manual
+
+# Upload .deb to GitLab Debian Package Registry.
+#upload__ubuntu24amd_deb:
+#  stage: upload_package
+#  needs: [build__ubuntu24amd]
+#  script:
+#    - export DEB_FILE=$(ls build/packages/*.deb)
+#    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+#           --upload-file "$DEB_FILE" \
+#           "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/debian/pool/main/m/enowsw/$(basename $DEB_FILE)"
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "main"'

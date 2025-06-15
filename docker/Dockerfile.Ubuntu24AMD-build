@@ -1,0 +1,27 @@
+FROM ubuntu:24.04
+
+# Metadata
+LABEL name="enowsw_contacts_1.0.0__ubuntu24amd__build"
+LABEL description="Ubuntu 24 AMD with all the dependencies and tools to build EnowSW Contacts 1.0.0 (vesion of the project and the Docker image are not related)."
+LABEL maintainer="dmit.shvyd@example.com"
+LABEL version="1.0.0"
+
+# Avoid interactive prompts during installs.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and dev tools.
+RUN apt update && apt install -y \
+    git \
+    python3 \
+    python-is-python3 \
+    build-essential \
+    cmake \
+    graphviz \
+    qt6-base-dev \
+    libboost-all-dev \
+    && apt clean
+
+# Optional: Add a user if needed.
+# RUN useradd -ms /bin/bash builder
+
+WORKDIR /project
