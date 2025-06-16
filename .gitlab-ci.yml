@@ -1,6 +1,6 @@
 stages:
   - build_test_package
-#  - upload_package
+  - upload_package
 
 build__ubuntu24amd:
   stage: build_test_package
@@ -15,13 +15,17 @@ build__ubuntu24amd:
     - when: manual
 
 # Upload .deb to GitLab Debian Package Registry.
-#upload__ubuntu24amd_deb:
-#  stage: upload_package
-#  needs: [build__ubuntu24amd]
-#  script:
-#    - export DEB_FILE=$(ls build/packages/*.deb)
-#    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-#           --upload-file "$DEB_FILE" \
-#           "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/debian/pool/main/m/enowsw/$(basename $DEB_FILE)"
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == "main"'
+upload__ubuntu24amd_deb:
+  stage: upload_package
+  needs: [build__ubuntu24amd]
+  script:
+    - |
+      for file in build/UnixMakefiles_GCC/Release/packages/*.deb; do
+        echo "Uploading $file"
+        curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+             --upload-file "$file" \
+             "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/debian/pool/main/${CI_PROJECT_NAME:0:1}/$CI_PROJECT_NAME/$(basename "$file")"
+      done
+  rules:
+    #- if: '$CI_COMMIT_BRANCH == "main"'
+    - when: manual
