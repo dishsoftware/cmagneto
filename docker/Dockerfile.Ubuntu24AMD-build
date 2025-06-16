@@ -19,6 +19,7 @@ RUN apt update && apt install -y \
     graphviz \
     qt6-base-dev \
     libboost-all-dev \
+    dpkg-dev \
     && apt clean
 
 # Optional: Add a user if needed.

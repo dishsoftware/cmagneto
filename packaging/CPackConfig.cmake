@@ -37,6 +37,7 @@ set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${SUBDIR_PACKAGES}")
 
 set(CPACK_PACKAGE_NAME "EnowContacts")
 set(CPACK_PACKAGE_VENDOR "Enow Software")
+set(CPACK_PACKAGE_CONTACT "Dim Shvydkoy <dmit.shvyd@gmail.com>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${CMAKE_PROJECT_DESCRIPTION}")
 
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -88,6 +89,14 @@ list(REMOVE_ITEM CPACK_COMPONENTS_ALL
     ${COMPONENT__BUILD_MACHINE_SPECIFIC}
 )
 
+# Include generator-specific (*Config_before_include_CPack.cmake) config files.
+foreach(_generator IN LISTS _packageGenerators)
+    message(STATUS "Configuring CPack for generator '${_generator}'...")
+    if(_generator STREQUAL "DEB")
+        include(${CMAKE_CURRENT_LIST_DIR}/DEB/DEBConfig_before_include_CPack.cmake)
+    endif()
+endforeach()
+
 include(CPack)
 
 cpack_add_install_type(INSTALL_TYPE__NORMAL
@@ -126,8 +135,10 @@ cpack_add_component(${COMPONENT__BUILD_MACHINE_SPECIFIC}
 # Include generator-specific config files.
 foreach(_generator IN LISTS _packageGenerators)
     message(STATUS "Configuring CPack for generator '${_generator}'...")
-    if (_generator STREQUAL "IFW")
+    if(_generator STREQUAL "IFW")
         include(${CMAKE_CURRENT_LIST_DIR}/IFW/IFWConfig.cmake)
+    elseif(_generator STREQUAL "DEB")
+        include(${CMAKE_CURRENT_LIST_DIR}/DEB/DEBConfig.cmake)
     else()
         message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
     endif()

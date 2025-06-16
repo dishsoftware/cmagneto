@@ -6,10 +6,10 @@ build__ubuntu24amd:
   stage: build_test_package
   image: registry.gitlab.com/enowsw/contacts/v1.0.0__ubuntu24amd__build:1.0.0
   script:
-    - python3 build.py --LIB_CONTACTS_SHARED=ON --build_types Release
+    - python3 build.py --toolset UnixMakefiles_GCC --LIB_CONTACTS_SHARED=ON --build_types Release
   artifacts:
     paths:
-      - build/packages/*.deb
+      - build/UnixMakefiles_GCC/Release/packages/*.deb
     expire_in: 1 week
   rules:
     - when: manual
