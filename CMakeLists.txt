@@ -2,10 +2,21 @@ set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
 cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
 
-project(EnowSW_Contacts
-    DESCRIPTION "EnowSW Contacts provides full control on how, when and where contacts contacts are stored and synchronized."
-    HOMEPAGE_URL "https://enowsw.io/contacts"
-    VERSION 1.0.0
+# Parse ./meta/project.json.
+file(READ "${CMAKE_SOURCE_DIR}/meta/Project.json" PROJECT_JSON_TEXT)
+string(JSON PROJECT_JSON__COMPANY_NAME_LEGAL GET "${PROJECT_JSON_TEXT}" "CompanyName_LEGAL")
+string(JSON PROJECT_JSON__COMPANY_NAME_FULL GET "${PROJECT_JSON_TEXT}" "CompanyName_FULL")
+string(JSON PROJECT_JSON__COMPANY_NAME_SHORT GET "${PROJECT_JSON_TEXT}" "CompanyName_SHORT")
+string(JSON PROJECT_JSON__PROJECT_NAME_BASE GET "${PROJECT_JSON_TEXT}" "ProjectNameBase")
+string(JSON PROJECT_JSON__PROJECT_DESCRIPTION GET "${PROJECT_JSON_TEXT}" "ProjectDescription")
+string(JSON PROJECT_JSON__PROJECT_HOMEPAGE GET "${PROJECT_JSON_TEXT}" "ProjectHomepage")
+string(JSON PROJECT_JSON__PROJECT_VERSION GET "${PROJECT_JSON_TEXT}" "ProjectVersion")
+
+
+project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
+    DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
+    HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
+    VERSION "${PROJECT_JSON__PROJECT_VERSION}"
     LANGUAGES CXX
 )
 

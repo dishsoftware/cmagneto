@@ -1,9 +1,7 @@
 FROM ubuntu:24.04
 
 # Metadata
-LABEL name="enowsw_contacts_1.0.0__ubuntu24amd__build"
-LABEL description="Ubuntu 24 AMD with all the dependencies and tools to build EnowSW Contacts 1.0.0 (vesion of the project and the Docker image are not related)."
-LABEL maintainer="dmit.shvyd@example.com"
+LABEL description="Ubuntu 24 AMD with all the dependencies and tools to build Enow Contacts 1.0.0 (vesion of the project and the Docker image are not related)."
 LABEL version="1.0.0"
 
 # Avoid interactive prompts during installs.
@@ -21,8 +19,5 @@ RUN apt update && apt install -y \
     libboost-all-dev \
     dpkg-dev \
     && apt clean
-
-# Optional: Add a user if needed.
-# RUN useradd -ms /bin/bash builder
 
 WORKDIR /project
