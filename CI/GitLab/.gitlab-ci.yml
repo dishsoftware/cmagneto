@@ -1,34 +1,51 @@
 variables:
   GIT_DEPTH: 1 # Get only the latest commit.
 
-stages:
-  - build_test_package
-  - upload_package
 
-build__ubuntu24amd:
-  stage: build_test_package
-  image: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build:1.0.0
+stages:
+  - build-test-package
+  - upload_packages
+
+
+deduce_build_image__ubuntu24amd:
+  stage: build-test-package
+  image: python:3
   script:
-    - python3 build.py --toolset UnixMakefiles_GCC --LIB_CONTACTS_SHARED=ON --build_types Release
+    # Generate .env file, which contains the var REMOTE_IMAGE_NAME_WITH_TAG with address (name) of Docker image with build environment.
+    - python ./CI/Docker/build_docker_image.py --file ./CI/Docker/Dockerfile.Ubuntu24AMD__build --build_stage GenerateEnvFile
+    - cat ./CI/Docker/.tmp/Dockerfile.Ubuntu24AMD__build.env
   artifacts:
-    paths:
-      - build/UnixMakefiles_GCC/Release/packages/*.deb
-    expire_in: 1 week
+      reports:
+          dotenv: ./CI/Docker/.tmp/Dockerfile.Ubuntu24AMD__build.env
   rules:
     - when: manual
 
-# Upload .deb to GitLab Debian Package Registry.
-upload__ubuntu24amd_deb:
-  stage: upload_package
-  needs: [build__ubuntu24amd]
+
+build-test-package__ubuntu24amd:
+  stage: build-test-package
+  needs: [deduce_build_image__ubuntu24amd]
+  image: ${REMOTE_IMAGE_NAME_WITH_TAG}
+  script:
+    - python build.py --toolset UnixMakefiles_GCC --build_types Release
+  artifacts:
+    when: always
+    paths:
+      - build/UnixMakefiles_GCC/Release/summary/test_report.xml
+      - build/UnixMakefiles_GCC/Release/packages/*.deb
+    reports:
+      junit: build/UnixMakefiles_GCC/Release/summary/test_report.xml
+    expire_in: 1 week
+
+
+# Upload generated .deb packages to GitLab Debian Package Registry.
+upload_deb_packages__ubuntu24amd:
+  stage: upload_packages
+  needs: [build-test-package__ubuntu24amd]
   script:
     - |
-      for file in build/UnixMakefiles_GCC/Release/packages/*.deb; do
-        echo "Uploading $file"
-        curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-             --upload-file "$file" \
-             "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/debian/pool/main/${CI_PROJECT_NAME:0:1}/$CI_PROJECT_NAME/$(basename "$file")"
+      for file in ./build/UnixMakefiles_GCC/Release/packages/*.deb; do
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/$(basename "${file}")"
+        echo "Uploading ${file} to ${url}"
+        curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "${file}" "${url}"
       done
-  rules:
-    #- if: '$CI_COMMIT_BRANCH == "main"'
-    - when: manual

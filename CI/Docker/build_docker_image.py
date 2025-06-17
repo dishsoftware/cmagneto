@@ -15,8 +15,9 @@ from scripts.MetadataHolder import MetadataHolder
 
 class DockerBuildRunner:
     class BuildStage(Enum):
-        Build = 0
-        Push = 1
+        GenerateEnvFile = 0 # Does not do anything with images, but creates DockerfileDir/.tmp/DockerfileName.env, where "DockerfileDir/DockerfileName" is --file argument value.
+        Build = 1
+        Push = 2
 
 
     class RunPrecedingStages(Enum):
@@ -66,9 +67,18 @@ class DockerBuildRunner:
         if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str) and isinstance(projectVersion, str)):
             error(f"{__class__.__name__}: can't get required metadata.")
 
-        platformNameAndEnvType = str(iDockerfilePath.name).removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
+        dockerFileNameSuffix = str(iDockerfilePath.name).removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
 
-        self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{platformNameAndEnvType}".lower()
+        suffixSubstrings = dockerFileNameSuffix.split("__")
+        getSuffixSubstring = lambda iIdx: suffixSubstrings[iIdx] if len(suffixSubstrings) > iIdx and suffixSubstrings[iIdx] else None
+        platform: str | None = getSuffixSubstring(0)
+        envType: str | None = getSuffixSubstring(1)
+
+        self.__imageDescription = f"{platform} image " if platform else "Image "
+        self.__imageDescription += f"with {envType} environment " if envType else ""
+        self.__imageDescription += f"for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
+
+        self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{dockerFileNameSuffix}".lower()
 
         self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistry"])
         dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistrySuffix"])
@@ -83,6 +93,9 @@ class DockerBuildRunner:
 
     def dockerFilePath(self) -> Path:
         return self.__dockerFilePath
+
+    def imageDescription(self) -> str:
+        return self.__imageDescription
 
     def imageVersion(self) -> str:
         """Returns version (tag) of the image to be built."""
@@ -102,6 +115,24 @@ class DockerBuildRunner:
     def imageMaintainer(self) -> str:
         return self.__imageMaintainer
 
+    def generateEnvFile(self):
+        text = f"Generation of .env file"
+        status(text + "...")
+
+        envFileContent: str = f"LOCAL_IMAGE_NAME={self.localImageName()}"
+        envFileContent += f"\nREMOTE_IMAGE_NAME={self.remoteImageName()}"
+        envFileContent += f"\nIMAGE_VERSION={self.imageVersion()}"
+        envFileContent += f"\nLOCAL_IMAGE_NAME_WITH_TAG={self.localImageName()}:{self.imageVersion()}"
+        envFileContent += f"\nREMOTE_IMAGE_NAME_WITH_TAG={self.remoteImageName()}:{self.imageVersion()}"
+
+        envFilePath = self.dockerFilePath().parent / ".tmp" / (str(self.dockerFilePath().name) + ".env")
+
+        envFilePath.parent.mkdir(parents=True, exist_ok=True)
+        with open(envFilePath, "w", encoding="utf-8") as file:
+            file.write(envFileContent)
+
+        status(text + " finished.\n")
+
     def build(self):
         text = f"Building docker image"
         status(text + "...")
@@ -110,8 +141,9 @@ class DockerBuildRunner:
             "docker", "build",
             "-f", str(self.dockerFilePath()),
             "-t", f"{self.localImageName()}:{self.imageVersion()}",
-            "--label", f"name=\"{self.localImageName()}\"",
-            "--label", f"maintainer=\"{self.imageMaintainer()}\"",
+            "--label", f"name={self.localImageName()}",
+            "--label", f"description={self.imageDescription()}",
+            "--label", f"maintainer={self.imageMaintainer()}",
             str(self.dockerFilePath().parent)
         ]
         runCommand(command)
@@ -141,12 +173,17 @@ class DockerBuildRunner:
         status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages):
-        if iBuildStage == DockerBuildRunner.BuildStage.Build or \
-            iRunPrecedingStages == DockerBuildRunner.RunPrecedingStages.Run and iBuildStage.value > DockerBuildRunner.BuildStage.Build.value:
+        isStageRequiredLamda = lambda iBuildStageOfStage, iBuildStage:  \
+            iBuildStage == iBuildStageOfStage or \
+            iRunPrecedingStages == DockerBuildRunner.RunPrecedingStages.Run and iBuildStage.value > iBuildStageOfStage.value
+
+        if isStageRequiredLamda(DockerBuildRunner.BuildStage.GenerateEnvFile, iBuildStage):
+            self.generateEnvFile()
+
+        if isStageRequiredLamda(DockerBuildRunner.BuildStage.Build, iBuildStage):
             self.build()
 
-        if iBuildStage == DockerBuildRunner.BuildStage.Push or \
-            iRunPrecedingStages == DockerBuildRunner.RunPrecedingStages.Run and iBuildStage.value > DockerBuildRunner.BuildStage.Push.value:
+        if isStageRequiredLamda(DockerBuildRunner.BuildStage.Push, iBuildStage):
             self.push()
 
 
@@ -163,14 +200,16 @@ DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.Docke
 {DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {", ".join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
-Pushes images to <DockerRegistry>/<DockerRegistrySuffix>/, where DockerRegistry and DockerRegistrySuffix are variables from ./meta/CI.json.",
+Pushes images to <DockerRegistry>/<DockerRegistrySuffix>/, where DockerRegistry and DockerRegistrySuffix are variables from ./meta/CI.json.\n\
+\n\
+Uses other variables from JSON files in ./meta to define image labels.",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--file", "-f",
         type=Path,
         required=True,
-        help="Path to a Dockerfile."
+        help="Path to a Dockerfile. Dockerfilename should be composed as 'Dockerfile.Platform__EnvType', e.g. 'Dockerfile.Ubuntu24AMD__build'."
     )
     DEFAULT_BUILD_STAGE = max(DockerBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(
