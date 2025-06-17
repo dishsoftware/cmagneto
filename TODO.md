@@ -20,10 +20,7 @@
 * Make inclusions of the project headers look like `#include <ProjectName/LibName/.../Subdir/.../Header.hpp>`.
 * Endorse specifying ProjectName as a namespace while linking targets of the project to other targets of the project. Support it in "./cmake/modules/SetUpTargets.cmake" and "./build.py".
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
-* Add packaging.
-* Add CI/CD.
 * Use InstallRequiredSystemLibraries CMake module.
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? SetUpTargets does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
 * Add function set_up_interface_library.
 * CMakePresets.json.
-* Create JSON with company, project names, maintainer, etc.
