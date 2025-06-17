@@ -1,0 +1,34 @@
+variables:
+  GIT_DEPTH: 1 # Get only the latest commit.
+
+stages:
+  - build_test_package
+  - upload_package
+
+build__ubuntu24amd:
+  stage: build_test_package
+  image: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build:1.0.0
+  script:
+    - python3 build.py --toolset UnixMakefiles_GCC --LIB_CONTACTS_SHARED=ON --build_types Release
+  artifacts:
+    paths:
+      - build/UnixMakefiles_GCC/Release/packages/*.deb
+    expire_in: 1 week
+  rules:
+    - when: manual
+
+# Upload .deb to GitLab Debian Package Registry.
+upload__ubuntu24amd_deb:
+  stage: upload_package
+  needs: [build__ubuntu24amd]
+  script:
+    - |
+      for file in build/UnixMakefiles_GCC/Release/packages/*.deb; do
+        echo "Uploading $file"
+        curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+             --upload-file "$file" \
+             "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/debian/pool/main/${CI_PROJECT_NAME:0:1}/$CI_PROJECT_NAME/$(basename "$file")"
+      done
+  rules:
+    #- if: '$CI_COMMIT_BRANCH == "main"'
+    - when: manual

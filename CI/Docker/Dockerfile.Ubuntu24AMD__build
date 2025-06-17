@@ -1,0 +1,23 @@
+FROM ubuntu:24.04
+
+# Metadata
+LABEL description="Ubuntu 24 AMD with all the dependencies and tools to build Enow Contacts 1.0.0 (vesion of the project and the Docker image are not related)."
+LABEL version="1.0.0"
+
+# Avoid interactive prompts during installs.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and dev tools.
+RUN apt update && apt install -y \
+    git \
+    python3 \
+    python-is-python3 \
+    build-essential \
+    cmake \
+    graphviz \
+    qt6-base-dev \
+    libboost-all-dev \
+    dpkg-dev \
+    && apt clean
+
+WORKDIR /project

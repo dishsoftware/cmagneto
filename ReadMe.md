@@ -10,6 +10,7 @@
 - Boost
 
 ## Ubuntu 24.04 GCC
+`dpkg-dev`
 `sudo apt-get install qt6-base-dev`
 `sudo apt-get install libboost-all-dev`
 

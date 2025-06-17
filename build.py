@@ -1,11 +1,10 @@
+from scripts.python_utils import *
 import os
-import sys
 import subprocess
 import shutil
 import platform
 import argparse
 import re
-import shlex
 from enum import Enum
 
 
@@ -30,52 +29,6 @@ class RunPrecedingStages(Enum):
     Run = 0 # Run preceding stages, if their artifacts do not exist.
     Rerun = 1 # Rerun preceding stages, even if their artifacts exist.
     Skip = 2 # Skip preceding stages, even if their artifacts do not exist.
-
-
-# Prohibits modification of class attributes after they are set.
-class ConstMetaClass(type):
-    def __setattr__(cls, key, value):
-        if key in cls.__dict__:
-            raise AttributeError(f"Cannot modify const member '{key}'")
-        super().__setattr__(key, value)
-
-
-class PrintColor(Enum):
-    Red = "\033[91m"
-    Green = "\033[92m"
-    Yellow = "\033[93m"
-    Blue = "\033[94m"
-    Magenta = "\033[95m"
-    Cyan = "\033[96m"
-    White = "\033[97m"
-
-def printColored(iText: str, iColor: PrintColor) -> None:
-    """ Prints text in the specified color."""
-    RESET_STR = "\033[0m"
-    print(f"{iColor.value}{iText}{RESET_STR}")
-
-def makeColored(iText: str, iColor: PrintColor) -> str:
-    """ Returns text in the specified color."""
-    RESET_STR = "\033[0m"
-    return f"{iColor.value}{iText}{RESET_STR}"
-
-def warning(iText: str) -> None:
-    """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
-    printColored(f"Warning: {iText}", PrintColor.Yellow)
-
-def error(iText: str) -> None:
-    """ Prints an error message in red color and exits the program. Adds "Error: " prefix."""
-    printColored(f"Error: {iText}", PrintColor.Red)
-    sys.exit(1)
-
-def status(iText: str) -> None:
-    """ Prints an informational message in green color."""
-    printColored(iText, PrintColor.Green)
-
-
-def runCommand(iCommand: list[str]) -> None:
-    print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue))
-    subprocess.run(iCommand, check=True)
 
 
 class BuildRunner:
@@ -103,7 +56,7 @@ class BuildRunner:
         self.__cppCompilerName = iCPPCompilerName
         self.__supportsMultiConfig = iSupportsMultiConfig
         self.__buildTypes = iBuildTypes
-        self.__srcDir     = os.path.abspath(".")
+        self.__srcDir = os.path.dirname(os.path.abspath(__file__))
         self.__buildDir   = os.path.join(self.__srcDir, "build",   iToolsetName)
         self.__installDir = os.path.join(self.__srcDir, "install", iToolsetName)
 

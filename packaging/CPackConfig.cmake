@@ -1,5 +1,12 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
+
+# Parse ./meta/packaging.json.
+file(READ "${CMAKE_SOURCE_DIR}/meta/Packaging.json" PACKAGING_JSON_TEXT)
+string(JSON PACKAGING_JSON__PACKAGE_NAME_BASE GET "${PACKAGING_JSON_TEXT}" "PackageNameBase")
+string(JSON PACKAGING_JSON__PACKAGE_MAINTAINER GET "${PACKAGING_JSON_TEXT}" "PackageMaintainer")
+
+
 # Default package generators for each supported platform.
 ## _packageGenerators is defined along with the CPACK_GENERATOR variable, because include(CPack) overrides CPACK_GENERATOR with a default list.
 if(WIN32)
@@ -7,12 +14,25 @@ if(WIN32)
 # elseif(APPLE)
     # set(_packageGenerators productbuild)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(_packageGenerators "IFW")
+    execute_process(COMMAND which dpkg
+                    RESULT_VARIABLE _hasDPKG
+                    OUTPUT_QUIET ERROR_QUIET)
+
+    execute_process(COMMAND which rpm
+                    RESULT_VARIABLE _hasRPM
+                    OUTPUT_QUIET ERROR_QUIET)
+
+    if(_hasDPKG EQUAL 0)
+        set(_packageGenerators "DEB")
+    elseif(_hasRPM EQUAL 0)
+        set(_packageGenerators "RPM")
+    else()
+        set(_packageGenerators "TGZ")
+    endif()
 else()
     set(_packageGenerators "TGZ")
 endif()
 set(CPACK_GENERATOR "${_packageGenerators}")
-
 
 
 # Generic setup for all package generators.
@@ -21,20 +41,20 @@ set(CPACK_GENERATOR "${_packageGenerators}")
 set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${SUBDIR_PACKAGES}")
 
-set(CPACK_PACKAGE_NAME "EnowContacts")
-set(CPACK_PACKAGE_VENDOR "Enow Software")
+set(CPACK_PACKAGE_NAME "${PROJECT_JSON__COMPANY_NAME_SHORT}${PROJECT_JSON__PROJECT_NAME_BASE}")
+set(CPACK_PACKAGE_VENDOR "PROJECT_JSON__COMPANY_NAME_LEGAL")
+set(CPACK_PACKAGE_CONTACT "${PACKAGING_JSON__PACKAGE_MAINTAINER}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${CMAKE_PROJECT_DESCRIPTION}")
 
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "EnowSW/Contacts")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}")
 
-# ? Force the package to be installed in /opt/EnowSW/Contacts on Linux, instead of /usr/local/EnowSW/Contacts.
+# ? Force the package to be installed in /opt/CompanyName_SHORT/ProjectNameBase on Linux, instead of /usr/local/CompanyName_SHORT/ProjectNameBase.
 if(NOT WIN32)
-    message(STATUS "Setting CPACK_PACKAGING_INSTALL_PREFIX to /opt/EnowSW/Contacts")
-    set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/EnowSW/Contacts")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}")
 endif()
 
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
@@ -74,6 +94,14 @@ list(REMOVE_ITEM CPACK_COMPONENTS_ALL
     ${COMPONENT__BUILD_MACHINE_SPECIFIC}
 )
 
+# Include generator-specific (*Config_before_include_CPack.cmake) config files.
+# If these files are included after include(CPack), they have no effect.
+foreach(_generator IN LISTS _packageGenerators)
+    if(_generator STREQUAL "DEB")
+        include(${CMAKE_CURRENT_LIST_DIR}/DEB/DEBConfig_before_include_CPack.cmake)
+    endif()
+endforeach()
+
 include(CPack)
 
 cpack_add_install_type(INSTALL_TYPE__NORMAL
@@ -111,9 +139,10 @@ cpack_add_component(${COMPONENT__BUILD_MACHINE_SPECIFIC}
 
 # Include generator-specific config files.
 foreach(_generator IN LISTS _packageGenerators)
-    message(STATUS "Configuring CPack for generator '${_generator}'...")
-    if (_generator STREQUAL "IFW")
+    if(_generator STREQUAL "IFW")
         include(${CMAKE_CURRENT_LIST_DIR}/IFW/IFWConfig.cmake)
+    elseif(_generator STREQUAL "DEB")
+        include(${CMAKE_CURRENT_LIST_DIR}/DEB/DEBConfig.cmake)
     else()
         message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
     endif()
