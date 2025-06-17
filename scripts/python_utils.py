@@ -25,7 +25,7 @@ class PrintColor(Enum):
 def printColored(iText: str, iColor: PrintColor) -> None:
     """ Prints text in the specified color."""
     RESET_STR = "\033[0m"
-    print(f"{iColor.value}{iText}{RESET_STR}")
+    print(f"{iColor.value}{iText}{RESET_STR}", flush=True)
 
 def makeColored(iText: str, iColor: PrintColor) -> str:
     """ Returns text in the specified color."""
@@ -47,5 +47,5 @@ def status(iText: str) -> None:
 
 
 def runCommand(iCommand: list[str]) -> None:
-    print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue))
+    print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue), flush=True)
     subprocess.run(iCommand, check=True)
