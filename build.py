@@ -56,7 +56,7 @@ class BuildRunner:
         self.__cppCompilerName = iCPPCompilerName
         self.__supportsMultiConfig = iSupportsMultiConfig
         self.__buildTypes = iBuildTypes
-        self.__srcDir     = os.path.abspath(".")
+        self.__srcDir = os.path.dirname(os.path.abspath(__file__))
         self.__buildDir   = os.path.join(self.__srcDir, "build",   iToolsetName)
         self.__installDir = os.path.join(self.__srcDir, "install", iToolsetName)
 

@@ -1,3 +1,6 @@
+variables:
+  GIT_DEPTH: 1 # Get only the latest commit.
+
 stages:
   - build_test_package
   - upload_package
@@ -6,6 +9,8 @@ build__ubuntu24amd:
   stage: build_test_package
   image: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build:1.0.0
   script:
+    - echo "Branch $CI_COMMIT_BRANCH"
+    - echo "Commit $CI_COMMIT_SHA"
     - python3 build.py --toolset UnixMakefiles_GCC --LIB_CONTACTS_SHARED=ON --build_types Release
   artifacts:
     paths:
