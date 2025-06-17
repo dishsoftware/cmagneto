@@ -64,7 +64,7 @@ class DockerBuildRunner:
         projectNameBase = MetadataHolder.GET_METADATA_VALUE("Project.json", ["ProjectNameBase"])
         projectVersion = MetadataHolder.GET_METADATA_VALUE("Project.json", ["ProjectVersion"])
         if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str) and isinstance(projectVersion, str)):
-            error(f"{__class__.__name__}: can't get required metadata. A")
+            error(f"{__class__.__name__}: can't get required metadata.")
 
         platformNameAndEnvType = str(iDockerfilePath.name).removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
 
@@ -73,13 +73,13 @@ class DockerBuildRunner:
         self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistry"])
         dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistrySuffix"])
         if not (isinstance(self.__dockerRegistry, str) and isinstance(dockerRegistrySuffix, str)):
-            error(f"{__class__.__name__}: can't get required metadata. B")
+            error(f"{__class__.__name__}: can't get required metadata.")
 
         self.__remoteImageName = f"{self.__dockerRegistry}/{dockerRegistrySuffix}/{self.__localImageName}"
 
         self.__imageMaintainer = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerMaintainer"])
         if not isinstance(self.__imageMaintainer, str):
-            error(f"{__class__.__name__}: can't get required metadata. C")
+            error(f"{__class__.__name__}: can't get required metadata.")
 
     def dockerFilePath(self) -> Path:
         return self.__dockerFilePath

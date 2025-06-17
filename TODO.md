@@ -4,7 +4,7 @@
     set_target_properties(iTarget PROPERTIES
         BUILD_RPATH "$ORIGIN/../lib;$ORIGIN/../other_lib"
         INSTALL_RPATH ""
-        # On Linux dynamic lins are placed to "lib" and executables into "bin":
+        # On Linux dynamic libs are placed to "lib" and executables into "bin":
         # Also add "../lib" to both BUILD_RPATH and INSTALL_RPATH of executables.
     )
     ```
