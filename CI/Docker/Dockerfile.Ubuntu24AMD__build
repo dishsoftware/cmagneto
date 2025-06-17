@@ -1,7 +1,6 @@
 FROM ubuntu:24.04
 
 # Metadata
-LABEL description="Ubuntu 24 AMD with all the dependencies and tools to build Enow Contacts 1.0.0 (vesion of the project and the Docker image are not related)."
 LABEL version="1.0.0"
 
 # Avoid interactive prompts during installs.
