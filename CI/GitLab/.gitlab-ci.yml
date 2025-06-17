@@ -2,6 +2,20 @@ variables:
   GIT_DEPTH: 1 # Get only the latest commit.
 
 
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG' # Run the pipeline if a tag has been assigned.
+      when: always
+
+    - if: '$CI_COMMIT_BRANCH == "main"' # Run the pipeline if a commit to "main" branch.
+      when: always
+
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"' # Run the pipeline if there is a merge request into "main".
+      when: always
+
+    - when: never # Prevent pipeline auto-creation in all other cases
+
+
 stages:
   - build-test-package
   - upload_packages
@@ -17,8 +31,6 @@ deduce_build_image__ubuntu24amd:
   artifacts:
       reports:
           dotenv: ./CI/Docker/.tmp/Dockerfile.Ubuntu24AMD__build.env
-  rules:
-    - when: manual
 
 
 build-test-package__ubuntu24amd:
