@@ -7,10 +7,13 @@ workflow:
     - if: '$CI_COMMIT_TAG' # Run the pipeline if a tag has been assigned.
       when: always
 
-    - if: '$CI_COMMIT_BRANCH == "main"' # Run the pipeline if a commit to "main" branch.
+    - if: '$CI_COMMIT_BRANCH == "main"' # If commit into "main" branch.
       when: always
 
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"' # Run the pipeline if there is a merge request into "main".
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"' # If merge request into "main" branch.
+      when: always
+
+    - if: '$CI_COMMIT_MESSAGE =~ /^RUN_CI_PIPELINE/' # If commit message starts with 'RUN_CI_PIPELINE'.
       when: always
 
     # - when: never # Prevent pipeline auto-creation in all other cases

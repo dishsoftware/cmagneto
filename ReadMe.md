@@ -93,3 +93,5 @@ where:
 
 The resulting URL may look like:
 `https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contacts/v1.0.0/Debian12AMD/UnixMakefiles_GCC/EnowContacts-1.0.0.deb`.
+
+CI pipeline is not triggered, if "main" branch is not involved. To run CI pipeline for other branch, commit to the branch anything with a message, starting with `RUN_CI_PIPELINE`.
