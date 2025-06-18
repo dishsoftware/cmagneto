@@ -77,4 +77,4 @@ Adjust values in `./meta/CI.json` before any actions with Docker images and CI p
 
 ## GitLab
 - `./CI/Docker/` contains Dockerfiles. All these files must be fed to `./CI/Docker/build_docker_image.py` to build images and push them to the image registry before running GitLab CI.
-- Go to GitLab project page, click on Settings->CI/CD->General pipelines. Set "CI/CD configuration file" to `CI/GitLab/.gitlab-ci.yml`.
+- Go to GitLab project page, click on Settings->CI/CD->General pipelines. Set "CI/CD configuration file" to `./CI/GitLab/.gitlab-ci.yml`.

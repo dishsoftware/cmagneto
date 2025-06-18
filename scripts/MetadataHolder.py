@@ -7,7 +7,7 @@ from typing import Any
 
 class MetadataHolder:
     """
-    Parses and holds in a buffer JSON files within "./meta" and its subdirectories.
+    Parses and holds in a buffer JSON files within 'meta' and its subdirectories.
     """
 
     __METADATA_DIR: Path = (Path(__file__).parent.resolve() / "../meta").resolve()
@@ -60,7 +60,7 @@ class MetadataHolder:
         """
         Returns value of a nested structure in a JSON file.
 
-        :param iFilePathRelativeToMetadataDir must refer to a file within "./meta" or its subdirectory.
+        :param iFilePathRelativeToMetadataDir must refer to a file within 'meta' or its subdirectory.
         :param iKeys is a sequence of names of ancestor structures.
         """
         filePath = (MetadataHolder.GET_METADATA_DIR() / iFilePathRelativeToMetadataDir).resolve()
