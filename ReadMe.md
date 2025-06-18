@@ -1,6 +1,6 @@
 # Configuration
 The project is designed to be easily configurable (mostly).
-`./meta/` contains JSON files. Adjust values in `./meta/Project.json` and `./meta/Packaging.json` before moving on to Build section.
+`./meta/` contains JSON files. Adjust values in `./meta/Project.json` and `./meta/Packaging.json` before moving on to [Build](#build) section.
 
 # Build
 `python ./build.py --help`
