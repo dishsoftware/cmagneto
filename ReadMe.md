@@ -78,3 +78,18 @@ Adjust values in `./meta/CI.json` before any actions with Docker images and CI p
 ## GitLab
 - `./CI/Docker/` contains Dockerfiles. All these files must be fed to `./CI/Docker/build_docker_image.py` to build images and push them to the image registry before running GitLab CI.
 - Go to GitLab project page, click on Settings->CI/CD->General pipelines. Set "CI/CD configuration file" to `./CI/GitLab/.gitlab-ci.yml`.
+
+Packages, generated during GitLab pipelines, are placed at:
+`https://gitlab.com/api/v4/projects/<CI_PROJECT_ID>/packages/generic/<DockerRegistrySuffix>/<BranchName_or_Tag>/<Platform>/<Toolset>/<PackageNameBase>-<ProjectVersion>.<PackageExtension>`.
+
+where:
+- CI_PROJECT_ID is a GitLab CI variable, which resolves to a number, e.g. 67161006;
+- DockerRegistrySuffix is defined in `./meta/CI.json`;
+- BranchName_or_Tag is name of a branch or a tag, which triggered the pipeline;
+- Platform is a substring of the Dockerfile name, which was used to build the used image; e.g. `Dockerfile.Debian12AMD__build` yields Platform==`Debian12AMD`;
+- Toolset is the argument, passed to `./build.py --toolset Toolset`.
+- PackageNameBase and ProjectVersion are defined in `./meta/Packaging.json` and `./meta/Project.json`.
+- PackageExtension is determined by a set of package generators; the set is defined in `./packaging/CPackConfig.cmake` and depends on platform and toolset.
+
+The resulting URL may look like:
+`https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contacts/v1.0.0/Debian12AMD/UnixMakefiles_GCC/EnowContacts-1.0.0.deb`.
