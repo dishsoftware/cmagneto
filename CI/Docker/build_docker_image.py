@@ -196,11 +196,13 @@ Build pipeline consists of the following stages: {", ".join([buildStage.name for
 Package name is generated as <CompanyName_SHORT>_<ProjectNameBase>_<ProjectVersion>__<DockerFileNameSuffix>,\n\
 where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from 'meta/Project.json';\n\
 DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.DockerFileNameSuffix'.\n\
+DockerFileNameSuffix should be composed as <Platform>__<EnvType>, e.g. Ubuntu24AMD__build.\n\
 \n\
 {DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {", ".join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
 Pushes images to <DockerRegistry>/<DockerRegistrySuffix>/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\
+An example of pushed image name: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build.\n\
 \n\
 Uses other variables from JSON files in 'meta' to define image labels.",
         formatter_class=argparse.RawTextHelpFormatter
