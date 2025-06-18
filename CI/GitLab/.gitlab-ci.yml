@@ -57,8 +57,10 @@ stages:
         mkdir -p "${destination}"
         mv "${dirToMove}" "${destination}/"
       fi
-      apt update && apt install -y tree
-      tree
+
+      # Print project strucuture.
+      # apt update && apt install -y tree
+      # tree
 
     # Append variables to inherited.env report artifact, in order to pass the variables to a following job. Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
