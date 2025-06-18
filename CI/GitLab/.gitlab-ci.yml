@@ -50,21 +50,6 @@ stages:
   script:
     - python3 build.py --toolset ${TOOLSET} --build_types Release
 
-    # Move ".../packages/_CPack_Packages" (contains CPack temp files) from its parent directory.
-    # Since only files from ".../packages/" are included into artifacts, it is redundant.
-    - |
-      buildDir="build/${TOOLSET}/Release"
-      dirToMove="${buildDir}/packages/_CPack_Packages"
-      destination="${buildDir}/packages__temp_files"
-      if [ -d "${dirToMove}" ]; then
-        mkdir -p "${destination}"
-        mv "${dirToMove}" "${destination}/"
-      fi
-
-      # Print project strucuture.
-      # apt update && apt install -y tree
-      # tree
-
     # Append variables to inherited.env report artifact, in order to pass the variables to a following job. Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
     - echo "TOOLSET=${TOOLSET}" >> inherited.env
@@ -72,11 +57,13 @@ stages:
     when: always
     paths:
       - build/${TOOLSET}/Release/summary/test_report.xml
-      - build/${TOOLSET}/Release/packages/* # Copy only files within ".../packages/", not subdirs.
+      - build/${TOOLSET}/Release/packages/** # Everything within ".../packages/" recursively.
+    exclude:
+      # Recursively exclude _CPack_Packages (the dir itself is also excluded). _CPack_Packages contains CPack temp files.
+      - build/${TOOLSET}/Release/packages/_CPack_Packages/**
     reports:
       junit: build/${TOOLSET}/Release/summary/test_report.xml
       dotenv: inherited.env
-    expire_in: 1 week
 
 
 # Upload generated packages to "GitLab generic packages repository".
@@ -85,8 +72,13 @@ stages:
   # needs: [.build-test-package__template]
   script:
     - |
-      for file in ./build/${TOOLSET}/Release/packages/*; do
-        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/$(basename "${file}")"
+      packagesDir="./build/${TOOLSET}/Release/packages"
+      #  Iterate over all files recursively under packagesDir.
+      for file in $(find "${packagesDir}" -type f); do
+        # Compute file path relative to packagesDir.
+        relative_path="${file#${packagesDir}/}"
+
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/${relative_path}"
         echo "Uploading ${file} to ${url}"
         curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
       done
