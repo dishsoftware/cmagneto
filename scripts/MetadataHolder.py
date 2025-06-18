@@ -27,7 +27,7 @@ class MetadataHolder:
     def __READ_METADATA_FILE(iFilePathInMetadataDir: Path) -> Any:
         """Returns data of iFilePathInMetadataDir"""
 
-        data = MetadataHolder.__GET_METADATA_BUFFER().get(iFilePathInMetadataDir, None)
+        data = MetadataHolder.__GET_METADATA_BUFFER().get(iFilePathInMetadataDir)
         if data is not None:
             return data
 
@@ -49,8 +49,10 @@ class MetadataHolder:
     @staticmethod
     def __GET_NESTED_VALUE(iData: dict, iKeys: list[str]) -> Any:
         for key in iKeys:
-            if isinstance(iData, dict) and key in iData:
-                iData = iData[key]
+            if isinstance(iData, dict):
+                data = iData.get(key)
+                if data is not None:
+                    iData = data
             else:
                 return None
         return iData
