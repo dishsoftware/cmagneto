@@ -26,3 +26,4 @@
 * CMakePresets.json.
 * Add license in every file.
 * Fix content of packaging\License.txt, packaging\Readme.txt, etc.
+* Add option "--file ALL" to ./CI/Docker/build_docker_image.py.
