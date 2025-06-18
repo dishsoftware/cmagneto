@@ -199,14 +199,14 @@ def main():
     parser = argparse.ArgumentParser(
         description=\
 f"Builds Docker images.\n\
-Build pipeline consists of the following stages: {", ".join([buildStage.name for buildStage in DockerBuildRunner.BuildStage])}.\n\
+Build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in DockerBuildRunner.BuildStage])}.\n\
 \n\
 Package name is generated as <CompanyName_SHORT>_<ProjectNameBase>_<ProjectVersion>__<DockerFileNameSuffix>,\n\
 where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from 'meta/Project.json';\n\
 DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.DockerFileNameSuffix'.\n\
 DockerFileNameSuffix must be composed as <Platform>__<EnvType>, e.g. 'Ubuntu24AMD__build'.\n\
 \n\
-{DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {", ".join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
+{DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {', '.join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
 Pushes images to <DockerRegistry>/<DockerRegistrySuffix>/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\

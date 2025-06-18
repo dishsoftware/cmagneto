@@ -81,7 +81,7 @@ stages:
   script:
     - |
       for file in ./build/${TOOLSET}/Release/packages/*; do
-        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/{TOOLSET}/$(basename "${file}")"
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/$(basename "${file}")"
         echo "Uploading ${file} to ${url}"
         curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
       done

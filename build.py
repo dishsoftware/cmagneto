@@ -702,7 +702,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=\
 f"Builds the CMake project.\n\
-Build pipeline consists of the following stages: {", ".join([buildStage.name for buildStage in BuildStage])}.\n\
+Build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildStage])}.\n\
 Supported OSes: Linux, Windows.",
         formatter_class=argparse.RawTextHelpFormatter
     )
