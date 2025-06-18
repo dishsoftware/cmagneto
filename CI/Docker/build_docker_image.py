@@ -52,14 +52,20 @@ class DockerBuildRunner:
         return labels
 
     def __init__(self, iDockerfilePath: Path):
-        iDockerfilePath = iDockerfilePath.resolve()
+        self.__dockerFilePath = iDockerfilePath.resolve()
 
-        if not iDockerfilePath.exists() or not iDockerfilePath.is_file():
-            error(f"Invalid file: \"${iDockerfilePath}\".")
+        if not self.__dockerFilePath.exists() or not self.__dockerFilePath.is_file():
+            error(f"Invalid file: \"${self.__dockerFilePath}\".")
 
-        self.__dockerFilePath = iDockerfilePath
-        requiredLabels = DockerBuildRunner.EXTRACT_REQUIRED_LABELS(iDockerfilePath)
-        self.__imageVersion: str = requiredLabels["version"] # AKA tag.
+        dockerFileName = str(self.__dockerFilePath.name)
+        dockerFileNameSuffix = dockerFileName.removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
+        dockerFileNameSuffixSubstrings = dockerFileNameSuffix.split("__")
+        getDockerFileNameSuffixSubstring = lambda iIdx: dockerFileNameSuffixSubstrings[iIdx] \
+            if len(dockerFileNameSuffixSubstrings) > iIdx and dockerFileNameSuffixSubstrings[iIdx] \
+            else error(f"Dockerfile name must be composed as 'Dockerfile.<Platform>__<EnvType>', e.g. 'Dockerfile.Ubuntu24AMD__build'. But filename is '{dockerFileName}'.")
+
+        self.__platform: str = getDockerFileNameSuffixSubstring(0)
+        self.__envType: str = getDockerFileNameSuffixSubstring(1)
 
         companyNameShort = MetadataHolder.GET_METADATA_VALUE("Project.json", ["CompanyName_SHORT"])
         projectNameBase = MetadataHolder.GET_METADATA_VALUE("Project.json", ["ProjectNameBase"])
@@ -67,18 +73,8 @@ class DockerBuildRunner:
         if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str) and isinstance(projectVersion, str)):
             error(f"{__class__.__name__}: can't get required metadata.")
 
-        dockerFileNameSuffix = str(iDockerfilePath.name).removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
-
-        suffixSubstrings = dockerFileNameSuffix.split("__")
-        getSuffixSubstring = lambda iIdx: suffixSubstrings[iIdx] if len(suffixSubstrings) > iIdx and suffixSubstrings[iIdx] else None
-        platform: str | None = getSuffixSubstring(0)
-        envType: str | None = getSuffixSubstring(1)
-
-        self.__imageDescription = f"{platform} image " if platform else "Image "
-        self.__imageDescription += f"with {envType} environment " if envType else ""
-        self.__imageDescription += f"for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
-
         self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{dockerFileNameSuffix}".lower()
+        self.__imageDescription = f"{self.__platform} image with {self.__envType} environment for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
 
         self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistry"])
         dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistrySuffix"])
@@ -91,39 +87,51 @@ class DockerBuildRunner:
         if not isinstance(self.__imageMaintainer, str):
             error(f"{__class__.__name__}: can't get required metadata.")
 
+        requiredLabels = DockerBuildRunner.EXTRACT_REQUIRED_LABELS(self.__dockerFilePath)
+        self.__imageVersion = requiredLabels.get("version")
+        if (self.__imageVersion is None):
+            error(f"'{self.__dockerFilePath}' must contain 'version' label.")
+
     def dockerFilePath(self) -> Path:
         return self.__dockerFilePath
 
-    def imageDescription(self) -> str:
-        return self.__imageDescription
+    def platform(self) -> str:
+        return self.__platform
 
-    def imageVersion(self) -> str:
-        """Returns version (tag) of the image to be built."""
-        return self.__imageVersion
+    def envType(self) -> str:
+        return self.__envType
 
     def localImageName(self) -> str:
         """Returns name of image to build in local registry."""
         return self.__localImageName
 
-    def remoteImageName(self) -> str:
-        """Returns name of image to push into remote registry."""
-        return self.__remoteImageName
+    def imageDescription(self) -> str:
+        return self.__imageDescription
 
     def dockerRegistry(self) -> str:
         return self.__dockerRegistry
 
+    def remoteImageName(self) -> str:
+        """Returns name of image to push into remote registry."""
+        return self.__remoteImageName
+
     def imageMaintainer(self) -> str:
         return self.__imageMaintainer
+
+    def imageVersion(self) -> str:
+        """Returns version (tag) of the image to be built."""
+        return self.__imageVersion
 
     def generateEnvFile(self):
         text = f"Generation of .env file"
         status(text + "...")
 
-        envFileContent: str = f"LOCAL_IMAGE_NAME={self.localImageName()}"
-        envFileContent += f"\nREMOTE_IMAGE_NAME={self.remoteImageName()}"
-        envFileContent += f"\nIMAGE_VERSION={self.imageVersion()}"
-        envFileContent += f"\nLOCAL_IMAGE_NAME_WITH_TAG={self.localImageName()}:{self.imageVersion()}"
-        envFileContent += f"\nREMOTE_IMAGE_NAME_WITH_TAG={self.remoteImageName()}:{self.imageVersion()}"
+        envFileContent: str = ""
+        envFileContent += f"PLATFORM={self.platform()}\n"
+        envFileContent += f"ENV_TYPE={self.envType()}\n"
+        envFileContent += f"LOCAL_IMAGE_NAME={self.localImageName()}\n"
+        envFileContent += f"REMOTE_IMAGE_NAME={self.remoteImageName()}\n"
+        envFileContent += f"IMAGE_VERSION={self.imageVersion()}"
 
         envFilePath = self.dockerFilePath().parent / ".tmp" / (str(self.dockerFilePath().name) + ".env")
 
@@ -196,7 +204,7 @@ Build pipeline consists of the following stages: {", ".join([buildStage.name for
 Package name is generated as <CompanyName_SHORT>_<ProjectNameBase>_<ProjectVersion>__<DockerFileNameSuffix>,\n\
 where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from 'meta/Project.json';\n\
 DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.DockerFileNameSuffix'.\n\
-DockerFileNameSuffix should be composed as <Platform>__<EnvType>, e.g. Ubuntu24AMD__build.\n\
+DockerFileNameSuffix must be composed as <Platform>__<EnvType>, e.g. 'Ubuntu24AMD__build'.\n\
 \n\
 {DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {", ".join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
@@ -211,7 +219,7 @@ Uses other variables from JSON files in 'meta' to define image labels.",
         "--file", "-f",
         type=Path,
         required=True,
-        help="Path to a Dockerfile. Dockerfilename should be composed as 'Dockerfile.Platform__EnvType', e.g. 'Dockerfile.Ubuntu24AMD__build'."
+        help="Path to a Dockerfile."
     )
     DEFAULT_BUILD_STAGE = max(DockerBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(

@@ -13,7 +13,7 @@ workflow:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"' # Run the pipeline if there is a merge request into "main".
       when: always
 
-    - when: never # Prevent pipeline auto-creation in all other cases
+    # - when: never # Prevent pipeline auto-creation in all other cases
 
 
 stages:
@@ -21,43 +21,104 @@ stages:
   - upload_packages
 
 
-deduce_build_image__ubuntu24amd:
+# Job templates -----------------------------------------------------------------------------------------------------------------
+
+# Generate .env file, which contains variables: REMOTE_IMAGE_NAME, IMAGE_VERSION, PLATFORM, ENV_TYPE, etc.
+# These variables describe a remote Docker image, which was built using ${Dockerfile}.
+.deduce_image__template:
   stage: build-test-package
   image: python:3
+  variables:
+    Dockerfile: "Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden. The file must be located in ./CI/Docker/.
   script:
-    # Generate .env file, which contains the var REMOTE_IMAGE_NAME_WITH_TAG with address (name) of Docker image with build environment.
-    - python ./CI/Docker/build_docker_image.py --file ./CI/Docker/Dockerfile.Ubuntu24AMD__build --build_stage GenerateEnvFile
-    - cat ./CI/Docker/.tmp/Dockerfile.Ubuntu24AMD__build.env
+    - python3 ./CI/Docker/build_docker_image.py --file ./CI/Docker/${Dockerfile} --build_stage GenerateEnvFile
+    - cat ./CI/Docker/.tmp/${Dockerfile}.env # Display the contents of the file.
   artifacts:
-      reports:
-          dotenv: ./CI/Docker/.tmp/Dockerfile.Ubuntu24AMD__build.env
+    reports:
+      dotenv: ./CI/Docker/.tmp/${Dockerfile}.env
 
 
-build-test-package__ubuntu24amd:
+.build-test-package__template:
   stage: build-test-package
-  needs: [deduce_build_image__ubuntu24amd]
-  image: ${REMOTE_IMAGE_NAME_WITH_TAG}
+  # needs: [.deduce_image__template]
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
   script:
-    - python build.py --toolset UnixMakefiles_GCC --build_types Release
+    - python3 build.py --toolset ${TOOLSET} --build_types Release
+
+    # Move ".../packages/_CPack_Packages" (contains CPack temp files) from its parent directory.
+    # Since only files from ".../packages/" are included into artifacts, it is redundant.
+    - |
+      buildDir="build/${TOOLSET}/Release"
+      dirToMove="${buildDir}/packages/_CPack_Packages"
+      destination="${buildDir}/packages__temp_files"
+      if [ -d "${dirToMove}" ]; then
+        mkdir -p "${destination}"
+        mv "${dirToMove}" "${destination}/"
+      fi
+      apt update && apt install -y tree
+      tree
+
+    # Append variables to inherited.env report artifact, in order to pass the variables to a following job. Newline in the end is added automatically.
+    - echo "PLATFORM=${PLATFORM}" >> inherited.env
+    - echo "TOOLSET=${TOOLSET}" >> inherited.env
   artifacts:
     when: always
     paths:
-      - build/UnixMakefiles_GCC/Release/summary/test_report.xml
-      - build/UnixMakefiles_GCC/Release/packages/*.deb
+      - build/${TOOLSET}/Release/summary/test_report.xml
+      - build/${TOOLSET}/Release/packages/* # Copy only files within ".../packages/", not subdirs.
     reports:
-      junit: build/UnixMakefiles_GCC/Release/summary/test_report.xml
+      junit: build/${TOOLSET}/Release/summary/test_report.xml
+      dotenv: inherited.env
     expire_in: 1 week
 
 
-# Upload generated .deb packages to GitLab Debian Package Registry.
-upload_deb_packages__ubuntu24amd:
+# Upload generated packages to "GitLab generic packages repository".
+.upload_packages__template:
   stage: upload_packages
-  needs: [build-test-package__ubuntu24amd]
+  # needs: [.build-test-package__template]
   script:
     - |
-      for file in ./build/UnixMakefiles_GCC/Release/packages/*.deb; do
-        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/$(basename "${file}")"
+      for file in ./build/${TOOLSET}/Release/packages/*; do
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/{TOOLSET}/$(basename "${file}")"
         echo "Uploading ${file} to ${url}"
-        curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-          --upload-file "${file}" "${url}"
+        curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
       done
+# Job templates (END) -----------------------------------------------------------------------------------------------------------
+
+
+# Jobs: Ubuntu 14 AMD ---------------------------
+deduce_build_image__ubuntu24amd:
+  extends: .deduce_image__template
+  variables:
+    Dockerfile: "Dockerfile.Ubuntu24AMD__build"
+
+
+build-test-package__ubuntu24amd:
+  extends: .build-test-package__template
+  needs: [deduce_build_image__ubuntu24amd]
+
+
+upload_packages__ubuntu24amd:
+  extends: .upload_packages__template
+  needs: [build-test-package__ubuntu24amd]
+# Jobs: Ubuntu 14 AMD (END) ---------------------
+
+
+# Jobs: Debian 12 AMD ---------------------------
+deduce_build_image__debian12amd:
+  extends: .deduce_image__template
+  variables:
+    Dockerfile: "Dockerfile.Debian12AMD__build"
+
+
+build-test-package__debian12amd:
+  extends: .build-test-package__template
+  needs: [deduce_build_image__debian12amd]
+
+
+upload_packages__debian12amd:
+  extends: .upload_packages__template
+  needs: [build-test-package__debian12amd]
+# Jobs: Debian 12 AMD (END) ---------------------
