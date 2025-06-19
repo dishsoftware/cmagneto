@@ -24,3 +24,7 @@
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? SetUpTargets does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
 * Add function set_up_interface_library.
 * CMakePresets.json.
+* Add license in every file.
+* Fix content of packaging\License.txt, packaging\Readme.txt, etc.
+* Add option "--file ALL" to ./CI/Docker/build_docker_image.py.
+* Don't try to generate packages with Qt IFW, if Qt Installer Framework is not installed.
