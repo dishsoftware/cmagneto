@@ -1,0 +1,48 @@
+# Glossary
+# - Pipeline: The full set of jobs, created in response to a trigger event.
+#
+# - Trigger [event]: AKA pipeline source. Push, merge request, or tag.
+#
+# - Job DAG (directed acyclic graph): A subset of pipeline jobs connected via `needs:` (and optionally `dependencies:`),
+#   where each job depends only on other jobs within the subset.
+#   These jobs inherently form a DAG, as GitLab prohibits cyclic dependencies between jobs.
+#
+# - Root job DAG: a job DAG, which is not a subgraph or component of a larger job DAG.
+#
+# - Pipeline creation: A pipeline is created, if
+#   there is at least one job that serves as an entry point to a root job DAG,
+#   and the `workflow:` (pipeline-general) rules and the individual job `rules:`
+#   do not evaluate the job's `when:` property to `never` for the given trigger and conditions.
+
+
+workflow:
+  rules:
+    # If trigger is an assigned tag.
+    - if: '$CI_COMMIT_TAG'
+      when: always
+
+    # If trigger is a commit into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+
+    # If trigger is a merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
+      when: always
+
+    # If trigger is a commit with a message, ending with 'RUN_CI_PIPELINE'.
+    - if: '$CI_COMMIT_MESSAGE =~ /RUN_CI_PIPELINE\s*$/'
+      when: always
+
+    # In other cases do not create the pipeline.
+    - when: never
+
+
+stages:
+  - build-test-package
+  - upload_packages
+
+
+include:
+  - local: 'CI/GitLab/job_templates.yml'
+  - local: 'CI/GitLab/job_DAGs/ubuntu24amd.yml'
+  - local: 'CI/GitLab/job_DAGs/debian12amd.yml'

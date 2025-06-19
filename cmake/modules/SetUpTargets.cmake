@@ -2,7 +2,7 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
     This file contains functions and variables to set up targets, install them and generate scripts and auxilliary files.
-    Dictionary:
+    Glossary:
         - configure time:
             CMake processes the top-level CMakeLists.txt and all subdirectories to understand your project structure, options, and dependencies.
         - generation time:
