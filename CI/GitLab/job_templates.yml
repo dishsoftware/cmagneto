@@ -2,34 +2,6 @@ variables:
   GIT_DEPTH: 1 # Get only the latest commit.
 
 
-workflow:
-  rules:
-    # If trigger is an assigned tag.
-    - if: '$CI_COMMIT_TAG'
-      when: always
-
-    # If trigger is a commit into "main" branch.
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: always
-
-    # If trigger is a merge request into "main" branch.
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
-      when: always
-
-    # If trigger is a commit with a message, ending with 'RUN_CI_PIPELINE'.
-    - if: '$CI_COMMIT_MESSAGE =~ /RUN_CI_PIPELINE\s*$/'
-      when: always
-
-    # In other cases do not create the pipeline.
-    - when: never
-
-
-stages:
-  - build-test-package
-  - upload_packages
-
-
-# Job templates -----------------------------------------------------------------------------------------------------------------
 .on_tag__template:
   rules:
     # If trigger is an assigned tag.
@@ -45,9 +17,9 @@ stages:
 .on_main__template:
   rules:
     # If trigger is:
-    # - commit into "main" branch;
-    # - merge request into "main" branch.
-    - if: '$CI_COMMIT_BRANCH == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    # - merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
       when: always
 
     # In other cases don't run the job.
@@ -60,9 +32,9 @@ stages:
   rules:
     # If trigger is NOT:
     # - assigned tag;
-    # - commit into "main" branch;
-    # - merge request into "main" branch.
-    - if: '$CI_COMMIT_TAG == null && $CI_COMMIT_BRANCH != "main" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != "main"'
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    # - merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_COMMIT_TAG == null && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
       when: always
 
     # In other cases don't run the job.
@@ -85,10 +57,10 @@ stages:
     reports:
       dotenv: ./CI/Docker/.tmp/${Dockerfile}.env
   rules:
-    # Start the first job (i.e. the whole pipeline) manually, if trigger is a merge request of a forked project.
+    # Start the first job (i.e. the whole job DAG) manually, if trigger is a merge request of a forked project.
     # INTENT
     # Any GitLab user can create a fork project and then create a merge request, even if the user is not a Member of the original project.
-    # To prevent abuse and wasting CI runners' quota, in such cases the pipeline is created, but requires a manual start.
+    # To prevent abuse and wasting CI runners' quota, in such cases the job DAG is created, but requires a manual start.
     # Only Members of the original project can run a job manually.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != null && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != $CI_PROJECT_NAMESPACE' # $CI_MERGE_REQUEST_PROJECT_NAMESPACE only exists when the pipeline is triggered by a merge request.
       when: manual
@@ -107,7 +79,7 @@ stages:
   script:
     - python3 build.py --toolset ${TOOLSET} --build_types Release
 
-    # Append variables to inherited.env report artifact, in order to pass the variables to a following job. Newline in the end is added automatically.
+    # Append variables to inherited.env report artifact, in order to pass the variables to a following job(s). Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
     - echo "TOOLSET=${TOOLSET}" >> inherited.env
   artifacts:
@@ -181,74 +153,3 @@ stages:
     - .on_branch__template
     - .upload_packages__template
   # needs: [.build-test-package__template]
-# Job templates (END) -----------------------------------------------------------------------------------------------------------
-
-
-# Jobs: Ubuntu 14 AMD ---------------------------
-deduce_build_image__ubuntu24amd:
-  extends: .deduce_image__template
-  variables:
-    Dockerfile: "Dockerfile.Ubuntu24AMD__build"
-
-
-on_tag__build-test-package__ubuntu24amd:
-  extends: .on_tag__build-test-package__template
-  needs: [deduce_build_image__ubuntu24amd]
-
-on_tag__upload_packages__ubuntu24amd:
-  extends: .on_tag__upload_packages__template
-  needs: [on_tag__build-test-package__ubuntu24amd]
-
-
-on_main__build-test-package__ubuntu24amd:
-  extends: .on_main__build-test-package__template
-  needs: [deduce_build_image__ubuntu24amd]
-
-on_main__upload_packages__ubuntu24amd:
-  extends: .on_main__upload_packages__template
-  needs: [on_main__build-test-package__ubuntu24amd]
-
-
-on_branch__build-test-package__ubuntu24amd:
-  extends: .on_branch__build-test-package__template
-  needs: [deduce_build_image__ubuntu24amd]
-
-on_branch__upload_packages__ubuntu24amd:
-  extends: .on_branch__upload_packages__template
-  needs: [on_branch__build-test-package__ubuntu24amd]
-# Jobs: Ubuntu 14 AMD (END) ---------------------
-
-
-# Jobs: Debian 12 AMD ---------------------------
-deduce_build_image__debian12amd:
-  extends: .deduce_image__template
-  variables:
-    Dockerfile: "Dockerfile.Debian12AMD__build"
-
-
-on_tag__build-test-package__debian12amd:
-  extends: .on_tag__build-test-package__template
-  needs: [deduce_build_image__debian12amd]
-
-on_tag__upload_packages__debian12amd:
-  extends: .on_tag__upload_packages__template
-  needs: [on_tag__build-test-package__debian12amd]
-
-
-on_main__build-test-package__debian12amd:
-  extends: .on_main__build-test-package__template
-  needs: [deduce_build_image__debian12amd]
-
-on_main__upload_packages__debian12amd:
-  extends: .on_main__upload_packages__template
-  needs: [on_main__build-test-package__debian12amd]
-
-
-on_branch__build-test-package__debian12amd:
-  extends: .on_branch__build-test-package__template
-  needs: [deduce_build_image__debian12amd]
-
-on_branch__upload_packages__debian12amd:
-  extends: .on_branch__upload_packages__template
-  needs: [on_branch__build-test-package__debian12amd]
-# Jobs: Debian 12 AMD (END) ---------------------

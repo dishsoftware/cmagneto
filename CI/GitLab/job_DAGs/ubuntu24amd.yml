@@ -1,0 +1,31 @@
+deduce_build_image__ubuntu24amd:
+  extends: .deduce_image__template
+  variables:
+    Dockerfile: "Dockerfile.Ubuntu24AMD__build"
+
+
+on_tag__build-test-package__ubuntu24amd:
+  extends: .on_tag__build-test-package__template
+  needs: [deduce_build_image__ubuntu24amd]
+
+on_tag__upload_packages__ubuntu24amd:
+  extends: .on_tag__upload_packages__template
+  needs: [on_tag__build-test-package__ubuntu24amd]
+
+
+on_main__build-test-package__ubuntu24amd:
+  extends: .on_main__build-test-package__template
+  needs: [deduce_build_image__ubuntu24amd]
+
+on_main__upload_packages__ubuntu24amd:
+  extends: .on_main__upload_packages__template
+  needs: [on_main__build-test-package__ubuntu24amd]
+
+
+on_branch__build-test-package__ubuntu24amd:
+  extends: .on_branch__build-test-package__template
+  needs: [deduce_build_image__ubuntu24amd]
+
+on_branch__upload_packages__ubuntu24amd:
+  extends: .on_branch__upload_packages__template
+  needs: [on_branch__build-test-package__ubuntu24amd]

@@ -1,0 +1,1 @@
+include_guard(GLOBAL)  # Ensures this file is included only once.
