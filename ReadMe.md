@@ -7,8 +7,10 @@ This template features:
 - Preconfigured Visual Studio Code settings
 - Docker support for reproducible environments
 - GitLab CI integration for automated building and packaging
----
 
+## License
+This project is licensed under the [MIT License](LICENSE).
+---
 
 # Configuration
 
