@@ -7,10 +7,22 @@ string(JSON PACKAGING_JSON__PACKAGE_NAME_BASE GET "${PACKAGING_JSON_TEXT}" "Pack
 string(JSON PACKAGING_JSON__PACKAGE_MAINTAINER GET "${PACKAGING_JSON_TEXT}" "PackageMaintainer")
 
 
+# Check if Qt IFW is available.
+find_program(QTIFW_BINARYCREATOR_EXECUTABLE binarycreator)
+find_program(QTIFW_REPOGEN_EXECUTABLE repogen)
+if(QTIFW_BINARYCREATOR_EXECUTABLE AND QTIFW_REPOGEN_EXECUTABLE)
+    message(STATUS "Qt Installer Framework found.")
+    set(QT_IFW_AVAILABLE TRUE)
+endif()
+
+
 # Default package generators for each supported platform.
 ## _packageGenerators is defined along with the CPACK_GENERATOR variable, because include(CPack) overrides CPACK_GENERATOR with a default list.
 if(WIN32)
-    set(_packageGenerators "IFW")
+    set(_packageGenerators "ZIP")
+    if(QT_IFW_AVAILABLE)
+        list(APPEND _packageGenerators "IFW")
+    endif()
 # elseif(APPLE)
     # set(_packageGenerators productbuild)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -28,6 +40,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(_packageGenerators "RPM")
     else()
         set(_packageGenerators "TGZ")
+    endif()
+
+    if(QT_IFW_AVAILABLE)
+        list(APPEND _packageGenerators "IFW")
     endif()
 else()
     set(_packageGenerators "TGZ")
@@ -143,6 +159,8 @@ foreach(_generator IN LISTS _packageGenerators)
         include(${CMAKE_CURRENT_LIST_DIR}/IFW/IFWConfig.cmake)
     elseif(_generator STREQUAL "DEB")
         include(${CMAKE_CURRENT_LIST_DIR}/DEB/DEBConfig.cmake)
+    elseif(_generator STREQUAL "ZIP")
+        include(${CMAKE_CURRENT_LIST_DIR}/ZIP/ZIPConfig.cmake)
     else()
         message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
     endif()

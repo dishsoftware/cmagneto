@@ -10,10 +10,13 @@ The project is designed to be easily configurable (mostly).
 - C++ 17 (or later) compiler (GCC, or MinGW, or MSVC)
 - Python 3.10 or later
 - Graphviz (optional)
+- Qt Installer Framework 4.10 or later (optional)
 
 If CMake target dependency graph picture is desired, Graphviz must be installed.
 Output picture is generated at `./build/{platform_name}/[{build_type}]/graphviz`.
 If Graphviz is installed, but there is no picture, define environment variable `GRAPHVIZ_DIR`. E.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
+
+Add path to Qt Installer Framework (e.g. `C:\Qt\Tools\QtInstallerFramework\4.10\bin`) to PATH variable.
 
 ## Dependencies
 - Qt6
@@ -53,12 +56,6 @@ The repo contains VS Code files, which configure intelliSense.
 Select "Windows_MSVC2022" configuration among other options in "C/C++ Configuration" settings.
 These IDE files refer to `VC2022ToolsInstallDir` environment variable. E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.
 Caveat: `.vscode/launch.json` contains a hard-coded path to an entrypoint-executable; If files in `./meta/` are adjusted, the path is invalid.
-
-## All Windows-based toolsets
-### Additional Build tools
-- Qt Installer Framework 4.10 or later
-
-Add path to Qt Installer Framework (e.g. `C:\Qt\Tools\QtInstallerFramework\4.10\bin`) to PATH variable.
 
 
 # Run
