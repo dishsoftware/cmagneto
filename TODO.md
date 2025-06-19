@@ -28,3 +28,4 @@
 * Fix content of packaging\License.txt, packaging\Readme.txt, etc.
 * Add option "--file ALL" to ./CI/Docker/build_docker_image.py.
 * Don't try to generate packages with Qt IFW, if Qt Installer Framework is not installed.
+* Replace "main" with CI_DEFAULT_BRANCH in CI.
