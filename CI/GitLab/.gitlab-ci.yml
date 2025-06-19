@@ -90,7 +90,7 @@ stages:
     # Any GitLab user can create a fork project and then create a merge request, even if the user is not a Member of the original project.
     # To prevent abuse and wasting CI runners' quota, in such cases the pipeline is created, but requires a manual start.
     # Only Members of the original project can run a job manually.
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != $CI_PROJECT_NAMESPACE' # $CI_MERGE_REQUEST_PROJECT_NAMESPACE only exists when the pipeline is triggered by a merge request.
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != null && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != $CI_PROJECT_NAMESPACE' # $CI_MERGE_REQUEST_PROJECT_NAMESPACE only exists when the pipeline is triggered by a merge request.
       when: manual
 
     # Start automatically, if previous job has succeeded (default behaviour).
