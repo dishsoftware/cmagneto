@@ -3,3 +3,4 @@
 /CI/Docker/.tmp/
 *.directory
 *.pyc
+*.odg#
