@@ -120,11 +120,11 @@ For builds made with:
 compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
 For other configurations (e.g., Windows MSVC 2022), it may be required to set paths to shared libraries of the dependecies before running.<br>
 <br>
-CMake module [`CMagneto`](./cmake/modules/SetUpTargets.cmake) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
+CMake module [`CMagneto`](./cmake/modules/CMagneto.cmake) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
 - `set_env` script sets environment variables for runtime.
 - `run` script executes the entrypoint-executable.
 
-Look for `set_up__set_env__script()` and `set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/SetUpTargets.cmake) CMake module.
+Look for `set_up__set_env__script()` and `set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.cmake) CMake module.
 
 
 # CI

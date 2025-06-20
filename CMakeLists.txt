@@ -26,7 +26,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON) # GoogleTest requires at least C++17.
 
 # Include custom CMake modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
-include(SetUpTargets)
+include(CMagneto)
 
 print_platform_and_compiler()
 set__IS_MULTTCONFIG__property()

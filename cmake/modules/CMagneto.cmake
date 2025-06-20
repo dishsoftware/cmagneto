@@ -744,10 +744,10 @@ set(SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
 set(ENV_VSCODE__SCRIPT_NAME ".env.vscode")
 
 set(SET_ENV__SCRIPT_NAME_WE "set_env")
-set(SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
+set(SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/CMagneto/${SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
 
 set(RUN__SCRIPT_NAME_WE "run")
-set(RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN__SCRIPT_NAME_WE}__TEMPLATE")
+set(RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/CMagneto/${RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(get__set_env__script_file_name oFileName)
@@ -910,7 +910,7 @@ endfunction()
 
 set(TEST_BUILD_SUMMARY__FILE_NAME "test_build_summary.txt")
 set(RUN_TESTS__SCRIPT_NAME_WE "run_tests")
-set(RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/${RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
+set(RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/CMagneto/${RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
 set(TEST_REPORT__FILE_NAME "test_report.xml")
 
 
@@ -994,7 +994,7 @@ function(set_test_discovery iTestTargetName)
 endfunction()
 
 
-set(GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/generate_build_summary.cmake")
+set(GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/CMagneto/generate_build_summary.cmake")
 set(BUILD_SUMMARY__FILE_NAME "build_summary.txt")
 
 
@@ -1063,7 +1063,7 @@ function(register_test_target iTestTargetName)
 endfunction()
 
 
-set(GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/SetUpTargets/generate_build_tests_summary.cmake")
+set(GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/CMagneto/generate_build_tests_summary.cmake")
 
 
 #[[
