@@ -17,13 +17,13 @@ class BuildRunner:
 
 
     class BuildStage(Enum):
-        Generate = 0 # Generate project files (MakeFiles, MSVS solution, etc.).
+        Generate = 0 # Generate build system files (e.g. MakeFiles or MSVS solution).
         Compile = 1 # Compile the project (create project's binaries, create auxilliary scripts, and place all of them into a build directory).
         CompileTests = 2
         RunTests = 3
         Install = 4 # Install the project (copy scripts and compiled binaries to an install directory).
         Package = 5 # Package the project (create packages, e.g. .deb, .rpm, .zip, etc.).
-        # Install stage is not required for Package stage. It is just easier to inspect yielded files in the install directory.
+        # Install stage is technically not required for Package stage. But the file is written .
 
 
     class RunPrecedingStages(Enum):
@@ -168,10 +168,10 @@ class BuildRunner:
         return os.path.exists(self.installDirForBuildType(iBuildType))
 
     def isPackageExistForBuildType(self, iBuildType: BuildType) -> bool:
-        """Returns True, if "packages" directory contains at least one file (non-recursively)."""
+        """Returns True if the 'packages' directory contains at least one file (recursively)."""
         packagesDir = os.path.join(self.buildDirForBuildType(iBuildType), BuildRunner.SUBDIR_PACKAGES)
-        for itemName in os.listdir(packagesDir):
-            if os.path.isfile(os.path.join(packagesDir, itemName)):
+        for root, _, files in os.walk(packagesDir):
+            if files:
                 return True
         return False
 
@@ -436,7 +436,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
                 self._package(buildType)
 
     def __generate(self, iBuildType: BuildRunner.BuildType) -> None:
-        text = f"Project generation ({iBuildType.name})"
+        text = f"Generation of build system files ({iBuildType.name})"
         status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
@@ -542,7 +542,7 @@ class BuildRunnerMultiConfig(BuildRunner):
                 self._package(buildType)
 
     def __generate(self) -> None:
-        text = "Project generation (multi-config)"
+        text = "Generation of build system files (multi-config)"
         status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.buildDir())
@@ -559,7 +559,7 @@ class BuildRunnerMultiConfig(BuildRunner):
         #
         # With Multi-config generator, CMake does not know which configuration will be built during generation.
         # It generates build rules for all configurations (Debug, Release, etc.).
-        # Generator expressions like $<CONFIG> are preserved as expressions in the generated build system (e.g., in MSBuild).
+        # Generator expressions like $<CONFIG> are preserved as expressions in the generated build system files.
         # So, at generation time, CMake cannot fully resolve conditional logics based on $<CONFIG>.
         # This has a direct impact on --graphviz=... output:
         # 1) The dependency graph, created by Graphviz, will reflect a union of targets and dependencies across all configurations;
@@ -717,7 +717,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=\
 f"Builds the CMake project.\n\
-Build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildRunner.BuildStage])}.\n\
+The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildRunner.BuildStage])}.\n\
 Supported OSes: Linux, Windows.",
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -738,7 +738,7 @@ Note: the set of available toolsets depends on the OS the script is run on."
         nargs="+",  # Allow one or more values
         default=[DEFAULT_BUILD_TYPE.name],
         help=\
-f"Specifies the build type(s). Default is {DEFAULT_BUILD_TYPE.name}.\n\
+f"Specify build types. Default is {DEFAULT_BUILD_TYPE.name}.\n\
 Example: \"--build_types {BuildRunner.BuildType.Debug.name} {BuildRunner.BuildType.Release.name}\"."
     )
     DEFAULT_BUILD_STAGE = max(BuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
@@ -747,7 +747,7 @@ Example: \"--build_types {BuildRunner.BuildType.Debug.name} {BuildRunner.BuildTy
         type=str,
         choices=[buildStage.name for buildStage in BuildRunner.BuildStage],
         default=DEFAULT_BUILD_STAGE.name,
-        help=f"Specifies build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
+        help=f"Specify a build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
     )
     DEFAULT_RPS = BuildRunner.RunPrecedingStages.Run
     parser.add_argument(
@@ -756,19 +756,18 @@ Example: \"--build_types {BuildRunner.BuildType.Debug.name} {BuildRunner.BuildTy
         choices=[rps.name for rps in BuildRunner.RunPrecedingStages],
         default=DEFAULT_RPS.name,
         help=\
-f"Specifies whether to run preceding build stages. Default is {DEFAULT_RPS.name}.\n\
+f"Specify whether to run preceding build stages. Default is {DEFAULT_RPS.name}.\n\
 {BuildRunner.RunPrecedingStages.Run.name}: if artifacts of preceding build stages, left from a previous build, do not exist, the stages are run too.\n\
 {BuildRunner.RunPrecedingStages.Rerun.name}: run preceding build stages even if their artifacts exist.\n\
 {BuildRunner.RunPrecedingStages.Skip.name}: skip preceding build stages, even if their artifacts do not exist.\n\
-Artifact of {BuildRunner.BuildStage.Generate.name} stage is the build directory.\n\
-Artifact of {BuildRunner.BuildStage.Compile.name} stage is \"{BuildRunner.BUILD_SUMMARY__FILE_NAME}\".\n\
-Artifact of {BuildRunner.BuildStage.CompileTests.name} stage is \"{BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME}\".\n\
-Artifact of {BuildRunner.BuildStage.RunTests.name} stage is \"{BuildRunner.TEST_REPORT__FILE_NAME}\".\n\
-Artifact of {BuildRunner.BuildStage.Install.name} stage is the install directory.\n\
-Atrifact of {BuildRunner.BuildStage.Package.name} stage is any file in the directory \"{BuildRunner.SUBDIR_PACKAGES}\".\n\
-    Files in subdirectories of \"{BuildRunner.SUBDIR_PACKAGES}\" are not considered as artifacts.\n\
+Artifact of {BuildRunner.BuildStage.Generate.name} stage is a corresponding subdirectory of \"./build/\".\n\
+Artifact of {BuildRunner.BuildStage.Compile.name} stage is a \"{BuildRunner.BUILD_SUMMARY__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.CompileTests.name} stage is a \"{BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.RunTests.name} stage is a \"{BuildRunner.TEST_REPORT__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.Install.name} stage is a corresponding subdirectory of \"./install/\".\n\
+Atrifact of {BuildRunner.BuildStage.Package.name} stage is any file in a \"{BuildRunner.SUBDIR_PACKAGES}\" subdirectory (recursively).\n\
 Note: only the presence of preceding stage artifacts is checked, not the success of execution of a previous build.\n\
-Note: tests are not recompiled automatically, if the project is recompiled;\n\
+Note: {BuildRunner.BuildStage.CompileTests.name} stage does not check, whether {BuildRunner.BuildStage.Compile.name} stage was rerun;\n\
      \"{BuildRunner.TEST_REPORT__FILE_NAME}\" is not deleted automatically, if tests are recompiled.\n\
 If a build stage fails during current build, the next stages are not run."
     )
