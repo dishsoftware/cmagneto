@@ -9,8 +9,22 @@ The template features:
 - Docker support for reproducible environments
 - GitLab CI integration for automated building and packaging
 
+The template is shipped with the following major components:
+- CMake module [`CMagneto`](./cmake/modules/CMagneto.cmake) contains functions to easily define CMake targets, generate build stage reports and helper scripts, etc;
+- One-command build script [`./build.py`](./build.py);
+- Pre-configured CTest files in [`./tests/`](./tests/);
+- Pre-configured CPack files in [`./packaging/`](./packaging/);
+- Pre-configured Dockerfiles and GitLab CI pipeline in [`./CI/`](./CI/);
+- Pre-configured VS Code files at [`./.vscode/`](./.vscode/);
+- Template configuration files in [`./meta/`](./meta/).
+
 ## License
 This project is licensed under the [MIT License](./LICENSE).
+
+### Third-party Components
+- **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
+- **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
+- [`./cmake/modules/QtWrappers.cmake`](./cmake/modules/QtWrappers.cmake) is licensed under the GNU LGPL 2.1 or later. See the file header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 
 ## Documentation Conventions
 - Paths, names of variables and options, and their values are `highlighted` and not wrapped in quotes.
