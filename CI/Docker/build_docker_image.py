@@ -1,3 +1,9 @@
+# Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+# SPDX-License-Identifier: MIT
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import sys
 import re
 from enum import Enum
@@ -15,7 +21,7 @@ from scripts.MetadataHolder import MetadataHolder
 
 class DockerBuildRunner:
     class BuildStage(Enum):
-        GenerateEnvFile = 0 # Does not do anything with images, but creates DockerfileDir/.tmp/DockerfileName.env, where "DockerfileDir/DockerfileName" is --file argument value.
+        GenerateEnvFile = 0 # Does not do anything with images, just creates DockerfileDir/.tmp/DockerfileName.env, where "DockerfileDir/DockerfileName" is --file argument value.
         Build = 1
         Push = 2
 
@@ -199,17 +205,17 @@ def main():
     parser = argparse.ArgumentParser(
         description=\
 f"Builds Docker images.\n\
-Build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in DockerBuildRunner.BuildStage])}.\n\
+The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in DockerBuildRunner.BuildStage])}.\n\
 \n\
-Package name is generated as <CompanyName_SHORT>_<ProjectNameBase>_<ProjectVersion>__<DockerFileNameSuffix>,\n\
+Package name is generated as {{CompanyName_SHORT}}_{{ProjectNameBase}}_{{ProjectVersion}}__{{DockerFileNameSuffix}},\n\
 where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from 'meta/Project.json';\n\
 DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.DockerFileNameSuffix'.\n\
-DockerFileNameSuffix must be composed as <Platform>__<EnvType>, e.g. 'Ubuntu24AMD__build'.\n\
+DockerFileNameSuffix must be composed as {{Platform}}__{{EnvType}}, e.g. 'Ubuntu24AMD__build'.\n\
 \n\
 {DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {', '.join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
-Pushes images to <DockerRegistry>/<DockerRegistrySuffix>/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\
+Pushes images to {{DockerRegistry}}/{{DockerRegistrySuffix}}/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\
 An example of pushed image name: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build.\n\
 \n\
 Uses other variables from JSON files in 'meta' to define image labels.",
@@ -227,7 +233,7 @@ Uses other variables from JSON files in 'meta' to define image labels.",
         type=str,
         choices=[buildStage.name for buildStage in DockerBuildRunner.BuildStage],
         default=DEFAULT_BUILD_STAGE.name,
-        help=f"Specifies build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
+        help=f"Specify build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
     )
     DEFAULT_RPS = DockerBuildRunner.RunPrecedingStages.Run
     parser.add_argument(
@@ -235,7 +241,7 @@ Uses other variables from JSON files in 'meta' to define image labels.",
         type=str,
         choices=[rps.name for rps in DockerBuildRunner.RunPrecedingStages],
         default=DEFAULT_RPS.name,
-        help=f"Specifies whether to run preceding build stages. Default is {DEFAULT_RPS.name}."
+        help=f"Specify whether to run preceding build stages. Default is {DEFAULT_RPS.name}."
     )
 
     args = parser.parse_args()

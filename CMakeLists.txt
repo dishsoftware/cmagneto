@@ -1,3 +1,9 @@
+# Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+# SPDX-License-Identifier: MIT
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
 cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
@@ -26,7 +32,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON) # GoogleTest requires at least C++17.
 
 # Include custom CMake modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
-include(SetUpTargets)
+include(CMagneto)
 
 print_platform_and_compiler()
 set__IS_MULTTCONFIG__property()
