@@ -1,3 +1,4 @@
+![Project Banner](assets/header/Header.jpg)
 # CMagneto. C++ Project Template with CMake
 
 A ready-to-use C++ project template powered by CMake, designed for cross-platform development.
