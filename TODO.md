@@ -26,3 +26,7 @@
 * CMakePresets.json.
 * Fix content of packaging\License.txt, packaging\Readme.txt, etc.
 * Add option "--file ALL" to ./CI/Docker/build_docker_image.py.
+* Test coverage.
+* Qt IFW tweaks.
+* Add intergation tests and approppriate job in CI pipeline.
+* Add ignition switch to branding assets.
