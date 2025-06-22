@@ -24,7 +24,7 @@ This project is licensed under the [MIT License](./LICENSE).
 ### Third-party Components
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
-- [`./cmake/modules/QtWrappers.cmake`](./cmake/modules/QtWrappers.cmake) is licensed under the GNU LGPL 2.1 or later. See the file header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+- [`./cmake/modules/QtWrappers.cmake`](./cmake/modules/QtWrappers.cmake) is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later. See the file header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 
 ## Documentation Conventions
 - Paths, names of variables and options, and their values are `highlighted` and not wrapped in quotes.

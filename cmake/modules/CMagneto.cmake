@@ -24,18 +24,65 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
         Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
 
     Notes of a Fool:
-        If CMAKE_CURRENT_LIST_DIR is evaluated in a function, it is the directory of the file where the function is defined.
-        If CMAKE_CURRENT_LIST_DIR is evaluated in a script (outside of functions), it is the directory of the script.
+
+        CMAKE_CURRENT_LIST_DIR
+            Definition: The directory of the currently parsed CMake file, which can be a CMakeLists.txt or any included .cmake file or script.
+            Scope:
+                Changes whenever
+                    CMake enters a new file, including modules or scripts included by include() or find_package(),
+                    and
+                    CMAKE_CURRENT_LIST_DIR is evaluated in file outside of a function.
+                If CMAKE_CURRENT_LIST_DIR is evaluated in a function, it evaluates to the directory of a file where the function is called (recursively).
+            Typical use: To refer to the directory of the script file currently being executed, often used inside .cmake modules to locate helper files or resources relative to the module.
+
+        CMAKE_CURRENT_SOURCE_DIR
+            Definition: The directory where the currently processed CMakeLists.txt file is located.
+            Scope: Changes when CMake processes a new CMakeLists.txt via add_subdirectory() or similar.
+            Typical use: To refer to the current source directory of the build, usually the directory of the current subproject or subdirectory being configured.
+
+        CMAKE_SOURCE_DIR equals CMAKE_CURRENT_SOURCE_DIR, if:
+            1) The project is not nested within a parent project directory (the project is the top level project);
+            2) Even if the project is nested within a parent project directory, the nested project is considered top level, if:
+                2.1) CMake is run from the nested project root directory;
+                2.2) The parent project calls ExternalProject_Add() to add the nested project.
+
+        Proper names that should have been used instead of the confusing-as-hell CMake variable names mentioned above:
+            CMAKE_CURRENT_LIST_DIR   is CMAKE_CURRENT_SCRIPT_DIR.
+            CMAKE_CURRENT_SOURCE_DIR is CMAKE_CURRENT_CMAKELISTS_DIR.
+            CMAKE_SOURCE_DIR         is CMAKE_ROOT_CMAKELISTS_DIR.
+
+
+    How to use this file:
+        0) Include ./parse_meta.cmake before "project()" command. Add the "project()" command:
+            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake")
+            project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
+                DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
+                HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
+                VERSION "${PROJECT_JSON__PROJECT_VERSION}"
+                LANGUAGES CXX
+            )
+
+        1) Include this file in root CMakeLists.txt, e.g.:
+            include(${CMAKE_CURRENT_LIST_DIR}/CMagneto.cmake)
+
+        2) Call set_up_library() or set_up_executable() to set up project targets.
+
+        3) Call set_up_project() to generate build stage reports, helper scripts, etc.
+            This function should be called after all targets are set up.
+
+        4) Call add__build_tests__target() to set up the tests target.
+            This function should be called after all targets with tests are added.
 ]]
 
 
 include(CMakePackageConfigHelpers)
 
+
 # Build/install subdirectory names.
 set(SUBDIR_STATIC "lib")
 set(SUBDIR_SHARED "lib") # On Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts.
 set(SUBDIR_EXECUTABLE "bin")
-set(SUBDIR_INCLUDE "include")
+set(SUBDIR_INCLUDE "include/${PROJECT_JSON__COMPANY_NAME_SHORT}")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
@@ -482,7 +529,11 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         # because the target_include_directories(${iLibName} PUBLIC $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>) is already set.
     )
 
-    qt_install_ts_resources("${iTSResources}" ${SUBDIR_RESOURCES}/${iLibName}/translations)
+    qt_install_ts_resources("${iTSResources}"
+        ${SUBDIR_RESOURCES}/${iLibName}/translations
+        ${COMPONENT__RUNTIME}
+    )
+
     install(FILES ${iOtherResources}
         DESTINATION ${SUBDIR_RESOURCES}/${iLibName}/other
         COMPONENT ${COMPONENT__RUNTIME}
@@ -573,7 +624,7 @@ function(set_project_entrypoint iExeName)
     set_property(GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE ${iExeName})
 
     # Make ${iExeName} the startup project in Visual Studio.
-    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
 endfunction()
 
 

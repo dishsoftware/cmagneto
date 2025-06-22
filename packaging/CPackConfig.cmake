@@ -7,11 +7,7 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
-# Parse ./meta/packaging.json.
-file(READ "${CMAKE_SOURCE_DIR}/meta/Packaging.json" PACKAGING_JSON_TEXT)
-string(JSON PACKAGING_JSON__PACKAGE_ID GET "${PACKAGING_JSON_TEXT}" "PackageID")
-string(JSON PACKAGING_JSON__PACKAGE_NAME_PREFIX GET "${PACKAGING_JSON_TEXT}" "PackageNamePrefix")
-string(JSON PACKAGING_JSON__PACKAGE_MAINTAINER GET "${PACKAGING_JSON_TEXT}" "PackageMaintainer")
+parse__packaging_json()
 
 
 # Check if Qt IFW is available.
