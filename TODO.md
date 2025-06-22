@@ -30,3 +30,4 @@
 * Qt IFW tweaks.
 * Add intergation tests and approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
+* Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
