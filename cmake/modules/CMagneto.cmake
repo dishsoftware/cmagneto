@@ -1133,7 +1133,6 @@ function(add__build_tests__target)
     get_property(_registeredTestTargets GLOBAL PROPERTY REGISTERED_TEST_TARGETS)
     if(NOT _registeredTestTargets)
         message(STATUS "add__build_tests__target: No registered test targets.")
-        return()
     endif()
 
     set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
