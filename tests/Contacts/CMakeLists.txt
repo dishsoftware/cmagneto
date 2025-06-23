@@ -1,11 +1,11 @@
-add_executable(TESTS_contacts
+add_executable(TESTS_Contacts
     TEST_Contacts_FieldTypeExtension.cpp
 )
 
-target_link_libraries(TESTS_contacts
+target_link_libraries(TESTS_Contacts
     PRIVATE
         GTest::gtest_main
-        contacts
+        Contacts
 )
 
-register_test_target(TESTS_contacts)
+register_test_target(TESTS_Contacts)

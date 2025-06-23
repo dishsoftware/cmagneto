@@ -11,27 +11,27 @@ set(_moc_HEADERS
 ## Regular/static headers.
 set(_regular_HEADERS
   Contacts.hpp
-  Contacts_Contact.hpp
-  Contacts_FieldType.hpp
-  Contacts_FieldTypeExtension.hpp
+  Contact.hpp
+  FieldType.hpp
+  FieldTypeExtension.hpp
 )
 
 ## All headers.
-set(contacts_HEADERS ${_moc_HEADERS} ${_regular_HEADERS})
+set(Contacts_HEADERS ${_moc_HEADERS} ${_regular_HEADERS})
 ####################################################################
 
 
 # Resources
 ## Resource files to be processed by RCC.
 set(_rcc_RESOURCES
-    #contacts.qrc
+    #Contacts.qrc
 )
 
 ## Resource files to be processed by LRelease.
 set(_ts_RESOURCES
-  #resources/contacts_txt_en.ts
-  #resources/contacts_txt_fr.ts
-  #resources/contacts_txt_images.ts
+  #resources/Contacts_txt_en.ts
+  #resources/Contacts_txt_fr.ts
+  #resources/Contacts_txt_images.ts
 )
 
 ## Regular/static resource files.
@@ -51,29 +51,29 @@ qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})
 
 ## Regular/static sources.
 set(_regular_SOURCES
-  Contacts_Contact.cpp
-  Contacts_FieldTypeExtension.cpp
+  Contact.cpp
+  FieldTypeExtension.cpp
 )
 
 ## All sources.
-set(contacts_SOURCES ${_regular_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
+set(Contacts_SOURCES ${_regular_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
 ####################################################################
 
 
 # Target
-get_library_type(contacts _LIB_TYPE)
-add_library(contacts ${_LIB_TYPE})
-# If _LIB_TYPE is SHARED, a preproceccor macro contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
-# No need to target_compile_definitions(contacts PRIVATE contacts_EXPORTS) explicitly.
+get_library_type(Contacts _LIB_TYPE)
+add_library(Contacts ${_LIB_TYPE})
+# If _LIB_TYPE is SHARED, a preproceccor macro Contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
+# No need to target_compile_definitions(Contacts PRIVATE Contacts_EXPORTS) explicitly.
 
-target_include_directories(contacts PRIVATE
+target_include_directories(Contacts PRIVATE
   ${Boost_INCLUDE_DIRS}
 )
 
-target_link_libraries(contacts PUBLIC Qt6::Core)
+target_link_libraries(Contacts PUBLIC Qt6::Core)
 ####################################################################
 
 
 # Building and installation
-set_up_library(contacts "${contacts_HEADERS}" "${contacts_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
+set_up_library(Contacts "${Contacts_HEADERS}" "${Contacts_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
 ####################################################################

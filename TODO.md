@@ -31,3 +31,6 @@
 * Add intergation tests and approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
+* Preserve path relative to ./src/ in:
+    PUBLIC_HEADER
+        DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}

@@ -79,10 +79,11 @@ include(CMakePackageConfigHelpers)
 
 
 # Build/install subdirectory names.
+set(SUBDIR_SOURCE "src")
 set(SUBDIR_STATIC "lib")
 set(SUBDIR_SHARED "lib") # On Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts.
 set(SUBDIR_EXECUTABLE "bin")
-set(SUBDIR_INCLUDE "include/${PROJECT_JSON__COMPANY_NAME_SHORT}")
+set(SUBDIR_INCLUDE "include")
 set(SUBDIR_CMAKE "lib/cmake")
 set(SUBDIR_RESOURCES "resources")
 set(SUBDIR_TMP "TMP")
@@ -492,8 +493,8 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
 
     target_include_directories(${iLibName}
         PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-            $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>
+            $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}>
     )
 
     compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
@@ -521,9 +522,9 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
             DESTINATION ${SUBDIR_EXECUTABLE}
             COMPONENT ${COMPONENT__RUNTIME}
         PUBLIC_HEADER
-            DESTINATION ${SUBDIR_INCLUDE}/${iLibName}
+            DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}
             COMPONENT ${COMPONENT__DEVELOPMENT}
-        # INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} is unnecessary.
+        # INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} is unnecessary. TODO Update comment.
         # If ^ line is uncommented, a generated ${iLibName}Config.cmake will have
         # INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/${SUBDIR_INCLUDE}/${iLibName}",
         # because the target_include_directories(${iLibName} PUBLIC $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>) is already set.
@@ -568,7 +569,7 @@ function(set_up_executable iExeName iExeHeaders iExeSources iTSResources iOtherR
     target_sources(${iExeName} PRIVATE ${iExeSources} ${iExeHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
 
     target_include_directories(${iExeName} PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>
     )
 
     compose_binary_OUTPUT_NAME(${iExeName} _binaryOutputName)

@@ -38,7 +38,7 @@ set__IS_MULTTCONFIG__property()
 
 
 # Add source directories.
-add_subdirectory(src)
+add_subdirectory("src/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}")
 
 
 # Generate build stage reports, helper scripts, etc.

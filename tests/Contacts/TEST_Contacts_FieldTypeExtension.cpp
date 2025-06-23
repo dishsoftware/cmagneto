@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "Contacts_FieldTypeExtension.hpp"
+#include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
 #include <iostream>
 
 TEST(ContactsFieldTypeExtension, FieldTypeEnum) {
-    using namespace enowsw::contacts::FieldType;
+    using namespace Enow::Contacts::Contacts::FieldType;
 
     // Check allEnums() and allStrings() correspond to each other.
     std::set<QString> stringsFromEnums{};
