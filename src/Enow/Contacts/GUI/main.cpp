@@ -1,6 +1,7 @@
 #include "Enow/Contacts/Contacts/FieldType.hpp"
 #include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
 #include <iostream>
+#include "Enow/Contacts/Contacts/dataTypes/Email.hpp"
 
 
 int main() {
@@ -11,6 +12,8 @@ int main() {
 
     const auto& fieldString = Enow::Contacts::Contacts::FieldType::toString(field);
     std::cout << "Enow::Contacts::Contacts::FieldType::toString(kEMail): " << fieldString.toStdString() << std::endl;
+
+    auto email = Enow::Contacts::Contacts::dataTypes::Email();
 
     return 0;
 }

@@ -10,10 +10,11 @@ set(_moc_HEADERS
 
 ## Regular/static headers.
 set(_regular_HEADERS
-  Contacts.hpp
-  Contact.hpp
-  FieldType.hpp
-  FieldTypeExtension.hpp
+    dataTypes/Email.hpp
+    Contacts.hpp
+    Contact.hpp
+    FieldType.hpp
+    FieldTypeExtension.hpp
 )
 
 ## All headers.
@@ -29,15 +30,15 @@ set(_rcc_RESOURCES
 
 ## Resource files to be processed by LRelease.
 set(_ts_RESOURCES
-  #resources/Contacts_txt_en.ts
-  #resources/Contacts_txt_fr.ts
-  #resources/Contacts_txt_images.ts
+    #resources/Contacts_txt_en.ts
+    #resources/Contacts_txt_fr.ts
+    #resources/Contacts_txt_images.ts
 )
 
 ## Regular/static resource files.
 set(_other_RESOURCES
-  #resources/icon.png
-  #resources/action_assets.json
+    #resources/icon.png
+    #resources/action_assets.json
 )
 ####################################################################
 
@@ -51,8 +52,8 @@ qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})
 
 ## Regular/static sources.
 set(_regular_SOURCES
-  Contact.cpp
-  FieldTypeExtension.cpp
+    Contact.cpp
+    FieldTypeExtension.cpp
 )
 
 ## All sources.
@@ -67,7 +68,7 @@ add_library(Contacts ${_LIB_TYPE})
 # No need to target_compile_definitions(Contacts PRIVATE Contacts_EXPORTS) explicitly.
 
 target_include_directories(Contacts PRIVATE
-  ${Boost_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(Contacts PUBLIC Qt6::Core)

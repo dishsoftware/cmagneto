@@ -124,8 +124,8 @@ endfunction()
     Resolves variables, "..", ".", etc. and compares paths.
 ]]
 function(are_paths_equal iPathA iPathB oAreEqual)
-    file(REAL_PATH "${iPathA}" _pathA)
-    file(REAL_PATH "${iPathB}" _pathB)
+    get_filename_component(_pathA "${iPathA}" REALPATH)
+    get_filename_component(_pathB "${iPathB}" REALPATH)
 
     if("${_pathA}" STREQUAL "${_pathB}")
         set(${oAreEqual} TRUE PARENT_SCOPE)
@@ -377,7 +377,7 @@ function(collect_paths_to_shared_libs iTargetName)
                     if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
                         set(_libPath ${_nonBuildSpecificLibPath})
                     else()
-                        message(WARNING "collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
+                        message(WARNING "⚠ collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
                         continue()
                     endif()
                 endif()
@@ -502,7 +502,6 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         PROPERTIES
             EXPORT_NAME ${iLibName}
             OUTPUT_NAME ${_binaryOutputName}
-            PUBLIC_HEADER "${iLibHeaders}"
             # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
             # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.
     )
@@ -521,10 +520,10 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         RUNTIME
             DESTINATION ${SUBDIR_EXECUTABLE}
             COMPONENT ${COMPONENT__RUNTIME}
-        PUBLIC_HEADER
-            DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}
-            COMPONENT ${COMPONENT__DEVELOPMENT}
-        # INCLUDES DESTINATION is redundant, because it is effectively set by
+        # INCLUDES
+        #     DESTINATION ...
+        #     ...
+        # is redundant, because it is effectively set by
         # target_include_directories(${iLibName}
         # PUBLIC
         #    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>
@@ -532,6 +531,49 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         #)
         # above.
     )
+
+    # Install headers, while preserving their subdirectory structure.
+    foreach(_headerPath IN LISTS iLibHeaders)
+        if(NOT IS_ABSOLUTE "${_headerPath}")
+            set(_absHeaderPath "${CMAKE_CURRENT_SOURCE_DIR}/${_headerPath}")
+            set(_relHeaderPath "${_headerPath}")
+        else()
+            set(_absHeaderPath "${_headerPath}")
+            file(RELATIVE_PATH _relHeaderPath "${CMAKE_CURRENT_SOURCE_DIR}" "${_absHeaderPath}")
+        endif()
+
+        get_filename_component(_headerSubDir "${_relHeaderPath}" DIRECTORY)
+
+        # Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
+        if (_headerSubDir STREQUAL ".")
+            set(_headerSubDir "")
+        endif()
+
+        set(_destinationDir "${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}/${_headerSubDir}")
+
+        # Check if the install destination is within include root.
+        set(_absDestinationPath "${CMAKE_INSTALL_PREFIX}/${_destinationDir}")
+        set(_absIncludePath "${CMAKE_INSTALL_PREFIX}/${SUBDIR_INCLUDE}")
+
+        ## Normalize (resolve "..", ".", etc.).
+        get_filename_component(_normalizedDestinationDir "${_absDestinationPath}" REALPATH)
+        get_filename_component(_normalizedIncludeDir "${_absIncludePath}" REALPATH)
+
+        ## Check if normalized install destination is within include root.
+        string(FIND "${_normalizedDestinationDir}" "${_normalizedIncludeDir}" _matchPos)
+        if(NOT _matchPos EQUAL 0)
+            message(WARNING "⚠ Header path \"${_headerPath}\" is provided. Its install path is escaping install root:\n"
+                "  \"${_normalizedDestinationDir}\"\n"
+                "  is not under\n"
+                "  \"${_normalizedIncludeDir}\" ."
+            )
+        endif()
+
+        install(FILES "${_absHeaderPath}"
+            DESTINATION "${_destinationDir}"
+            COMPONENT ${COMPONENT__DEVELOPMENT}
+        )
+    endforeach()
 
     qt_install_ts_resources("${iTSResources}"
         ${SUBDIR_RESOURCES}/${iLibName}/translations
@@ -936,7 +978,7 @@ function(generate__run__script_content iBuildType oScriptContent)
 
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        message(WARNING "generate__run__script_content: The project entrypoint executable is not set.")
+        message(WARNING "⚠ generate__run__script_content: The project entrypoint executable is not set.")
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)

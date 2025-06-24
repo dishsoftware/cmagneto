@@ -9,7 +9,6 @@
     )
     ```
 * ? Make some variables from "./cmake/modules/CMagneto.cmake" accessible only within the file.
-* ? Add project name as prefix to all variables in CMagneto to support superbuild.
 
 * Generate "LibName.h" with exports from a CMake or Python script.
 * Add a script, which copies 3rd-party shared libraries to "install/.../3rd_party" directory. The script must also copy ".pdb" or analogues, if they exist.
