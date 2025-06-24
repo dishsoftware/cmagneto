@@ -31,7 +31,19 @@ This project is licensed under the [MIT License](./LICENSE).
 - If a path, name or value includes `a {placeholder}, wrapped in curly braces,` the `placeholder` is a required value that must be substituted.
 - If `a [{placeholder}] is wrapped in square brackets`, the `placeholder` is optional.
 - Always use relative paths, unless an absolute path is explicitly required.
+
+## Code Conventions
+- Place sources of a module under `./src/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
+- The project endorses inclusions of headers of other modules within the project as:
+  ```c++
+  #include "{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp"
+  ```
+  and inclusions in consumer projects as:
+   ```c++
+  #include <{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp>
+  ```
 ---
+
 
 # Configuration
 

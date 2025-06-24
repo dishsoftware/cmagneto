@@ -1,6 +1,6 @@
 * ? Remove "set_env" and ".env.vscode" scripts and copy 3rd-party libraries to "build/.../bin" and "install/.../bin" instead.
     It can be achieved using
-    ```
+    ```cmake
     set_target_properties(iTarget PROPERTIES
         BUILD_RPATH "$ORIGIN/../lib;$ORIGIN/../other_lib"
         INSTALL_RPATH ""
