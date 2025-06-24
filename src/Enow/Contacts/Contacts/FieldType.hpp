@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Contacts.hpp"
+#include <cstdint>
 
 
 namespace Enow::Contacts::Contacts::FieldType {
-    enum class CONTACTS_EXPORT Enum {
+    enum class CONTACTS_EXPORT Enum : std::uint8_t {
         kString, // Generic string without restrictions.
         kPhoneNumber,
         kEMail,

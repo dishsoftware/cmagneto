@@ -9,12 +9,12 @@ set(_regular_SOURCES
 
 
 # Target
-add_executable(gui)
-target_link_libraries(gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Contacts)
+add_executable(GUI)
+target_link_libraries(GUI PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Contacts)
 ####################################################################
 
 
 # Building and installation
-set_up_executable(gui "${_regular_HEADERS}" "${_regular_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
-set_project_entrypoint(gui)
+set_up_executable(GUI "${_regular_HEADERS}" "${_regular_SOURCES}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
+set_project_entrypoint(GUI)
 ####################################################################

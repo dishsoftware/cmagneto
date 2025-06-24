@@ -524,10 +524,13 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         PUBLIC_HEADER
             DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}
             COMPONENT ${COMPONENT__DEVELOPMENT}
-        # INCLUDES DESTINATION ${SUBDIR_INCLUDE}/${iLibName} is unnecessary. TODO Update comment.
-        # If ^ line is uncommented, a generated ${iLibName}Config.cmake will have
-        # INTERFACE_INCLUDE_DIRECTORIES with duplicated "${_IMPORT_PREFIX}/${SUBDIR_INCLUDE}/${iLibName}",
-        # because the target_include_directories(${iLibName} PUBLIC $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}/${iLibName}>) is already set.
+        # INCLUDES DESTINATION is redundant, because it is effectively set by
+        # target_include_directories(${iLibName}
+        # PUBLIC
+        #    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>
+        #    $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}>
+        #)
+        # above.
     )
 
     qt_install_ts_resources("${iTSResources}"

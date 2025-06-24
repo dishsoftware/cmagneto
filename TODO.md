@@ -34,3 +34,4 @@
 * Preserve path relative to ./src/ in:
     PUBLIC_HEADER
         DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}
+* get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibName}_SHARED` instead of `--LIB_{LibName}_SHARED`.

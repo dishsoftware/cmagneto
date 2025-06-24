@@ -781,12 +781,12 @@ If a build stage fails during current build, the next stages are not run."
         "--BUILD_SHARED_LIBS",
         action="store_true",
         help=\
-"Build implicit type (DEFAULT) libraries as shared.\n\
-It is possible to override this option for each library, using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
+f"Build implicit type (DEFAULT) libraries as shared.\n\
+It is possible to override this option for each library, using --LIB_{{LibName}}_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
     )
 
     args, unknownArgs = parser.parse_known_args()
-    # Parse unknown arguments that are in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+    # Parse unknown arguments that are in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
     libSharedOptions = {}
     for arg in unknownArgs[:]:
         if not arg.startswith("--"):
@@ -795,7 +795,7 @@ It is possible to override this option for each library, using --LIB_<NAME>_SHAR
         # Remove leading "--".
         processedArg = arg[2:]
 
-        # Check if the argument is in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+        # Check if the argument is in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
         optionAndVal = processedArg.split("=")
         if len(optionAndVal) != 2:
             continue
