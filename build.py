@@ -685,11 +685,12 @@ class BuildToolsetHolder(metaclass=ConstMetaClass):
 
 
     class WindowsToolset(Enum):
-        MinGWMakefiles_MinGW = 0
-        VS2022_MSVC = 1
+        MinGW = 0 # MinGW Makefiles and MinGW compiler.
+        # The MinGW name does not follow the accepted naming convention {BuildSystem}_{Compiler}, because for this case the conventional name is too long.
+        VS2022_MSVC = 1 # Visual Studio 2022 with MSVC compiler.
 
     WINDOWS_BUILD_RUNNERS: dict[WindowsToolset, BuildRunner] = {
-        WindowsToolset.MinGWMakefiles_MinGW: MinGWMakefilesMinGWRunner,
+        WindowsToolset.MinGW: MinGWMakefilesMinGWRunner,
         WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
     }
 
