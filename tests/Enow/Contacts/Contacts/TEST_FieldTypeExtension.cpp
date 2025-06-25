@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
+
+#include <gtest/gtest.h>
 
 
 TEST(Enow_Contacts_Contacts, FieldTypeExtension) {

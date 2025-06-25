@@ -1,6 +1,8 @@
 #include "FieldTypeExtension.hpp"
+
 #include <boost/bimap.hpp>
 #include <QtGlobal>
+
 #include <stdexcept>
 
 
@@ -11,7 +13,7 @@ namespace Enow::Contacts::Contacts::FieldType {
             const auto newValues = new boost::bimap<Enum, QString>();
             newValues->insert({Enum::kString, "String"});
             newValues->insert({Enum::kPhoneNumber, "PhoneNumber"});
-            newValues->insert({Enum::kEMail, "EMail"});
+            newValues->insert({Enum::kEMailAddress, "EMailAddress"});
             newValues->insert({Enum::kLocation, "Location"});
             newValues->insert({Enum::kGraphics, "Graphics"});
             values = newValues;

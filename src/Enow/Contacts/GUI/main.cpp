@@ -1,19 +1,20 @@
 #include "Enow/Contacts/Contacts/FieldType.hpp"
 #include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
+#include "Enow/Contacts/Contacts/fields/EmailAddress.hpp"
+
 #include <iostream>
-#include "Enow/Contacts/Contacts/dataTypes/Email.hpp"
 
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
 
-    const auto field = Enow::Contacts::Contacts::FieldType::Enum::kEMail;
-    std::cout << "Enow::Contacts::Contacts::FieldType::Enum::kEMail index: " << static_cast<int>(field) << std::endl;
+    const auto fieldType = Enow::Contacts::Contacts::FieldType::Enum::kEMailAddress;
+    std::cout << "Enow::Contacts::Contacts::FieldType::Enum::kEMailAddress index: " << static_cast<int>(fieldType) << std::endl;
 
-    const auto& fieldString = Enow::Contacts::Contacts::FieldType::toString(field);
-    std::cout << "Enow::Contacts::Contacts::FieldType::toString(kEMail): " << fieldString.toStdString() << std::endl;
+    const auto& fieldTypeString = Enow::Contacts::Contacts::FieldType::toString(fieldType);
+    std::cout << "Enow::Contacts::Contacts::FieldType::toString(kEMailAddress): " << fieldTypeString.toStdString() << std::endl;
 
-    auto email = Enow::Contacts::Contacts::dataTypes::Email();
+    auto emailAddress = Enow::Contacts::Contacts::fields::EmailAddress();
 
     return 0;
 }

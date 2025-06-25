@@ -1,8 +1,11 @@
 #pragma once
 
+#include "Contacts_DEFS.hpp"
+
 #include "FieldType.hpp"
-#include "Contacts.hpp"
+
 #include <QString>
+
 #include <set>
 
 

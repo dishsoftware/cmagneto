@@ -16,7 +16,6 @@
 * Generate ".vscode/launch.json" using a template by substituting "program" properties with a name of the entrypoint executable binary.
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
-* Make inclusions of the project headers look like `#include <ProjectName/LibName/.../Subdir/.../Header.hpp>`.
 * Endorse specifying ProjectName as a namespace while linking targets of the project to other targets of the project. Support it in "./cmake/modules/CMagneto.cmake" and "./build.py".
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
 * Use InstallRequiredSystemLibraries CMake module.
@@ -30,7 +29,4 @@
 * Add intergation tests and approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
-* Preserve path relative to ./src/ in:
-    PUBLIC_HEADER
-        DESTINATION ${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}
 * get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibName}_SHARED` instead of `--LIB_{LibName}_SHARED`.
