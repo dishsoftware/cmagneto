@@ -75,6 +75,12 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
+# Set up CMagneto CMake module logging.
+include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/log.cmake")
+
+
+# CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),
+# which are read by find_package() in consumer projects.
 include(CMakePackageConfigHelpers)
 
 
@@ -111,10 +117,10 @@ endfunction()
 
 
 function(print_platform_and_compiler)
-    message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
-    message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-    message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
-    message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+    CMagneto__message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
+    CMagneto__message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+    CMagneto__message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+    CMagneto__message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
 endfunction()
 
 
@@ -152,18 +158,18 @@ function(set__IS_MULTTCONFIG__property)
     if(CMAKE_VERSION VERSION_LESS "3.3.0")
         # Bug https://cmake.org/Bug/view.php?id=15577 .
         if(CMAKE_BUILD_TYPE)
-            message(DEBUG "Single-configuration generator")
+            CMagneto__message(DEBUG "Single-configuration generator")
             set_property(GLOBAL PROPERTY IS_MULTTCONFIG FALSE)
         else()
-            message(DEBUG "Multi-configuration generator")
+            CMagneto__message(DEBUG "Multi-configuration generator")
             set_property(GLOBAL PROPERTY IS_MULTTCONFIG TRUE)
         endif()
     else()
         if(CMAKE_CONFIGURATION_TYPES)
-            message(DEBUG "Multi-configuration generator")
+            CMagneto__message(DEBUG "Multi-configuration generator")
             set_property(GLOBAL PROPERTY IS_MULTTCONFIG TRUE)
         else()
-            message(DEBUG "Single-configuration generator")
+            CMagneto__message(DEBUG "Single-configuration generator")
             set_property(GLOBAL PROPERTY IS_MULTTCONFIG FALSE)
         endif()
     endif()
@@ -201,12 +207,12 @@ function(check_target_name_validity iTargetName)
     # Reject names made only of underscores
     string(REGEX MATCH "^_+$" _only_underscores "${iTargetName}")
     if(_only_underscores)
-        message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must not be composed only of underscores.")
+        CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must not be composed only of underscores.")
     endif()
 
     string(REGEX MATCH "^[a-zA-Z_][a-zA-Z0-9_]*$" _isValid "${iTargetName}")
     if(NOT _isValid)
-        message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
+        CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
     endif()
 
     # Check if the target name is already registered.
@@ -216,9 +222,9 @@ function(check_target_name_validity iTargetName)
         string(TOUPPER "${_registeredTarget}" _registeredTargetUC)
         if(_targetNameUC STREQUAL _registeredTargetUC)
             if(iTargetName STREQUAL _registeredTarget)
-                message(FATAL_ERROR "Target name \"${iTargetName}\" is already registered.")
+                CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is already registered.")
             else()
-                message(FATAL_ERROR "Target name \"${iTargetName}\" conflicts with previosly registered \"${_registeredTarget}\".")
+                CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" conflicts with previosly registered \"${_registeredTarget}\".")
             endif()
         endif()
     endforeach()
@@ -371,13 +377,13 @@ function(collect_paths_to_shared_libs iTargetName)
 
             get_target_property(_libPath ${_lib} IMPORTED_LOCATION_${_config})
             if(NOT (_libPath AND EXISTS ${_libPath}))
-                message(STATUS "collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
+                CMagneto__message(STATUS "collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
                 get_target_property(_libPath ${_lib} IMPORTED_LOCATION_RELEASE)
                 if(NOT (_libPath AND EXISTS ${_libPath}))
                     if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
                         set(_libPath ${_nonBuildSpecificLibPath})
                     else()
-                        message(WARNING "⚠ collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
+                        CMagneto_warning("collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
                         continue()
                     endif()
                 endif()
@@ -464,7 +470,7 @@ function(get_library_type iLibName oLibType)
     if(${_libType} STREQUAL "SHARED")
         add_definitions(-D${_cacheVarName}) # Define preproceccor macro LIB_LIBNAME_SHARED.
     endif()
-    message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
+    CMagneto__message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
 endfunction()
 
 
@@ -534,22 +540,54 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
 
     # Install headers, while preserving their subdirectory structure.
     foreach(_headerPath IN LISTS iLibHeaders)
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Set up of installation of passed header \"${_headerPath}\" started.")
+
         if(NOT IS_ABSOLUTE "${_headerPath}")
+            CMagneto__message(TRACE "set_up_library(${iLibName}): Passed header path is relative.")
             set(_absHeaderPath "${CMAKE_CURRENT_SOURCE_DIR}/${_headerPath}")
             set(_relHeaderPath "${_headerPath}")
         else()
+            CMagneto__message(TRACE "set_up_library(${iLibName}): Passed header path is absolute.")
             set(_absHeaderPath "${_headerPath}")
             file(RELATIVE_PATH _relHeaderPath "${CMAKE_CURRENT_SOURCE_DIR}" "${_absHeaderPath}")
         endif()
 
-        get_filename_component(_headerSubDir "${_relHeaderPath}" DIRECTORY)
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Absolute header path: \"${_absHeaderPath}\"")
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Relative header path: \"${_relHeaderPath}\"")
 
-        # Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
-        if (_headerSubDir STREQUAL ".")
-            set(_headerSubDir "")
+        # Check if the header is within project source directory.
+        get_filename_component(_normalizedHeaderPath "${_absHeaderPath}" REALPATH)
+        get_filename_component(_normalizedSourceDir "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}" REALPATH)
+        string(FIND "${_normalizedHeaderPath}" "${_normalizedSourceDir}" _matchPos)
+        if(NOT _matchPos EQUAL 0)
+            set(_msgTemplate [=[
+Header path "${_headerPath}" is provided. Its path is outside of project "${PROJECT_NAME}" source root:
+    "${_normalizedHeaderPath}"
+    is not under
+    "${_normalizedSourceDir}".
+Install layout reflects source layout. To keep install layout clean and relocatable the build has been failed.
+            ]=])
+
+            string(CONFIGURE "${_msgTemplate}" _msg)
+            CMagneto__message(FATAL_ERROR "${_msg}")
         endif()
 
-        set(_destinationDir "${SUBDIR_INCLUDE}/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}/${iLibName}/${_headerSubDir}")
+        file(RELATIVE_PATH _libCMakeListsDirRelativeToSourceDir "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}")
+        # Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
+        if (_libCMakeListsDirRelativeToSourceDir STREQUAL ".")
+            set(_libCMakeListsDirRelativeToSourceDir "")
+        endif()
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Library CMakeLists.txt directory relative to source dir: \"${_libCMakeListsDirRelativeToSourceDir}\"")
+
+        get_filename_component(_headerSubDirRelativeToLibCMakeLists "${_relHeaderPath}" DIRECTORY)
+        # Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
+        if (_headerSubDirRelativeToLibCMakeLists STREQUAL ".")
+            set(_headerSubDirRelativeToLibCMakeLists "")
+        endif()
+
+        set(_destinationDir "${SUBDIR_INCLUDE}/${_libCMakeListsDirRelativeToSourceDir}/${_headerSubDirRelativeToLibCMakeLists}")
+
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Header destination directory: \"${_destinationDir}\"")
 
         # Check if the install destination is within include root.
         set(_absDestinationPath "${CMAKE_INSTALL_PREFIX}/${_destinationDir}")
@@ -559,20 +597,12 @@ function(set_up_library iLibName iLibHeaders iLibSources iTSResources iOtherReso
         get_filename_component(_normalizedDestinationDir "${_absDestinationPath}" REALPATH)
         get_filename_component(_normalizedIncludeDir "${_absIncludePath}" REALPATH)
 
-        ## Check if normalized install destination is within include root.
-        string(FIND "${_normalizedDestinationDir}" "${_normalizedIncludeDir}" _matchPos)
-        if(NOT _matchPos EQUAL 0)
-            message(WARNING "⚠ Header path \"${_headerPath}\" is provided. Its install path is escaping install root:\n"
-                "  \"${_normalizedDestinationDir}\"\n"
-                "  is not under\n"
-                "  \"${_normalizedIncludeDir}\" ."
-            )
-        endif()
-
         install(FILES "${_absHeaderPath}"
             DESTINATION "${_destinationDir}"
             COMPONENT ${COMPONENT__DEVELOPMENT}
         )
+
+        CMagneto__message(TRACE "set_up_library(${iLibName}): Set up of installation of passed header \"${_headerPath}\" finished.\n")
     endforeach()
 
     qt_install_ts_resources("${iTSResources}"
@@ -658,13 +688,13 @@ function(set_project_entrypoint iExeName)
     if(_isSet)
         get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
         if(NOT (_exeName STREQUAL iExeName))
-            message(FATAL_ERROR "set_project_entrypoint: The project entry point executable is already set to \"${_exeName}\".")
+            CMagneto__message(FATAL_ERROR "set_project_entrypoint: The project entry point executable is already set to \"${_exeName}\".")
         endif()
     endif()
 
     get_target_property(_targetType ${iExeName} TYPE)
     if(NOT (${_targetType} STREQUAL "EXECUTABLE"))
-        message(FATAL_ERROR "set_project_entrypoint: The target type must be EXECUTABLE.")
+        CMagneto__message(FATAL_ERROR "set_project_entrypoint: The target type must be EXECUTABLE.")
     endif()
 
     set_property(GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE ${iExeName})
@@ -978,7 +1008,7 @@ function(generate__run__script_content iBuildType oScriptContent)
 
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        message(WARNING "⚠ generate__run__script_content: The project entrypoint executable is not set.")
+        CMagneto_warning("generate__run__script_content: The project entrypoint executable is not set.")
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
@@ -1178,7 +1208,7 @@ set(GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/CMagneto
 function(add__build_tests__target)
     get_property(_registeredTestTargets GLOBAL PROPERTY REGISTERED_TEST_TARGETS)
     if(NOT _registeredTestTargets)
-        message(STATUS "add__build_tests__target: No registered test targets.")
+        CMagneto__message(STATUS "add__build_tests__target: No registered test targets.")
     endif()
 
     set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")

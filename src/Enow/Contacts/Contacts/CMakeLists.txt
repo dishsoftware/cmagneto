@@ -77,7 +77,7 @@ add_library(Contacts ${_LIB_TYPE})
 
 target_link_libraries(Contacts
     PUBLIC
-        Qt6::Core
+        Qt6::Core Boost::boost
     PRIVATE
         PhoneNumberFormatter
 )
