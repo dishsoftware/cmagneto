@@ -7,17 +7,14 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
-# Parse ./meta/packaging.json.
-file(READ "${CMAKE_SOURCE_DIR}/meta/Packaging.json" PACKAGING_JSON_TEXT)
-string(JSON PACKAGING_JSON__PACKAGE_NAME_BASE GET "${PACKAGING_JSON_TEXT}" "PackageNameBase")
-string(JSON PACKAGING_JSON__PACKAGE_MAINTAINER GET "${PACKAGING_JSON_TEXT}" "PackageMaintainer")
+parse__packaging_json()
 
 
 # Check if Qt IFW is available.
 find_program(QTIFW_BINARYCREATOR_EXECUTABLE binarycreator)
 find_program(QTIFW_REPOGEN_EXECUTABLE repogen)
 if(QTIFW_BINARYCREATOR_EXECUTABLE AND QTIFW_REPOGEN_EXECUTABLE)
-    message(STATUS "Qt Installer Framework found.")
+    CMagneto__message(STATUS "Qt Installer Framework found.")
     set(QT_IFW_AVAILABLE TRUE)
 endif()
 
@@ -63,7 +60,7 @@ set(CPACK_GENERATOR "${_packageGenerators}")
 set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${SUBDIR_PACKAGES}")
 
-set(CPACK_PACKAGE_NAME "${PROJECT_JSON__COMPANY_NAME_SHORT}${PROJECT_JSON__PROJECT_NAME_BASE}")
+set(CPACK_PACKAGE_NAME "${PACKAGING_JSON__PACKAGE_NAME_PREFIX}")
 set(CPACK_PACKAGE_VENDOR "PROJECT_JSON__COMPANY_NAME_LEGAL")
 set(CPACK_PACKAGE_CONTACT "${PACKAGING_JSON__PACKAGE_MAINTAINER}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${CMAKE_PROJECT_DESCRIPTION}")
@@ -168,6 +165,6 @@ foreach(_generator IN LISTS _packageGenerators)
     elseif(_generator STREQUAL "ZIP")
         include(${CMAKE_CURRENT_LIST_DIR}/ZIP/ZIPConfig.cmake)
     else()
-        message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
+        CMagneto__message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
     endif()
 endforeach()

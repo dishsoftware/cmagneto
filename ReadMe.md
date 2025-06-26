@@ -24,14 +24,18 @@ This project is licensed under the [MIT License](./LICENSE).
 ### Third-party Components
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
-- [`./cmake/modules/QtWrappers.cmake`](./cmake/modules/QtWrappers.cmake) is licensed under the GNU LGPL 2.1 or later. See the file header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+- [`./cmake/modules/QtWrappers.cmake`](./cmake/modules/QtWrappers.cmake) is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later. See the file header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 
 ## Documentation Conventions
 - Paths, names of variables and options, and their values are `highlighted` and not wrapped in quotes.
 - If a path, name or value includes `a {placeholder}, wrapped in curly braces,` the `placeholder` is a required value that must be substituted.
 - If `a [{placeholder}] is wrapped in square brackets`, the `placeholder` is optional.
 - Always use relative paths, unless an absolute path is explicitly required.
+
+## Code Conventions
+Look into [`./docs/CodeConventions.md`](./docs/CodeConventions.md) .
 ---
+
 
 # Configuration
 
@@ -160,7 +164,7 @@ To create the pipeline for an untagged commit to another branch, push the commit
 
 ### CI Artifact Output
 Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNameBase}-{ProjectVersion}.{PackageExtension}`,
+`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
 
 where:
 - `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. 67161006;
@@ -168,7 +172,7 @@ where:
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
 - `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform==`Ubuntu24AMD`;
 - `toolset` is the argument, passed to [`./build.py --toolset`](./build.py).
-- `PackageNameBase` and `ProjectVersion` are defined in [`./meta/Packaging.json`](./meta/Packaging.json) and [`./meta/Project.json`](./meta/Project.json).
+- `PackageNamePrefix` and `ProjectVersion` are defined in [`./meta/Packaging.json`](./meta/Packaging.json) and [`./meta/Project.json`](./meta/Project.json).
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>

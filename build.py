@@ -685,11 +685,12 @@ class BuildToolsetHolder(metaclass=ConstMetaClass):
 
 
     class WindowsToolset(Enum):
-        MinGWMakefiles_MinGW = 0
-        VS2022_MSVC = 1
+        MinGW = 0 # MinGW Makefiles and MinGW compiler.
+        # The MinGW name does not follow the accepted naming convention {BuildSystem}_{Compiler}, because for this case the conventional name is too long.
+        VS2022_MSVC = 1 # Visual Studio 2022 with MSVC compiler.
 
     WINDOWS_BUILD_RUNNERS: dict[WindowsToolset, BuildRunner] = {
-        WindowsToolset.MinGWMakefiles_MinGW: MinGWMakefilesMinGWRunner,
+        WindowsToolset.MinGW: MinGWMakefilesMinGWRunner,
         WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
     }
 
@@ -781,12 +782,12 @@ If a build stage fails during current build, the next stages are not run."
         "--BUILD_SHARED_LIBS",
         action="store_true",
         help=\
-"Build implicit type (DEFAULT) libraries as shared.\n\
-It is possible to override this option for each library, using --LIB_<NAME>_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
+f"Build implicit type (DEFAULT) libraries as shared.\n\
+It is possible to override this option for each library, using --LIB_{{LibName}}_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
     )
 
     args, unknownArgs = parser.parse_known_args()
-    # Parse unknown arguments that are in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+    # Parse unknown arguments that are in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
     libSharedOptions = {}
     for arg in unknownArgs[:]:
         if not arg.startswith("--"):
@@ -795,7 +796,7 @@ It is possible to override this option for each library, using --LIB_<NAME>_SHAR
         # Remove leading "--".
         processedArg = arg[2:]
 
-        # Check if the argument is in the form of LIB_<name>_SHARED=ON|OFF|DEFAULT.
+        # Check if the argument is in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
         optionAndVal = processedArg.split("=")
         if len(optionAndVal) != 2:
             continue

@@ -1,4 +1,5 @@
 {
-    "PackageNameBase": "EnowContacts",
+    "PackageID": "io.enowsw.contacts",
+    "PackageNamePrefix": "EnowContacts",
     "PackageMaintainer": "Dim Shvydkoy <dmit.shvyd@gmail.com>"
 }
