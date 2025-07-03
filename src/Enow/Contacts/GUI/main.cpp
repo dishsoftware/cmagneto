@@ -2,6 +2,8 @@
 #include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
 #include "Enow/Contacts/Contacts/fields/EmailAddress.hpp"
 
+#include <QIcon>
+
 #include <iostream>
 
 
@@ -15,6 +17,9 @@ int main() {
     std::cout << "Enow::Contacts::Contacts::FieldType::toString(kEMailAddress): " << fieldTypeString.toStdString() << std::endl;
 
     auto emailAddress = Enow::Contacts::Contacts::fields::EmailAddress();
+
+    QIcon iconContacts("qrc:/Enow/Contacts/Contacts/icons/logo.svg");
+    QIcon iconGUI("qrc:/Enow/Contacts/GUI/icons/logo.svg");
 
     return 0;
 }

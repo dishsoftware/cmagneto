@@ -76,7 +76,7 @@ endmacro(qt_install_ts_resources)
 ]]
 macro(qt_wrap_moc)
     qt6_wrap_cpp(${ARGN})
-    if (NOT WIN32)
+    if(NOT WIN32)
         foreach(_inputFilePath ${ARGN})
             get_filename_component(_inputFilePath ${_inputFilePath} ABSOLUTE)
             get_filename_component(_fileNameWE ${_inputFilePath} NAME_WE)

@@ -1,3 +1,5 @@
+set(CMagneto__MESSAGE_LOG_LEVEL TRACE)
+
 add_subdirectory(fields/PhoneNumberFormatter)
 
 
@@ -6,13 +8,30 @@ find_package(Boost REQUIRED)
 
 
 # Headers
-## Headers to be processed by MOC.
-set(_moc_HEADERS
+## Headers to be processed by QtMOC.
+### Public QtMOC headers.
+set(_QtMOC_PUBLIC_HEADERS
 
 )
 
-## Regular/static headers.
-set(_regular_HEADERS
+### Interface QtMOC headers.
+### _QtMOC_INTERFACE_HEADERS must not be `#include`d in any file of this target.
+### _QtMOC_INTERFACE_HEADERS should be empty. If not, consumers of this target must enable AUTOMOC or run QtMOC for _QtMOC_INTERFACE_HEADERS manually.
+set(_QtMOC_INTERFACE_HEADERS)
+
+### Private QtMOC headers.
+set(_QtMOC_PRIVATE_HEADERS
+
+)
+
+### All headers to be processed by QtMOC during compilation of this target. _QtMOC_INTERFACE_HEADERS are not included intentionally.
+set(_QtMOC_HEADERS
+    ${_QtMOC_PUBLIC_HEADERS} ${_QtMOC_PRIVATE_HEADERS}
+)
+
+
+## Regular headers.
+set(_regular_PUBLIC_HEADERS
     Contacts_DEFS.hpp
     Contact.hpp
     Field.hpp
@@ -22,25 +41,31 @@ set(_regular_HEADERS
     fields/PhoneNumber.hpp
 )
 
-## All headers.
-set(_headers ${_moc_HEADERS} ${_regular_HEADERS})
+set(_regular_INTERFACE_HEADERS
+
+)
+
+set(_regular_PRIVATE_HEADERS
+    # ../../../in_src_with_no_subdir.hpp
+    # C:/Data/Work/Enow/Note.hpp
+)
 ####################################################################
 
 
 # Resources
-## Resource files to be processed by RCC.
-set(_rcc_RESOURCES
-    #Contacts.qrc
+## Resource files to be processed by Qt RCC.
+set(_QtRCC_RESOURCES
+    resources/target.qrc
 )
 
-## Resource files to be processed by LRelease.
-set(_ts_RESOURCES
+## Resource files to be processed by Qt LRelease.
+set(_QtTS_RESOURCES
     #resources/Contacts_txt_en.ts
     #resources/Contacts_txt_fr.ts
     #resources/Contacts_txt_images.ts
 )
 
-## Regular/static resource files.
+## Regular resource files.
 set(_other_RESOURCES
     #resources/icon.png
     #resources/action_assets.json
@@ -49,13 +74,13 @@ set(_other_RESOURCES
 
 
 # Sources
-## MOC wrappings.
-qt_wrap_moc(_moc_SOURCES ${_moc_HEADERS})
+## QtMOC wrappings.
+qt_wrap_moc(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
-## RCC wrappings.
-qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})
+## QtRCC wrappings.
+qt_add_resources(_QtRCC_SOURCES ${_QtRCC_RESOURCES})
 
-## Regular/static sources.
+## Regular sources.
 set(_regular_SOURCES
     Contact.cpp
     Field.cpp
@@ -65,7 +90,7 @@ set(_regular_SOURCES
 )
 
 ## All sources.
-set(_sources ${_regular_SOURCES} ${_moc_SOURCES} ${_rcc_SOURCES})
+set(_sources ${_QtMOC_SOURCES} ${_QtRCC_SOURCES} ${_regular_SOURCES})
 ####################################################################
 
 
@@ -85,5 +110,18 @@ target_link_libraries(Contacts
 
 
 # Building and installation
-set_up_library(Contacts "${_headers}" "${_sources}" "${_ts_RESOURCES}" "${_other_RESOURCES}")
+set_up_library(Contacts
+    PUBLIC_HEADERS
+        ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
+    INTERFACE_HEADERS
+        ${_QtMOC_INTERFACE_HEADERS} ${_regular_INTERFACE_HEADERS}
+    PRIVATE_HEADERS
+        ${_QtMOC_PRIVATE_HEADERS} ${_regular_PRIVATE_HEADERS}
+    SOURCES
+        ${_sources}
+    QT_TS_RESOURCES
+        ${_QtTS_RESOURCES}
+    OTHER_RESOURCES
+        ${_other_RESOURCES}
+)
 ####################################################################

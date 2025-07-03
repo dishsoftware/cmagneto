@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC>
+    <qresource prefix="/Enow/Contacts/Contacts/">
+        <file>icons/logo.svg</file>
+    </qresource>
+</RCC>

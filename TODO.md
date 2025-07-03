@@ -30,3 +30,4 @@
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
 * get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibName}_SHARED` instead of `--LIB_{LibName}_SHARED`.
+* Add option to run verbose build: `cmake --build . --config Release --verbose`.

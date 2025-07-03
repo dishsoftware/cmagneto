@@ -170,3 +170,25 @@ function(CMagneto__message iMessageLogLevel iText)
     set(CMAKE_MESSAGE_LOG_LEVEL "${iMessageLogLevel}")
     message(${iMessageLogLevel} "${oColoredText}")
 endfunction()
+
+
+#[[
+    CMagneto__wrap_strings_and_join
+
+    Wraps each string from iStrings as {iBra}{string}{iKet}, and joins them with iDelimiter.
+]]
+function(CMagneto__wrap_strings_and_join oString iBra iKet iDelimiter iStrings)
+    set(_quotedStrings "")
+    foreach(_string IN LISTS iStrings)
+        string(APPEND _quotedStrings "${iBra}${_string}${iKet}")
+    endforeach()
+
+    string(JOIN "${iDelimiter}" _joined "${_quotedStrings}")
+    set(${oString} "${_joined}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagneto__wrap_strings_in_quotes_and_join oString iDelimiter iStrings)
+    CMagneto__wrap_strings_and_join(oString "\"" "\"" "${iDelimiter}" "${iStrings}")
+    set(${oString} "${oString}" PARENT_SCOPE)
+endfunction()
