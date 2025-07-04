@@ -461,7 +461,7 @@ function(__is_file_in_dir iAbsoluteFilePath iAbsoluteDirPath oFileIsInDir)
 
     string(FIND "${_normalizedFilePath}" "${_normalizedDirPath}" _pos)
 
-    # Check if the path starts with the dir (with trailing slash).
+    # Check if the path starts with the dir.
     if(_pos EQUAL 0)
         set(${oFileIsInDir} TRUE PARENT_SCOPE)
     else()
@@ -470,18 +470,29 @@ function(__is_file_in_dir iAbsoluteFilePath iAbsoluteDirPath oFileIsInDir)
 endfunction()
 
 
-#[[
-    __get_paths_relative_to_target_root
+function(__get_dir_relative_to_project_source_root iAbsoluteDir oDirRelativeToProjectSourceRoot)
+    file(RELATIVE_PATH _dirRelativeToProjectSourceRoot "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}" "${iAbsoluteDir}")
+    # Avoid paths like "*/./*", bacause some CMake generators do not handle them correctly.
+    if (_dirRelativeToProjectSourceRoot STREQUAL ".")
+        set(_dirRelativeToProjectSourceRoot "")
+    endif()
+    set(${oDirRelativeToProjectSourceRoot} "${_dirRelativeToProjectSourceRoot}" PARENT_SCOPE)
+endfunction()
 
-    Fails, if any path in iFilePaths is not under ${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/ or ${CMAKE_BINARY_DIR}/.
+
+#[[
+    __get_paths_relative_to_target_source_root
+
+    Converts iFilePaths into paths relative to project source root directory.
+    Fails, if any path in iFilePaths is not under `${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/` or `${CMAKE_BINARY_DIR}/`.
     Parameters:
         - IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT: {IGNORE, WARN, FAIL}, default is IGNORE.
-          If not IGNORE, and a path is not under ${CMAKE_BINARY_DIR}/, checks if the path is under iTargetAbsoluteRoot.
-        - ALLOW_FILES_UNDER_BUILD_DIR: flag. If defined, files under ${CMAKE_BINARY_DIR}/ are also allowed.
+          If not IGNORE, and a path is not under `${CMAKE_BINARY_DIR}/`, checks if the path is under iTargetAbsoluteSourceRoot.
+        - ALLOW_FILES_UNDER_TARGET_BUILD_ROOT: flag. If defined, files under `${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_targetSourceRootRelativeToProjectSourceRoot}/` are also allowed.
 ]]
-function(__get_paths_relative_to_target_root iTargetAbsoluteRoot iFilePaths oRelFilePaths)
+function(__get_paths_relative_to_target_source_root iTargetAbsoluteSourceRoot iFilePaths oRelFilePaths)
     cmake_parse_arguments(ARG
-        "ALLOW_FILES_UNDER_BUILD_DIR"  # Options (boolean flags).
+        "ALLOW_FILES_UNDER_TARGET_BUILD_ROOT" # Options (boolean flags).
         "IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT" # Single-value keywords (strings).
         "" # Multi-value keywords (lists).
         ${ARGN}
@@ -499,7 +510,7 @@ function(__get_paths_relative_to_target_root iTargetAbsoluteRoot iFilePaths oRel
     if(NOT ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT IN_LIST _IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT__ALLOWED_VALUES)
         CMagneto__wrap_strings_in_quotes_and_join(_allowedValsStr ", " "${_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT__ALLOWED_VALUES}")
         set(_msgTemplate [=[
-__get_paths_relative_to_target_root: invalid value "${ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT}" of parameter IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT.
+__get_paths_relative_to_target_source_root: invalid value "${ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT}" of parameter IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT.
                                      Allowed values: ${_allowedValsStr}.
         ]=])
         string(CONFIGURE "${_msgTemplate}" _msg)
@@ -512,39 +523,43 @@ __get_paths_relative_to_target_root: invalid value "${ARG_IF_FILE_OUTSIDE_TARGET
     set(_filePathsOutsideSourceDir "")
     set(_filePathsOutsideTargetRoot "")
 
+    __get_dir_relative_to_project_source_root("${iTargetAbsoluteSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
+    set(_targetBuildRoot "${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_targetSourceRootRelativeToProjectSourceRoot}")
+    CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): target build root = \"${_targetBuildRoot}\".\n")
+
     foreach(_filePath IN LISTS iFilePaths)
-        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Handling of a file \"${_filePath}\" started.")
+        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Handling of a file \"${_filePath}\" started.")
 
         if(NOT IS_ABSOLUTE "${_filePath}")
-            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Passed file path is relative.")
-            set(_absFilePath "${iTargetAbsoluteRoot}/${_filePath}")
+            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Passed file path is relative.")
+            set(_absFilePath "${iTargetAbsoluteSourceRoot}/${_filePath}")
             set(_relFilePath "${_filePath}")
         else()
-            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Passed file path is absolute.")
+            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Passed file path is absolute.")
             set(_absFilePath "${_filePath}")
-            file(RELATIVE_PATH _relFilePath "${iTargetAbsoluteRoot}" "${_absFilePath}")
+            file(RELATIVE_PATH _relFilePath "${iTargetAbsoluteSourceRoot}" "${_absFilePath}")
         endif()
 
-        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Absolute file path: \"${_absFilePath}\"")
-        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Relative file path: \"${_relFilePath}\"")
+        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Absolute file path: \"${_absFilePath}\"")
+        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Relative file path: \"${_relFilePath}\"")
 
-        # Check if file is under build dir.
-        if(ARG_ALLOW_FILES_UNDER_BUILD_DIR AND _absFilePath MATCHES "^${CMAKE_BINARY_DIR}/")
+        # Check if file is under target build root.
+        if(ARG_ALLOW_FILES_UNDER_TARGET_BUILD_ROOT AND _absFilePath MATCHES "^${_targetBuildRoot}")
             list(APPEND _relFilePaths "${_relFilePath}")
-            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Handling of a file \"${_filePath}\" finished.\n")
+            CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Handling of a file \"${_filePath}\" finished.\n")
             continue()
         endif()
 
-        # Check if the file is within this project source directory.
-        set(_sourceDir "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/")
-        __is_file_in_dir("${_absFilePath}" "${_sourceDir}" _fileIsInSourceDir)
+        # Check if the file is under this project source root.
+        set(_projectSourceRoot "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/")
+        __is_file_in_dir("${_absFilePath}" "${_projectSourceRoot}" _fileIsInSourceDir)
         if(NOT _fileIsInSourceDir)
             list(APPEND _filePathsOutsideSourceDir "${_filePath}")
         endif()
 
-        # Check if the file is within target root.
+        # Check if the file is under target source root.
         if(NOT ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT STREQUAL "IGNORE")
-            __is_file_in_dir("${_absFilePath}" "${iTargetAbsoluteRoot}" _fileIsInTargetRootDir)
+            __is_file_in_dir("${_absFilePath}" "${iTargetAbsoluteSourceRoot}" _fileIsInTargetRootDir)
             if(NOT _fileIsInTargetRootDir)
                 list(APPEND _filePathsOutsideTargetRoot "${_filePath}")
             endif()
@@ -552,29 +567,32 @@ __get_paths_relative_to_target_root: invalid value "${ARG_IF_FILE_OUTSIDE_TARGET
 
         list(APPEND _relFilePaths "${_relFilePath}")
 
-        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteRoot}): Handling of a file \"${_filePath}\" finished.\n")
+        CMagneto__message(TRACE "get_paths_relative_to_target_root(${iTargetAbsoluteSourceRoot}): Handling of a file \"${_filePath}\" finished.\n")
     endforeach()
 
     list(LENGTH _filePathsOutsideSourceDir _filePathsOutsideSourceDirLength)
     if(NOT _filePathsOutsideSourceDirLength EQUAL 0)
         CMagneto__wrap_strings_and_join(_invalidPathsString "\t\"" "\"" "\n" "${_filePathsOutsideSourceDir}")
-        set(_msgTemplate [=[
-These paths are outside of the project "${PROJECT_NAME}" source root "${_sourceDir}":
-${_invalidPathsString}.
-        ]=])
-        string(CONFIGURE "${_msgTemplate}" _msg)
+        set(_msg "These paths are outside of the project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\"")
+
+        if (ARG_ALLOW_FILES_UNDER_TARGET_BUILD_ROOT)
+            set(_msg "${_msg} and outside of the target build root \"${_targetBuildRoot}\"")
+        endif()
+
+        set(_msg "${_msg}:\n${_invalidPathsString}.")
         CMagneto__message(FATAL_ERROR "${_msg}")
     endif()
 
     list(LENGTH _filePathsOutsideTargetRoot _filePathsOutsideTargetRootLength)
     if(NOT _filePathsOutsideTargetRootLength EQUAL 0)
         CMagneto__wrap_strings_and_join(_invalidPathsString "\t\"" "\"" "\n" "${_filePathsOutsideTargetRoot}")
-        set(_msgTemplate [=[
-These paths are outside of the target root "${iTargetAbsoluteRoot}":
-${_invalidPathsString}.
-        ]=])
-        string(CONFIGURE "${_msgTemplate}" _msg)
+        set(_msg "These paths are outside of the target source root \"${iTargetAbsoluteSourceRoot}\"")
 
+        if (ARG_ALLOW_FILES_UNDER_TARGET_BUILD_ROOT)
+            set(_msg "${_msg} and outside of the target build root \"${_targetBuildRoot}\"")
+        endif()
+
+        set(_msg "${_msg}:\n${_invalidPathsString}.")
         if(ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT STREQUAL "WARN")
             CMagneto__message(WARNING "${_msg}")
         elseif(ARG_IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT STREQUAL "FAIL")
@@ -594,38 +612,44 @@ endfunction()
 
     It must be called:
     - After `${iLibName}` has been created and linked against its dependencies.
-    - From the root `CMakeLists.txt` of `${iLibName}`.
+    - From the root `CMakeLists.txt` of `${iLibName}`. The root `CMakeLists.txt` must be in the source root of the lib.
 
     Parameters:
     iLibName           - The name of the library target to configure.
 
     Named arguments (passed via ARGN, all optional):
-    PUBLIC_HEADERS     - List of public headers to be installed and made available to consumers.
+    PUBLIC_HEADERS     - List of public headers used for compiling the library and to be installed and made available to consumers.
     INTERFACE_HEADERS  - List of interface-only headers (used by consumers, but not compiled into the library).
-    PRIVATE_HEADERS    - List of private headers used only for building the library, not exposed to consumers.
+    PRIVATE_HEADERS    - List of private headers used only for compiling the library, not exposed to consumers.
     SOURCES            - List of implementation source files for the library, including:
                             - Regular source files (e.g. .cpp, .cxx)
                             - MOC-generated sources from Qt (e.g. via `qt_wrap_cpp`)
-                            - RCC-generated sources from Qt resources (via `qt_add_resources`)
     QT_TS_RESOURCES    - List of Qt translation source files (`.ts`) to be processed.
     OTHER_RESOURCES    - Other non-code resources (e.g. icons, JSON files) used in the library.
 
     Notes:
-    - All files: headers, sources and resources - must reside inside the source root directory of the target or build directory,
-      otherwise the configuration will fail. It is made to keep both source and install directories layout clean and relocatable.
+    - All files: headers, sources and resources - must reside under the source root directory of the target,
+      otherwise the configuration will fail.
+      Source files are also allowed to reside under the build root directory of the target.
+      It is made to keep both source and install directories layout clean and relocatable.
 ]]
 function(set_up_library iLibName)
     check_target_name_validity(${iLibName})
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
-    cmake_parse_arguments(ARG "" "" "PUBLIC_HEADERS;INTERFACE_HEADERS;PRIVATE_HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
+    cmake_parse_arguments(ARG
+        "" # Options (boolean flags).
+        "" # Single-value keywords (strings).
+        "PUBLIC_HEADERS;INTERFACE_HEADERS;PRIVATE_HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" # Multi-value keywords (lists).
+        ${ARGN}
+    )
 
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_PUBLIC_HEADERS}" _relPublicHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_PRIVATE_HEADERS}" _relPrivateHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_INTERFACE_HEADERS}" _relInterfaceHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_SOURCES}" _relSources IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL ALLOW_FILES_UNDER_BUILD_DIR)
-    #__get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_QT_TS_RESOURCES}" _relQtTSResources)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${OTHER_RESOURCES}" _relOtherResources)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_PUBLIC_HEADERS}" _relPublicHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_PRIVATE_HEADERS}" _relPrivateHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_INTERFACE_HEADERS}" _relInterfaceHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_SOURCES}" _relSources IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL ALLOW_FILES_UNDER_TARGET_BUILD_ROOT)
+    #__get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_QT_TS_RESOURCES}" _relQtTSResources)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${OTHER_RESOURCES}" _relOtherResources)
 
     # Add target sources.
     ## Add header sets.
@@ -658,8 +682,8 @@ function(set_up_library iLibName)
     )
 
     ## Add sources.
-    #target_sources(${iLibName} PRIVATE $<BUILD_INTERFACE:${_relSources}>)
-    target_sources(${iLibName} PRIVATE ${_relSources})
+    target_sources(${iLibName} PRIVATE $<BUILD_INTERFACE:${_relSources}>)
+    #target_sources(${iLibName} PRIVATE ${_relSources})
     ####################################################################
 
     target_include_directories(${iLibName}
@@ -679,13 +703,9 @@ function(set_up_library iLibName)
     )
 
     # Install.
-    ## _libRootDirRelativeToSourceDir helps tp keep install dir structure the same as source dir structure.
-    file(RELATIVE_PATH _libRootDirRelativeToSourceDir "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}")
-    ## Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
-    if (_libRootDirRelativeToSourceDir STREQUAL ".")
-        set(_libRootDirRelativeToSourceDir "")
-    endif()
-    CMagneto__message(TRACE "set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libRootDirRelativeToSourceDir}\"")
+    ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
+    __get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
+    CMagneto__message(TRACE "set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iLibName}
         EXPORT ${PROJECT_NAME}Targets
@@ -699,10 +719,10 @@ function(set_up_library iLibName)
             DESTINATION ${SUBDIR_EXECUTABLE}
             COMPONENT ${COMPONENT__RUNTIME}
         FILE_SET public_headers
-            DESTINATION "${SUBDIR_INCLUDE}/${_libRootDirRelativeToSourceDir}"
+            DESTINATION "${SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
             COMPONENT ${COMPONENT__DEVELOPMENT}
         FILE_SET interface_headers
-            DESTINATION "${SUBDIR_INCLUDE}/${_libRootDirRelativeToSourceDir}"
+            DESTINATION "${SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
             COMPONENT ${COMPONENT__DEVELOPMENT}
         # INCLUDES
         #     DESTINATION ...
@@ -718,13 +738,13 @@ function(set_up_library iLibName)
 
     ## Install Qt TS resources.
     qt_install_ts_resources("${ARG_QT_TS_RESOURCES}"
-        DESTINATION "${SUBDIR_RESOURCES}/translations/${_libRootDirRelativeToSourceDir}"
+        DESTINATION "${SUBDIR_RESOURCES}/translations/${_libSourceRootRelativeToProjectSourceRoot}"
         ${COMPONENT__RUNTIME}
     )
 
     ## Install other resources.
     install(FILES ${_relOtherResources}
-        DESTINATION "${SUBDIR_RESOURCES}/other/${_libRootDirRelativeToSourceDir}"
+        DESTINATION "${SUBDIR_RESOURCES}/other/${_libSourceRootRelativeToProjectSourceRoot}"
         COMPONENT ${COMPONENT__RUNTIME}
     )
     ####################################################################
@@ -741,15 +761,29 @@ endfunction()
 #[[
     set_up_executable
 
-    Sets up building and installation of a executable-target iExeName.
-    Also registers iExeName in the global property REGISTERED_TARGETS.
-    Must be called after linking libraries to iExeName.
+    Sets up the build and installation process for the executable target `${iExeName}`.
+    This function also registers `${iExeName}` in the global property `REGISTERED_TARGETS`.
+
+    It must be called:
+    - After `${iExeName}` has been created and linked against its dependencies.
+    - From the root `CMakeLists.txt` of `${iExeName}`. The root `CMakeLists.txt` must be in the source root of the executable.
 
     Parameters:
-    iExeHeaders - regular headers (_regular_HEADERS) and Qt MOC headers (_moc_HEADERS).
-    iExeSources - regular sources (_regular_SOURCES), Qt MOC sources (qt_wrap_moc(_moc_SOURCES ${_moc_HEADERS})) and RCC sources (qt_add_resources(_rcc_SOURCES ${_rcc_RESOURCES})).
-    iTSResources - TS resources (*.ts files).
-    iOtherResources - other resources (icons. jsons etc.).
+    iExeName           - The name of the executable target to configure.
+
+    Named arguments (passed via ARGN, all optional):
+    HEADERS         - List of public headers used for compiling the executable.
+    SOURCES         - List of implementation source files for the executable, including:
+                            - Regular source files (e.g. .cpp, .cxx)
+                            - MOC-generated sources from Qt (e.g. via `qt_wrap_cpp`)
+    QT_TS_RESOURCES - List of Qt translation source files (`.ts`) to be processed.
+    OTHER_RESOURCES - Other non-code resources (e.g. icons, JSON files) used in the executable.
+
+    Notes:
+    - All files: headers, sources and resources - must reside under the source root directory of the target,
+      otherwise the configuration will fail.
+      Source files are also allowed to reside under the build root directory of the target.
+      It is made to keep source and install directories layout clean and relocatable.
 ]]
 function(set_up_executable iExeName)
     check_target_name_validity(${iExeName})
@@ -757,10 +791,10 @@ function(set_up_executable iExeName)
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_HEADERS}" _relHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_SOURCES}" _relSources IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL ALLOW_FILES_UNDER_BUILD_DIR)
-    #__get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_QT_TS_RESOURCES}" _relQtTSResources)
-    __get_paths_relative_to_target_root("${CMAKE_CURRENT_SOURCE_DIR}" "${OTHER_RESOURCES}" _relOtherResources)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_HEADERS}" _relHeaders IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_SOURCES}" _relSources IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL ALLOW_FILES_UNDER_TARGET_BUILD_ROOT)
+    #__get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_QT_TS_RESOURCES}" _relQtTSResources)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${OTHER_RESOURCES}" _relOtherResources)
 
     # Add target sources.
     target_sources(${iExeName} PRIVATE ${_relSources} ${_relHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
@@ -779,13 +813,9 @@ function(set_up_executable iExeName)
     )
 
     # Install.
-    ## _exeRootDirRelativeToSourceDir helps tp keep install dir structure the same as source dir structure.
-    file(RELATIVE_PATH _exeRootDirRelativeToSourceDir "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}")
-    ## Avoid destinations like "include/Enow/Contacts/Contacts/./FieldType.hpp".
-    if (_exeRootDirRelativeToSourceDir STREQUAL ".")
-        set(_exeRootDirRelativeToSourceDir "")
-    endif()
-    CMagneto__message(TRACE "set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeRootDirRelativeToSourceDir}\"")
+    ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
+    __get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
+    CMagneto__message(TRACE "set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iExeName}
         EXPORT ${PROJECT_NAME}Targets
@@ -795,13 +825,13 @@ function(set_up_executable iExeName)
 
     ## Install Qt TS resources.
     qt_install_ts_resources("${ARG_QT_TS_RESOURCES}"
-        DESTINATION "${SUBDIR_RESOURCES}/translations/${_exeRootDirRelativeToSourceDir}"
+        DESTINATION "${SUBDIR_RESOURCES}/translations/${_exeSourceRootRelativeToProjectSourceRoot}"
         ${COMPONENT__RUNTIME}
     )
 
     ## Install other resources.
     install(FILES ${_relOtherResources}
-        DESTINATION "${SUBDIR_RESOURCES}/other/${_exeRootDirRelativeToSourceDir}"
+        DESTINATION "${SUBDIR_RESOURCES}/other/${_exeSourceRootRelativeToProjectSourceRoot}"
         COMPONENT ${COMPONENT__RUNTIME}
     )
     ####################################################################
@@ -841,9 +871,77 @@ function(set_project_entrypoint iExeName)
     endif()
 
     set_property(GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE ${iExeName})
+    CMagneto__message(STATUS "\"${iExeName}\" executable target is set as the \"${PROJECT_NAME}\" project entrypoint.")
 
     # Make ${iExeName} the startup project in Visual Studio.
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
+endfunction()
+
+
+#[[
+    CMagneto__qt_add_resources
+
+    The function does the same as qt_add_resources, but the CMagneto__qt_add_resources also
+    - checks if all BIG_RESOURCES and FILES are within target root source dir;
+    - composes resource name as `${iTargetName}__${iResourceNamePostfix}`;
+    - if Qt creates auxilliary resource targets, the targets are exported (added to *Config.cmake).
+
+    Notes:
+    - If iTargetName is a static library, don't forget to call `Q_INIT_RESOURCE(${iTargetName}__${iResourceNamePostfix});`
+      from outside of any namespace before usage of the embedded resources.
+    - Do not use the following scheme/pattern of embedding resources with Qt RCC:
+      ```cmake
+      qt_add_resources(_qrcSources "*.qrc")
+      set_up_executable(${iTargetName}
+          SOURCES
+              ${_qrcSources}
+      )
+      ```
+      Because Qt behaves strangely:
+      this leads to creation of source files in the root build dir of iTargetName (which is fine),
+      and then those files are added as source files at least to all dependency-lib-targets of the iTargetName.
+]]
+function(CMagneto__qt_add_resources iTargetName iResourceNamePostfix)
+    cmake_parse_arguments(ARG
+        "" # Options (boolean flags).
+        "PREFIX;LANG;BASE;OUTPUT_TARGETS" # Single-value keywords (strings).
+        "BIG_RESOURCES;FILES;OPTIONS" # Multi-value keywords (lists).
+        ${ARGN}
+    )
+
+    if(NOT DEFINED iResourceNamePostfix OR iResourceNamePostfix STREQUAL "")
+        CMagneto__message(FATAL_ERROR "Magneto__qt_add_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
+    endif()
+
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_BIG_RESOURCES}" _relBigResources IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+    __get_paths_relative_to_target_source_root("${CMAKE_CURRENT_SOURCE_DIR}" "${ARG_FILES}" _relFiles IF_FILE_OUTSIDE_TARGET_SOURCE_ROOT FAIL)
+
+    qt_add_resources(${iTargetName} "${iTargetName}__${iResourceNamePostfix}"
+        PREFIX "${ARG_PREFIX}"
+        LANG "${ARG_LANG}"
+        BASE "${ARG_BASE}"
+        BIG_RESOURCES ${_relBigResources}
+        OUTPUT_TARGETS ${ARG_OUTPUT_TARGETS}
+        FILES ${_relFiles}
+        OPTIONS ${ARG_OPTIONS}
+    )
+
+    set(_resourceTargetNames "${${ARG_OUTPUT_TARGETS}}")
+    if (NOT _resourceTargetNames STREQUAL "")
+        CMagneto__message(TRACE "Magneto__qt_add_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
+        foreach(_resourceTargetName IN LISTS _resourceTargetNames)
+            install(TARGETS ${_resourceTargetName}
+                EXPORT ${PROJECT_NAME}Targets
+                ARCHIVE
+                    DESTINATION ${SUBDIR_STATIC}
+                    COMPONENT ${COMPONENT__DEVELOPMENT}
+                LIBRARY
+                    DESTINATION ${SUBDIR_SHARED}
+                    COMPONENT ${COMPONENT__RUNTIME}
+            )
+        endforeach()
+    endif()
+    set(${ARG_OUTPUT_TARGETS} "${_resourceTargetNames}" PARENT_SCOPE)
 endfunction()
 
 

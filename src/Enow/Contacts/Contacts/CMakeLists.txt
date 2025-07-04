@@ -3,7 +3,7 @@ set(CMagneto__MESSAGE_LOG_LEVEL TRACE)
 add_subdirectory(fields/PhoneNumberFormatter)
 
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 find_package(Boost REQUIRED)
 
 
@@ -53,9 +53,9 @@ set(_regular_PRIVATE_HEADERS
 
 
 # Resources
-## Resource files to be processed by Qt RCC.
-set(_QtRCC_RESOURCES
-    resources/target.qrc
+## Resources to embed into the lib's binary.
+set(_QtRCC_RESOURCE_FILES
+    "resources/QRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
@@ -77,9 +77,6 @@ set(_other_RESOURCES
 ## QtMOC wrappings.
 qt_wrap_moc(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
-## QtRCC wrappings.
-qt_add_resources(_QtRCC_SOURCES ${_QtRCC_RESOURCES})
-
 ## Regular sources.
 set(_regular_SOURCES
     Contact.cpp
@@ -90,7 +87,7 @@ set(_regular_SOURCES
 )
 
 ## All sources.
-set(_sources ${_QtMOC_SOURCES} ${_QtRCC_SOURCES} ${_regular_SOURCES})
+set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 ####################################################################
 
 
@@ -102,7 +99,7 @@ add_library(Contacts ${_LIB_TYPE})
 
 target_link_libraries(Contacts
     PUBLIC
-        Qt6::Core Boost::boost
+        Qt6::Core Qt6::Gui Boost::boost
     PRIVATE
         PhoneNumberFormatter
 )
@@ -123,5 +120,12 @@ set_up_library(Contacts
         ${_QtTS_RESOURCES}
     OTHER_RESOURCES
         ${_other_RESOURCES}
+)
+
+CMagneto__qt_add_resources(Contacts QRC
+   PREFIX "/Enow/Contacts/Contacts/"
+   BASE "resources/QRC"
+   FILES
+       ${_QtRCC_RESOURCE_FILES}
 )
 ####################################################################

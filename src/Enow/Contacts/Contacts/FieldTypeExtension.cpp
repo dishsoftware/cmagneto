@@ -2,8 +2,11 @@
 
 #include <boost/bimap.hpp>
 #include <QtGlobal>
+#include <QIcon>
 
 #include <stdexcept>
+
+void initMyResource() { Q_INIT_RESOURCE(Contacts__QRC); }
 
 
 namespace Enow::Contacts::Contacts::FieldType {
@@ -46,6 +49,9 @@ namespace Enow::Contacts::Contacts::FieldType {
     }
 
     const QString& toString(const Enum iEnum) {
+        initMyResource();
+        QIcon iconContacts(":/Enow/Contacts/Contacts/icons/logo.svg");
+
         const auto it = allValues().left.find(iEnum);
         Q_ASSERT_X(it != allValues().left.end(), "Enow::Contacts::Contacts::FieldType::toString", "Reconcile Enum and allValues() implementation!");
         return it->second;

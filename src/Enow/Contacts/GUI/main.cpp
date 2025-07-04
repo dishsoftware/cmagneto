@@ -18,8 +18,8 @@ int main() {
 
     auto emailAddress = Enow::Contacts::Contacts::fields::EmailAddress();
 
-    QIcon iconContacts("qrc:/Enow/Contacts/Contacts/icons/logo.svg");
-    QIcon iconGUI("qrc:/Enow/Contacts/GUI/icons/logo.svg");
+    QIcon iconContacts(":/Enow/Contacts/Contacts/icons/logo.svg");
+    QIcon iconGUI(":/Enow/Contacts/GUI/icons/logo.svg");
 
     return 0;
 }

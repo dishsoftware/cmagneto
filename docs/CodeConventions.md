@@ -8,6 +8,9 @@
    ```c++
   #include <{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp>
   ```
+- The CMagneto CMake module requires all target headers, sources and resources to be placed under the target root source directory (the same dir where the target's `CMakeLists.txt` resides).
+  Sources of the target can also be generated under the target build root directory.
+
 
 ## C++ Conventions
 ### C++ Naming Conventions

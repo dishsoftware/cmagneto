@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 
 # Headers (PRIVATE)
@@ -15,9 +15,9 @@ set(_regular_HEADERS
 
 
 # Resources
-## Resource files to be processed by Qt RCC.
-set(_QtRCC_RESOURCES
-    resources/target.qrc
+## Resources to embed into the executable's binary.
+set(_QtRCC_RESOURCE_FILES
+    "resources/QRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
@@ -36,16 +36,13 @@ set(_other_RESOURCES
 ## QtMOC wrappings.
 qt_wrap_moc(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
-## QtRCC wrappings.
-qt_add_resources(_QtRCC_SOURCES ${_QtRCC_RESOURCES})
-
 ## Regular sources.
 set(_regular_SOURCES
     main.cpp
 )
 
 ## All sources.
-set(_sources ${_QtMOC_SOURCES} ${_QtRCC_SOURCES} ${_regular_SOURCES})
+set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 ####################################################################
 
 
@@ -65,6 +62,13 @@ set_up_executable(GUI
         ${_QtTS_RESOURCES}
     OTHER_RESOURCES
         ${_other_RESOURCES}
+)
+
+CMagneto__qt_add_resources(GUI QRC
+   PREFIX "/Enow/Contacts/GUI/"
+   BASE "resources/QRC"
+   FILES
+       ${_QtRCC_RESOURCE_FILES}
 )
 
 set_project_entrypoint(GUI)
