@@ -2,13 +2,14 @@
 #include "Enow/Contacts/Contacts/FieldTypeExtension.hpp"
 #include "Enow/Contacts/Contacts/fields/EmailAddress.hpp"
 
+#include <QCoreApplication>
 #include <QIcon>
 
 #include <iostream>
 
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    std::wcout << QCoreApplication::translate("Enow::Contacts::GUI::main", "GREETING").toStdWString() << std::endl;
 
     const auto fieldType = Enow::Contacts::Contacts::FieldType::Enum::kEMailAddress;
     std::cout << "Enow::Contacts::Contacts::FieldType::Enum::kEMailAddress index: " << static_cast<int>(fieldType) << std::endl;

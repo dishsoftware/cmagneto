@@ -7,20 +7,20 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
-set(PROJECT_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Project.json")
-set(PACKAGING_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Packaging.json")
+set(CMagnetoPrivate__PROJECT_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Project.json")
+set(CMagnetoPrivate__PACKAGING_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Packaging.json")
 
 
 #[[
-    parse__project_json
+    CMagneto__parse__project_json
 
     Parses ./meta/Project.json.
 
     The function must be called before the project() in the root CMakeLists.txt.
     The parsed values are exported to the parent scope, so they can be used in the top-level CMakeLists.txt.
 ]]
-function(parse__project_json)
-    file(READ "${PROJECT_JSON__PATH}" PROJECT_JSON_TEXT)
+function(CMagneto__parse__project_json)
+    file(READ "${CMagnetoPrivate__PROJECT_JSON__PATH}" PROJECT_JSON_TEXT)
 
     string(JSON PROJECT_JSON__COMPANY_NAME_LEGAL     GET "${PROJECT_JSON_TEXT}" "CompanyName_LEGAL")
     string(JSON PROJECT_JSON__COMPANY_NAME_FULL      GET "${PROJECT_JSON_TEXT}" "CompanyName_FULL")
@@ -45,20 +45,20 @@ endfunction()
 
 # Call it immediately along with
 #   include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake").
-parse__project_json()
+CMagneto__parse__project_json()
 
 
 #[[
-    parse__packaging_json
+    CMagneto__parse__packaging_json
 
     Parses ./meta/Packaging.json.
 
     The function must be called before the project() in the root CMakeLists.txt.
     The parsed values are exported to the parent scope, so they can be used in the top-level CMakeLists.txt.
 ]]
-function(parse__packaging_json)
+function(CMagneto__parse__packaging_json)
     # Parse ./meta/packaging.json.
-    file(READ "${PACKAGING_JSON__PATH}" PACKAGING_JSON_TEXT)
+    file(READ "${CMagnetoPrivate__PACKAGING_JSON__PATH}" PACKAGING_JSON_TEXT)
 
     string(JSON PACKAGING_JSON__PACKAGE_ID          GET "${PACKAGING_JSON_TEXT}" "PackageID")
     string(JSON PACKAGING_JSON__PACKAGE_NAME_PREFIX GET "${PACKAGING_JSON_TEXT}" "PackageNamePrefix")

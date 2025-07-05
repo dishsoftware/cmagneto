@@ -33,8 +33,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON) # GoogleTest requires at least C++17.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
 include(CMagneto)
 
-print_platform_and_compiler()
-set__IS_MULTTCONFIG__property()
+CMagneto__print_platform_and_compiler()
 
 
 # Add source directories.
@@ -42,18 +41,18 @@ add_subdirectory("src/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJEC
 
 
 # Generate build stage reports, helper scripts, etc.
-set_up_project()
-set_up__3rd_party_shared_libs__list()
-set_up__set_env__script()
-set_up__env_vscode__file()
-set_up__run__script()
-set_up__run_tests__script()
-set_up__build_summary__file()
+CMagneto__set_up_project()
+CMagneto__set_up__3rd_party_shared_libs__list()
+CMagneto__set_up__set_env__script()
+CMagneto__set_up__env_vscode__file()
+CMagneto__set_up__run__script()
+CMagneto__set_up__run_tests__script()
+CMagneto__set_up__build_summary__file()
 
 
 # Configure tests.
 add_subdirectory(tests EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
-add__build_tests__target()
+CMagneto__add__build_tests__target()
 
 
 # Configure packaging.

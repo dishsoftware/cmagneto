@@ -142,7 +142,7 @@ CMake module [`CMagneto`](./cmake/modules/CMagneto.cmake) creates helper scripts
 - `set_env` script sets environment variables for runtime.
 - `run` script executes the entrypoint-executable.
 
-Look for `set_up__set_env__script()` and `set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.cmake) CMake module.
+Look for `CMagneto__set_up__set_env__script()` and `CMagneto__set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.cmake) CMake module.
 
 
 # CI

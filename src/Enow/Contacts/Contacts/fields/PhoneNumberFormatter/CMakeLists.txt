@@ -41,7 +41,7 @@ set(_regular_PRIVATE_HEADERS
 
 
 # Resources
-## Resources to embed into the lib's binary.
+## Resources to embed into the lib's binary using Qt RCC.
 set(_QtRCC_RESOURCE_FILES
 
 )
@@ -63,7 +63,7 @@ set(_other_RESOURCES
 
 # Sources
 ## QtMOC wrappings.
-qt_wrap_moc(_QtMOC_SOURCES ${_QtMOC_HEADERS})
+QtWrappers__qt_wrap_cpp(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
 ## Regular sources.
 set(_regular_SOURCES
@@ -76,7 +76,7 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 
 
 # Target
-get_library_type(PhoneNumberFormatter _LIB_TYPE)
+CMagneto__get_library_type(PhoneNumberFormatter _LIB_TYPE)
 add_library(PhoneNumberFormatter ${_LIB_TYPE})
 ## If _LIB_TYPE is SHARED, a preproceccor macro PhoneNumberFormatter_EXPORTS or PHONENUMBERFORMATTER_EXPORTS is defined implicitly when the target is compiled.
 ## No need to target_compile_definitions(PhoneNumberFormatter PRIVATE PhoneNumberFormatter_EXPORTS) explicitly.
@@ -89,7 +89,7 @@ target_link_libraries(PhoneNumberFormatter
 
 
 # Building and installation
-set_up_library(PhoneNumberFormatter
+CMagneto__set_up_library(PhoneNumberFormatter
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS
@@ -104,10 +104,10 @@ set_up_library(PhoneNumberFormatter
         ${_other_RESOURCES}
 )
 
-CMagneto__qt_add_resources(Contacts QRC
-   PREFIX "/Enow/Contacts/Contacts/fields/PhoneNumberFormatter"
-   BASE "resources/QRC"
-   FILES
-       ${_QtRCC_RESOURCE_FILES}
+CMagneto__embed_QtRC_resources(Contacts QtRC
+    PREFIX "/Enow/Contacts/Contacts/fields/PhoneNumberFormatter"
+    BASE "@resources/QtRC"
+    FILES
+        ${_QtRCC_RESOURCE_FILES}
 )
 ####################################################################

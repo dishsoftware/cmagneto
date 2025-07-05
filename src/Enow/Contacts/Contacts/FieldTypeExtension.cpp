@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-void initMyResource() { Q_INIT_RESOURCE(Contacts__QRC); }
+void initMyResource() { Q_INIT_RESOURCE(Contacts__QtRC); }
 
 
 namespace Enow::Contacts::Contacts::FieldType {

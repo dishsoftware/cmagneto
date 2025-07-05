@@ -7,14 +7,20 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
-parse__packaging_json()
+CMagneto__parse__packaging_json()
 
 
 # Check if Qt IFW is available.
 find_program(QTIFW_BINARYCREATOR_EXECUTABLE binarycreator)
 find_program(QTIFW_REPOGEN_EXECUTABLE repogen)
 if(QTIFW_BINARYCREATOR_EXECUTABLE AND QTIFW_REPOGEN_EXECUTABLE)
-    CMagneto__message(STATUS "Qt Installer Framework found.")
+    set(_msgTemplate [=[
+Qt Installer Framework found:
+    binarycreator is "${QTIFW_BINARYCREATOR_EXECUTABLE}";
+    repogen       is "${QTIFW_REPOGEN_EXECUTABLE}".
+    ]=])
+    string(CONFIGURE "${_msgTemplate}" _msg)
+    CMagneto__message(STATUS "${_msg}")
     set(QT_IFW_AVAILABLE TRUE)
 endif()
 

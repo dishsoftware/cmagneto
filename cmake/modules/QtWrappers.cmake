@@ -26,56 +26,14 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 #[[
-    qt_install_ts_resources
-
-    Must be called after find_package(Qt6 ...) is called: the macro uses QT_LRELEASE_EXECUTABLE variable, which is set by FindQT.cmake.
-    Can be called with empty iTSFilePaths, even if Qt is not found, in which case it does nothing.
-
-    Parameters:
-    iTSFilePaths - list of *.ts files to compile.
-    iInstallDir - directory (relative to install_prefix) to install *.qm files after compilation of *.ts files.
-    iComponentName - name of the installation/packaging component to which the *.qm files belong.
-]]
-macro(qt_install_ts_resources iTSFilePaths iInstallDir iComponentName)
-    if(iTSFilePaths)
-        if(NOT DEFINED QT_LRELEASE_EXECUTABLE)
-            message(FATAL_ERROR "qt_install_ts_resources: QT_LRELEASE_EXECUTABLE is not defined. Qt is likely not found.")
-            return()
-        endif()
-
-        foreach(_tsFilePath ${iTSFilePaths})
-            get_filename_component(_fileDir "${_tsFilePath}" DIRECTORY)
-            get_filename_component(_fileNameWE "${_tsFilePath}" NAME_WE)
-            set(_qmFilePath "${CMAKE_CURRENT_BINARY_DIR}/${_fileDir}/${_fileNameWE}.qm")
-            string(REPLACE "/" "__" _qmFilePathAsVarName "${_qmFilePath}")
-
-            set(_command
-                "${QT_LRELEASE_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/${_tsFilePath}" -qm "${_qmFilePath}"
-            )
-
-            add_custom_target(qt_install_ts_resources__${_qmFilePathAsVarName} ALL
-                COMMAND "${_command}"
-                DEPENDS "${_tsFilePath}"
-            )
-
-            install(FILES "${_qmFilePath}"
-                DESTINATION "${iInstallDir}"
-                COMPONENT ${iComponentName}
-            )
-        endforeach()
-    endif()
-endmacro(qt_install_ts_resources)
-
-
-#[[
-    qt_wrap_moc
+    QtWrappers__qt_wrap_cpp
 
     Workaround for a bug in MOC preprocessor of Qt 5.6.0 and newer.
     The problem emerges on Linux, if system-native Qt is installed, and "-I/usr/include" precedes custom Qt includes in MOC command line.
     To avoid it, move "-I/usr/include" parameter in the "MOC parameters" file to the end of the "include section".
 ]]
-macro(qt_wrap_moc)
-    qt6_wrap_cpp(${ARGN})
+macro(QtWrappers__qt_wrap_cpp)
+    qt_wrap_cpp(${ARGN})
     if(NOT WIN32)
         foreach(_inputFilePath ${ARGN})
             get_filename_component(_inputFilePath ${_inputFilePath} ABSOLUTE)
@@ -110,4 +68,4 @@ macro(qt_wrap_moc)
             endif()
         endforeach()
     endif()
-endmacro(qt_wrap_moc)
+endmacro(QtWrappers__qt_wrap_cpp)

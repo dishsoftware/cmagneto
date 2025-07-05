@@ -1,5 +1,6 @@
 set(CMagneto__MESSAGE_LOG_LEVEL TRACE)
 
+
 add_subdirectory(fields/PhoneNumberFormatter)
 
 
@@ -39,6 +40,10 @@ set(_regular_PUBLIC_HEADERS
     FieldTypeExtension.hpp
     fields/EmailAddress.hpp
     fields/PhoneNumber.hpp
+    # Invalid paths to test.
+    #..\\../../in_src_with_no_subdir.hpp
+    # ../../../in_src_with_no_subdir.hpp
+    # C:/Data/Work/Enow/Note.hpp
 )
 
 set(_regular_INTERFACE_HEADERS
@@ -46,23 +51,21 @@ set(_regular_INTERFACE_HEADERS
 )
 
 set(_regular_PRIVATE_HEADERS
-    # ../../../in_src_with_no_subdir.hpp
-    # C:/Data/Work/Enow/Note.hpp
+
 )
 ####################################################################
 
 
 # Resources
-## Resources to embed into the lib's binary.
+## Resources to embed into the lib's binary using Qt RCC.
 set(_QtRCC_RESOURCE_FILES
-    "resources/QRC/icons/logo.svg"
+    "@resources/QtRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
 set(_QtTS_RESOURCES
-    #resources/Contacts_txt_en.ts
-    #resources/Contacts_txt_fr.ts
-    #resources/Contacts_txt_images.ts
+    "@resources/QtTS/fields/PhoneNumber_en.ts"
+    "@resources/QtTS/fields/PhoneNumber_ru.ts"
 )
 
 ## Regular resource files.
@@ -75,7 +78,7 @@ set(_other_RESOURCES
 
 # Sources
 ## QtMOC wrappings.
-qt_wrap_moc(_QtMOC_SOURCES ${_QtMOC_HEADERS})
+QtWrappers__qt_wrap_cpp(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
 ## Regular sources.
 set(_regular_SOURCES
@@ -92,7 +95,7 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 
 
 # Target
-get_library_type(Contacts _LIB_TYPE)
+CMagneto__get_library_type(Contacts _LIB_TYPE)
 add_library(Contacts ${_LIB_TYPE})
 ## If _LIB_TYPE is SHARED, a preproceccor macro Contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
 ## No need to target_compile_definitions(Contacts PRIVATE Contacts_EXPORTS) explicitly.
@@ -107,7 +110,7 @@ target_link_libraries(Contacts
 
 
 # Building and installation
-set_up_library(Contacts
+CMagneto__set_up_library(Contacts
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS
@@ -122,10 +125,10 @@ set_up_library(Contacts
         ${_other_RESOURCES}
 )
 
-CMagneto__qt_add_resources(Contacts QRC
-   PREFIX "/Enow/Contacts/Contacts/"
-   BASE "resources/QRC"
-   FILES
-       ${_QtRCC_RESOURCE_FILES}
+CMagneto__embed_QtRC_resources(Contacts QtRC
+    PREFIX "/Enow/Contacts/Contacts/"
+    BASE "@resources/QtRC"
+    FILES
+        ${_QtRCC_RESOURCE_FILES}
 )
 ####################################################################

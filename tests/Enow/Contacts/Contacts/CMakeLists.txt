@@ -10,4 +10,4 @@ target_link_libraries(${_TESTS_TargetName}
         Contacts
 )
 
-register_test_target(${_TESTS_TargetName})
+CMagneto__register_test_target(${_TESTS_TargetName})

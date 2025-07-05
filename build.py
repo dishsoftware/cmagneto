@@ -45,10 +45,10 @@ class BuildRunner:
     SUBDIR_SUMMARY = "summary"
     SUBDIR_PACKAGES = "packages"
 
-    RUN_TESTS__FILE_NAME_WE = "run_tests"
-    BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
-    TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
-    TEST_REPORT__FILE_NAME = "test_report.xml"
+    CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE = "run_tests"
+    CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
+    CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
+    CMagnetoPrivate__TEST_REPORT__FILE_NAME = "test_report.xml"
 
     def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
         if (iToolsetName is None) or (iToolsetName.isspace()):
@@ -129,12 +129,12 @@ class BuildRunner:
 
     def isBuildSummaryExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the build summary file exists for the specified build type."""
-        buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.BUILD_SUMMARY__FILE_NAME)
+        buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME)
         return os.path.exists(buildSummaryFilePath)
 
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""
-        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME)
+        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME)
         return os.path.exists(compiledTestsFilePath)
 
     def _runTests(self, iBuildType: BuildType) -> None:
@@ -142,9 +142,9 @@ class BuildRunner:
         status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
-        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.RUN_TESTS__FILE_NAME_WE)
+        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
-            warning(f"Script \"{BuildRunner.RUN_TESTS__FILE_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Use set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            warning(f"Script \"{BuildRunner.CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagneto__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
             BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
@@ -153,12 +153,12 @@ class BuildRunner:
 
     def isTestReportExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the test report file exists for the specified build type."""
-        testReportFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_REPORT__FILE_NAME)
+        testReportFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagnetoPrivate__TEST_REPORT__FILE_NAME)
         return os.path.exists(testReportFilePath)
 
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""
-        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME)
+        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME)
         return os.path.exists(compiledTestsFilePath)
 
     def installDir(self) -> str:
@@ -768,14 +768,14 @@ f"Specify whether to run preceding build stages. Default is {DEFAULT_RPS.name}.\
 {BuildRunner.RunPrecedingStages.Rerun.name}: run preceding build stages even if their artifacts exist.\n\
 {BuildRunner.RunPrecedingStages.Skip.name}: skip preceding build stages, even if their artifacts do not exist.\n\
 Artifact of {BuildRunner.BuildStage.Generate.name} stage is a corresponding subdirectory of \"./build/\".\n\
-Artifact of {BuildRunner.BuildStage.Compile.name} stage is a \"{BuildRunner.BUILD_SUMMARY__FILE_NAME}\".\n\
-Artifact of {BuildRunner.BuildStage.CompileTests.name} stage is a \"{BuildRunner.TEST_BUILD_SUMMARY__FILE_NAME}\".\n\
-Artifact of {BuildRunner.BuildStage.RunTests.name} stage is a \"{BuildRunner.TEST_REPORT__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.Compile.name} stage is a \"{BuildRunner.CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.CompileTests.name} stage is a \"{BuildRunner.CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME}\".\n\
+Artifact of {BuildRunner.BuildStage.RunTests.name} stage is a \"{BuildRunner.CMagnetoPrivate__TEST_REPORT__FILE_NAME}\".\n\
 Artifact of {BuildRunner.BuildStage.Install.name} stage is a corresponding subdirectory of \"./install/\".\n\
 Atrifact of {BuildRunner.BuildStage.Package.name} stage is any file in a \"{BuildRunner.SUBDIR_PACKAGES}\" subdirectory (recursively).\n\
 Note: only the presence of preceding stage artifacts is checked, not the success of execution of a previous build.\n\
 Note: {BuildRunner.BuildStage.CompileTests.name} stage does not check, whether {BuildRunner.BuildStage.Compile.name} stage was rerun;\n\
-     \"{BuildRunner.TEST_REPORT__FILE_NAME}\" is not deleted automatically, if tests are recompiled.\n\
+     \"{BuildRunner.CMagnetoPrivate__TEST_REPORT__FILE_NAME}\" is not deleted automatically, if tests are recompiled.\n\
 If a build stage fails during current build, the next stages are not run."
     )
     parser.add_argument(
