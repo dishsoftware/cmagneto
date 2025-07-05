@@ -12,19 +12,37 @@
   Sources of the target can also be generated under the target build root directory.
 
 
+## CMake Conventions
+### CMake Naming Conventions
+- File of a module: `cmake/modules/ModuleName.cmake`.
+- File of a module's submodule: `cmake/modules/ModuleName/SubModule.cmake`.
+- Script file: `script_file.cmake`.
+- Function in a module: `ModuleName__function_name`. But, e.g. `CMagneto__find__Qt_TOOL_EXE` is also fine: just start the function name part with a Capital letter.
+- Function in a module, intended for usage only within the module: `ModuleNamePrivate__function_name`. But, e.g. `CMagnetoPrivate__find__Qt_TOOL_EXE` is also fine: just start the function name part with a Capital letter.
+- Variable in a module, outside of function: `ModuleName__varName`.
+- Constant in a module, outside of function: `ModuleName__CONST_NAME`.
+- Variable in a module, outside of function, intended for usage only within the module: `ModuleNamePrivate__varName`.
+- Constant in a module, outside of function, intended for usage only within the module: `ModuleNamePrivate__CONST_NAME`.
+- Parameters of functions:
+    * Purely input parameter: `iParamName`.
+    * Purely output parameter: `oParamName`.
+- Variable in a function, macro, script or CMakeLists.txt: `_varName`.
+- Constant in a function, macro, script or CMakeLists.txt: `_CONST_NAME`.
+
+
 ## C++ Conventions
 ### C++ Naming Conventions
-- Target/module (library, executable): `CamelCase`.
-- Class, struct, enum: `CamelCase`.
-- Non-static field of a class/struct: `mCamelCase`.
-- Static non-const field of a class/struct: `sCamelCase`.
-- Static const field of a class/struct, enum option, const standalone variable: `kCamelCase`.
-- Standalone non-const variable: `camelCase`.
+- Target/module (library, executable): `ModuleName`.
+- Class, struct, enum: `ClassName`.
+- Non-static field of a class/struct: `mClassFieldName`.
+- Static non-const field of a class/struct: `sClassFieldName`.
+- Static const field of a class/struct, enum option, const standalone variable: `kConstName`.
+- Standalone non-const variable: `varName`.
 - Function's/method's parameter:
-    * Purely input parameter: `iCamelCase`.
-    * Purely output parameter: `oCamelCase`.
-    * Parameter that serves as both input and output: `ioCamelCase`.
-- Standalone function or class'/struct' method (static or regular): `camelCase`.
+    * Purely input parameter: `iParamName`.
+    * Purely output parameter: `oParamName`.
+    * Parameter that serves as both input and output: `ioParamName`.
+- Standalone function or class'/struct' method (static or regular): `functionName`.
 - Namespace:
     * Namespaces, encapsulating entities of a module, are composed as: `{CompanyName_SHORT}::{ProjectNameBase}::{ModuleName}`.
         ```c++

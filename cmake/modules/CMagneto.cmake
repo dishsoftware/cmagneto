@@ -24,9 +24,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
         Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
 
     How to use this file:
-        0) Include ./parse_meta.cmake before "project()" command. Add the "project()" command:
+        0) Include ./ParseMeta.cmake before "project()" command. Add the "project()" command:
             ```cmake
-            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake")
+            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake")
             project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
                 DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
                 HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
@@ -50,6 +50,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 # Add CMagneto CMake module private vars and functions.
 include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Private.cmake")
+
+
+CMagnetoPrivate__set__IS_MULTTCONFIG__property()
 
 
 function(CMagneto__print_platform_and_compiler)
@@ -450,7 +453,7 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     )
 
     if(iResourceNamePostfix STREQUAL "")
-        CMagneto__message(FATAL_ERROR "CMagneto__qt_add_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
+        CMagneto__message(FATAL_ERROR "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
     endif()
 
     # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
@@ -464,14 +467,14 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
         LANG "${ARG_LANG}"
         BASE "${ARG_BASE}"
         BIG_RESOURCES ${ARG_BIG_RESOURCES}
-        OUTPUT_TARGETS ${ARG_OUTPUT_TARGETS}
+        OUTPUT_TARGETS _outputTargets
         FILES ${ARG_FILES}
         OPTIONS ${ARG_OPTIONS}
     )
 
-    set(_resourceTargetNames "${${ARG_OUTPUT_TARGETS}}")
+    set(_resourceTargetNames "${_outputTargets}")
     if (NOT _resourceTargetNames STREQUAL "")
-        CMagneto__message(TRACE "CMagneto__qt_add_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
+        CMagneto__message(STATUS "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
         foreach(_resourceTargetName IN LISTS _resourceTargetNames)
             install(TARGETS ${_resourceTargetName}
                 EXPORT ${PROJECT_NAME}Targets

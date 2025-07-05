@@ -8,7 +8,7 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 # Set up CMagneto CMake module logging.
-include("${CMAKE_CURRENT_LIST_DIR}/log.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/Log.cmake")
 
 
 # CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),
@@ -628,9 +628,11 @@ function(CMagnetoPrivate__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoo
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
         cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_targetAbsoluteQtTSSourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
-        cmake_path(SET _absQMFilePath NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/${_QtTSFileNameWE}.qm")
+        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
+        cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
         CMagneto__message(TRACE "CMagnetoPrivate__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
+        file(MAKE_DIRECTORY "${_absQMFileDir}") # Without creation of the dir before calling the lrelease, compilation fails on Linux.
         add_custom_command(
             OUTPUT "${_absQMFilePath}"
             COMMAND ${QT_LRELEASE_EXECUTABLE} ${_absQtTSFilePath} -qm ${_absQMFilePath}

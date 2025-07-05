@@ -44,7 +44,7 @@ endfunction()
 
 
 # Call it immediately along with
-#   include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake").
+#   include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake").
 CMagneto__parse__project_json()
 
 

@@ -56,6 +56,7 @@ Then proceed to the [Build](#build) section.
 - C++ 17 (or later) compiler (GCC, MinGW, MSVC)
 - Python 3.10 or later
 - Graphviz (optional, for target graph)
+- Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files)
 - Qt Installer Framework 4.10 or later (optional, for packaging)
 
 ### Notes:
@@ -64,7 +65,9 @@ Output is located at `./build/{toolset}/[{build_type}]/graphviz/`.
 If Graphviz is installed, but no image is generated, define the `GRAPHVIZ_DIR` environment variable.
 Example: `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
 
-- Add the Qt Installer Framework’s bin directory to your system `PATH`.
+- The easiest way to get Qt Installer Framework - install it using QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source.<br>
+Another option is to compile it from [sources](https://download.qt.io/official_releases/qt-installer-framework/).<br>
+Add the Qt Installer Framework’s bin directory to your system `PATH`.
 Example: `C:\Qt\Tools\QtInstallerFramework\4.10\bin`.
 
 ## Dependencies
@@ -87,11 +90,12 @@ The [`./build.py`](./build.py) supports multiple toolsets (pairs of a build syst
 Use the `UnixMakefiles_GCC` toolset.<br>
 
 ### Installation Of Dependecies
-To install the required dependencies, run:
+To install most of build tools and dependencies (all, but Qt Installer Framework), run:
 ```bash
 sudo apt update && sudo apt-get install -y \
   dpkg-dev \
   qt6-base-dev \
+  qt6-tools-dev \
   libboost-all-dev
 ```
 ### VS Code:

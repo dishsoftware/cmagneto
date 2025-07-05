@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24
 # Configure project attributes.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake")
 
 
 project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
