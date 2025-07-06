@@ -155,6 +155,10 @@ set(CMagneto__MESSAGE_PREFIX "[CMagneto]")
     If the current CMAKE_MESSAGE_LOG_LEVEL >= iMessageLogLevel or CMagneto__MESSAGE_LOG_LEVEL >= iMessageLogLevel,
     logs iText with iMessagePrefix colored with an appropriate to iMessageLogLevel color.
     Intended to be used within the CMagneto CMake module.
+
+    Notes:
+    - It would be more convenient to read warnings and errors if CMagneto__message were a macro instead of a function,
+      but that would pollute the caller’s namespace with internal temporary variables.
 ]]
 function(CMagneto__message iMessageLogLevel iText)
     CMagnetoInternal__get_message_log_level_idx("${iMessageLogLevel}" _messageLogLevel_idx)

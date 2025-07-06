@@ -15,10 +15,10 @@ cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24
 include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake")
 
 
-project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
-    DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
-    HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
-    VERSION "${PROJECT_JSON__PROJECT_VERSION}"
+project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
+    DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
+    HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"
+    VERSION "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"
     LANGUAGES CXX
 )
 
@@ -37,7 +37,7 @@ CMagneto__print_platform_and_compiler()
 
 
 # Add source directories.
-add_subdirectory("src/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}")
+add_subdirectory("src/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
 
 
 # Generate build stage reports, helper scripts, etc.

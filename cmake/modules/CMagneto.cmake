@@ -27,10 +27,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
         0) Include ./ParseMeta.cmake before "project()" command. Add the "project()" command:
             ```cmake
             include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake")
-            project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
-                DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
-                HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
-                VERSION "${PROJECT_JSON__PROJECT_VERSION}"
+            project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
+                DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
+                HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"
+                VERSION "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"
                 LANGUAGES CXX
             )
             ```
