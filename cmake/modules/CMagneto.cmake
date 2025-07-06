@@ -7,7 +7,7 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
-    This file contains functions and variables to set up targets, install them and generate scripts and auxilliary files.
+    This module contains functions, constants and variables to set up targets, install them and generate scripts and auxilliary files.
     Glossary:
         - configure time:
             CMake processes the top-level CMakeLists.txt and all subdirectories to understand your project structure, options, and dependencies.
@@ -24,9 +24,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
         Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
 
     How to use this file:
-        0) Include ./ParseMeta.cmake before "project()" command. Add the "project()" command:
+        0) Include ./CMagneto/MetaLoader.cmake before "project()" command. Add the "project()" command:
             ```cmake
-            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake")
+            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
             project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
                 DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
                 HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"

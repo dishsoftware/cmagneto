@@ -7,7 +7,7 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
-    This submodule of the CMagneto module defines functions to parse project metdata from `./meta/` project directory.
+    This submodule of the CMagneto module defines functions to load project metadata from `./meta/` project directory.
 ]]
 
 
@@ -48,7 +48,7 @@ endfunction()
 
 
 # Call it immediately along with
-#   include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/ParseMeta.cmake").
+# `include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")`.
 CMagneto__parse__project_json()
 
 

@@ -13,7 +13,7 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 # Set up CMagneto CMake module logging.
-include("${CMAKE_CURRENT_LIST_DIR}/Log.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 
 # CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),
 # which are read by find_package() in consumer projects.
