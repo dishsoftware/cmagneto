@@ -49,10 +49,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 # Add CMagneto CMake module private vars and functions.
-include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Private.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Internals.cmake")
 
 
-CMagnetoPrivate__set__IS_MULTTCONFIG__property()
+CMagnetoInternal__set__IS_MULTTCONFIG__property()
 
 
 function(CMagneto__print_platform_and_compiler)
@@ -146,7 +146,7 @@ endfunction()
     CMagneto__set_up_library
 
     Sets up the build and installation process for the library target `${iLibName}`.
-    This function also registers `${iLibName}` in the global property `CMagnetoPrivate__REGISTERED_TARGETS`.
+    This function also registers `${iLibName}` in the global property `CMagnetoInternal__REGISTERED_TARGETS`.
 
     It must be called:
     - Once for the library target.
@@ -176,7 +176,7 @@ endfunction()
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
 function(CMagneto__set_up_library iLibName)
-    CMagnetoPrivate__check_target_name_validity(${iLibName})
+    CMagnetoInternal__check_target_name_validity(${iLibName})
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
     cmake_parse_arguments(ARG
@@ -187,11 +187,11 @@ function(CMagneto__set_up_library iLibName)
     )
 
     set(_baseDirDescription "library target \"${iLibName}\"")
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PRIVATE_HEADERS}" OUTPUT_REL_PATHS _relPrivateHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_REL_PATHS _relInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
-    #CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PRIVATE_HEADERS}" OUTPUT_REL_PATHS _relPrivateHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_REL_PATHS _relInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
+    #CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
 
     # Add target sources.
     ## Add header sets.
@@ -246,7 +246,7 @@ function(CMagneto__set_up_library iLibName)
 
     # Install.
     ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagnetoPrivate__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
+    CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
     CMagneto__message(TRACE "CMagneto__set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iLibName}
@@ -280,18 +280,18 @@ function(CMagneto__set_up_library iLibName)
     ####################################################################
 
     # Set up Qt TS resources.
-    CMagnetoPrivate__set_up_QtTS_files(${iLibName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
+    CMagnetoInternal__set_up_QtTS_files(${iLibName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
     # TODO
     ####################################################################
 
 
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
     list(APPEND _registeredTargets ${iLibName})
-    set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS "${_registeredTargets}")
+    set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS "${_registeredTargets}")
 
-    CMagnetoPrivate__collect_paths_to_shared_libs(${iLibName})
+    CMagnetoInternal__collect_paths_to_shared_libs(${iLibName})
 endfunction()
 
 
@@ -299,7 +299,7 @@ endfunction()
     CMagneto__set_up_executable
 
     Sets up the build and installation process for the executable target `${iExeName}`.
-    This function also registers `${iExeName}` in the global property `CMagnetoPrivate__REGISTERED_TARGETS`.
+    This function also registers `${iExeName}` in the global property `CMagnetoInternal__REGISTERED_TARGETS`.
 
     It must be called:
     - Once for the executable target.
@@ -327,15 +327,15 @@ endfunction()
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
 function(CMagneto__set_up_executable iExeName)
-    CMagnetoPrivate__check_target_name_validity(${iExeName})
+    CMagnetoInternal__check_target_name_validity(${iExeName})
     add_executable(${PROJECT_NAME}::${iExeName} ALIAS ${iExeName})
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
     set(_baseDirDescription "executable target \"${iExeName}\"")
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
-    #CMagnetoPrivate__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
+    #CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
 
     # Add target sources.
     target_sources(${iExeName} PRIVATE ${_relSources} ${_relHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
@@ -355,7 +355,7 @@ function(CMagneto__set_up_executable iExeName)
 
     # Install.
     ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagnetoPrivate__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
+    CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
     CMagneto__message(TRACE "CMagneto__set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iExeName}
@@ -366,18 +366,18 @@ function(CMagneto__set_up_executable iExeName)
     ####################################################################
 
     # Set up Qt TS resources.
-    CMagnetoPrivate__set_up_QtTS_files(${iExeName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
+    CMagnetoInternal__set_up_QtTS_files(${iExeName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
     # TODO
     ####################################################################
 
 
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
     list(APPEND _registeredTargets ${iExeName})
-    set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS "${_registeredTargets}")
+    set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS "${_registeredTargets}")
 
-    CMagnetoPrivate__collect_paths_to_shared_libs(${iExeName})
+    CMagnetoInternal__collect_paths_to_shared_libs(${iExeName})
 endfunction()
 
 
@@ -459,8 +459,8 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
     set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTRC}/")
     set(_baseDirDescription "target \"${iTargetName}\" QtRC")
-    CMagnetoPrivate__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoPrivate__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_FILES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_FILES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
 
     qt_add_resources(${iTargetName} "${iTargetName}__${iResourceNamePostfix}"
         PREFIX "${ARG_PREFIX}"
@@ -501,7 +501,7 @@ endfunction()
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__3rd_party_shared_libs__list)
-    CMagnetoPrivate__set_up_file("CMagnetoPrivate__get__3rd_party_shared_libs__file_name" "CMagnetoPrivate__generate__3rd_party_shared_libs__content" FALSE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -514,7 +514,7 @@ endfunction()
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__set_env__script)
-    CMagnetoPrivate__set_up_file("CMagnetoPrivate__get__set_env__script_file_name" "CMagnetoPrivate__generate__set_env__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -530,7 +530,7 @@ endfunction()
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__env_vscode__file)
-    CMagnetoPrivate__set_up_file("CMagnetoPrivate__get__env_vscode__file_name" "CMagnetoPrivate__generate__env_vscode__file_content" FALSE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -544,7 +544,7 @@ endfunction()
     The function must be called after CMagneto__set_up__set_env__script() is called.
 ]]
 function(CMagneto__set_up__run__script)
-    CMagnetoPrivate__set_up_file("CMagnetoPrivate__get__run__script_file_name" "CMagnetoPrivate__generate__run__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -558,7 +558,7 @@ endfunction()
     If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
 ]]
 function(CMagneto__set_up__run_tests__script)
-    CMagnetoPrivate__set_up_file("CMagnetoPrivate__get__run_tests__script_file_name" "CMagnetoPrivate__generate__run_tests__script_content" TRUE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -574,17 +574,17 @@ endfunction()
 function(CMagneto__set_up__build_summary__file)
     set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
 
-    CMagnetoPrivate__is_multiconfig(IS_MULTICONFIG)
+    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME}")
+        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
     else()
-        set(_summaryOutputPath "${_summaryOutputDir}/${CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME}")
+        set(_summaryOutputPath "${_summaryOutputDir}/${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}")
         set(_buildType "${CMAKE_BUILD_TYPE}")
     endif()
 
     add_custom_target(build_summary ALL)
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
     if(_registeredTargets)
         add_dependencies(build_summary ${_registeredTargets})
     endif()
@@ -592,7 +592,7 @@ function(CMagneto__set_up__build_summary__file)
     # The file is used by "build.py" to determine whether the project is compiled.
     add_custom_command(
         TARGET build_summary POST_BUILD
-        COMMENT "Composing ${CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME}"
+        COMMENT "Composing ${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}"
         COMMAND ${CMAKE_COMMAND}
             -DOUT="${_summaryOutputPath}"
             -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
@@ -602,7 +602,7 @@ function(CMagneto__set_up__build_summary__file)
             -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
             -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
             -DCMAKE_BUILD_TYPE="${_buildType}"
-            -P "${CMagnetoPrivate__GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
+            -P "${CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
     )
 
     # Install the file.
@@ -614,12 +614,12 @@ endfunction()
 
 
 function(CMagneto__register_test_target iTestTargetName)
-    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TEST_TARGETS)
+    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS)
     list(APPEND _registeredTestTargets ${iTestTargetName})
-    set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TEST_TARGETS "${_registeredTestTargets}")
+    set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS "${_registeredTestTargets}")
 
     # Set test discovery for the test target.
-    CMagnetoPrivate__set_test_discovery(${iTestTargetName})
+    CMagnetoInternal__set_test_discovery(${iTestTargetName})
 endfunction()
 
 
@@ -630,19 +630,19 @@ endfunction()
     Allows to build all tests with a single command, e.g.: "cmake --build . --target build_tests".
 ]]
 function(CMagneto__add__build_tests__target)
-    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TEST_TARGETS)
+    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS)
     if(NOT DEFINED _registeredTestTargets OR _registeredTestTargets STREQUAL "")
         CMagneto__message(STATUS "CMagneto__add__build_tests__target: No registered test targets.")
     endif()
 
     set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
 
-    CMagnetoPrivate__is_multiconfig(IS_MULTICONFIG)
+    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_filePath "${_fileDir}/$<CONFIG>/${CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/$<CONFIG>/${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
     else()
-        set(_filePath "${_fileDir}/${CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}")
     endif()
 
     # Add a target that depends on all registered test targets.
@@ -657,7 +657,7 @@ function(CMagneto__add__build_tests__target)
         COMMAND ${CMAKE_COMMAND}
             -DFILE_PATH="${_filePath}"
             -DTEST_TARGETS="${_registeredTestTargets}"
-            -P "${CMagnetoPrivate__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH}"
-        COMMENT "Composing ${CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME}"
+            -P "${CMagnetoInternal__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH}"
+        COMMENT "Composing ${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}"
     )
 endfunction()

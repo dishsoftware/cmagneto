@@ -48,6 +48,7 @@ function(compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
     set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
 endfunction()
 
+
 #[[
     CMagneto__are_paths_equal
 
@@ -64,7 +65,7 @@ function(CMagneto__are_paths_equal iPathA iPathB oAreEqual)
 endfunction()
 
 
-function(CMagnetoPrivate__does_path_contain_backslash iPath oPathContainsBackslash)
+function(CMagnetoInternal__does_path_contain_backslash iPath oPathContainsBackslash)
     string(FIND "${iPath}" "\\" _backslashPos)
     if(_backslashPos EQUAL -1)
         set(${oPathContainsBackslash} FALSE PARENT_SCOPE)
@@ -74,14 +75,14 @@ function(CMagnetoPrivate__does_path_contain_backslash iPath oPathContainsBacksla
 endfunction()
 
 
-function(CMagnetoPrivate__is_path_valid_for_CMakeLists iPath oErrorMessage)
+function(CMagnetoInternal__is_path_valid_for_CMakeLists iPath oErrorMessage)
     set(_errorMessage "")
 
     if(IS_ABSOLUTE "${_path}")
         set(_errorMessage "${_errorMessage}Path \"${iPath}\" is absolute.\nOnly relative paths are allowed in CMakeLists.txt.\n")
     endif()
 
-    CMagnetoPrivate__does_path_contain_backslash("${iPath}" _pathContainsBackslash)
+    CMagnetoInternal__does_path_contain_backslash("${iPath}" _pathContainsBackslash)
     if(_pathContainsBackslash)
         set(_errorMessage "${_errorMessage}Path \"${iPath}\" contains \"\\\",\nwhich is not valid on Unix systems.\nOnly \"/\" is allowed as path leafs' separator in CMakeLists.txt.\n")
     endif()
@@ -91,15 +92,15 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__set__IS_MULTTCONFIG__property
+    CMagnetoInternal__set__IS_MULTTCONFIG__property
 
-    Defines CMagnetoPrivate__IS_MULTTCONFIG global boolean property as TRUE, if generator supports multi-config, and FALSE otherwise.
-    Calling it directly is not necessary, if CMagnetoPrivate__IS_MULTTCONFIG is only retrieved using CMagnetoPrivate__is_multiconfig(oIsMulticonfig).
+    Defines CMagnetoInternal__IS_MULTTCONFIG global boolean property as TRUE, if generator supports multi-config, and FALSE otherwise.
+    Calling it directly is not necessary, if CMagnetoInternal__IS_MULTTCONFIG is only retrieved using CMagnetoInternal__is_multiconfig(oIsMulticonfig).
     However, it is better to call it as early as possible to avoid errors,
-    if get_property(oIsMulticonfig GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG) is used and called earlier, than CMagnetoPrivate__is_multiconfig(oIsMulticonfig).
+    if get_property(oIsMulticonfig GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG) is used and called earlier, than CMagnetoInternal__is_multiconfig(oIsMulticonfig).
 ]]
-function(CMagnetoPrivate__set__IS_MULTTCONFIG__property)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG SET)
+function(CMagnetoInternal__set__IS_MULTTCONFIG__property)
+    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG SET)
     if(_isSet)
         return()
     endif()
@@ -108,30 +109,30 @@ function(CMagnetoPrivate__set__IS_MULTTCONFIG__property)
         # Bug https://cmake.org/Bug/view.php?id=15577 .
         if(CMAKE_BUILD_TYPE)
             CMagneto__message(DEBUG "Single-configuration generator")
-            set_property(GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG FALSE)
+            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
         else()
             CMagneto__message(DEBUG "Multi-configuration generator")
-            set_property(GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG TRUE)
+            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
         endif()
     else()
         if(CMAKE_CONFIGURATION_TYPES)
             CMagneto__message(DEBUG "Multi-configuration generator")
-            set_property(GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG TRUE)
+            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
         else()
             CMagneto__message(DEBUG "Single-configuration generator")
-            set_property(GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG FALSE)
+            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
         endif()
     endif()
 endfunction()
 
 
-function(CMagnetoPrivate__is_multiconfig oIsMulticonfig)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG SET)
+function(CMagnetoInternal__is_multiconfig oIsMulticonfig)
+    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG SET)
     if(NOT _isSet)
-        CMagnetoPrivate__set__IS_MULTTCONFIG__property()
+        CMagnetoInternal__set__IS_MULTTCONFIG__property()
     endif()
 
-    get_property(_isMulticonfig GLOBAL PROPERTY CMagnetoPrivate__IS_MULTTCONFIG)
+    get_property(_isMulticonfig GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG)
     set(${oIsMulticonfig} ${_isMulticonfig} PARENT_SCOPE)
 endfunction()
 
@@ -140,11 +141,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake)
 
 
 # Appended every time CMagneto__set_up_library(iLibName) or CMagneto__set_up_executable(iExeName) is called.
-set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS "")
+set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS "")
 
 
 #[[
-    CMagnetoPrivate__check_target_name_validity
+    CMagnetoInternal__check_target_name_validity
 
     Checks if a target name is valid and not already registered. Registered target names are compared case-insensitively.
     Valid target names:
@@ -152,7 +153,7 @@ set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS "")
         * must contain only letters, digits, and underscores;
         * must not be made only of underscores.
 ]]
-function(CMagnetoPrivate__check_target_name_validity iTargetName)
+function(CMagnetoInternal__check_target_name_validity iTargetName)
     # Reject names made only of underscores
     string(REGEX MATCH "^_+$" _only_underscores "${iTargetName}")
     if(_only_underscores)
@@ -166,7 +167,7 @@ function(CMagnetoPrivate__check_target_name_validity iTargetName)
 
     # Check if the target name is already registered.
     string(TOUPPER "${iTargetName}" _targetNameUC)
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
     foreach(_registeredTarget IN LISTS _registeredTargets)
         string(TOUPPER "${_registeredTarget}" _registeredTargetUC)
         if(_targetNameUC STREQUAL _registeredTargetUC)
@@ -181,7 +182,7 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__add_path_to_shared_libs
+    CMagnetoInternal__add_path_to_shared_libs
 
     Parameters:
     iTargetName - name of a target created in the project.
@@ -190,12 +191,12 @@ endfunction()
 
     iPath - path to a binary of a shared lib, which iTargetName is linked to.
 ]]
-function(CMagnetoPrivate__add_path_to_shared_libs iTargetName iBuildType iPath)
+function(CMagnetoInternal__add_path_to_shared_libs iTargetName iBuildType iPath)
     string(TOUPPER "${iBuildType}" _buildType)
     if (_buildType STREQUAL "NONSPECIFIC")
-        set(_propName "CMagnetoPrivate__PATHS_TO_SHARED_LIBS__${iTargetName}")
+        set(_propName "CMagnetoInternal__PATHS_TO_SHARED_LIBS__${iTargetName}")
     else()
-        set(_propName "CMagnetoPrivate__PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
+        set(_propName "CMagnetoInternal__PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
     endif()
 
     get_property(_paths GLOBAL PROPERTY "${_propName}")
@@ -211,7 +212,7 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__get_paths_to_shared_libs
+    CMagnetoInternal__get_paths_to_shared_libs
 
     Returns paths to binaries of shared libraries, which iTargetName is linked to.
 
@@ -222,12 +223,12 @@ endfunction()
 
     Paths to shared libs for iTargetName are filled when CMagneto__set_up_library(iTargetName) or CMagneto__set_up_executable(iTargetName) are called.
 ]]
-function(CMagnetoPrivate__get_paths_to_shared_libs iTargetName iBuildType oPaths)
+function(CMagnetoInternal__get_paths_to_shared_libs iTargetName iBuildType oPaths)
     string(TOUPPER "${iBuildType}" _buildType)
     if (_buildType STREQUAL "NONSPECIFIC")
-        set(_propName "CMagnetoPrivate__PATHS_TO_SHARED_LIBS__${iTargetName}")
+        set(_propName "CMagnetoInternal__PATHS_TO_SHARED_LIBS__${iTargetName}")
     else()
-        set(_propName "CMagnetoPrivate__PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
+        set(_propName "CMagnetoInternal__PATHS_TO_${_buildType}_SHARED_LIBS__${iTargetName}")
     endif()
 
     get_property(_isSet GLOBAL PROPERTY "${_propName}" SET)
@@ -242,12 +243,12 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__get_shared_library_dirs
+    CMagnetoInternal__get_shared_library_dirs
 
     Returns directories, containing 3rd-party shared libraries, which iTargets are linked to.
     If a shared library is in iTargets or defined in the project, it's path is not returned.
 ]]
-function(CMagnetoPrivate__get_shared_library_dirs oLibraryDirs iTargets iBuildType)
+function(CMagnetoInternal__get_shared_library_dirs oLibraryDirs iTargets iBuildType)
     set(_libraryDirs "")
 
     foreach(_target ${iTargets})
@@ -260,7 +261,7 @@ function(CMagnetoPrivate__get_shared_library_dirs oLibraryDirs iTargets iBuildTy
             continue()
         endif()
 
-        CMagnetoPrivate__get_paths_to_shared_libs(${_target} ${iBuildType} _libPaths)
+        CMagnetoInternal__get_paths_to_shared_libs(${_target} ${iBuildType} _libPaths)
         foreach(_libPath ${_libPaths})
             cmake_path(GET _libPath PARENT_PATH _libDir)
             list(APPEND _libraryDirs ${_libDir})
@@ -273,10 +274,10 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__collect_paths_to_shared_libs
+    CMagnetoInternal__collect_paths_to_shared_libs
 
     The method collects paths to binaries of 3rd-party shared libraries, which iTargetName is linked to,
-    and stores them in a global properties CMagnetoPrivate__PATHS_TO_SHARED_LIBS__${iTargetName} and CMagnetoPrivate__PATHS_TO_${BUILD_TYPE}_SHARED_LIBS__${iTargetName}.
+    and stores them in a global properties CMagnetoInternal__PATHS_TO_SHARED_LIBS__${iTargetName} and CMagnetoInternal__PATHS_TO_${BUILD_TYPE}_SHARED_LIBS__${iTargetName}.
     Should be called from the same folder where iTargetName is declared after libraries are linked to iTargetName.
 
     The method was written to overcome the following limitation:
@@ -285,13 +286,13 @@ endfunction()
     Parameters:
     iTargetName - name of a target created in the project.
 ]]
-function(CMagnetoPrivate__collect_paths_to_shared_libs iTargetName)
+function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
     get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)
     if(_targetLinkLibraries STREQUAL "NOTFOUND")
         return()
     endif()
 
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
 
     foreach(_lib ${_targetLinkLibraries})
         if(NOT TARGET ${_lib})
@@ -311,10 +312,10 @@ function(CMagnetoPrivate__collect_paths_to_shared_libs iTargetName)
 
         get_target_property(_nonBuildSpecificLibPath ${_lib} IMPORTED_LOCATION)
         if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
-            CMagnetoPrivate__add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
+            CMagnetoInternal__add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
         endif()
 
-        CMagnetoPrivate__is_multiconfig(IS_MULTICONFIG)
+        CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
         if(IS_MULTICONFIG)
             set(_buildConfigs ${CMAKE_CONFIGURATION_TYPES})
         else()
@@ -326,36 +327,36 @@ function(CMagnetoPrivate__collect_paths_to_shared_libs iTargetName)
 
             get_target_property(_libPath ${_lib} IMPORTED_LOCATION_${_config})
             if(NOT (_libPath AND EXISTS ${_libPath}))
-                CMagneto__message(STATUS "CMagnetoPrivate__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
+                CMagneto__message(STATUS "CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
                 get_target_property(_libPath ${_lib} IMPORTED_LOCATION_RELEASE)
                 if(NOT (_libPath AND EXISTS ${_libPath}))
                     if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
                         set(_libPath ${_nonBuildSpecificLibPath})
                     else()
-                        CMagneto_warning("CMagnetoPrivate__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
+                        CMagneto_warning("CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
                         continue()
                     endif()
                 endif()
             endif()
 
-            CMagnetoPrivate__add_path_to_shared_libs(${iTargetName} ${_config} ${_libPath})
+            CMagnetoInternal__add_path_to_shared_libs(${iTargetName} ${_config} ${_libPath})
         endforeach()
     endforeach()
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__is_path_under_dir
+    CMagnetoInternal__is_path_under_dir
 
     Checks, if iAbsolutePath is under iAbsoluteDirPath (in the dir or its subdirectory recursively).
     iAbsolutePath == iAbsoluteDirPath yields TRUE.
 ]]
-function(CMagnetoPrivate__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPathIsUnderDir)
+function(CMagnetoInternal__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPathIsUnderDir)
     if(NOT IS_ABSOLUTE "${iAbsolutePath}")
-        CMagneto__message(FATAL_ERROR "CMagnetoPrivate__is_path_under_dir: iAbsolutePath is not absolute: \"${iAbsolutePath}\".")
+        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsolutePath is not absolute: \"${iAbsolutePath}\".")
     endif()
     if(NOT IS_ABSOLUTE "${iAbsoluteDirPath}")
-        CMagneto__message(FATAL_ERROR "CMagnetoPrivate__is_path_under_dir: iAbsoluteDirPath is not absolute: \"${iAbsoluteDirPath}\".")
+        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not absolute: \"${iAbsoluteDirPath}\".")
     endif()
 
     cmake_path(SET _normalizedPath NORMALIZE "${iAbsolutePath}")
@@ -363,7 +364,7 @@ function(CMagnetoPrivate__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPath
 
     # Ensure dir ends with a slash to avoid erroneous matches.
     if(NOT _normalizedDirPath MATCHES "/$")
-        CMagneto__message(FATAL_ERROR "CMagnetoPrivate__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
+        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
     endif()
 
     string(FIND "${_normalizedPath}" "${_normalizedDirPath}" _pos)
@@ -377,7 +378,7 @@ function(CMagnetoPrivate__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPath
 endfunction()
 
 
-function(CMagnetoPrivate__get_dir_relative_to_project_source_root iAbsoluteDir oDirRelativeToProjectSourceRoot)
+function(CMagnetoInternal__get_dir_relative_to_project_source_root iAbsoluteDir oDirRelativeToProjectSourceRoot)
     cmake_path(RELATIVE_PATH iAbsoluteDir BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/" OUTPUT_VARIABLE _dirRelativeToProjectSourceRoot)
     cmake_path(SET _dirRelativeToProjectSourceRoot NORMALIZE "${_dirRelativeToProjectSourceRoot}")
     # Avoid "." paths, bacause some CMake generators do not handle them correctly.
@@ -389,7 +390,7 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__handle_source_paths
+    CMagnetoInternal__handle_source_paths
 
     Processes a list of input paths by resolving them relative to a specified source base directory.
     Produces two output lists:
@@ -422,12 +423,12 @@ endfunction()
     Notes:
     - If a path A equals path B, A is considered under B.
 ]]
-function(CMagnetoPrivate__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSourceBaseDirDescription iPaths)
+function(CMagnetoInternal__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSourceBaseDirDescription iPaths)
     cmake_path(SET _absoluteSourceBaseDir NORMALIZE "${iAbsoluteSourceBaseDir}/")
     cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/")
-    CMagnetoPrivate__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
+    CMagnetoInternal__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
     if(NOT _isSourceBaseDirUnderProjectSourceRoot)
-        CMagneto__message(FATAL_ERROR "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
+        CMagneto__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
     endif()
 
     cmake_parse_arguments(ARG
@@ -449,7 +450,7 @@ function(CMagnetoPrivate__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSo
     if(NOT ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR IN_LIST _IF_PATH_OUTSIDE_SOURCE_BASE_DIR__ALLOWED_VALUES)
         CMagneto__wrap_strings_in_quotes_and_join(_allowedValsStr ", " "${_IF_PATH_OUTSIDE_SOURCE_BASE_DIR__ALLOWED_VALUES}")
         set(_msgTemplate [=[
-CMagnetoPrivate__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR}" of parameter IF_PATH_OUTSIDE_SOURCE_BASE_DIR.
+CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR}" of parameter IF_PATH_OUTSIDE_SOURCE_BASE_DIR.
                        Allowed values: ${_allowedValsStr}.
         ]=])
         string(CONFIGURE "${_msgTemplate}" _msg)
@@ -462,39 +463,39 @@ CMagnetoPrivate__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOURC
     set(_pathsOutsideProjectSourceRoot "")
     set(_pathsOutsideSourceBaseDir "")
 
-    CMagnetoPrivate__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
+    CMagnetoInternal__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
     cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/")
-    CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
+    CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
 
     foreach(_path IN LISTS iPaths)
-        CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" started.")
+        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" started.")
 
         if(IS_ABSOLUTE "${_path}")
-            CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is absolute.")
+            CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is absolute.")
             cmake_path(SET _absPath NORMALIZE "${_path}")
             cmake_path(RELATIVE_PATH _absPath BASE_DIRECTORY "${_absoluteSourceBaseDir}" OUTPUT_VARIABLE _relPath)
         else()
-            CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is relative.")
+            CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is relative.")
             cmake_path(SET _absPath NORMALIZE "${_absoluteSourceBaseDir}/${_path}")
             cmake_path(SET _relPath NORMALIZE "${_path}")
         endif()
 
-        CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Absolute path: \"${_absPath}\"")
-        CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Relative path: \"${_relPath}\"")
+        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Absolute path: \"${_absPath}\"")
+        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Relative path: \"${_relPath}\"")
 
         if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
             # Check if the path is under the build base dir.
             # Don't check whether the _path contains a backslash or is absolute: most probably the file is generated and added to iPaths automatically.
-            CMagnetoPrivate__is_path_under_dir("${_absPath}" "${_absoluteBuildBaseDir}" _pathIsUnderBuildBaseDir)
+            CMagnetoInternal__is_path_under_dir("${_absPath}" "${_absoluteBuildBaseDir}" _pathIsUnderBuildBaseDir)
             if(_pathIsUnderBuildBaseDir)
                 list(APPEND _relPaths "${_relPath}")
                 list(APPEND _absPaths "${_absPath}")
-                CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
+                CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
                 continue()
             endif()
         endif()
 
-        CMagnetoPrivate__is_path_valid_for_CMakeLists("${_path}" _errorMessage)
+        CMagnetoInternal__is_path_valid_for_CMakeLists("${_path}" _errorMessage)
         if(NOT _errorMessage STREQUAL "")
             set(_msgTemplate [=[
 ${iAbsoluteSourceBaseDirDescription}.
@@ -509,7 +510,7 @@ are only allowed under the build base dir
 
         if(NOT ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR STREQUAL "USE_ANYWAY")
             # Check if the path is not under the source base dir.
-            CMagnetoPrivate__is_path_under_dir("${_absPath}" "${_absoluteSourceBaseDir}" _pathIsUnderSourceBaseDir)
+            CMagnetoInternal__is_path_under_dir("${_absPath}" "${_absoluteSourceBaseDir}" _pathIsUnderSourceBaseDir)
             if(NOT _pathIsUnderSourceBaseDir)
                 set(_msg "Path \"${_path}\" is\n\toutside of the ${iAbsoluteSourceBaseDirDescription} source base dir\n\t\"${_absoluteSourceBaseDir}\"")
                 if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
@@ -526,7 +527,7 @@ are only allowed under the build base dir
         endif()
 
         # Check if the path is not under the project source root.
-        CMagnetoPrivate__is_path_under_dir("${_absPath}" "${_projectSourceRoot}" _pathIsUnderProjectSourceRoot)
+        CMagnetoInternal__is_path_under_dir("${_absPath}" "${_projectSourceRoot}" _pathIsUnderProjectSourceRoot)
         if(NOT _pathIsUnderProjectSourceRoot)
             set(_msg "Path \"${_path}\" is\n\toutside of the project \"${PROJECT_NAME}\" source root\n\t\"${_projectSourceRoot}\"")
             if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
@@ -538,7 +539,7 @@ are only allowed under the build base dir
 
         list(APPEND _relPaths "${_relPath}")
         list(APPEND _absPaths "${_absPath}")
-        CMagneto__message(TRACE "CMagnetoPrivate__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
+        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
     endforeach()
 
     # Return output.
@@ -552,7 +553,7 @@ are only allowed under the build base dir
 endfunction()
 
 
-function(CMagnetoPrivate__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
+function(CMagnetoInternal__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
     #set(QT_LRELEASE_EXECUTABLE "${QT_LRELEASE_EXECUTABLE}" CACHE FILEPATH "Path to Qt lrelease executable" FORCE)
 
     if(DEFINED QT_LRELEASE_EXECUTABLE AND NOT QT_LRELEASE_EXECUTABLE STREQUAL "")
@@ -586,7 +587,7 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__set_up_QtTS_files
+    CMagnetoInternal__set_up_QtTS_files
 
     It must be called:
     - Once for the target.
@@ -599,7 +600,7 @@ endfunction()
                                  Paths must be under `${iAbsoluteTargetSourceRoot}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}`.
                                  Paths must not contain backslashes.
 ]]
-function(CMagnetoPrivate__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoot iQtTSFilePaths)
+function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoot iQtTSFilePaths)
     if(iQtTSFilePaths STREQUAL "")
         return()
     endif()
@@ -607,7 +608,7 @@ function(CMagnetoPrivate__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoo
     cmake_path(SET _targetAbsoluteQtTSSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/")
 
     # Check, that all files are under _targetAbsoluteQtTSSourceRoot.
-    CMagnetoPrivate__handle_source_paths(
+    CMagnetoInternal__handle_source_paths(
         "${_targetAbsoluteQtTSSourceRoot}"
         "target \"${iTargetName}\" QtTS"
         "${iQtTSFilePaths}"
@@ -615,22 +616,22 @@ function(CMagnetoPrivate__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoo
     )
 
     # Convert iQtTSFilePaths to absolute paths.
-    CMagnetoPrivate__handle_source_paths(
+    CMagnetoInternal__handle_source_paths(
         "${iAbsoluteTargetSourceRoot}"
         "target \"${iTargetName}\" QtTS"
         "${iQtTSFilePaths}"
         OUTPUT_ABS_PATHS _absQtTSFilePaths
     )
 
-    CMagnetoPrivate__find__Qt_lrelease_executable(QT_LRELEASE_EXECUTABLE)
-    CMagnetoPrivate__get_dir_relative_to_project_source_root("${iAbsoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
+    CMagnetoInternal__find__Qt_lrelease_executable(QT_LRELEASE_EXECUTABLE)
+    CMagnetoInternal__get_dir_relative_to_project_source_root("${iAbsoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
     foreach(_absQtTSFilePath IN LISTS _absQtTSFilePaths)
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
         cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_targetAbsoluteQtTSSourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
         cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
-        CMagneto__message(TRACE "CMagnetoPrivate__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
+        CMagneto__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
         file(MAKE_DIRECTORY "${_absQMFileDir}") # Without creation of the dir before calling the lrelease, compilation fails on Linux.
         add_custom_command(
@@ -654,7 +655,7 @@ endfunction()
 
 
 #[[
-    CMagnetoPrivate__set_up_file
+    CMagnetoInternal__set_up_file
 
     Places to build directory and installs to ${SUBDIR_EXECUTABLE} a file with name and content,
     which are returned by fileNameGetter(oFileName) and contentGetter(iConfig oContent) functions.
@@ -669,8 +670,8 @@ endfunction()
         iComponentName - name of the component to which the file is installed.
             If iInstall is FALSE, this parameter is ignored.
 ]]
-function(CMagnetoPrivate__set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
-    CMagnetoPrivate__is_multiconfig(IS_MULTICONFIG)
+function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
+    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
 
@@ -758,21 +759,21 @@ function(CMagnetoPrivate__set_up_file iFileNameGetterName iContentGetterName iAd
 endfunction()
 
 
-set(CMagnetoPrivate__3RD_PARTY_SHARED_LIBS__LIST_NAME "3rd_party_shared_libs.json")
-function(CMagnetoPrivate__get__3rd_party_shared_libs__file_name oFileName)
-    set(${oFileName} "${CMagnetoPrivate__3RD_PARTY_SHARED_LIBS__LIST_NAME}" PARENT_SCOPE)
+set(CMagnetoInternal__3RD_PARTY_SHARED_LIBS__LIST_NAME "3rd_party_shared_libs.json")
+function(CMagnetoInternal__get__3rd_party_shared_libs__file_name oFileName)
+    set(${oFileName} "${CMagnetoInternal__3RD_PARTY_SHARED_LIBS__LIST_NAME}" PARENT_SCOPE)
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__generate__3rd_party_shared_libs__content
+    CMagnetoInternal__generate__3rd_party_shared_libs__content
 
     Returns content of the "3rd_party_shared_libs.json" file.
 
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
-function(CMagnetoPrivate__generate__3rd_party_shared_libs__content iBuildType oContent)
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+function(CMagnetoInternal__generate__3rd_party_shared_libs__content iBuildType oContent)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
     list(LENGTH _registeredTargets _registeredTargetsLength)
 
     set(_fileContent "{\n")
@@ -780,7 +781,7 @@ function(CMagnetoPrivate__generate__3rd_party_shared_libs__content iBuildType oC
     foreach(_target ${_registeredTargets})
         set(_fileContent "${_fileContent}\t\"${_target}\": [")
 
-        CMagnetoPrivate__get_paths_to_shared_libs(${_target} "${iBuildType}" _libPaths)
+        CMagnetoInternal__get_paths_to_shared_libs(${_target} "${iBuildType}" _libPaths)
         list(LENGTH _libPaths _libPathsLength)
         if(NOT _libPathsLength EQUAL 0)
             string(JOIN "\",\n\t\t\"" _libPathsJoined ${_libPaths})
@@ -800,55 +801,55 @@ function(CMagnetoPrivate__generate__3rd_party_shared_libs__content iBuildType oC
 endfunction()
 
 
-set(CMagnetoPrivate__SCRIPT_EXTENSION_UNIX "sh")
-set(CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS "bat")
+set(CMagnetoInternal__SCRIPT_EXTENSION_UNIX "sh")
+set(CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS "bat")
 
-set(CMagnetoPrivate__SCRIPT_NAME_SUFFIX_UNIX "_Unix")
+set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX "_Unix")
 # The differentiation is required, because Unix_standard scripts can't be run on Unix or don't do what they are intented for.
 # E.g. Android is also Unix, but not Unix-standard: some variables and functions are not available or restricted.
-set(CMagnetoPrivate__SCRIPT_NAME_SUFFIX_UNIX_STANDARD "_Unix_standard")
-set(CMagnetoPrivate__SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
+set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX_STANDARD "_Unix_standard")
+set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
 
-set(CMagnetoPrivate__ENV_VSCODE__SCRIPT_NAME ".env.vscode")
+set(CMagnetoInternal__ENV_VSCODE__SCRIPT_NAME ".env.vscode")
 
-set(CMagnetoPrivate__SET_ENV__SCRIPT_NAME_WE "set_env")
-set(CMagnetoPrivate__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoPrivate__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE "set_env")
+set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
 
-set(CMagnetoPrivate__RUN__SCRIPT_NAME_WE "run")
-set(CMagnetoPrivate__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoPrivate__RUN__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__RUN__SCRIPT_NAME_WE "run")
+set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
-function(CMagnetoPrivate__get__set_env__script_file_name oFileName)
+function(CMagnetoInternal__get__set_env__script_file_name oFileName)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoPrivate__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
     else()
-        set(${oFileName} "${CMagnetoPrivate__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
     endif()
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__generate__set_env__script_content
+    CMagnetoInternal__generate__set_env__script_content
 
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
-function(CMagnetoPrivate__generate__set_env__script_content iBuildType oScriptContent)
+function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
     set(PARAM__SHARED_LIB_DIRS_STRING "param\\nSHARED_LIB_DIRS_STRING\\nparam")
     ####################################################################
 
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
 
     set(_libraryDirs "")
-    CMagnetoPrivate__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
+    CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoPrivate__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}")
+        set(_template_script_path "${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
     else()
-        set(_template_script_path "${CMagnetoPrivate__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_UNIX_STANDARD}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}")
+        set(_template_script_path "${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX_STANDARD}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
     endif()
 
     file(READ "${_template_script_path}" _scriptContent)
@@ -858,13 +859,13 @@ function(CMagnetoPrivate__generate__set_env__script_content iBuildType oScriptCo
 endfunction()
 
 
-function(CMagnetoPrivate__get__env_vscode__file_name oFileName)
-    set(${oFileName} "${CMagnetoPrivate__ENV_VSCODE__SCRIPT_NAME}" PARENT_SCOPE)
+function(CMagnetoInternal__get__env_vscode__file_name oFileName)
+    set(${oFileName} "${CMagnetoInternal__ENV_VSCODE__SCRIPT_NAME}" PARENT_SCOPE)
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__generate__env_vscode__file_content
+    CMagnetoInternal__generate__env_vscode__file_content
 
     The file sets Path/LD_LIBRARY_PATH equal to list of dirs to 3rd-party shared libraries, which registered (created) targets are linked to.
 
@@ -873,11 +874,11 @@ endfunction()
 
     The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
 ]]
-function(CMagnetoPrivate__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TARGETS)
+function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
 
     set(_libraryDirs "")
-    CMagnetoPrivate__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
+    CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -890,40 +891,40 @@ function(CMagnetoPrivate__generate__env_vscode__file_content iBuildType oFileCon
 endfunction()
 
 
-function(CMagnetoPrivate__get__run__script_file_name oFileName)
+function(CMagnetoInternal__get__run__script_file_name oFileName)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoPrivate__RUN__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__RUN__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
     else()
-        set(${oFileName} "${CMagnetoPrivate__RUN__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__RUN__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
     endif()
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__generate__run__script_content
+    CMagnetoInternal__generate__run__script_content
 
     If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
 
     The function must be called after CMagneto__set_up__set_env__script() is called.
 ]]
-function(CMagnetoPrivate__generate__run__script_content iBuildType oScriptContent)
+function(CMagnetoInternal__generate__run__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
     set(EXECUTABLE_NAME_WE "param\\nEXECUTABLE_NAME_WE\\nparam")
     ####################################################################
 
     get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE SET)
     if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        CMagneto_warning("CMagnetoPrivate__generate__run__script_content: The project entrypoint executable is not set.")
+        CMagneto_warning("CMagnetoInternal__generate__run__script_content: The project entrypoint executable is not set.")
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
     compose_binary_OUTPUT_NAME(${_exeName} _exeName)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoPrivate__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}")
+        set(_template_script_path "${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
     else()
-        set(_template_script_path "${CMagnetoPrivate__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}")
+        set(_template_script_path "${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
     endif()
 
     file(READ "${_template_script_path}" _scriptContent)
@@ -933,20 +934,20 @@ function(CMagnetoPrivate__generate__run__script_content iBuildType oScriptConten
 endfunction()
 
 
-set(CMagnetoPrivate__TEST_BUILD_SUMMARY__FILE_NAME "test_build_summary.txt")
-set(CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE "run_tests")
-set(CMagnetoPrivate__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
-set(CMagnetoPrivate__TEST_REPORT__FILE_NAME "test_report.xml")
+set(CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME "test_build_summary.txt")
+set(CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE "run_tests")
+set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__TEST_REPORT__FILE_NAME "test_report.xml")
 
 
 #[[
-    CMagnetoPrivate__generate__run_tests__script_content
+    CMagnetoInternal__generate__run_tests__script_content
 
     The script runs "set_env" script and "ctest" with proper arguments.
 
     The function must be called after CMagneto__set_up__set_env__script() is called.
 ]]
-function(CMagnetoPrivate__generate__run_tests__script_content iBuildType oScriptContent)
+function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScriptContent)
 # Strings to replace in the template script.
     set(DIR_WITH_CTESTTESTFILE "param\\nDIR_WITH_CTESTTESTFILE\\nparam")
     set(BUILD_CONFIG "param\\nBUILD_CONFIG\\nparam")
@@ -954,18 +955,18 @@ function(CMagnetoPrivate__generate__run_tests__script_content iBuildType oScript
     ####################################################################
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoPrivate__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}")
+        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
     else()
-        set(_template_script_path "${CMagnetoPrivate__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoPrivate__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}")
+        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
     endif()
 
-    CMagnetoPrivate__is_multiconfig(IS_MULTICONFIG)
+    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
         set(_dirWithCtestTestFile "../../${SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../../${SUBDIR_SUMMARY}/${iBuildType}/${CMagnetoPrivate__TEST_REPORT__FILE_NAME}")
+        set(_reportPath "../../${SUBDIR_SUMMARY}/${iBuildType}/${CMagnetoInternal__TEST_REPORT__FILE_NAME}")
     else()
         set(_dirWithCtestTestFile "../${SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../${SUBDIR_SUMMARY}/${CMagnetoPrivate__TEST_REPORT__FILE_NAME}")
+        set(_reportPath "../${SUBDIR_SUMMARY}/${CMagnetoInternal__TEST_REPORT__FILE_NAME}")
     endif()
 
     file(READ "${_template_script_path}" _scriptContent)
@@ -977,17 +978,17 @@ function(CMagnetoPrivate__generate__run_tests__script_content iBuildType oScript
 endfunction()
 
 
-function(CMagnetoPrivate__get__run_tests__script_file_name oFileName)
+function(CMagnetoInternal__get__run_tests__script_file_name oFileName)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
     else()
-        set(${oFileName} "${CMagnetoPrivate__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoPrivate__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
+        set(${oFileName} "${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
     endif()
 endfunction()
 
 
 #[[
-    CMagnetoPrivate__set_test_discovery
+    CMagnetoInternal__set_test_discovery
 
     Sets test discovery after build time and just before execution of test bodies.
 
@@ -995,7 +996,7 @@ endfunction()
     If the function is not called, test discovery may be started during build time,
     and if paths to 3rd-party shared libraries are not set, build will fail.
 ]]
-function(CMagnetoPrivate__set_test_discovery iTestTargetName)
+function(CMagnetoInternal__set_test_discovery iTestTargetName)
     # Triggers test discovery: runs the test executable with the --gtest_list_tests argument after build time just before execution of test bodies.
     # Creates a list of all test suites and test names (without executing their bodies).
     # Parses the list of tests, and adds each one to ctest.
@@ -1005,12 +1006,12 @@ function(CMagnetoPrivate__set_test_discovery iTestTargetName)
 endfunction()
 
 
-set(CMagnetoPrivate__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_summary.cmake")
-set(CMagnetoPrivate__BUILD_SUMMARY__FILE_NAME "build_summary.txt")
+set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_summary.cmake")
+set(CMagnetoInternal__BUILD_SUMMARY__FILE_NAME "build_summary.txt")
 
 
 # Appended every time CMagneto__register_test_target(iTestTargetName) is called.
-set_property(GLOBAL PROPERTY CMagnetoPrivate__REGISTERED_TEST_TARGETS "")
+set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS "")
 
 
-set(CMagnetoPrivate__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_tests_summary.cmake")
+set(CMagnetoInternal__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_tests_summary.cmake")
