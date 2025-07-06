@@ -1,6 +1,3 @@
-set(CMagneto__MESSAGE_LOG_LEVEL TRACE)
-
-
 add_subdirectory(fields/PhoneNumberFormatter)
 
 

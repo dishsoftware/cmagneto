@@ -1,6 +1,3 @@
-set(CMagneto__MESSAGE_LOG_LEVEL TRACE)
-
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
 
 
