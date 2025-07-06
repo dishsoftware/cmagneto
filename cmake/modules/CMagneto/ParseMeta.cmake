@@ -6,6 +6,10 @@
 
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
+#[[
+    This submodule of the CMagneto module defines functions to parse project metdata from `./meta/` project directory.
+]]
+
 
 set(CMagnetoInternal__PROJECT_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Project.json")
 set(CMagnetoInternal__PACKAGING_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Packaging.json")

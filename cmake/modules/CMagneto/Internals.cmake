@@ -6,6 +6,11 @@
 
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
+#[[
+    This submodule of the CMagneto module loads other submodules and
+    defines internal functions, variables, and constants that are not associated with any specific submodule.
+]]
+
 
 # Set up CMagneto CMake module logging.
 include("${CMAKE_CURRENT_LIST_DIR}/Log.cmake")

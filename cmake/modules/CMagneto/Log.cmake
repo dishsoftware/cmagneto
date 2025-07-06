@@ -6,6 +6,10 @@
 
 include_guard(GLOBAL)
 
+#[[
+    This submodule of the CMagneto module defines logging functions and associated log level variables.
+]]
+
 
 # Set up CMagneto CMake module logging.
 ## Define default CMagneto__MESSAGE_LOG_LEVEL variable.

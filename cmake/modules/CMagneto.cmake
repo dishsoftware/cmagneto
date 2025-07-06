@@ -48,7 +48,7 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
-# Add CMagneto CMake module private vars and functions.
+# Load CMagneto submodules.
 include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Internals.cmake")
 
 
