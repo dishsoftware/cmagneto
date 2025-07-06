@@ -22,97 +22,22 @@ include(CMakePackageConfigHelpers)
 # Set constants, which may be used by scripts and other modules.
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
+# Defines general-purpose functions to simplify integration with CMake generators of build system files.
+include("${CMAKE_CURRENT_LIST_DIR}/GeneratorTools.cmake")
+
+# Define general-purpose functions for path handling.
+include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
+
+# Define general-purpose functions and variables to simplify Qt integration.
+include("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
+
 
 function(CMagnetoInternal__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
     set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
 endfunction()
 
 
-#[[
-    CMagneto__are_paths_equal
-
-    Resolves variables and "..", and then compares paths.
-]]
-function(CMagneto__are_paths_equal iPathA iPathB oAreEqual)
-    cmake_path(SET _normalizedPathA NORMALIZE "${iPathA}")
-    cmake_path(SET _normalizedPathB NORMALIZE "${iPathB}")
-    if("${_normalizedPathA}" STREQUAL "${_normalizedPathB}")
-        set(${oAreEqual} TRUE PARENT_SCOPE)
-    else()
-        set(${oAreEqual} FALSE PARENT_SCOPE)
-    endif()
-endfunction()
-
-
-function(CMagnetoInternal__does_path_contain_backslash iPath oPathContainsBackslash)
-    string(FIND "${iPath}" "\\" _backslashPos)
-    if(_backslashPos EQUAL -1)
-        set(${oPathContainsBackslash} FALSE PARENT_SCOPE)
-    else()
-        set(${oPathContainsBackslash} TRUE PARENT_SCOPE)
-    endif()
-endfunction()
-
-
-function(CMagnetoInternal__is_path_valid_for_CMakeLists iPath oErrorMessage)
-    set(_errorMessage "")
-
-    if(IS_ABSOLUTE "${_path}")
-        set(_errorMessage "${_errorMessage}Path \"${iPath}\" is absolute.\nOnly relative paths are allowed in CMakeLists.txt.\n")
-    endif()
-
-    CMagnetoInternal__does_path_contain_backslash("${iPath}" _pathContainsBackslash)
-    if(_pathContainsBackslash)
-        set(_errorMessage "${_errorMessage}Path \"${iPath}\" contains \"\\\",\nwhich is not valid on Unix systems.\nOnly \"/\" is allowed as path leafs' separator in CMakeLists.txt.\n")
-    endif()
-
-    set(${oErrorMessage} "${_errorMessage}" PARENT_SCOPE)
-endfunction()
-
-
-#[[
-    CMagnetoInternal__set__IS_MULTTCONFIG__property
-
-    Defines CMagnetoInternal__IS_MULTTCONFIG global boolean property as TRUE, if generator supports multi-config, and FALSE otherwise.
-    Calling it directly is not necessary, if CMagnetoInternal__IS_MULTTCONFIG is only retrieved using CMagnetoInternal__is_multiconfig(oIsMulticonfig).
-    However, it is better to call it as early as possible to avoid errors,
-    if get_property(oIsMulticonfig GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG) is used and called earlier, than CMagnetoInternal__is_multiconfig(oIsMulticonfig).
-]]
-function(CMagnetoInternal__set__IS_MULTTCONFIG__property)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG SET)
-    if(_isSet)
-        return()
-    endif()
-
-    if(CMAKE_VERSION VERSION_LESS "3.3.0")
-        # Bug https://cmake.org/Bug/view.php?id=15577 .
-        if(CMAKE_BUILD_TYPE)
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
-        else()
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
-        endif()
-    else()
-        if(CMAKE_CONFIGURATION_TYPES)
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
-        else()
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
-        endif()
-    endif()
-endfunction()
-
-
-function(CMagnetoInternal__is_multiconfig oIsMulticonfig)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG SET)
-    if(NOT _isSet)
-        CMagnetoInternal__set__IS_MULTTCONFIG__property()
-    endif()
-
-    get_property(_isMulticonfig GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG)
-    set(${oIsMulticonfig} ${_isMulticonfig} PARENT_SCOPE)
-endfunction()
-
-
-include(${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake)
+include("${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake")
 
 
 # Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeName) is called.
@@ -290,7 +215,7 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
             CMagnetoInternal__add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
         endif()
 
-        CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
+        CMagneto__is_multiconfig(IS_MULTICONFIG)
         if(IS_MULTICONFIG)
             set(_buildConfigs ${CMAKE_CONFIGURATION_TYPES})
         else()
@@ -320,47 +245,19 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
 endfunction()
 
 
-#[[
-    CMagnetoInternal__is_path_under_dir
+function(CMagnetoInternal__is_path_valid_for_CMakeLists iPath oErrorMessage)
+    set(_errorMessage "")
 
-    Checks, if iAbsolutePath is under iAbsoluteDirPath (in the dir or its subdirectory recursively).
-    iAbsolutePath == iAbsoluteDirPath yields TRUE.
-]]
-function(CMagnetoInternal__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPathIsUnderDir)
-    if(NOT IS_ABSOLUTE "${iAbsolutePath}")
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsolutePath is not absolute: \"${iAbsolutePath}\".")
-    endif()
-    if(NOT IS_ABSOLUTE "${iAbsoluteDirPath}")
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not absolute: \"${iAbsoluteDirPath}\".")
+    if(IS_ABSOLUTE "${_path}")
+        set(_errorMessage "${_errorMessage}Path \"${iPath}\" is absolute.\nOnly relative paths are allowed in CMakeLists.txt.\n")
     endif()
 
-    cmake_path(SET _normalizedPath NORMALIZE "${iAbsolutePath}")
-    cmake_path(SET _normalizedDirPath NORMALIZE "${iAbsoluteDirPath}")
-
-    # Ensure dir ends with a slash to avoid erroneous matches.
-    if(NOT _normalizedDirPath MATCHES "/$")
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
+    CMagneto__does_path_contain_backslash("${iPath}" _pathContainsBackslash)
+    if(_pathContainsBackslash)
+        set(_errorMessage "${_errorMessage}Path \"${iPath}\" contains \"\\\",\nwhich is not valid on Unix systems.\nOnly \"/\" is allowed as path leafs' separator in CMakeLists.txt.\n")
     endif()
 
-    string(FIND "${_normalizedPath}" "${_normalizedDirPath}" _pos)
-
-    # Check if the path starts with the dir.
-    if(_pos EQUAL 0)
-        set(${oPathIsUnderDir} TRUE PARENT_SCOPE)
-    else()
-        set(${oPathIsUnderDir} FALSE PARENT_SCOPE)
-    endif()
-endfunction()
-
-
-function(CMagnetoInternal__get_dir_relative_to_project_source_root iAbsoluteDir oDirRelativeToProjectSourceRoot)
-    cmake_path(RELATIVE_PATH iAbsoluteDir BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/" OUTPUT_VARIABLE _dirRelativeToProjectSourceRoot)
-    cmake_path(SET _dirRelativeToProjectSourceRoot NORMALIZE "${_dirRelativeToProjectSourceRoot}")
-    # Avoid "." paths, bacause some CMake generators do not handle them correctly.
-    if (_dirRelativeToProjectSourceRoot STREQUAL ".")
-        set(_dirRelativeToProjectSourceRoot "")
-    endif()
-    set(${oDirRelativeToProjectSourceRoot} "${_dirRelativeToProjectSourceRoot}" PARENT_SCOPE)
+    set(${oErrorMessage} "${_errorMessage}" PARENT_SCOPE)
 endfunction()
 
 
@@ -401,7 +298,7 @@ endfunction()
 function(CMagnetoInternal__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSourceBaseDirDescription iPaths)
     cmake_path(SET _absoluteSourceBaseDir NORMALIZE "${iAbsoluteSourceBaseDir}/")
     cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/")
-    CMagnetoInternal__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
+    CMagneto__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
     if(NOT _isSourceBaseDirUnderProjectSourceRoot)
         CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
     endif()
@@ -438,7 +335,7 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
     set(_pathsOutsideProjectSourceRoot "")
     set(_pathsOutsideSourceBaseDir "")
 
-    CMagnetoInternal__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
+    CMagneto__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
     cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/")
     CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
 
@@ -461,7 +358,7 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
         if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
             # Check if the path is under the build base dir.
             # Don't check whether the _path contains a backslash or is absolute: most probably the file is generated and added to iPaths automatically.
-            CMagnetoInternal__is_path_under_dir("${_absPath}" "${_absoluteBuildBaseDir}" _pathIsUnderBuildBaseDir)
+            CMagneto__is_path_under_dir("${_absPath}" "${_absoluteBuildBaseDir}" _pathIsUnderBuildBaseDir)
             if(_pathIsUnderBuildBaseDir)
                 list(APPEND _relPaths "${_relPath}")
                 list(APPEND _absPaths "${_absPath}")
@@ -485,7 +382,7 @@ are only allowed under the build base dir
 
         if(NOT ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR STREQUAL "USE_ANYWAY")
             # Check if the path is not under the source base dir.
-            CMagnetoInternal__is_path_under_dir("${_absPath}" "${_absoluteSourceBaseDir}" _pathIsUnderSourceBaseDir)
+            CMagneto__is_path_under_dir("${_absPath}" "${_absoluteSourceBaseDir}" _pathIsUnderSourceBaseDir)
             if(NOT _pathIsUnderSourceBaseDir)
                 set(_msg "Path \"${_path}\" is\n\toutside of the ${iAbsoluteSourceBaseDirDescription} source base dir\n\t\"${_absoluteSourceBaseDir}\"")
                 if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
@@ -502,7 +399,7 @@ are only allowed under the build base dir
         endif()
 
         # Check if the path is not under the project source root.
-        CMagnetoInternal__is_path_under_dir("${_absPath}" "${_projectSourceRoot}" _pathIsUnderProjectSourceRoot)
+        CMagneto__is_path_under_dir("${_absPath}" "${_projectSourceRoot}" _pathIsUnderProjectSourceRoot)
         if(NOT _pathIsUnderProjectSourceRoot)
             set(_msg "Path \"${_path}\" is\n\toutside of the project \"${PROJECT_NAME}\" source root\n\t\"${_projectSourceRoot}\"")
             if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
@@ -525,39 +422,6 @@ are only allowed under the build base dir
     if(NOT ARG_OUTPUT_ABS_PATHS STREQUAL "")
         set(${ARG_OUTPUT_ABS_PATHS} "${_absPaths}" PARENT_SCOPE)
     endif()
-endfunction()
-
-
-function(CMagnetoInternal__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
-    #set(QT_LRELEASE_EXECUTABLE "${QT_LRELEASE_EXECUTABLE}" CACHE FILEPATH "Path to Qt lrelease executable" FORCE)
-
-    if(DEFINED QT_LRELEASE_EXECUTABLE AND NOT QT_LRELEASE_EXECUTABLE STREQUAL "")
-        set(${oQT_LRELEASE_EXECUTABLE} "${QT_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${QT_LRELEASE_EXECUTABLE}\".")
-        return()
-    endif()
-
-    if(DEFINED QT6_LRELEASE_EXECUTABLE AND NOT QT6_LRELEASE_EXECUTABLE STREQUAL "")
-        set(${oQT_LRELEASE_EXECUTABLE} "${QT6_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${QT6_LRELEASE_EXECUTABLE}\".")
-        return()
-    endif()
-
-    if(DEFINED Qt6_LRELEASE_EXECUTABLE AND NOT Qt6_LRELEASE_EXECUTABLE STREQUAL "")
-        set(${oQT_LRELEASE_EXECUTABLE} "${Qt6_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${Qt6_LRELEASE_EXECUTABLE}\".")
-        return()
-    endif()
-
-    find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
-    get_target_property(_lreleaseLocation Qt6::lrelease LOCATION)
-    if(NOT _lreleaseLocation STREQUAL "")
-        set(${oQT_LRELEASE_EXECUTABLE} "${_lreleaseLocation}" PARENT_SCOPE)
-        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${_lreleaseLocation}\".")
-        return()
-    endif()
-
-    CMagnetoInternal__message(FATAL_ERROR "Qt lrelease not found.")
 endfunction()
 
 
@@ -598,8 +462,8 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         OUTPUT_ABS_PATHS _absQtTSFilePaths
     )
 
-    CMagnetoInternal__find__Qt_lrelease_executable(QT_LRELEASE_EXECUTABLE)
-    CMagnetoInternal__get_dir_relative_to_project_source_root("${iAbsoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
+    CMagneto__find__Qt_lrelease_executable(QT_LRELEASE_EXECUTABLE)
+    CMagneto__get_dir_relative_to_project_source_root("${iAbsoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
     foreach(_absQtTSFilePath IN LISTS _absQtTSFilePaths)
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
         cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_targetAbsoluteQtTSSourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
@@ -646,7 +510,7 @@ endfunction()
             If iInstall is FALSE, this parameter is ignored.
 ]]
 function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
-    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
 
@@ -932,7 +796,7 @@ function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScrip
         set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
     endif()
 
-    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
         set(_dirWithCtestTestFile "../../${CMagneto__SUBDIR_CTESTTESTFILE}")
         set(_reportPath "../../${CMagneto__SUBDIR_SUMMARY}/${iBuildType}/${CMagneto__TEST_REPORT__FILE_NAME}")

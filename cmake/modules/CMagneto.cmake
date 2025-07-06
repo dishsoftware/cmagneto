@@ -52,20 +52,17 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Internals.cmake")
 
 
-CMagnetoInternal__set__IS_MULTTCONFIG__property()
-
-
 function(CMagneto__print_platform_and_compiler)
     CMagnetoInternal__message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
     CMagnetoInternal__message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
     CMagnetoInternal__message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
     CMagnetoInternal__message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
 
-    CMagnetoInternal__is_multiconfig(_isGeneratorMulticonfig)
+    CMagneto__is_multiconfig(_isGeneratorMulticonfig)
     if(_isGeneratorMulticonfig)
-        CMagnetoInternal__message(STATUS "Multi-configuration build system files generator")
+        CMagnetoInternal__message(STATUS "Multi-configuration build system files' generator")
     else()
-        CMagnetoInternal__message(STATUS "Single-configuration build system files generator")
+        CMagnetoInternal__message(STATUS "Single-configuration build system files' generator")
     endif()
 endfunction()
 
@@ -253,7 +250,7 @@ function(CMagneto__set_up__library iLibName)
 
     # Install.
     ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
+    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
     CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iLibName}
@@ -362,7 +359,7 @@ function(CMagneto__set_up__executable iExeName)
 
     # Install.
     ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
+    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
     CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iExeName}
@@ -581,7 +578,7 @@ endfunction()
 function(CMagneto__set_up__build_summary__file)
     set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
 
-    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
         set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
@@ -644,7 +641,7 @@ function(CMagneto__add__build_tests__target)
 
     set(_fileDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
 
-    CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
         set(_filePath "${_fileDir}/$<CONFIG>/${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
