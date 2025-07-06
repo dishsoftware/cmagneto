@@ -60,6 +60,13 @@ function(CMagneto__print_platform_and_compiler)
     CMagnetoInternal__message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
     CMagnetoInternal__message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
     CMagnetoInternal__message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+
+    CMagnetoInternal__is_multiconfig(_isGeneratorMulticonfig)
+    if(_isGeneratorMulticonfig)
+        CMagnetoInternal__message(STATUS "Multi-configuration build system files generator")
+    else()
+        CMagnetoInternal__message(STATUS "Single-configuration build system files generator")
+    endif()
 endfunction()
 
 
