@@ -8,13 +8,21 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
     This submodule of the CMagneto module defines functions to load project metadata from `./meta/` project directory.
+    Must be loaded before loading of the CMagneto module itself.
 ]]
 
 
+## Under project root: parent for project metadata.
+## The constant is defined here, not in the Constants submodule,
+## because the constant must be available before `project(...)` command,
+## but the Constants submodule must be loaded after the CMakePackageConfigHelpers is loaded (TODO verify).
+set(CMagneto__SUBDIR_META "meta/")
+
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-set(CMagnetoInternal__PROJECT_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Project.json")
-set(CMagnetoInternal__PACKAGING_JSON__PATH "${CMAKE_SOURCE_DIR}/meta/Packaging.json")
+cmake_path(SET CMagnetoInternal__META_DIR NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_META}/")
+cmake_path(SET CMagnetoInternal__PROJECT_JSON__PATH   NORMALIZE "${CMagnetoInternal__META_DIR}/Project.json")
+cmake_path(SET CMagnetoInternal__PACKAGING_JSON__PATH NORMALIZE "${CMagnetoInternal__META_DIR}/Packaging.json")
 
 
 #[[
@@ -47,11 +55,6 @@ function(CMagneto__parse__project_json)
     set(CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE       "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"       PARENT_SCOPE)
     set(CMagneto__PROJECT_JSON__PROJECT_VERSION        "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"        PARENT_SCOPE)
 endfunction()
-
-
-# Call it immediately along with
-# `include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")`.
-CMagneto__parse__project_json()
 
 
 #[[

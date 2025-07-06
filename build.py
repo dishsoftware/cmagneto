@@ -147,7 +147,7 @@ class BuildRunner:
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
         run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
-            warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagneto__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
             BuildRunner.RUN_SCRIPT(run_tests__scriptPath)

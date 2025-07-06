@@ -92,7 +92,7 @@ set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR
 # Packaging assets of the project.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-set(CMagneto__PACKAGE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/packaging/@resources")
+set(CMagneto__PACKAGE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_CPACKCONFIG}/${CMagneto__SUBDIR_PACKAGE_RESOURCES}/")
 
 cmake_path(SET CPACK_PACKAGE_DESCRIPTION_FILE NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Description.txt")
 cmake_path(SET CPACK_RESOURCE_FILE_WELCOME NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Welcome.txt")

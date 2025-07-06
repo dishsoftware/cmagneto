@@ -1,4 +1,11 @@
 # Code Conventions
+
+
+## 1. CMake Conventions
+The same as [CMake Conventions of the `CMagneto` CMake module](./../cmake/modules/CMagneto/CodeConventions.md).
+
+
+## 2. C++ Conventions
 - Place sources of a module under `./src/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
 - The project endorses inclusions of headers of other modules within the project as:
   ```c++
@@ -8,32 +15,9 @@
    ```c++
   #include <{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp>
   ```
-- The CMagneto CMake module requires all target headers, sources and resources to be placed under the target root source directory (the same dir where the target's `CMakeLists.txt` resides).
-  Sources of the target can also be generated under the target build root directory.
+- The [`CMagneto CMake module imposes restrictions on locations of files`](./../cmake/modules/CMagneto.md#1-how-to-use-the-module).
 
-
-## CMake Conventions
-### CMake Naming Conventions
-- File of a module: `cmake/modules/ModuleName.cmake`.
-- File of a module's submodule: `cmake/modules/ModuleName/SubModule.cmake`.
-- Script file: `script_file.cmake`.
-- Function in a module: `ModuleName__function_name`.<br>
-  But, e.g. `CMagneto__find__Qt_TOOL_EXE` is also fine: the function name part must start according to the convention and may be appended with anything after the last `_`.
-- Function in a module, intended for usage only within the module: `ModuleNameInternal__function_name`.<br>
-  But, e.g. `CMagnetoInternal__find__Qt_TOOL_EXE` is also fine: the function name part must start according to the convention and may be appended with anything after the last `_`.
-- Variable in a module, outside of function: `ModuleName__varName`.
-- Constant in a module, outside of function: `ModuleName__CONST_NAME`.
-- Variable in a module, outside of function, intended for usage only within the module: `ModuleNameInternal__varName`.
-- Constant in a module, outside of function, intended for usage only within the module: `ModuleNameInternal__CONST_NAME`.
-- Parameters of functions:
-    * Purely input parameter: `iParamName`.
-    * Purely output parameter: `oParamName`.
-- Variable in a function, macro, script or CMakeLists.txt: `_varName`.
-- Constant in a function, macro, script or CMakeLists.txt: `_CONST_NAME`.
-
-
-## C++ Conventions
-### C++ Naming Conventions
+### 2.1. C++ Naming Conventions
 - Target/module (library, executable): `ModuleName`.
 - Class, struct, enum: `ClassName`.
 - Non-static field of a class/struct: `mClassFieldName`.
@@ -105,7 +89,7 @@
         ```
     * Names of headers, containing module-related definitions, are appended with `_DEFS`.
 
-#### `#include` Directives
+### 2.2. `#include` Directives Order And Blank Lines
 - A corresponding header for the current .cpp file, or a header, containing module-related definitions, for the current .hpp file.
 - This project's headers.
 - Third-party library headers (e.g., Qt, Boost).
@@ -115,12 +99,9 @@
 - The last `#include` directive is separated from the following code with two blank lines.
 - Inside each group, headers are sorted alphabetically.
 - Use `#include "..."` for this project's headers, and `#include <...>` for system/third-party/standard headers.
-
-#### Blank Lines
-- Look into [`#include` Directives](#include-directives) section.
 - Class, its fields and methods are separated with two blank lines from anything which is not field or method of the class.
 
-#### Classes and structs
+### 2.3. Classes And Structs
 Explicitly declare the special member functions, even when default behavior is acceptable. Use `= default` or `= delete` to show your intent.
 - Default constructor (if it is possible)
 - Destructor

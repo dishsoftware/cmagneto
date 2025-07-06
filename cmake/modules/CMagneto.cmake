@@ -7,44 +7,9 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
-    This module contains functions, constants and variables to set up targets, install them and generate scripts and auxilliary files.
-    Glossary:
-        - configure time:
-            CMake processes the top-level CMakeLists.txt and all subdirectories to understand your project structure, options, and dependencies.
-        - generation time:
-            CMake generates the build system files (e.g., Makefiles, Visual Studio project files) based on the configuration.
-            Dependencies and build rules are created.
-        - build time:
-            CMake builds the project using the generated build system files.
-            This is when the actual compilation and linking of the code happens.
-        - install time:
-            CMake installs the built targets to the specified locations.
-            This is when the final binaries, libraries, and resources are copied to their installation directories.
-
-        Whenever a "target" is mentioned without additinal context, it means a target created in the project using add_library() or add_executable().
-
-    How to use this file:
-        0) Include ./CMagneto/MetaLoader.cmake before "project()" command. Add the "project()" command:
-            ```cmake
-            include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
-            project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
-                DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
-                HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"
-                VERSION "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"
-                LANGUAGES CXX
-            )
-            ```
-
-        1) Include this file in root CMakeLists.txt, e.g.:
-           `include(${CMAKE_CURRENT_LIST_DIR}/CMagneto.cmake)`
-
-        2) Call `CMagneto__set_up__library()` or `CMagneto__set_up__executable()` to set up project targets.
-
-        3) Call `CMagneto__set_up__project()` to generate build stage reports, helper scripts, etc.
-           The function should be called after all targets are set up.
-
-        4) Call `CMagneto__add__build_tests__target()` to set up the tests target.
-           The function should be called after all targets with tests are added.
+    See `./CMagneto.md`.
+    Notes:
+        - Whenever a "target" is mentioned without an additinal context, it means "target created in the project using add_library() or add_executable()".
 ]]
 
 
@@ -64,47 +29,6 @@ function(CMagneto__print_platform_and_compiler)
     else()
         CMagnetoInternal__message(STATUS "Single-configuration build system files' generator")
     endif()
-endfunction()
-
-
-function(CMagneto__set_up__project)
-    # Export all targets to a single export set.
-    install(EXPORT ${PROJECT_NAME}Targets
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
-        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
-    )
-
-    # Create a template "${PROJECT_NAME}Config.cmake.in" file.
-    set(_cmake_in__content [[
-@PACKAGE_INIT@
-
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
-    ]])
-    set(_cmake_in__path "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
-    file(WRITE "${_cmake_in__path}" "${_cmake_in__content}")
-
-    # Generate the ${PROJECT_NAME}Config.cmake using the template file.
-    configure_package_config_file(
-        "${_cmake_in__path}"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
-    )
-
-    # Create the ${PROJECT_NAME}ConfigVersion.cmake file.
-    write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY SameMajorVersion
-    )
-
-    # Install the package configuration files.
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
-        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
-    )
 endfunction()
 
 
@@ -390,8 +314,8 @@ endfunction()
 
     Sets the project entry point executable.
 
-    The entry point is run by "run" script, which is set up by CMagneto__set_up__run__script().
-    The entry point executable is run when the project is started in Visual Studio.
+    The entry point executable is run by "run" script, which is set up by CMagnetoInternal__set_up__run__script().
+    The entry point executable is also run when the project is started in Visual Studio.
 
     Parameters:
     iExeName - the name of the executable that is the project entry point.
@@ -461,7 +385,7 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     endif()
 
     # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
-    set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTRC}/")
+    set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTRC}/")
     set(_baseDirDescription "target \"${iTargetName}\" QtRC")
     CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_FILES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
@@ -496,172 +420,43 @@ endfunction()
 
 
 #[[
-    CMagneto__set_up__3rd_party_shared_libs__list
+    CMagneto__finalize_project_set_up
 
-    Generates, places to build directory and installs "3rd_party_shared_libs.json" file.
-    The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
-    The file may be used to make distributable packages.
+    Sets up:
+    - CMake package configuration files, auxilliary targets, reports, helper scripts, etc.;
+    - Unit and integration test compilation and `run_tests` scripts;
+    - Packaging.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    It must be called:
+    - After all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    - From a CMakeLists.txt, where the `project(...) command is called.
 ]]
-function(CMagneto__set_up__3rd_party_shared_libs__list)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
-endfunction()
+function(CMagneto__finalize_project_set_up)
+    CMagneto__print_platform_and_compiler()
 
+    # Add source directory.
+    cmake_path(SET _PROJECT_SOURCE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
+    add_subdirectory("${_PROJECT_SOURCE_DIR}")
 
-#[[
-    CMagneto__set_up__set_env__script
+    # Generate build stage reports, helper scripts, etc.
+    CMagnetoInternal__set_up__CMake_package_export()
+    CMagnetoInternal__set_up__build_summary__file() # Required by `build.py` in the project root.
+    CMagnetoInternal__set_up__3rd_party_shared_libs__list() # Optional.
+    CMagnetoInternal__set_up__set_env__script() # Required by `run` and `run_tests` scripts.
+    CMagnetoInternal__set_up__env_vscode__file() # Required by VS Code to launch the entrypoint executable for debugging.
+    CMagnetoInternal__set_up__run__script() # Optional.
+    ####################################################
 
-    Generates, places to build directory and installs "set_env" script.
-    The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
+    # Configure tests.
+    cmake_path(SET _PROJECT_TESTS_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TESTS}/")
+    add_subdirectory("${_PROJECT_TESTS_DIR}" EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
+    CMagnetoInternal__add__build_tests__target() # Required by `build.py` in the project root.
+    CMagnetoInternal__set_up__run_tests__script() # Required by `build.py` in the project root.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
-]]
-function(CMagneto__set_up__set_env__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
-endfunction()
-
-
-#[[
-    CMagneto__set_up__env_vscode__file
-
-    Generates and places to build directory ".env.vscode" file.
-    The file sets Path/LD_LIBRARY_PATH equal to list of dirs to 3rd-party shared libraries, which registered (created) targets are linked to.
-
-    The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
-    an executable for debugging.
-
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
-]]
-function(CMagneto__set_up__env_vscode__file)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
-endfunction()
-
-
-#[[
-    CMagneto__set_up__run__script
-
-    Generates, places to build directory and installs "run" script.
-    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
-    The script runs "set_env" script and the project entrypoint executable.
-
-    The function must be called after CMagneto__set_up__set_env__script() is called.
-]]
-function(CMagneto__set_up__run__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
-endfunction()
-
-
-#[[
-    CMagneto__set_up__run_tests__script
-
-    Generates, places to build directory and installs "run_tests" script.
-    The script runs "set_env" script and "ctest" with proper arguments.
-
-    The function must be called after CMagneto__set_up__set_env__script() is called.
-    If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
-]]
-function(CMagneto__set_up__run_tests__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
-endfunction()
-
-
-#[[
-    CMagneto__set_up__build_summary__file
-
-    After all registered targets are built, the function composes, places to build directory and installs "build_summary.txt".
-
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
-    If the function is not called, "build.py" will not work correctly:
-    "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
-]]
-function(CMagneto__set_up__build_summary__file)
-    set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
-
-    CMagneto__is_multiconfig(IS_MULTICONFIG)
-    if(IS_MULTICONFIG)
-        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
-        set(_buildType $<CONFIG>)
-    else()
-        set(_summaryOutputPath "${_summaryOutputDir}/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
-        set(_buildType "${CMAKE_BUILD_TYPE}")
+    # Configure packaging.
+    ## The project only sets up packaging, if it is the top level project.
+    if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        cmake_path(SET _CPACKCONFIG_PATH NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_CPACKCONFIG}/CPackConfig.cmake")
+        include("${_CPACKCONFIG_PATH}")
     endif()
-
-    add_custom_target(build_summary ALL)
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
-    if(_registeredTargets)
-        add_dependencies(build_summary ${_registeredTargets})
-    endif()
-
-    # The file is used by "build.py" to determine whether the project is compiled.
-    add_custom_command(
-        TARGET build_summary POST_BUILD
-        COMMENT "Composing ${CMagneto__BUILD_SUMMARY__FILE_NAME}"
-        COMMAND ${CMAKE_COMMAND}
-            -DOUT="${_summaryOutputPath}"
-            -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
-            -DCMAKE_SYSTEM_VERSION="${CMAKE_SYSTEM_VERSION}"
-            -DCMAKE_GENERATOR="${CMAKE_GENERATOR}"
-            -DCMAKE_CXX_COMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
-            -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
-            -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
-            -DCMAKE_BUILD_TYPE="${_buildType}"
-            -P "${CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
-    )
-
-    # Install the file.
-    install(FILES "${_summaryOutputPath}"
-        DESTINATION "${CMagneto__SUBDIR_SUMMARY}"
-        COMPONENT ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC}
-    )
-endfunction()
-
-
-function(CMagneto__register_test_target iTestTargetName)
-    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS)
-    list(APPEND _registeredTestTargets ${iTestTargetName})
-    set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS "${_registeredTestTargets}")
-
-    # Set test discovery for the test target.
-    CMagnetoInternal__set_test_discovery(${iTestTargetName})
-endfunction()
-
-
-#[[
-    CMagneto__add__build_tests__target
-
-    Creates "build_tests" target that depends on all registered test targets.
-    Allows to build all tests with a single command, e.g.: "cmake --build . --target build_tests".
-]]
-function(CMagneto__add__build_tests__target)
-    get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS)
-    if(NOT DEFINED _registeredTestTargets OR _registeredTestTargets STREQUAL "")
-        CMagnetoInternal__message(STATUS "CMagneto__add__build_tests__target: No registered test targets.")
-    endif()
-
-    set(_fileDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
-
-    CMagneto__is_multiconfig(IS_MULTICONFIG)
-    if(IS_MULTICONFIG)
-        set(_filePath "${_fileDir}/$<CONFIG>/${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}")
-        set(_buildType $<CONFIG>)
-    else()
-        set(_filePath "${_fileDir}/${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}")
-    endif()
-
-    # Add a target that depends on all registered test targets.
-    add_custom_target(build_tests
-        DEPENDS ${_registeredTestTargets}
-        COMMENT "Compiling tests."
-    )
-
-    # The file is used by "build.py" to determine whether tests are compiled.
-    add_custom_command(
-        TARGET build_tests POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-            -DFILE_PATH="${_filePath}"
-            -DTEST_TARGETS="${_registeredTestTargets}"
-            -P "${CMagnetoInternal__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH}"
-        COMMENT "Composing ${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}"
-    )
 endfunction()

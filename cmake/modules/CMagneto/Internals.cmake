@@ -15,6 +15,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # Set up CMagneto CMake module logging.
 include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 
+# Define functions to load project metadata.
+include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader.cmake")
+
 # CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),
 # which are read by find_package() in consumer projects.
 include(CMakePackageConfigHelpers)
@@ -436,7 +439,7 @@ endfunction()
     iAbsoluteTargetSourceRoot  - Dir path, where root CMakeLists.txt of the target is defined.
     iQtTSFilePaths             - Paths of target *.ts files.
                                  Paths must be relative to iAbsoluteTargetSourceRoot.
-                                 Paths must be under `${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}`.
+                                 Paths must be under `${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTTS}`.
                                  Paths must not contain backslashes.
 ]]
 function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoot iQtTSFilePaths)
@@ -444,7 +447,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         return()
     endif()
 
-    cmake_path(SET _targetAbsoluteQtTSSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/")
+    cmake_path(SET _targetAbsoluteQtTSSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTTS}/")
 
     # Check, that all files are under _targetAbsoluteQtTSSourceRoot.
     CMagnetoInternal__handle_source_paths(
@@ -468,7 +471,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
         cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_targetAbsoluteQtTSSourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
-        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
+        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
         CMagnetoInternal__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
@@ -482,7 +485,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         list(APPEND _absQMFilePaths "${_absQMFilePath}")
 
         # Install the *.qm file.
-        cmake_path(SET _destination NORMALIZE "${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
+        cmake_path(SET _destination NORMALIZE "${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         install(FILES "${_absQMFilePath}"
             DESTINATION "${_destination}"
             COMPONENT ${CMagneto__COMPONENT__RUNTIME} # TODO
@@ -490,6 +493,114 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
     endforeach()
 
     add_custom_target("${iTargetName}__QtTS" ALL DEPENDS ${_absQMFilePaths})
+endfunction()
+
+
+#[[
+    CMagnetoInternal__set_up__CMake_package_export
+
+    Sets up CMake package configuration files:
+    1) Defines an export set for install targets;
+    2) Generates and installs:
+        2.1) *Targets.cmake
+        2.2) *Config.cmake
+        2.3) *ConfigVersion.cmake
+
+    It must be called:
+    - After all library and executable targets has been set up.
+]]
+function(CMagnetoInternal__set_up__CMake_package_export)
+    # Export all targets to a single export set.
+    install(EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
+    )
+
+    # Create a template "${PROJECT_NAME}Config.cmake.in" file.
+    set(_cmake_in__content [[
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+    ]])
+    set(_cmake_in__path "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
+    file(WRITE "${_cmake_in__path}" "${_cmake_in__content}")
+
+    # Generate the ${PROJECT_NAME}Config.cmake using the template file.
+    configure_package_config_file(
+        "${_cmake_in__path}"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
+    )
+
+    # Create the ${PROJECT_NAME}ConfigVersion.cmake file.
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    # Install the package configuration files.
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
+    )
+endfunction()
+
+
+set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_summary.cmake")
+
+
+#[[
+    CMagnetoInternal__set_up__build_summary__file
+
+    After all registered targets are built, the function composes, places to build directory and installs "build_summary.txt".
+
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    If the function is not called, "build.py" will not work correctly:
+    "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
+]]
+function(CMagnetoInternal__set_up__build_summary__file)
+    set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
+
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
+    if(IS_MULTICONFIG)
+        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
+        set(_buildType $<CONFIG>)
+    else()
+        set(_summaryOutputPath "${_summaryOutputDir}/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
+        set(_buildType "${CMAKE_BUILD_TYPE}")
+    endif()
+
+    add_custom_target(build_summary ALL)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
+    if(_registeredTargets)
+        add_dependencies(build_summary ${_registeredTargets})
+    endif()
+
+    # The file is used by "build.py" to determine whether the project is compiled.
+    add_custom_command(
+        TARGET build_summary POST_BUILD
+        COMMENT "Composing ${CMagneto__BUILD_SUMMARY__FILE_NAME}"
+        COMMAND ${CMAKE_COMMAND}
+            -DOUT="${_summaryOutputPath}"
+            -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
+            -DCMAKE_SYSTEM_VERSION="${CMAKE_SYSTEM_VERSION}"
+            -DCMAKE_GENERATOR="${CMAKE_GENERATOR}"
+            -DCMAKE_CXX_COMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
+            -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
+            -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
+            -DCMAKE_BUILD_TYPE="${_buildType}"
+            -P "${CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
+    )
+
+    # Install the file.
+    install(FILES "${_summaryOutputPath}"
+        DESTINATION "${CMagneto__SUBDIR_SUMMARY}"
+        COMPONENT ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC}
+    )
 endfunction()
 
 
@@ -640,22 +751,34 @@ function(CMagnetoInternal__generate__3rd_party_shared_libs__content iBuildType o
 endfunction()
 
 
+#[[
+    CMagnetoInternal__set_up__3rd_party_shared_libs__list
+
+    Generates, places to build directory and installs "3rd_party_shared_libs.json" file.
+    The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
+    The file may be used to make distributable packages.
+
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+]]
+function(CMagnetoInternal__set_up__3rd_party_shared_libs__list)
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+endfunction()
+
+
+# Platform-dependent script extensions.
 set(CMagnetoInternal__SCRIPT_EXTENSION_UNIX "sh")
 set(CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS "bat")
 
+# Platfrom-dependent script name suffixes.
 set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX "_Unix")
-# The differentiation is required, because Unix_standard scripts can't be run on Unix or don't do what they are intented for.
-# E.g. Android is also Unix, but not Unix-standard: some variables and functions are not available or restricted.
+## The differentiation is required, because Unix_standard scripts can't be run on Unix or don't do what they are intented for.
+## E.g. Android is also Unix, but not Unix-standard: some variables and functions are not available or restricted.
 set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX_STANDARD "_Unix_standard")
 set(CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS "_Windows")
 
-set(CMagnetoInternal__ENV_VSCODE__SCRIPT_NAME ".env.vscode")
 
 set(CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE "set_env")
 set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
-
-set(CMagnetoInternal__RUN__SCRIPT_NAME_WE "run")
-set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(CMagnetoInternal__get__set_env__script_file_name oFileName)
@@ -698,6 +821,22 @@ function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptC
 endfunction()
 
 
+#[[
+    CMagnetoInternal__set_up__set_env__script
+
+    Generates, places to build directory and installs "set_env" script.
+    The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
+
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+]]
+function(CMagnetoInternal__set_up__set_env__script)
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+endfunction()
+
+
+set(CMagnetoInternal__ENV_VSCODE__SCRIPT_NAME ".env.vscode")
+
+
 function(CMagnetoInternal__get__env_vscode__file_name oFileName)
     set(${oFileName} "${CMagnetoInternal__ENV_VSCODE__SCRIPT_NAME}" PARENT_SCOPE)
 endfunction()
@@ -730,6 +869,26 @@ function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileCo
 endfunction()
 
 
+#[[
+    CMagnetoInternal__set_up__env_vscode__file
+
+    Generates and places to build directory ".env.vscode" file.
+    The file sets Path/LD_LIBRARY_PATH equal to list of dirs to 3rd-party shared libraries, which registered (created) targets are linked to.
+
+    The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
+    an executable for debugging.
+
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+]]
+function(CMagnetoInternal__set_up__env_vscode__file)
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+endfunction()
+
+
+set(CMagnetoInternal__RUN__SCRIPT_NAME_WE "run")
+set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
+
+
 function(CMagnetoInternal__get__run__script_file_name oFileName)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(${oFileName} "${CMagnetoInternal__RUN__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
@@ -745,7 +904,7 @@ endfunction()
     If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
 
-    The function must be called after CMagneto__set_up__set_env__script() is called.
+    The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]
 function(CMagnetoInternal__generate__run__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
@@ -773,80 +932,19 @@ function(CMagnetoInternal__generate__run__script_content iBuildType oScriptConte
 endfunction()
 
 
-set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
-
-
 #[[
-    CMagnetoInternal__generate__run_tests__script_content
+    CMagnetoInternal__set_up__run__script
 
-    The script runs "set_env" script and "ctest" with proper arguments.
+    Generates, places to build directory and installs "run" script.
+    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
+    The script runs "set_env" script and the project entrypoint executable.
 
-    The function must be called after CMagneto__set_up__set_env__script() is called.
+    The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]
-function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScriptContent)
-# Strings to replace in the template script.
-    set(DIR_WITH_CTESTTESTFILE "param\\nDIR_WITH_CTESTTESTFILE\\nparam")
-    set(BUILD_CONFIG "param\\nBUILD_CONFIG\\nparam")
-    set(REPORT_PATH "param\\nREPORT_PATH\\nparam")
-    ####################################################################
-
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
-    else()
-        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
-    endif()
-
-    CMagneto__is_multiconfig(IS_MULTICONFIG)
-    if(IS_MULTICONFIG)
-        set(_dirWithCtestTestFile "../../${CMagneto__SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../../${CMagneto__SUBDIR_SUMMARY}/${iBuildType}/${CMagneto__TEST_REPORT__FILE_NAME}")
-    else()
-        set(_dirWithCtestTestFile "../${CMagneto__SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../${CMagneto__SUBDIR_SUMMARY}/${CMagneto__TEST_REPORT__FILE_NAME}")
-    endif()
-
-    file(READ "${_template_script_path}" _scriptContent)
-    string(REPLACE "${DIR_WITH_CTESTTESTFILE}" "${_dirWithCtestTestFile}" _scriptContent "${_scriptContent}")
-    string(REPLACE "${BUILD_CONFIG}" "${iBuildType}" _scriptContent "${_scriptContent}")
-    string(REPLACE "${REPORT_PATH}" "${_reportPath}" _scriptContent "${_scriptContent}")
-
-    set(${oScriptContent} "${_scriptContent}" PARENT_SCOPE)
+function(CMagnetoInternal__set_up__run__script)
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
-function(CMagnetoInternal__get__run_tests__script_file_name oFileName)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
-    else()
-        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
-    endif()
-endfunction()
-
-
-#[[
-    CMagnetoInternal__set_test_discovery
-
-    Sets test discovery after build time and just before execution of test bodies.
-
-    The function must be called after include(GoogleTest).
-    If the function is not called, test discovery may be started during build time,
-    and if paths to 3rd-party shared libraries are not set, build will fail.
-]]
-function(CMagnetoInternal__set_test_discovery iTestTargetName)
-    # Triggers test discovery: runs the test executable with the --gtest_list_tests argument after build time just before execution of test bodies.
-    # Creates a list of all test suites and test names (without executing their bodies).
-    # Parses the list of tests, and adds each one to ctest.
-    gtest_discover_tests(${iTestTargetName}
-        DISCOVERY_MODE PRE_TEST # Not using of DISCOVERY_MODE POST_BUILD allows to not add ENVIRONMENT argument which is $<CONFIG>-dependent.
-    )
-endfunction()
-
-
-set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_summary.cmake")
-
-
-# Appended every time CMagneto__register_test_target(iTestTargetName) is called.
-set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS "")
-
-
-set(CMagnetoInternal__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_tests_summary.cmake")
+# Define functions for GoogleTest integration.
+include("${CMAKE_CURRENT_LIST_DIR}/TestTools.cmake")

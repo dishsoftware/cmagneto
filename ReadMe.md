@@ -10,13 +10,15 @@ The template features:
 - GitLab CI integration for automated building and packaging
 
 The template is shipped with the following major components:
-- CMake module [`CMagneto`](./cmake/modules/CMagneto.cmake) contains functions to easily define CMake targets, generate build stage reports and helper scripts, etc;
+- CMake module [`CMagneto`](./cmake/modules/CMagneto.md) contains functions to easily define CMake targets,<br>
+  generate build stage reports and helper scripts, etc;
 - One-command build script [`./build.py`](./build.py);
 - Pre-configured CTest files in [`./tests/`](./tests/);
 - Pre-configured CPack files in [`./packaging/`](./packaging/);
 - Pre-configured Dockerfiles and GitLab CI pipeline in [`./CI/`](./CI/);
 - Pre-configured VS Code files at [`./.vscode/`](./.vscode/);
 - Template configuration files in [`./meta/`](./meta/).
+- Installation package resources in [`./packaging/@resources/`](./packaging/@resources/).
 
 ## License
 This project is licensed under the [MIT License](./LICENSE).
@@ -37,7 +39,7 @@ Look into [`./docs/CodeConventions.md`](./docs/CodeConventions.md) .
 ---
 
 
-# Configuration
+# 1. Configuration
 
 The project is designed to be easily configurable.
 
@@ -46,18 +48,20 @@ Before building the project locally, adjust values in:
 - [`./meta/Project.json`](./meta/Project.json)
 - [`./meta/Packaging.json`](./meta/Packaging.json)
 
-Then proceed to the [Build](#build) section.
+and installation package resources in [`./packaging/@resources/`](./packaging/@resources/).
+
+Then proceed to the [Build](#2-build) section.
 
 
-# Build
+# 2. Build
 
-## Build Tools
-- CMake 3.28 or later
-- C++ 17 (or later) compiler (GCC, MinGW, MSVC)
-- Python 3.10 or later
-- Graphviz (optional, for target graph)
-- Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files)
-- Qt Installer Framework 4.10 or later (optional, for packaging)
+## 2.1. Build Tools
+- CMake 3.28 or later. Bound by the oldest tested version.
+- C++ 17 (or later) compiler (GCC, MinGW, MSVC). Bound by the project source code and CMagneto CMake module.
+- Python 3.10 or later. Bound by the oldest tested version.
+- Graphviz (optional, for target graph).
+- Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files). Bound by the oldest tested version.
+- Qt Installer Framework 4.10 or later (optional, for packaging). Bound by the oldest tested version.
 
 ### Notes:
 - If CMake target dependency graph is desired, Graphviz must be installed.
@@ -70,26 +74,26 @@ Another option is to compile it from [sources](https://download.qt.io/official_r
 Add the Qt Installer Framework’s bin directory to your system `PATH`.
 Example: `C:\Qt\Tools\QtInstallerFramework\4.10\bin`.
 
-## Dependencies
+## 2.2. Dependencies
 - Qt 6
 - Boost
 - GoogleTest (downloaded automatically by CMake during project generation)
 
-## One-Command Build Script
+## 2.3. One-Command Build Script
 Use [`./build.py`](./build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the CMake project and generate installation packages.<br>
 To see available options, run:
 ```bash
 python ./build.py --help
 ```
 The [`./build.py`](./build.py) supports multiple toolsets (pairs of a build system and a compiler). The toolsets were tested on the following platforms:
-- [Ubuntu 24](#ubuntu-24) (Make and GCC);
-- [Windows 11](#windows-11-with-ucrt) (Make and MinGW UCRT);
-- [Windows 11](#windows-11-with-msvs-2022-and-msvc) (MSVS2022 and MSVC).
+- [Ubuntu 24](#24-ubuntu-24) (Make and GCC);
+- [Windows 11](#25-windows-11-with-ucrt) (Make and MinGW UCRT);
+- [Windows 11](#26-windows-11-with-msvs-2022-and-msvc) (MSVS2022 and MSVC).
 
-## Ubuntu 24
+## 2.4. Ubuntu 24
 Use the `UnixMakefiles_GCC` toolset.<br>
 
-### Installation Of Dependecies
+### 2.4.1. Installation Of Dependecies
 To install most of build tools and dependencies (all, but Qt Installer Framework), run:
 ```bash
 sudo apt update && sudo apt-get install -y \
@@ -98,28 +102,28 @@ sudo apt update && sudo apt-get install -y \
   qt6-tools-dev \
   libboost-all-dev
 ```
-### VS Code:
+### 2.4.2. VS Code
 Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
 **Caveat:** [`./.vscode/launch.json`](./.vscode/launch.json) contains a hardcoded path to an entrypoint-executable. If you edit files in [`./meta/`](./meta/), the path may break.
 
-## Windows 11 With UCRT
+## 2.5. Windows 11 With UCRT
 Use the `MinGWMakefiles_MinGW` toolset.<br>
 
-### Installation Of Dependecies
+### 2.5.1. Installation Of Dependecies
 MSYS2 is expected to be installed in `C:/msys64`.<br>
 To install the required dependencies, run:
 ```bash
 pacman -S mingw-w64-ucrt-x86_64-qt6 mingw-w64-ucrt-x86_64-boost-libs
 ```
-### VS Code:
+### 2.5.2. VS Code
 Define the environment variable `MSYS2_HOME=C:\msys64`.<br>
 Use the `Windows_MinGW_UCRT` configuration in the `C/C++ Configuration` settings.<br>
 **Caveat:** [`./.vscode/launch.json`](./.vscode/launch.json) contains a hardcoded path to an entrypoint-executable. If you edit files in [`./meta/`](./meta/), the path may break.
 
-## Windows 11 With MSVS 2022 and MSVC
+## 2.6. Windows 11 With MSVS 2022 and MSVC
 Use the `VS2022_MSVC` toolset.<br>
 
-### Installation Of Dependecies
+### 2.6.1. Installation Of Dependecies
 Tested with:
 - Qt 6.8.2. The easiest way to get it - run QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source and install "Qt/Qt 6.8.2/MSVC 2022 64-bit" component.
 - Boost 1.87.0. The easiest way to get it - install from [Prebuilt windows binaries](https://sourceforge.net/projects/boost/files/boost-binaries/) at https://www.boost.org/users/download/.
@@ -127,46 +131,46 @@ Tested with:
 Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
 Define the environment variable `BOOST_MSVC2022_DIR`, which refers to a directory with compatible Boost files. E.g. `BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3`.
 
-### VS Code:
+### 2.6.2. VS Code
 Define the environment variable `VC2022ToolsInstallDir`. <br>
 E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.<br>
 Use the `Windows_MSVC2022` configuration in the `C/C++ Configuration` settings.<br>
 **Caveat:** [`./.vscode/launch.json`](./.vscode/launch.json) contains a hardcoded path to an entrypoint-executable. If you edit files in [`./meta/`](./meta/), the path may break.
 
 
-# Run
+# 3. Run
 For builds made with:
-- [Ubuntu 24](#ubuntu-24) (Make and GCC);
-- [Windows 11](#windows-11-with-ucrt) (Make and MinGW UCRT);
+- [Ubuntu 24](#24-ubuntu-24) (Make and GCC);
+- [Windows 11](#25-windows-11-with-ucrt) (Make and MinGW UCRT);
 
 compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
 For other configurations (e.g., Windows MSVC 2022), it may be required to set paths to shared libraries of the dependecies before running.<br>
 <br>
-CMake module [`CMagneto`](./cmake/modules/CMagneto.cmake) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
+CMake module [`CMagneto`](./cmake/modules/CMagneto.md) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
 - `set_env` script sets environment variables for runtime.
 - `run` script executes the entrypoint-executable.
 
-Look for `CMagneto__set_up__set_env__script()` and `CMagneto__set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.cmake) CMake module.
+Look for `CMagnetoInternal__set_up__set_env__script()` and `CMagnetoInternal__set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.md) CMake module.
 
 
-# CI
+# 4. CI
 Adjust values in [`./meta/CI.json`](./meta/CI.json) before any actions with Docker images and CI pipelines.
 
-## Docker
+## 4.1. Docker
 Use [`./CI/Docker/build_docker_image.py`](./CI/Docker/build_docker_image.py) to build Docker images:
 ```bash
 python ./CI/Docker/build_docker_image.py --help
 ```
 
-## GitLab
+## 4.2. GitLab
 - [`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. These must be passed to [`./CI/Docker/build_docker_image.py`](./CI/Docker/build_docker_image.py) before triggering CI.
 - Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/pipeline.yml`](./CI/GitLab/pipeline.yml)\".
 
-### CI Triggers
+### 4.2.1. CI Triggers
 The [`./CI/GitLab/pipeline.yml`](./CI/GitLab/pipeline.yml) instructs GitLab to create a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
 To create the pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
 
-### CI Artifact Output
+### 4.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
 `https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
 
