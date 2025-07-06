@@ -4,60 +4,37 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
-
 cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
+# set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
 
 # Configure project attributes.
+## Define functions to load project data.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/parse_meta.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
+CMagneto__parse__project_json()
 
 
-project("${PROJECT_JSON__COMPANY_NAME_SHORT}_${PROJECT_JSON__PROJECT_NAME_BASE}"
-    DESCRIPTION "${PROJECT_JSON__PROJECT_DESCRIPTION}"
-    HOMEPAGE_URL "${PROJECT_JSON__PROJECT_HOMEPAGE}"
-    VERSION "${PROJECT_JSON__PROJECT_VERSION}"
+project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
+    DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
+    HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"
+    VERSION "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"
     LANGUAGES CXX
 )
 
 
+# Set project-global options.
+## Minimum language standard is bound by the project source code and GoogleTest CMake module.
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON) # GoogleTest requires at least C++17.
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 # Include custom CMake modules.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
+
+
 include(CMagneto)
-
-print_platform_and_compiler()
-set__IS_MULTTCONFIG__property()
-
-
-# Add source directories.
-add_subdirectory("src/${PROJECT_JSON__COMPANY_NAME_SHORT}/${PROJECT_JSON__PROJECT_NAME_BASE}")
-
-
-# Generate build stage reports, helper scripts, etc.
-set_up_project()
-set_up__3rd_party_shared_libs__list()
-set_up__set_env__script()
-set_up__env_vscode__file()
-set_up__run__script()
-set_up__run_tests__script()
-set_up__build_summary__file()
-
-
-# Configure tests.
-add_subdirectory(tests EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
-add__build_tests__target()
-
-
-# Configure packaging.
-## The project only tries to set up packaging, if it is the top level project.
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-    include(${CMAKE_CURRENT_SOURCE_DIR}/packaging/CPackConfig.cmake)
-endif()
+CMagneto__finalize_project_set_up()

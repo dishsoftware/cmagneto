@@ -1,0 +1,292 @@
+<!--
+Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+SPDX-License-Identifier: MIT
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+-->
+
+# CMagneto CMake Module
+CMagneto module consists of [`./CMagneto.cmake`](./CMagneto.cmake), submodules and scripts under [`./CMagneto/`](./CMagneto/) and this file.<br>
+CMagneto module is designed to easily set up and enforce a unified project structure, build logic, and tooling integration for C++ projects.
+
+
+## Requirements
+- CMake 3.28 or above. Bound by the oldest tested version.
+- C++17 or above. Bound by the GoogleTest CMake module.
+- Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files). Bound by the oldest tested version.
+
+## Code Conventions
+Look into [`./CMagneto/CodeConventions.md`](./CMagneto/CodeConventions.md).
+---
+
+
+## 1. How To Use The Module
+0) The module mandates or endorses restrictions on locations of:
+    - target headers, sources and resources;
+    - test targets' headers, sources and resources;
+    - packaging resources.
+    Adhere to the **project structure**:
+
+```text
+ProjectRoot/
+├── CMakeLists.txt                   # [Project] top-level ([project] root) `CMakeLists.txt`. Define project here.
+├── meta/
+│   ├── project.json
+│   ├── packaging.json
+│   └── ...
+├── cmake/
+│   └── modules/
+│       ├── CMagneto.md              # This file.
+│       ├── CMagneto.cmake           # The CMagneto CMake module entrypoint.
+│       ├── CMagneto/                # CMagneto CMake module submodules, scripts and resources.
+│       └── ...
+├── src/                             # Project source root.
+│   └── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
+│       └── {ProjectNameBase}/       # ^
+│           └── TargetName/          # Target source root.
+|               ├── CMakeLists.txt   # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
+|               ├── Header.hpp
+|               ├── Source.cpp
+|               ├── Code/
+│               |   ├── Header.hpp
+│               |   ├── Source.cpp
+│               |   ├── Code/
+|               |   |   └── ...
+│               |   └── ...
+|               ├── ...
+|               └── @resources/      # Target resources root.
+|                   ├── QtRC/        # Resources to embed into target's binary using Qt RCC. Under this dir, the resources can be nested arbitrary.
+|                   ├── QtTS/        # Qt `*.ts` files to compile `*.qm` external resource files. Under this dir, `*.ts` files can be nested arbitrary.
+|                   └── other/       # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
+├── tests/                           # Project tests' root. Under this dir, test headers and sources can be nested arbitrary.
+|   ├── CMakeLists.txt               # Set up GoogleTest here.
+│   ├── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
+│   |   └── {ProjectNameBase}/       # ^
+│   |       ├── TargetName/          # Test target source root.
+|   |       |   ├── CMakeLists.txt   # Add test target TESTS_TargetName here and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+|   |       |   |                    # ^ The naming of test targets is not mandated, but endorsed.
+|   |       |   ├── TEST_Header.hpp  # The naming is not mandated, but endorsed.
+|   |       |   ├── TEST_Source.cpp  # The naming is not mandated, but endorsed.
+│   |       |   └── ...
+│   |       └── ...
+│   └── ...                          # Tests for external projects can be placed here.
+├── packaging/
+│   ├── CPackConfig.cmake
+│   └── @resources/                  # Package resources root. Under this dir, the resources can be nested arbitrary.
+└── ...
+```
+**Note: until the end of the list paths are shown relative to the project root.**
+
+1) Adjust values in config files inside [`./meta/`](./../../meta/) directory:
+    - [`./meta/Project.json`](./../../meta/Project.json)
+    - [`./meta/Packaging.json`](./../../meta/Packaging.json)
+    - etc.
+
+    and installation package resources in [`./packaging/@resources/`](./../../packaging/@resources/).
+
+2) Include the [`MetaLoader`](./CMagneto/MetaLoader.cmake) submodule in the top-level (root) `CMakeLists.txt` before `project()` command.<br>
+    Use `CMagneto__PROJECT_JSON__*` variables, defined by `CMagneto__parse__project_json()` function of the submodule, in the `project()` command:
+    ```cmake
+    cmake_minimum_required(VERSION 3.28)
+    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
+    CMagneto__parse__project_json()
+    project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
+        DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
+        HOMEPAGE_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}"
+        VERSION "${CMagneto__PROJECT_JSON__PROJECT_VERSION}"
+        LANGUAGES CXX
+    )
+    ```
+
+3) Set project-global options, e.g.:
+    ```cmake
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    ```
+
+4) Include the [`CMagneto`](./CMagneto.cmake) module in the root `CMakeLists.txt`:
+    ```cmake
+    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto.cmake")
+    ```
+
+5) Add library targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../src/):
+    ```cmake
+    CMagneto__get_library_type(TargetName _LIB_TYPE)
+    add_library(TargetName ${_LIB_TYPE}) # Don't add any files to the target in the command.
+    target_link_libraries(TargetName ...)
+    CMagneto__set_up__library(TargetName
+        ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
+    )
+    ```
+
+6) Add executable targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../src/):
+    ```cmake
+    add_executable(TargetName) # Don't add any files to the target in the command.
+    target_link_libraries(TargetName ...)
+    CMagneto__set_up__executable(TargetName
+        ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
+    )
+    ```
+
+7) If the project defines an executable target, which is considered as the entrypoint, call
+    ```cmake
+    CMagneto__set_project_entrypoint(EntrypointTargetName)
+    ```
+    to configure `run` scripts.
+
+8) Embed resources, located under `@resources/QtRC/` target subdirectory, into the target's binary using Qt RCC:
+    ```cmake
+    CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
+        ... # List the files to embed here.
+    )
+    ```
+
+9) Keep [`./tests/CMakeLists.txt`](./../../tests/CMakeLists.txt) as is,<br>
+   except `add_subdirectory(...)` commands, if you don't stick to the endorsed `{CompanyName_SHORT}/{ProjectNameBase}/{TargetName}/` nesting scheme.
+
+10) Add test targets in `CMakeLists.txt` under subdirectories of [`./tests/`](./../../tests/):
+    ```cmake
+    set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
+
+    add_executable(${_TESTS_TargetName}
+        TEST_Source.cpp
+    )
+
+    target_link_libraries(${_TESTS_TargetName}
+        PRIVATE
+            GTest::gtest_main
+            TargetName
+    )
+
+    CMagneto__register_test_target(${_TESTS_TargetName})
+    ```
+
+11) After all targets are set up, call: `CMagneto__finalize_project_set_up()`.
+    The function Sets up:
+    - CMake package configuration files, auxilliary targets, reports, helper scripts, etc.;
+    - Unit and integration test compilation and `run_tests` scripts;
+    - Packaging.
+
+
+## 2. General CMake Knowledge
+Why was this section even added?
+
+A developer seldom sets up projects - starting from scratch is even rarer. As a result, deep CMake knowledge is unlikely to land into a developer's procedural memory. The situation is aggravated by how extremely unintuitive CMake is as a language: ask someone unfamiliar with it, what `CMAKE_CURRENT_LIST_DIR` and `CMAKE_CURRENT_SOURCE_DIR` variables are or try to use a comma-containing string variable in a generator expression.<br>
+
+At the same time, the [`official CMake documentation`](https://cmake.org/documentation/) **sucks**. At best, it helps clarify minor details - like function arguments and options - but beyond that, it’s practically useless. There’s little to no explanation of how features are intended to be used or what the recommended practices are. And I can't say any other material I've come across, devoted to CMake, is good enough either. I recommend [`Scott C. Professional CMake: A Practical Guide [Internet]. 2018`](https://crascit.com/professional-cmake/). But even after reading the book, a developer still needs to vigorously experiment, google, and chat with AI bots to figure out how things actually work. And I hate that. I want clear, concise instructions all in one place and available offline. At least, this section covers the major sources of confusion.
+
+### 2.1. Stages (Times) of the CMake Build Pipeline
+#### 2.1.1. Configuration Time
+CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
+
+#### 2.1.2. Generation Time
+CMake generates the build system files (e.g., Makefiles, Visual Studio project files) based on the configuration.
+These files are written under the specified **build directory**.
+Build rules and dependency graphs are created at this stage.
+
+#### 2.1.3. Build Time
+The actual build process begins.
+CMake (or the underlying build system) compiles the source code and links the binaries using the previously generated build system files.
+
+#### 2.1.4. Test Build Time (optional)
+The project’s unit and integration test targets are compiled if they exist. This stage may be part of the regular [Build Time](#213-build-time) or triggered separately.
+
+#### 2.1.5. Install Time
+If installation rules are defined, CMake installs the built targets and other specified files under the defined **install directory**.
+Note that the **install directory** is not necessarily the same location, where [**installation packages**](#216-package-time-optional) (if generated) will install the software.
+Optionally, during this phase, CMake may adjust RPATH (or similar) properties of the compiled binaries.
+
+#### 2.1.6. Package Time (optional)
+CPack invokes one or more package generators to create **installation packages** in a specified output directory.
+A package is essentially an archive that contains selected files from the **install directory**, along with optional metadata (e.g., for package managers like APT). The **installation packages** are the primary distribution format for the software, intended to be installed and run on a users' devices locally (not SaaS).
+
+In addition to the specific actions described above, CMake can be programmed to perform virtually any task during the build, install, and package times.
+
+
+### 2.2. CMake variables
+#### 2.2.1. `CMAKE_CURRENT_LIST_DIR`, `CMAKE_CURRENT_SOURCE_DIR` and `CMAKE_SOURCE_DIR`
+Consider these variables not as variables, but rather as getter functions: their returned values vary depending on the call context without explicit reassignment.
+
+`CMAKE_CURRENT_LIST_DIR`<br>
+**Definition**: The directory of the currently parsed CMake file, which can be a `CMakeLists.txt` or any included `.cmake` file or script.<br>
+**Scope**: changes whenever<br>
+1) CMake enters a new file, including modules or scripts included by include() or find_package();
+2)  `CMAKE_CURRENT_LIST_DIR` is evaluated in file outside of a function.<br>
+    If `CMAKE_CURRENT_LIST_DIR` is evaluated in a function, it evaluates to the directory of a file where the function is called (recursively).<br>
+
+**Typical use**: To refer to the directory of the script file currently being executed, often used inside .cmake modules to locate helper files or resources relative to the module.
+
+`CMAKE_CURRENT_SOURCE_DIR`<br>
+**Definition**: The directory where the currently processed CMakeLists.txt file is located.<br>
+**Scope**: Changes when CMake processes a new CMakeLists.txt via `add_subdirectory()` or similar.<br>
+**Typical use**: To refer to the current source directory of the build, usually the directory of the current subproject or subdirectory being configured.
+
+`CMAKE_SOURCE_DIR` equals `CMAKE_CURRENT_SOURCE_DIR`, if:
+1) The project is not nested within a parent project directory (the project is the top level project);
+2) Even if the project is nested within a parent project directory, the nested project is considered top level, if:
+    * 2.1) CMake is run from the nested project root directory;
+    * 2.2) The parent project calls `ExternalProject_Add()` to add the nested project.
+
+Proper names that should have been used instead of the confusing-as-hell CMake variable names mentioned above:<br>
+`CMAKE_CURRENT_LIST_DIR`   is `CMAKE_CURRENT_SCRIPT_DIR`.<br>
+`CMAKE_CURRENT_SOURCE_DIR` is `CMAKE_CURRENT_CMAKELISTS_DIR`.<br>
+`CMAKE_SOURCE_DIR `        is `CMAKE_ROOT_CMAKELISTS_DIR`.<br>
+
+
+### 2.3. CMake Commands
+#### 2.3.1. Setting Up A Target
+##### 2.3.1.1. `PRIVATE`, `INTERFACE` and `PUBLIC`
+In CMake, the keywords `PRIVATE`, `INTERFACE`, and `PUBLIC` control the propagation of properties such as sources, include directories, compile definitions, and compile options between targets:
+- `PRIVATE`: The property is used only when compiling the target itself. It is not exposed to consumers of the target.
+- `INTERFACE`: The property is not used when compiling the target, but is used by targets that link against the target.
+- `PUBLIC`: The property is used both when compiling the target and when compiling consumers that link against the target.
+In other words, PUBLIC is effectively a union of `PRIVATE` and `INTERFACE`.
+
+##### 2.3.1.2. Adding source files to an existing target
+```cmake
+target_sources(${iLibName}
+    PUBLIC
+        $<BUILD_INTERFACE:${iPublicHeadersAbsolutePaths}>
+        # Absolute path means something like $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/algo.h>.
+        # See https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/ .
+        $<INSTALL_INTERFACE:${iPublicHeaders}>
+    INTERFACE
+        $<BUILD_INTERFACE:${iInterfaceHeaders}>
+        $<INSTALL_INTERFACE:${iInterfaceHeaders}>
+    PRIVATE
+        $<BUILD_INTERFACE:${iPrivateHeaders}>
+        $<BUILD_INTERFACE:${iSources}>
+        # iSources should always be PRIVATE, because they are part of library's internal implementation, not its public interface.
+        # When to mark .cpp as PUBLIC sources:
+        # 1) You want them to appear in IDEs under both iLibName and consumer targets;
+        # 2) You want to share source files across multiple libraries and compile them in multiple targets.
+)
+```
+
+
+| A file marked with a keyword | Compiled into iLibName | Shown in IDE as a file of iLibName | Shown in IDE as a file of consumer targets within the same project | Exported via `install(EXPORT)` [^1] | Compiled by consumers [^2] |
+| ----------- | ---------- | --------- | ---------- | ---------- | -----------------------|
+| `PRIVATE`   | ✅ Yes    | ✅ Yes    | ❌ No     | ❌ No      | ❌ No                  |
+| `PUBLIC`    | ✅ Yes    | ✅ Yes    | ✅ Yes    | ✅ Yes     | ❌ No                  |
+| `INTERFACE` | ❌ No     | ❌ No     | ✅ Yes    | ✅ Yes     | ❌ Yes, if `#include`d |
+
+[^1]: Compilation, installed files, and included paths are not affected. Essentially, `INTERFACE` or `PUBLIC` file is shown in IDEs as a file of consumer targets within consumer projects.<br>
+A BS-explanation: a metadata, added to *Config.cmake files, if a file is marked is marked with `INTERFACE` or `PUBLIC`, is used only by CMake-aware IDEs and tooling for display/navigation purposes.
+
+[^2]: Depends on what functions are in the header:
+| Function in header                       | Compiled by         | Safe? | Note                                                                   |
+| ---------------------------------------- | ------------------- | ----- | ---------------------------------------------------------------------- |
+| Template                                 | Consumer            | ✅   | Must be header-defined                                                 |
+| Inline non-template                      | Consumer            | ✅   | One (same signature) definition allowed across translation units (TUs) |
+| Static non-template                      | Consumer            | ✅   | Separate copy per TU                                                   |
+| Regular non-template (not inline/static) | Consumer & iLibName | ❌   | Causes multiple definitions — **don't do this**                        |
+
+or what class methods are in the header:
+| Method in header                          | Compiled by                   | Safe? | Notes                                                      |
+| ----------------------------------------- | ----------------------------- | ----- | ---------------------------------------------------------- |
+| Class declaration (no method definitions) | iLibName                      | ✅   | Header-only declarations are fine                          |
+| Class with inline method definitions      | Consumer                      | ✅   | Like inline functions — must be same across TUs            |
+| Class with template method definitions    | Consumer                      | ✅   | Must be header-only (or explicitly instantiated elsewhere) |
+| Class with non-inline method definitions  | ❌ Linker error if in header | ❌   | Multiple definitions across TUs — ODR violation            |
+| Class with only static methods in header  | Consumer                      | ✅   | Each TU gets its own copy (like static functions)          |

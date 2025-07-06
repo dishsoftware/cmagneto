@@ -1,4 +1,11 @@
 # Code Conventions
+
+
+## 1. CMake Conventions
+The same as [CMake Conventions of the `CMagneto` CMake module](./../cmake/modules/CMagneto/CodeConventions.md).
+
+
+## 2. C++ Conventions
 - Place sources of a module under `./src/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
 - The project endorses inclusions of headers of other modules within the project as:
   ```c++
@@ -8,20 +15,20 @@
    ```c++
   #include <{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp>
   ```
+- The [`CMagneto CMake module imposes restrictions on locations of files`](./../cmake/modules/CMagneto.md#1-how-to-use-the-module).
 
-## C++ Conventions
-### C++ Naming Conventions
-- Target/module (library, executable): `CamelCase`.
-- Class, struct, enum: `CamelCase`.
-- Non-static field of a class/struct: `mCamelCase`.
-- Static non-const field of a class/struct: `sCamelCase`.
-- Static const field of a class/struct, enum option, const standalone variable: `kCamelCase`.
-- Standalone non-const variable: `camelCase`.
+### 2.1. C++ Naming Conventions
+- Target/module (library, executable): `ModuleName`.
+- Class, struct, enum: `ClassName`.
+- Non-static field of a class/struct: `mClassFieldName`.
+- Static non-const field of a class/struct: `sClassFieldName`.
+- Static const field of a class/struct, enum option, const standalone variable: `kConstName`.
+- Standalone non-const variable: `varName`.
 - Function's/method's parameter:
-    * Purely input parameter: `iCamelCase`.
-    * Purely output parameter: `oCamelCase`.
-    * Parameter that serves as both input and output: `ioCamelCase`.
-- Standalone function or class'/struct' method (static or regular): `camelCase`.
+    * Purely input parameter: `iParamName`.
+    * Purely output parameter: `oParamName`.
+    * Parameter that serves as both input and output: `ioParamName`.
+- Standalone function or class'/struct' method (static or regular): `functionName`.
 - Namespace:
     * Namespaces, encapsulating entities of a module, are composed as: `{CompanyName_SHORT}::{ProjectNameBase}::{ModuleName}`.
         ```c++
@@ -82,7 +89,7 @@
         ```
     * Names of headers, containing module-related definitions, are appended with `_DEFS`.
 
-#### `#include` Directives
+### 2.2. `#include` Directives Order And Blank Lines
 - A corresponding header for the current .cpp file, or a header, containing module-related definitions, for the current .hpp file.
 - This project's headers.
 - Third-party library headers (e.g., Qt, Boost).
@@ -92,12 +99,9 @@
 - The last `#include` directive is separated from the following code with two blank lines.
 - Inside each group, headers are sorted alphabetically.
 - Use `#include "..."` for this project's headers, and `#include <...>` for system/third-party/standard headers.
-
-#### Blank Lines
-- Look into [`#include` Directives](#include-directives) section.
 - Class, its fields and methods are separated with two blank lines from anything which is not field or method of the class.
 
-#### Classes and structs
+### 2.3. Classes And Structs
 Explicitly declare the special member functions, even when default behavior is acceptable. Use `= default` or `= delete` to show your intent.
 - Default constructor (if it is possible)
 - Destructor

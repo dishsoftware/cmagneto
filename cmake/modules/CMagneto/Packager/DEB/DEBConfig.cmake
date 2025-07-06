@@ -10,7 +10,7 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # set(CPACK_DEB_COMPONENT_INSTALL ON)
 
 # Maintainer field in the Debian control file.
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${PACKAGING_JSON__PACKAGE_MAINTAINER}")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CMagneto__PACKAGING_JSON__PACKAGE_MAINTAINER}")
 
 # Purpose of the software as a logical category within the Debian package ecosystem.
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
