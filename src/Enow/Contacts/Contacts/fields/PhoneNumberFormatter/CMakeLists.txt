@@ -89,7 +89,7 @@ target_link_libraries(PhoneNumberFormatter
 
 
 # Building and installation
-CMagneto__set_up_library(PhoneNumberFormatter
+CMagneto__set_up__library(PhoneNumberFormatter
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS

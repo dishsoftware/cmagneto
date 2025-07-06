@@ -140,7 +140,7 @@ endfunction()
 include(${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake)
 
 
-# Appended every time CMagneto__set_up_library(iLibName) or CMagneto__set_up_executable(iExeName) is called.
+# Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeName) is called.
 set_property(GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS "")
 
 
@@ -221,7 +221,7 @@ endfunction()
 
     iBuildType - build type (e.g. Debug, Release, etc.). To get non-build-type-specific paths, set it to "NonSpecific". Case doesn't matter.
 
-    Paths to shared libs for iTargetName are filled when CMagneto__set_up_library(iTargetName) or CMagneto__set_up_executable(iTargetName) are called.
+    Paths to shared libs for iTargetName are filled when CMagneto__set_up__library(iTargetName) or CMagneto__set_up__executable(iTargetName) are called.
 ]]
 function(CMagnetoInternal__get_paths_to_shared_libs iTargetName iBuildType oPaths)
     string(TOUPPER "${iBuildType}" _buildType)
@@ -770,7 +770,7 @@ endfunction()
 
     Returns content of the "3rd_party_shared_libs.json" file.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagnetoInternal__generate__3rd_party_shared_libs__content iBuildType oContent)
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)
@@ -833,7 +833,7 @@ endfunction()
 
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
@@ -872,7 +872,7 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TARGETS)

@@ -41,7 +41,7 @@ add_subdirectory("src/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__
 
 
 # Generate build stage reports, helper scripts, etc.
-CMagneto__set_up_project()
+CMagneto__set_up__project()
 CMagneto__set_up__3rd_party_shared_libs__list()
 CMagneto__set_up__set_env__script()
 CMagneto__set_up__env_vscode__file()

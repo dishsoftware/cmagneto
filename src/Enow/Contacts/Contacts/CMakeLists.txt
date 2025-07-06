@@ -110,7 +110,7 @@ target_link_libraries(Contacts
 
 
 # Building and installation
-CMagneto__set_up_library(Contacts
+CMagneto__set_up__library(Contacts
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS

@@ -57,7 +57,7 @@ target_link_libraries(GUI PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Contacts)
 
 
 # Building and installation
-CMagneto__set_up_executable(GUI
+CMagneto__set_up__executable(GUI
     HEADERS
         ${_QtMOC_HEADERS} ${_regular_HEADERS}
     SOURCES

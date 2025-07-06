@@ -38,9 +38,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
         1) Include this file in root CMakeLists.txt, e.g.:
            `include(${CMAKE_CURRENT_LIST_DIR}/CMagneto.cmake)`
 
-        2) Call `CMagneto__set_up_library()` or `CMagneto__set_up_executable()` to set up project targets.
+        2) Call `CMagneto__set_up__library()` or `CMagneto__set_up__executable()` to set up project targets.
 
-        3) Call `CMagneto__set_up_project()` to generate build stage reports, helper scripts, etc.
+        3) Call `CMagneto__set_up__project()` to generate build stage reports, helper scripts, etc.
            The function should be called after all targets are set up.
 
         4) Call `CMagneto__add__build_tests__target()` to set up the tests target.
@@ -63,7 +63,7 @@ function(CMagneto__print_platform_and_compiler)
 endfunction()
 
 
-function(CMagneto__set_up_project)
+function(CMagneto__set_up__project)
     # Export all targets to a single export set.
     install(EXPORT ${PROJECT_NAME}Targets
         NAMESPACE ${PROJECT_NAME}::
@@ -143,7 +143,7 @@ endfunction()
 
 
 #[[
-    CMagneto__set_up_library
+    CMagneto__set_up__library
 
     Sets up the build and installation process for the library target `${iLibName}`.
     This function also registers `${iLibName}` in the global property `CMagnetoInternal__REGISTERED_TARGETS`.
@@ -175,7 +175,7 @@ endfunction()
       Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
-function(CMagneto__set_up_library iLibName)
+function(CMagneto__set_up__library iLibName)
     CMagnetoInternal__check_target_name_validity(${iLibName})
     add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
 
@@ -247,7 +247,7 @@ function(CMagneto__set_up_library iLibName)
     # Install.
     ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iLibName}
         EXPORT ${PROJECT_NAME}Targets
@@ -296,7 +296,7 @@ endfunction()
 
 
 #[[
-    CMagneto__set_up_executable
+    CMagneto__set_up__executable
 
     Sets up the build and installation process for the executable target `${iExeName}`.
     This function also registers `${iExeName}` in the global property `CMagnetoInternal__REGISTERED_TARGETS`.
@@ -326,7 +326,7 @@ endfunction()
       Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
-function(CMagneto__set_up_executable iExeName)
+function(CMagneto__set_up__executable iExeName)
     CMagnetoInternal__check_target_name_validity(${iExeName})
     add_executable(${PROJECT_NAME}::${iExeName} ALIAS ${iExeName})
 
@@ -356,7 +356,7 @@ function(CMagneto__set_up_executable iExeName)
     # Install.
     ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iExeName}
         EXPORT ${PROJECT_NAME}Targets
@@ -435,7 +435,7 @@ endfunction()
     - Do not use the following scheme/pattern of embedding resources with Qt RCC:
       ```cmake
       qt_add_resources(_qrcSources "*.qrc")
-      CMagneto__set_up_executable(${iTargetName}
+      CMagneto__set_up__executable(${iTargetName}
           SOURCES
               ${_qrcSources}
       )
@@ -498,7 +498,7 @@ endfunction()
     The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
     The file may be used to make distributable packages.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__3rd_party_shared_libs__list)
     CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
@@ -511,7 +511,7 @@ endfunction()
     Generates, places to build directory and installs "set_env" script.
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__set_env__script)
     CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
@@ -527,7 +527,7 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__env_vscode__file)
     CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
@@ -567,7 +567,7 @@ endfunction()
 
     After all registered targets are built, the function composes, places to build directory and installs "build_summary.txt".
 
-    The function must be called after all CMagneto__set_up_library(iLibName) and CMagneto__set_up_executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
     If the function is not called, "build.py" will not work correctly:
     "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
 ]]
