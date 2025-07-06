@@ -7,7 +7,7 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 #[[
-    This submodule of the CMagneto module loads other submodules and
+    This submodule of the CMagneto module loads other submodules (except MetaLoader and Packager) and
     defines internal functions, variables, and constants that are not associated with any specific submodule.
 ]]
 
@@ -31,13 +31,13 @@ include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
 # Define general-purpose functions and variables to simplify Qt integration.
 include("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
 
+# Load the QtWrappers CMake module to use a workaround for a bug in MOC preprocessor of Qt 5.6.0 and newer.
+include("${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake")
+
 
 function(CMagnetoInternal__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
     set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
 endfunction()
-
-
-include("${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake")
 
 
 # Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeName) is called.
