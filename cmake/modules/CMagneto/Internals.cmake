@@ -10,41 +10,15 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # Set up CMagneto CMake module logging.
 include("${CMAKE_CURRENT_LIST_DIR}/Log.cmake")
 
-
 # CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),
 # which are read by find_package() in consumer projects.
 include(CMakePackageConfigHelpers)
 
+# Set constants, which may be used by scripts and other modules.
+include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
-# Build/install subdirectory names.
-set(SUBDIR_SOURCE "src/")
-set(SUBDIR_STATIC "lib/")
-set(SUBDIR_SHARED "lib/") # On Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts.
-set(SUBDIR_EXECUTABLE "bin/")
-set(SUBDIR_INCLUDE "include/")
-set(SUBDIR_CMAKE "lib/cmake/")
-set(SUBDIR_RESOURCES "@resources/")
-set(SUBDIR_QTRC "QtRC/")
-set(SUBDIR_QTTS "QtTS/")
-set(SUBDIR_TMP "TMP/")
-set(SUBDIR_SUMMARY "summary/")
-set(SUBDIR_CTESTTESTFILE "tests/")
-set(SUBDIR_PACKAGES "packages/")
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_STATIC}/")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_SHARED}/")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/")
-
-set(COMPONENT__RUNTIME "Runtime")
-set(COMPONENT__DEVELOPMENT "Development")
-set(COMPONENT__BUILD_MACHINE_SPECIFIC "BuildMachineSpecific")
-
-# These postfixes do not affect executable target output names.
-set(CMAKE_DEBUG_POSTFIX "_D")
-set(CMAKE_RELWITHDEBINFO_POSTFIX "_RDI")
-set(CMAKE_MINSIZEREL_POSTFIX "_MSR")
-
-function(compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
+function(CMagnetoInternal__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
     set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
 endfunction()
 
@@ -375,7 +349,7 @@ endfunction()
 
 
 function(CMagnetoInternal__get_dir_relative_to_project_source_root iAbsoluteDir oDirRelativeToProjectSourceRoot)
-    cmake_path(RELATIVE_PATH iAbsoluteDir BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/" OUTPUT_VARIABLE _dirRelativeToProjectSourceRoot)
+    cmake_path(RELATIVE_PATH iAbsoluteDir BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/" OUTPUT_VARIABLE _dirRelativeToProjectSourceRoot)
     cmake_path(SET _dirRelativeToProjectSourceRoot NORMALIZE "${_dirRelativeToProjectSourceRoot}")
     # Avoid "." paths, bacause some CMake generators do not handle them correctly.
     if (_dirRelativeToProjectSourceRoot STREQUAL ".")
@@ -393,7 +367,7 @@ endfunction()
         - OUTPUT_REL_PATHS: normalized paths relative to iAbsoluteSourceBaseDir;
         - OUTPUT_ABS_PATHS: normalized absolute paths.
 
-    iPaths must reside under the project source root `${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}`, otherwise fails,
+    iPaths must reside under the project source root `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`, otherwise fails,
     unless a set of allowed locations is overridden by named parameters.
 
     Parameters:
@@ -404,7 +378,7 @@ endfunction()
 
     Named input arguments:
         ALLOW_PATHS_UNDER_BUILD_BASE_DIR   - Flag (optional).
-                                             If defined, paths under the build base dir `${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/`
+                                             If defined, paths under the build base dir `${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/`
                                              are also allowed. Paths under the dir can be absolute or contain backslashes.
 
         IF_PATH_OUTSIDE_SOURCE_BASE_DIR    - String (optional). Accepts one of: USE_ANYWAY (default), WARN, FAIL.
@@ -421,7 +395,7 @@ endfunction()
 ]]
 function(CMagnetoInternal__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSourceBaseDirDescription iPaths)
     cmake_path(SET _absoluteSourceBaseDir NORMALIZE "${iAbsoluteSourceBaseDir}/")
-    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/")
+    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/")
     CMagnetoInternal__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
     if(NOT _isSourceBaseDirUnderProjectSourceRoot)
         CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
@@ -460,7 +434,7 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
     set(_pathsOutsideSourceBaseDir "")
 
     CMagnetoInternal__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
-    cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/")
+    cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/")
     CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
 
     foreach(_path IN LISTS iPaths)
@@ -593,7 +567,7 @@ endfunction()
     iAbsoluteTargetSourceRoot  - Dir path, where root CMakeLists.txt of the target is defined.
     iQtTSFilePaths             - Paths of target *.ts files.
                                  Paths must be relative to iAbsoluteTargetSourceRoot.
-                                 Paths must be under `${iAbsoluteTargetSourceRoot}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}`.
+                                 Paths must be under `${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}`.
                                  Paths must not contain backslashes.
 ]]
 function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoot iQtTSFilePaths)
@@ -601,7 +575,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         return()
     endif()
 
-    cmake_path(SET _targetAbsoluteQtTSSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/")
+    cmake_path(SET _targetAbsoluteQtTSSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/")
 
     # Check, that all files are under _targetAbsoluteQtTSSourceRoot.
     CMagnetoInternal__handle_source_paths(
@@ -625,7 +599,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
         cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_targetAbsoluteQtTSSourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
-        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
+        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
         CMagnetoInternal__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
@@ -639,10 +613,10 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         list(APPEND _absQMFilePaths "${_absQMFilePath}")
 
         # Install the *.qm file.
-        cmake_path(SET _destination NORMALIZE "${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
+        cmake_path(SET _destination NORMALIZE "${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         install(FILES "${_absQMFilePath}"
             DESTINATION "${_destination}"
-            COMPONENT ${COMPONENT__RUNTIME} # TODO
+            COMPONENT ${CMagneto__COMPONENT__RUNTIME} # TODO
         )
     endforeach()
 
@@ -653,22 +627,22 @@ endfunction()
 #[[
     CMagnetoInternal__set_up_file
 
-    Places to build directory and installs to ${SUBDIR_EXECUTABLE} a file with name and content,
+    Places to build directory and installs to ${CMagneto__SUBDIR_EXECUTABLE} a file with name and content,
     which are returned by fileNameGetter(oFileName) and contentGetter(iConfig oContent) functions.
     If a generator supports multi-config, temporary files are generated for every configuration (Debug, Release, etc.) during
-    configure/generation time and copied to ${SUBDIR_EXECUTABLE} during build of corresponding $<CONFIG>.
+    configure/generation time and copied to ${CMagneto__SUBDIR_EXECUTABLE} during build of corresponding $<CONFIG>.
     oFileName - is also a name of an utility target (created within the function) that depends on the output file, if multi-config generator is used.
     It must not contain characters that are not allowed in target names; dots are replaced with underscores.
 
     parameters:
         iAddExePermission - if TRUE, the file is given execute permission (Unix only).
-        iInstall - if TRUE, the file is installed to ${SUBDIR_EXECUTABLE}.
+        iInstall - if TRUE, the file is installed to ${CMagneto__SUBDIR_EXECUTABLE}.
         iComponentName - name of the component to which the file is installed.
             If iInstall is FALSE, this parameter is ignored.
 ]]
 function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
     CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
-    set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${SUBDIR_TMP}")
+    set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
 
     if(IS_MULTICONFIG)
@@ -683,7 +657,7 @@ function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iA
         endforeach()
 
         # Add a command to copy the file at build time.
-        set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/$<CONFIG>/${_fileName}")
+        set(_filePath "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_EXECUTABLE}/$<CONFIG>/${_fileName}")
         set(_tmpFilePath "${_TMP_FILE_DIR}/$<CONFIG>/${_fileName}")
 
         set(_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_tmpFilePath}" "${_filePath}")
@@ -707,7 +681,7 @@ function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iA
     else()
         cmake_language(CALL ${iFileNameGetterName} _fileName)
         cmake_language(CALL ${iContentGetterName} "${CMAKE_BUILD_TYPE}" _fileContent)
-        set(_filePath "${CMAKE_BINARY_DIR}/${SUBDIR_EXECUTABLE}/${_fileName}")
+        set(_filePath "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_EXECUTABLE}/${_fileName}")
 
         # Add the file to build dir(s) at configire time.
         file(WRITE "${_filePath}" "${_fileContent}")
@@ -724,14 +698,14 @@ function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iA
             # Explicit setting of permissions only provide a bit of additional security.
                 install(
                     FILES "${_filePath}"
-                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    DESTINATION "${CMagneto__SUBDIR_EXECUTABLE}"
                     COMPONENT "${iComponentName}"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                 )
             else()
                 install(
                     FILES "${_filePath}"
-                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    DESTINATION "${CMagneto__SUBDIR_EXECUTABLE}"
                     COMPONENT "${iComponentName}"
                     PERMISSIONS OWNER_READ OWNER_WRITE
                 )
@@ -740,13 +714,13 @@ function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iA
             if(UNIX AND iAddExePermission)
                 install(
                     FILES "${_filePath}"
-                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    DESTINATION "${CMagneto__SUBDIR_EXECUTABLE}"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                 )
             else()
                 install(
                     FILES "${_filePath}"
-                    DESTINATION "${SUBDIR_EXECUTABLE}"
+                    DESTINATION "${CMagneto__SUBDIR_EXECUTABLE}"
                     PERMISSIONS OWNER_READ OWNER_WRITE
                 )
             endif()
@@ -915,7 +889,7 @@ function(CMagnetoInternal__generate__run__script_content iBuildType oScriptConte
         return()
     endif()
     get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
-    compose_binary_OUTPUT_NAME(${_exeName} _exeName)
+    CMagnetoInternal__compose_binary_OUTPUT_NAME(${_exeName} _exeName)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(_template_script_path "${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
@@ -930,10 +904,7 @@ function(CMagnetoInternal__generate__run__script_content iBuildType oScriptConte
 endfunction()
 
 
-set(CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME "test_build_summary.txt")
-set(CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE "run_tests")
-set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
-set(CMagnetoInternal__TEST_REPORT__FILE_NAME "test_report.xml")
+set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 #[[
@@ -958,11 +929,11 @@ function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScrip
 
     CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_dirWithCtestTestFile "../../${SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../../${SUBDIR_SUMMARY}/${iBuildType}/${CMagnetoInternal__TEST_REPORT__FILE_NAME}")
+        set(_dirWithCtestTestFile "../../${CMagneto__SUBDIR_CTESTTESTFILE}")
+        set(_reportPath "../../${CMagneto__SUBDIR_SUMMARY}/${iBuildType}/${CMagneto__TEST_REPORT__FILE_NAME}")
     else()
-        set(_dirWithCtestTestFile "../${SUBDIR_CTESTTESTFILE}")
-        set(_reportPath "../${SUBDIR_SUMMARY}/${CMagnetoInternal__TEST_REPORT__FILE_NAME}")
+        set(_dirWithCtestTestFile "../${CMagneto__SUBDIR_CTESTTESTFILE}")
+        set(_reportPath "../${CMagneto__SUBDIR_SUMMARY}/${CMagneto__TEST_REPORT__FILE_NAME}")
     endif()
 
     file(READ "${_template_script_path}" _scriptContent)
@@ -976,9 +947,9 @@ endfunction()
 
 function(CMagnetoInternal__get__run_tests__script_file_name oFileName)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
+        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
     else()
-        set(${oFileName} "${CMagnetoInternal__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
+        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -1003,7 +974,6 @@ endfunction()
 
 
 set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_DIR}/generate_build_summary.cmake")
-set(CMagnetoInternal__BUILD_SUMMARY__FILE_NAME "build_summary.txt")
 
 
 # Appended every time CMagneto__register_test_target(iTestTargetName) is called.

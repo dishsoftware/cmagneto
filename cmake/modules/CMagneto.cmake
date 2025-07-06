@@ -74,8 +74,8 @@ function(CMagneto__set_up__project)
     # Export all targets to a single export set.
     install(EXPORT ${PROJECT_NAME}Targets
         NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
-        COMPONENT ${COMPONENT__DEVELOPMENT}
+        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
     )
 
     # Create a template "${PROJECT_NAME}Config.cmake.in" file.
@@ -91,7 +91,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
     configure_package_config_file(
         "${_cmake_in__path}"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
+        INSTALL_DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
     )
 
     # Create the ${PROJECT_NAME}ConfigVersion.cmake file.
@@ -105,8 +105,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION ${SUBDIR_CMAKE}/${PROJECT_NAME}
-        COMPONENT ${COMPONENT__DEVELOPMENT}
+        DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
+        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
     )
 endfunction()
 
@@ -237,12 +237,12 @@ function(CMagneto__set_up__library iLibName)
 
     target_include_directories(${iLibName}
         PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}> # Set up compiler.
-            $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}> # Set up *Config.cmake.
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}> # Set up compiler.
+            $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
     )
 
     # Set up binary.
-    compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
+    CMagnetoInternal__compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
     set_target_properties(${iLibName}
         PROPERTIES
             EXPORT_NAME ${iLibName}
@@ -259,28 +259,28 @@ function(CMagneto__set_up__library iLibName)
     install(TARGETS ${iLibName}
         EXPORT ${PROJECT_NAME}Targets
         ARCHIVE
-            DESTINATION ${SUBDIR_STATIC}
-            COMPONENT ${COMPONENT__DEVELOPMENT}
+            DESTINATION ${CMagneto__SUBDIR_STATIC}
+            COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         LIBRARY
-            DESTINATION ${SUBDIR_SHARED}
-            COMPONENT ${COMPONENT__RUNTIME}
+            DESTINATION ${CMagneto__SUBDIR_SHARED}
+            COMPONENT ${CMagneto__COMPONENT__RUNTIME}
         RUNTIME
-            DESTINATION ${SUBDIR_EXECUTABLE}
-            COMPONENT ${COMPONENT__RUNTIME}
+            DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
+            COMPONENT ${CMagneto__COMPONENT__RUNTIME}
         FILE_SET public_headers
-            DESTINATION "${SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
-            COMPONENT ${COMPONENT__DEVELOPMENT}
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         FILE_SET interface_headers
-            DESTINATION "${SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
-            COMPONENT ${COMPONENT__DEVELOPMENT}
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         # INCLUDES
         #     DESTINATION ...
         #     ...
         # is redundant, because it is effectively set by:
         # target_include_directories(${iLibName}
         #     PUBLIC
-        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>
-        #         $<INSTALL_INTERFACE:${SUBDIR_INCLUDE}>
+        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
+        #         $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}>
         # )
         # above.
     )
@@ -349,11 +349,11 @@ function(CMagneto__set_up__executable iExeName)
     ####################################################################
 
     target_include_directories(${iExeName} PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}>  # Set up compiler.
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>  # Set up compiler.
     )
 
     # Set up binary.
-    compose_binary_OUTPUT_NAME(${iExeName} _binaryOutputName)
+    CMagnetoInternal__compose_binary_OUTPUT_NAME(${iExeName} _binaryOutputName)
     set_target_properties(${iExeName}
         PROPERTIES
             EXPORT_NAME ${iExeName}
@@ -367,8 +367,8 @@ function(CMagneto__set_up__executable iExeName)
 
     install(TARGETS ${iExeName}
         EXPORT ${PROJECT_NAME}Targets
-        DESTINATION ${SUBDIR_EXECUTABLE}
-        COMPONENT ${COMPONENT__RUNTIME}
+        DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
+        COMPONENT ${CMagneto__COMPONENT__RUNTIME}
     )
     ####################################################################
 
@@ -464,7 +464,7 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     endif()
 
     # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
-    set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTRC}/")
+    set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_RESOURCES}/${CMagneto__SUBDIR_QTRC}/")
     set(_baseDirDescription "target \"${iTargetName}\" QtRC")
     CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_FILES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
@@ -486,11 +486,11 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
             install(TARGETS ${_resourceTargetName}
                 EXPORT ${PROJECT_NAME}Targets
                 ARCHIVE
-                    DESTINATION ${SUBDIR_STATIC}
-                    COMPONENT ${COMPONENT__DEVELOPMENT}
+                    DESTINATION ${CMagneto__SUBDIR_STATIC}
+                    COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
                 LIBRARY
-                    DESTINATION ${SUBDIR_SHARED}
-                    COMPONENT ${COMPONENT__RUNTIME}
+                    DESTINATION ${CMagneto__SUBDIR_SHARED}
+                    COMPONENT ${CMagneto__COMPONENT__RUNTIME}
             )
         endforeach()
     endif()
@@ -508,7 +508,7 @@ endfunction()
     The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__3rd_party_shared_libs__list)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -521,7 +521,7 @@ endfunction()
     The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__set_env__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -537,7 +537,7 @@ endfunction()
     The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
 ]]
 function(CMagneto__set_up__env_vscode__file)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -551,7 +551,7 @@ endfunction()
     The function must be called after CMagneto__set_up__set_env__script() is called.
 ]]
 function(CMagneto__set_up__run__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -565,7 +565,7 @@ endfunction()
     If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
 ]]
 function(CMagneto__set_up__run_tests__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -579,14 +579,14 @@ endfunction()
     "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
 ]]
 function(CMagneto__set_up__build_summary__file)
-    set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
+    set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
 
     CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}")
+        set(_summaryOutputPath "${_summaryOutputDir}/$<CONFIG>/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
     else()
-        set(_summaryOutputPath "${_summaryOutputDir}/${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}")
+        set(_summaryOutputPath "${_summaryOutputDir}/${CMagneto__BUILD_SUMMARY__FILE_NAME}")
         set(_buildType "${CMAKE_BUILD_TYPE}")
     endif()
 
@@ -599,7 +599,7 @@ function(CMagneto__set_up__build_summary__file)
     # The file is used by "build.py" to determine whether the project is compiled.
     add_custom_command(
         TARGET build_summary POST_BUILD
-        COMMENT "Composing ${CMagnetoInternal__BUILD_SUMMARY__FILE_NAME}"
+        COMMENT "Composing ${CMagneto__BUILD_SUMMARY__FILE_NAME}"
         COMMAND ${CMAKE_COMMAND}
             -DOUT="${_summaryOutputPath}"
             -DCMAKE_SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
@@ -614,8 +614,8 @@ function(CMagneto__set_up__build_summary__file)
 
     # Install the file.
     install(FILES "${_summaryOutputPath}"
-        DESTINATION "${SUBDIR_SUMMARY}"
-        COMPONENT ${COMPONENT__BUILD_MACHINE_SPECIFIC}
+        DESTINATION "${CMagneto__SUBDIR_SUMMARY}"
+        COMPONENT ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC}
     )
 endfunction()
 
@@ -642,14 +642,14 @@ function(CMagneto__add__build_tests__target)
         CMagnetoInternal__message(STATUS "CMagneto__add__build_tests__target: No registered test targets.")
     endif()
 
-    set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")
+    set(_fileDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
 
     CMagnetoInternal__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_filePath "${_fileDir}/$<CONFIG>/${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/$<CONFIG>/${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}")
         set(_buildType $<CONFIG>)
     else()
-        set(_filePath "${_fileDir}/${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}")
+        set(_filePath "${_fileDir}/${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}")
     endif()
 
     # Add a target that depends on all registered test targets.
@@ -665,6 +665,6 @@ function(CMagneto__add__build_tests__target)
             -DFILE_PATH="${_filePath}"
             -DTEST_TARGETS="${_registeredTestTargets}"
             -P "${CMagnetoInternal__GENERATE_TEST_BUILD_SUMMARY__SCRIPT_PATH}"
-        COMMENT "Composing ${CMagnetoInternal__TEST_BUILD_SUMMARY__FILE_NAME}"
+        COMMENT "Composing ${CMagneto__TEST_BUILD_SUMMARY__FILE_NAME}"
     )
 endfunction()

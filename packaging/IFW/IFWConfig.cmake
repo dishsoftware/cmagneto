@@ -26,14 +26,14 @@ set(CPACK_IFW_PACKAGE_LOGO ${CMAKE_CURRENT_LIST_DIR}/PackageLogo.png)
 
 
 ## Component setup.
-cpack_ifw_configure_component(${COMPONENT__RUNTIME}
+cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
     DISPLAY_NAME "${COMPONENT__RUNTIME___NAME}"
         ru "${COMPONENT__RUNTIME___NAME_ru}"
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
         ru "${COMPONENT__RUNTIME___DESCRIPTION_ru}"
 )
 
-cpack_ifw_configure_component(${COMPONENT__DEVELOPMENT}
+cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}
     DISPLAY_NAME "${COMPONENT__DEVELOPMENT___NAME}"
         ru "${COMPONENT__DEVELOPMENT___NAME_ru}"
     DESCRIPTION "${COMPONENT__DEVELOPMENT___DESCRIPTION}"
