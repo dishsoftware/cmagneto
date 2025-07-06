@@ -10,7 +10,7 @@ include_guard(GLOBAL)
 # Set up CMagneto CMake module logging.
 ## Define default CMagneto__MESSAGE_LOG_LEVEL variable.
 set(CMagneto__MESSAGE_LOG_LEVEL "${CMAKE_MESSAGE_LOG_LEVEL}"
-    CACHE STRING "CMagneto log level. Allows to enable more verbose, than CMAKE_MESSAGE_LOG_LEVEL, output from CMagneto__message(), without affecting output of message()."
+    CACHE STRING "CMagneto log level. Allows to enable more verbose, than CMAKE_MESSAGE_LOG_LEVEL, output from CMagnetoInternal__message(), without affecting output of message()."
 )
 
 ## The set of levels must be a subset of the CMAKE_MESSAGE_LOG_LEVEL values (modes) with a preserved order (descending severity).
@@ -62,7 +62,7 @@ function(CMagneto__make_colored iText iANSIColorCode oColoredText)
     # It fails to find a match, returning -1, even when the string looks identical.
     # list(FIND ANSI_COLOR_CODES "${iANSIColorCode}" _colorIdx)
     # if(_colorIdx EQUAL -1)
-    #    CMagneto__message(WARNING "CMagneto__make_colored: Invalid ANSI color code. Returning iText without color.")
+    #    CMagnetoInternal__message(WARNING "CMagneto__make_colored: Invalid ANSI color code. Returning iText without color.")
     #    set(oColoredText "${iText}" PARENT_SCOPE)
     #    return()
     # endif()
@@ -78,7 +78,7 @@ foreach(_level IN LISTS CMagnetoInternal__MESSAGE_LOG_LEVELS)
 endforeach()
 list(FIND CMagnetoInternal__MESSAGE_LOG_LEVELS "${CMagnetoInternal__MESSAGE_LOG_LEVEL__DEFAULT}" CMagneto__MESSAGE_LOG_LEVEL__DEFAULT_idx)
 if(CMagneto__MESSAGE_LOG_LEVEL__DEFAULT_idx EQUAL -1)
-    CMagneto__message(FATAL_ERROR "Invalid logics in CMagneto CMake module: CMagnetoInternal__MESSAGE_LOG_LEVEL__DEFAULT must be equal to one of strings from CMagnetoInternal__MESSAGE_LOG_LEVELS.")
+    CMagnetoInternal__message(FATAL_ERROR "Invalid logics in CMagneto CMake module: CMagnetoInternal__MESSAGE_LOG_LEVEL__DEFAULT must be equal to one of strings from CMagnetoInternal__MESSAGE_LOG_LEVELS.")
 endif()
 
 
@@ -122,7 +122,7 @@ Returning index of ${CMagnetoInternal__MESSAGE_LOG_LEVEL__DEFAULT}.
             ]=])
 
             string(CONFIGURE "${_msgTemplate}" _msg)
-            CMagneto__message(WARNING "${_msg}")
+            CMagnetoInternal__message(WARNING "${_msg}")
 
             set(${oMessageLogLevelIdx} "${CMagneto__MESSAGE_LOG_LEVEL__DEFAULT_idx}" PARENT_SCOPE)
         else()
@@ -132,35 +132,20 @@ Returning index of ${CMagnetoInternal__MESSAGE_LOG_LEVEL__DEFAULT}.
 endfunction()
 
 
-#[[
-    CMagneto__prefixed_colored_message
-
-    If the current CMAKE_MESSAGE_LOG_LEVEL >= iMessageLogLevel,
-    logs iText with iMessagePrefix colored with an appropriate to iMessageLogLevel color.
-    Intended to be used outside of the CMagneto CMake module.
-]]
-function(CMagneto__colored_prefixed_message iMessageLogLevel iMessagePrefix iText)
-    CMagnetoInternal__get_message_log_level_idx("${iMessageLogLevel}" _messageLogLevel_idx)
-    CMagnetoInternal__make_colored_as_log_level_idx("${iMessagePrefix} ${iText}" ${_messageLogLevel_idx} oColoredText)
-    message(${iMessageLogLevel} "${oColoredText}")
-endfunction()
-
-
-set(CMagneto__MESSAGE_PREFIX "[CMagneto]")
+set(CMagnetoInternal__MESSAGE_PREFIX "[CMagneto]")
 
 
 #[[
-    CMagneto__message
+    CMagnetoInternal__message
 
     If the current CMAKE_MESSAGE_LOG_LEVEL >= iMessageLogLevel or CMagneto__MESSAGE_LOG_LEVEL >= iMessageLogLevel,
     logs iText with iMessagePrefix colored with an appropriate to iMessageLogLevel color.
-    Intended to be used within the CMagneto CMake module.
 
     Notes:
-    - It would be more convenient to read warnings and errors if CMagneto__message were a macro instead of a function,
+    - It would be more convenient to read warnings and errors if CMagnetoInternal__message was a macro instead of a function,
       but that would pollute the caller’s namespace with internal temporary variables.
 ]]
-function(CMagneto__message iMessageLogLevel iText)
+function(CMagnetoInternal__message iMessageLogLevel iText)
     CMagnetoInternal__get_message_log_level_idx("${iMessageLogLevel}" _messageLogLevel_idx)
     CMagnetoInternal__get_message_log_level_idx("${CMagneto__MESSAGE_LOG_LEVEL}" _MESSAGE_LOG_LEVEL_idx)
     CMagnetoInternal__get_message_log_level_idx("${CMAKE_MESSAGE_LOG_LEVEL}" _CMAKE_MESSAGE_LOG_LEVEL_idx)
@@ -170,8 +155,25 @@ function(CMagneto__message iMessageLogLevel iText)
         return()
     endif()
 
-    CMagnetoInternal__make_colored_as_log_level_idx("${CMagneto__MESSAGE_PREFIX} ${iText}" ${_messageLogLevel_idx} oColoredText)
+    CMagnetoInternal__make_colored_as_log_level_idx("${CMagnetoInternal__MESSAGE_PREFIX} ${iText}" ${_messageLogLevel_idx} oColoredText)
     set(CMAKE_MESSAGE_LOG_LEVEL "${iMessageLogLevel}")
+    message(${iMessageLogLevel} "${oColoredText}")
+endfunction()
+
+
+#[[
+    CMagneto__message
+
+    If the current CMAKE_MESSAGE_LOG_LEVEL >= iMessageLogLevel,
+    logs iText with iMessagePrefix colored with an appropriate to iMessageLogLevel color.
+
+    Notes:
+    - It would be more convenient to read warnings and errors if CMagneto__message was a macro instead of a function,
+      but that would pollute the caller’s namespace with internal temporary variables.
+]]
+function(CMagneto__message iMessageLogLevel iMessagePrefix iText)
+    CMagnetoInternal__get_message_log_level_idx("${iMessageLogLevel}" _messageLogLevel_idx)
+    CMagnetoInternal__make_colored_as_log_level_idx("${iMessagePrefix} ${iText}" ${_messageLogLevel_idx} oColoredText)
     message(${iMessageLogLevel} "${oColoredText}")
 endfunction()
 

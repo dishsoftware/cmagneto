@@ -56,10 +56,10 @@ CMagnetoInternal__set__IS_MULTTCONFIG__property()
 
 
 function(CMagneto__print_platform_and_compiler)
-    CMagneto__message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
-    CMagneto__message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-    CMagneto__message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
-    CMagneto__message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+    CMagnetoInternal__message(STATUS "System Name: ${CMAKE_SYSTEM_NAME}")
+    CMagnetoInternal__message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+    CMagnetoInternal__message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+    CMagnetoInternal__message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
 endfunction()
 
 
@@ -138,7 +138,7 @@ function(CMagneto__get_library_type iLibName oLibType)
     if(${_libType} STREQUAL "SHARED")
         add_definitions(-D${_cacheVarName}) # Define preproceccor macro LIB_LIBNAME_SHARED.
     endif()
-    CMagneto__message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
+    CMagnetoInternal__message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
 endfunction()
 
 
@@ -247,7 +247,7 @@ function(CMagneto__set_up_library iLibName)
     # Install.
     ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
-    CMagneto__message(TRACE "CMagneto__set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up_library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iLibName}
         EXPORT ${PROJECT_NAME}Targets
@@ -356,7 +356,7 @@ function(CMagneto__set_up_executable iExeName)
     # Install.
     ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagnetoInternal__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
-    CMagneto__message(TRACE "CMagneto__set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up_executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
     install(TARGETS ${iExeName}
         EXPORT ${PROJECT_NAME}Targets
@@ -397,17 +397,17 @@ function(CMagneto__set_project_entrypoint iExeName)
     if(_isSet)
         get_property(_exeName GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE)
         if(NOT (_exeName STREQUAL iExeName))
-            CMagneto__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The project entry point executable is already set to \"${_exeName}\".")
+            CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The project entry point executable is already set to \"${_exeName}\".")
         endif()
     endif()
 
     get_target_property(_targetType ${iExeName} TYPE)
     if(NOT (${_targetType} STREQUAL "EXECUTABLE"))
-        CMagneto__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The target type must be EXECUTABLE.")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The target type must be EXECUTABLE.")
     endif()
 
     set_property(GLOBAL PROPERTY PROJECT_ENTRYPOINT_EXE ${iExeName})
-    CMagneto__message(STATUS "\"${iExeName}\" executable target is set as the \"${PROJECT_NAME}\" project entrypoint.")
+    CMagnetoInternal__message(STATUS "\"${iExeName}\" executable target is set as the \"${PROJECT_NAME}\" project entrypoint.")
 
     # Make ${iExeName} the startup project in Visual Studio.
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
@@ -453,7 +453,7 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     )
 
     if(iResourceNamePostfix STREQUAL "")
-        CMagneto__message(FATAL_ERROR "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
     endif()
 
     # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
@@ -474,7 +474,7 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
 
     set(_resourceTargetNames "${_outputTargets}")
     if (NOT _resourceTargetNames STREQUAL "")
-        CMagneto__message(STATUS "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
+        CMagnetoInternal__message(STATUS "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
         foreach(_resourceTargetName IN LISTS _resourceTargetNames)
             install(TARGETS ${_resourceTargetName}
                 EXPORT ${PROJECT_NAME}Targets
@@ -632,7 +632,7 @@ endfunction()
 function(CMagneto__add__build_tests__target)
     get_property(_registeredTestTargets GLOBAL PROPERTY CMagnetoInternal__REGISTERED_TEST_TARGETS)
     if(NOT DEFINED _registeredTestTargets OR _registeredTestTargets STREQUAL "")
-        CMagneto__message(STATUS "CMagneto__add__build_tests__target: No registered test targets.")
+        CMagnetoInternal__message(STATUS "CMagneto__add__build_tests__target: No registered test targets.")
     endif()
 
     set(_fileDir "${CMAKE_BINARY_DIR}/${SUBDIR_SUMMARY}")

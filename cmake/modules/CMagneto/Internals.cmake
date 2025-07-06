@@ -108,18 +108,18 @@ function(CMagnetoInternal__set__IS_MULTTCONFIG__property)
     if(CMAKE_VERSION VERSION_LESS "3.3.0")
         # Bug https://cmake.org/Bug/view.php?id=15577 .
         if(CMAKE_BUILD_TYPE)
-            CMagneto__message(DEBUG "Single-configuration generator")
+            CMagnetoInternal__message(DEBUG "Single-configuration generator")
             set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
         else()
-            CMagneto__message(DEBUG "Multi-configuration generator")
+            CMagnetoInternal__message(DEBUG "Multi-configuration generator")
             set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
         endif()
     else()
         if(CMAKE_CONFIGURATION_TYPES)
-            CMagneto__message(DEBUG "Multi-configuration generator")
+            CMagnetoInternal__message(DEBUG "Multi-configuration generator")
             set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
         else()
-            CMagneto__message(DEBUG "Single-configuration generator")
+            CMagnetoInternal__message(DEBUG "Single-configuration generator")
             set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
         endif()
     endif()
@@ -157,12 +157,12 @@ function(CMagnetoInternal__check_target_name_validity iTargetName)
     # Reject names made only of underscores
     string(REGEX MATCH "^_+$" _only_underscores "${iTargetName}")
     if(_only_underscores)
-        CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must not be composed only of underscores.")
+        CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must not be composed only of underscores.")
     endif()
 
     string(REGEX MATCH "^[a-zA-Z_][a-zA-Z0-9_]*$" _isValid "${iTargetName}")
     if(NOT _isValid)
-        CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
+        CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
     endif()
 
     # Check if the target name is already registered.
@@ -172,9 +172,9 @@ function(CMagnetoInternal__check_target_name_validity iTargetName)
         string(TOUPPER "${_registeredTarget}" _registeredTargetUC)
         if(_targetNameUC STREQUAL _registeredTargetUC)
             if(iTargetName STREQUAL _registeredTarget)
-                CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" is already registered.")
+                CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" is already registered.")
             else()
-                CMagneto__message(FATAL_ERROR "Target name \"${iTargetName}\" conflicts with previosly registered \"${_registeredTarget}\".")
+                CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" conflicts with previosly registered \"${_registeredTarget}\".")
             endif()
         endif()
     endforeach()
@@ -327,7 +327,7 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
 
             get_target_property(_libPath ${_lib} IMPORTED_LOCATION_${_config})
             if(NOT (_libPath AND EXISTS ${_libPath}))
-                CMagneto__message(STATUS "CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
+                CMagnetoInternal__message(STATUS "CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\". Trying to get a path to RELEASE or non-build-type-specific binary instead.")
                 get_target_property(_libPath ${_lib} IMPORTED_LOCATION_RELEASE)
                 if(NOT (_libPath AND EXISTS ${_libPath}))
                     if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
@@ -353,10 +353,10 @@ endfunction()
 ]]
 function(CMagnetoInternal__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPathIsUnderDir)
     if(NOT IS_ABSOLUTE "${iAbsolutePath}")
-        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsolutePath is not absolute: \"${iAbsolutePath}\".")
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsolutePath is not absolute: \"${iAbsolutePath}\".")
     endif()
     if(NOT IS_ABSOLUTE "${iAbsoluteDirPath}")
-        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not absolute: \"${iAbsoluteDirPath}\".")
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not absolute: \"${iAbsoluteDirPath}\".")
     endif()
 
     cmake_path(SET _normalizedPath NORMALIZE "${iAbsolutePath}")
@@ -364,7 +364,7 @@ function(CMagnetoInternal__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPat
 
     # Ensure dir ends with a slash to avoid erroneous matches.
     if(NOT _normalizedDirPath MATCHES "/$")
-        CMagneto__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
     endif()
 
     string(FIND "${_normalizedPath}" "${_normalizedDirPath}" _pos)
@@ -428,7 +428,7 @@ function(CMagnetoInternal__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteS
     cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${SUBDIR_SOURCE}/")
     CMagnetoInternal__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourceRoot}" _isSourceBaseDirUnderProjectSourceRoot)
     if(NOT _isSourceBaseDirUnderProjectSourceRoot)
-        CMagneto__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" source root \"${_projectSourceRoot}\".")
     endif()
 
     cmake_parse_arguments(ARG
@@ -454,7 +454,7 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
                        Allowed values: ${_allowedValsStr}.
         ]=])
         string(CONFIGURE "${_msgTemplate}" _msg)
-        CMagneto__message(FATAL_ERROR "${_msg}")
+        CMagnetoInternal__message(FATAL_ERROR "${_msg}")
     endif()
 
     # Handle iPaths.
@@ -465,23 +465,23 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
 
     CMagnetoInternal__get_dir_relative_to_project_source_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToProjectSourceRoot)
     cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_SOURCE}/${_sourceBaseDirRelativeToProjectSourceRoot}/")
-    CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
+    CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
 
     foreach(_path IN LISTS iPaths)
-        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" started.")
+        CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" started.")
 
         if(IS_ABSOLUTE "${_path}")
-            CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is absolute.")
+            CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is absolute.")
             cmake_path(SET _absPath NORMALIZE "${_path}")
             cmake_path(RELATIVE_PATH _absPath BASE_DIRECTORY "${_absoluteSourceBaseDir}" OUTPUT_VARIABLE _relPath)
         else()
-            CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is relative.")
+            CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Input path is relative.")
             cmake_path(SET _absPath NORMALIZE "${_absoluteSourceBaseDir}/${_path}")
             cmake_path(SET _relPath NORMALIZE "${_path}")
         endif()
 
-        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Absolute path: \"${_absPath}\"")
-        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Relative path: \"${_relPath}\"")
+        CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Absolute path: \"${_absPath}\"")
+        CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Relative path: \"${_relPath}\"")
 
         if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
             # Check if the path is under the build base dir.
@@ -490,7 +490,7 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
             if(_pathIsUnderBuildBaseDir)
                 list(APPEND _relPaths "${_relPath}")
                 list(APPEND _absPaths "${_absPath}")
-                CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
+                CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
                 continue()
             endif()
         endif()
@@ -505,7 +505,7 @@ are only allowed under the build base dir
 "${_absoluteBuildBaseDir}".
             ]=])
             string(CONFIGURE "${_msgTemplate}" _msg)
-            CMagneto__message(FATAL_ERROR "${_msg}")
+            CMagnetoInternal__message(FATAL_ERROR "${_msg}")
         endif()
 
         if(NOT ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR STREQUAL "USE_ANYWAY")
@@ -519,9 +519,9 @@ are only allowed under the build base dir
                 set(_msg "${_msg}.")
 
                 if(ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR STREQUAL "WARN")
-                    CMagneto__message(WARNING "${_msg}")
+                    CMagnetoInternal__message(WARNING "${_msg}")
                 elseif(ARG_IF_PATH_OUTSIDE_SOURCE_BASE_DIR STREQUAL "FAIL")
-                    CMagneto__message(FATAL_ERROR "${_msg}")
+                    CMagnetoInternal__message(FATAL_ERROR "${_msg}")
                 endif()
             endif()
         endif()
@@ -534,12 +534,12 @@ are only allowed under the build base dir
                 set(_msg "${_msg}\n\tand outside of the {iAbsoluteSourceBaseDirDescription} build base dir\n\t\"${_absoluteBuildBaseDir}\"")
             endif()
             set(_msg "${_msg}.")
-            CMagneto__message(FATAL_ERROR "${_msg}")
+            CMagnetoInternal__message(FATAL_ERROR "${_msg}")
         endif()
 
         list(APPEND _relPaths "${_relPath}")
         list(APPEND _absPaths "${_absPath}")
-        CMagneto__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
+        CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): Handling of a path \"${_path}\" finished.\n")
     endforeach()
 
     # Return output.
@@ -558,19 +558,19 @@ function(CMagnetoInternal__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
 
     if(DEFINED QT_LRELEASE_EXECUTABLE AND NOT QT_LRELEASE_EXECUTABLE STREQUAL "")
         set(${oQT_LRELEASE_EXECUTABLE} "${QT_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagneto__message(STATUS "Qt lrelease found at \"${QT_LRELEASE_EXECUTABLE}\".")
+        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${QT_LRELEASE_EXECUTABLE}\".")
         return()
     endif()
 
     if(DEFINED QT6_LRELEASE_EXECUTABLE AND NOT QT6_LRELEASE_EXECUTABLE STREQUAL "")
         set(${oQT_LRELEASE_EXECUTABLE} "${QT6_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagneto__message(STATUS "Qt lrelease found at \"${QT6_LRELEASE_EXECUTABLE}\".")
+        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${QT6_LRELEASE_EXECUTABLE}\".")
         return()
     endif()
 
     if(DEFINED Qt6_LRELEASE_EXECUTABLE AND NOT Qt6_LRELEASE_EXECUTABLE STREQUAL "")
         set(${oQT_LRELEASE_EXECUTABLE} "${Qt6_LRELEASE_EXECUTABLE}" PARENT_SCOPE)
-        CMagneto__message(STATUS "Qt lrelease found at \"${Qt6_LRELEASE_EXECUTABLE}\".")
+        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${Qt6_LRELEASE_EXECUTABLE}\".")
         return()
     endif()
 
@@ -578,11 +578,11 @@ function(CMagnetoInternal__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
     get_target_property(_lreleaseLocation Qt6::lrelease LOCATION)
     if(NOT _lreleaseLocation STREQUAL "")
         set(${oQT_LRELEASE_EXECUTABLE} "${_lreleaseLocation}" PARENT_SCOPE)
-        CMagneto__message(STATUS "Qt lrelease found at \"${_lreleaseLocation}\".")
+        CMagnetoInternal__message(STATUS "Qt lrelease found at \"${_lreleaseLocation}\".")
         return()
     endif()
 
-    CMagneto__message(FATAL_ERROR "Qt lrelease not found.")
+    CMagnetoInternal__message(FATAL_ERROR "Qt lrelease not found.")
 endfunction()
 
 
@@ -631,7 +631,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
         cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${SUBDIR_RESOURCES}/${SUBDIR_QTTS}/${_targetSourceRootRelativeToProjectSourceRoot}/${_tsFileSubDir}/")
         cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
-        CMagneto__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
+        CMagnetoInternal__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
         file(MAKE_DIRECTORY "${_absQMFileDir}") # Without creation of the dir before calling the lrelease, compilation fails on Linux.
         add_custom_command(

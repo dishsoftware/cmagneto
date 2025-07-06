@@ -20,7 +20,7 @@ Qt Installer Framework found:
     repogen       is "${QTIFW_REPOGEN_EXECUTABLE}".
     ]=])
     string(CONFIGURE "${_msgTemplate}" _msg)
-    CMagneto__message(STATUS "${_msg}")
+    CMagnetoInternal__message(STATUS "${_msg}")
     set(QT_IFW_AVAILABLE TRUE)
 endif()
 
@@ -171,6 +171,6 @@ foreach(_generator IN LISTS _packageGenerators)
     elseif(_generator STREQUAL "ZIP")
         include(${CMAKE_CURRENT_LIST_DIR}/ZIP/ZIPConfig.cmake)
     else()
-        CMagneto__message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
+        CMagnetoInternal__message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
     endif()
 endforeach()
