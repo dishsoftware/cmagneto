@@ -35,7 +35,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/GeneratorTools.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/PathTools.cmake")
 
 ## Define constants and functions for handling scripts.
-include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/ScriptTools.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/Platform.cmake")
 
 ## Define general-purpose functions generation and installation of arbitrary files.
 include("${CMAKE_CURRENT_LIST_DIR}/CMagneto/SetUpFile.cmake")

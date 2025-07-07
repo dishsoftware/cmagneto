@@ -18,7 +18,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
 # Define constants and functions for handling scripts.
-include("${CMAKE_CURRENT_LIST_DIR}/ScriptTools.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/Platform.cmake")
 
 # Define general-purpose functions generation and installation of arbitrary files.
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpFile.cmake")
@@ -107,11 +107,7 @@ function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScrip
     set(REPORT_PATH "param\\nREPORT_PATH\\nparam")
     ####################################################################
 
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
-    else()
-        set(_template_script_path "${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
-    endif()
+    CMagneto__platform__add_script_suffix_and_extension("${CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX}" _templateScriptPath)
 
     CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
@@ -122,7 +118,7 @@ function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScrip
         set(_reportPath "../${CMagneto__SUBDIR_SUMMARY}/${CMagneto__TEST_REPORT__FILE_NAME}")
     endif()
 
-    file(READ "${_template_script_path}" _scriptContent)
+    file(READ "${_templateScriptPath}" _scriptContent)
     string(REPLACE "${DIR_WITH_CTESTTESTFILE}" "${_dirWithCtestTestFile}" _scriptContent "${_scriptContent}")
     string(REPLACE "${BUILD_CONFIG}" "${iBuildType}" _scriptContent "${_scriptContent}")
     string(REPLACE "${REPORT_PATH}" "${_reportPath}" _scriptContent "${_scriptContent}")
@@ -132,11 +128,8 @@ endfunction()
 
 
 function(CMagnetoInternal__get__run_tests__script_file_name oFileName)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
-    else()
-        set(${oFileName} "${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
-    endif()
+    CMagneto__platform__add_script_extension("${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}" _fileName)
+    set(${oFileName} "${_fileName}" PARENT_SCOPE)
 endfunction()
 
 
@@ -150,5 +143,5 @@ endfunction()
     If the function is not called, "build.py" will not be able to run tests: "build.py" calls "run_tests" scripts.
 ]]
 function(CMagnetoInternal__set_up__run_tests__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__run_tests__script_file_name" "CMagnetoInternal__generate__run_tests__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
