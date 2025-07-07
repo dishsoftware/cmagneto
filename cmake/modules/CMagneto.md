@@ -162,7 +162,7 @@ ProjectRoot/
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-11) After all targets are set up, call: `CMagneto__finalize_project_set_up()`.
+11) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function Sets up:
     - CMake package configuration files, auxilliary targets, reports, helper scripts, etc.;
     - Unit and integration test compilation and `run_tests` scripts;

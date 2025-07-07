@@ -11,38 +11,8 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
-#[[
-    CMagnetoInternal__set__IS_MULTTCONFIG__property
-
-    Defines CMagnetoInternal__IS_MULTTCONFIG global boolean property as TRUE, if generator supports multi-config, and FALSE otherwise.
-    The property should not be accessed or modified directly.
-]]
-function(CMagnetoInternal__set__IS_MULTTCONFIG__property)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG SET)
-    if(_isSet)
-        return()
-    endif()
-
-    if(CMAKE_VERSION VERSION_LESS "3.3.0")
-        # Bug https://cmake.org/Bug/view.php?id=15577 .
-        if(CMAKE_BUILD_TYPE)
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
-        else()
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
-        endif()
-    else()
-        if(CMAKE_CONFIGURATION_TYPES)
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG TRUE)
-        else()
-            set_property(GLOBAL PROPERTY CMagnetoInternal__IS_MULTTCONFIG FALSE)
-        endif()
-    endif()
-endfunction()
-
-
-# Calling it directly is not necessary, if CMagnetoInternal__IS_MULTTCONFIG is only retrieved using CMagneto__is_multiconfig(oIsMulticonfig).
-# However, it is better to invoke this function early to avoid errors if the property is accessed directly against recommendations.
-CMagnetoInternal__set__IS_MULTTCONFIG__property()
+# Load internals of the submodule.
+include("${CMAKE_CURRENT_LIST_DIR}/GeneratorTools_Internals.cmake")
 
 
 function(CMagneto__is_multiconfig oIsMulticonfig)

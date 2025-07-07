@@ -12,13 +12,23 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
+# Set up CMagneto CMake module logging.
+include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
+
+# Define constants.
+include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
+
+# Define functions to load project metadata.
+include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader.cmake")
+
+
 CMagneto__parse__packaging_json()
 
 
 # Check if Qt IFW is available.
 find_program(QTIFW_BINARYCREATOR_EXECUTABLE binarycreator)
 find_program(QTIFW_REPOGEN_EXECUTABLE repogen)
-if(QTIFW_BINARYCREATOR_EXECUTABLE AND QTIFW_REPOGEN_EXECUTABLE)
+if(QTIFW_BINARYCREATOR_EXECUTABLE AND QTIFW_REPOGEN_EXECUTABLE) # TODO Move to Qt submodule.
     set(_msgTemplate [=[
 Qt Installer Framework found:
     binarycreator is "${QTIFW_BINARYCREATOR_EXECUTABLE}";
