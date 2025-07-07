@@ -10,10 +10,9 @@
     ```
 * ? Make some variables from "./cmake/modules/CMagneto.cmake" accessible only within the file.
 
-* Generate "LibName.h" with exports from a CMake or Python script.
+* Generate "LibTargetName.h" with exports from a CMake or Python script.
 * Add a script, which copies 3rd-party shared libraries to "install/.../3rd_party" directory. The script must also copy ".pdb" or analogues, if they exist.
 * Gather paths to include directories of 3rd-party shared libraries and generate "./vscode/c_cpp_properties.json" using a template file by substituting "includePath" properties with the gathered paths.
-* Generate ".vscode/launch.json" using a template by substituting "program" properties with a name of the entrypoint executable binary.
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
 * Endorse specifying ProjectName as a namespace while linking targets of the project to other targets of the project. Support it in "./cmake/modules/CMagneto.cmake" and "./build.py".
@@ -22,12 +21,12 @@
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? CMagneto does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
 * Add function set_up_interface_library.
 * CMakePresets.json.
-* Fix content of packaging\License.txt, packaging\Readme.txt, etc.
 * Add option "--file ALL" to ./CI/Docker/build_docker_image.py.
 * Test coverage.
 * Qt IFW tweaks.
-* Add intergation tests and approppriate job in CI pipeline.
+* Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
-* CMagneto__get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibName}_SHARED` instead of `--LIB_{LibName}_SHARED`.
+* CMagneto__get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibTargetName}_SHARED` instead of `--LIB_{LibTargetName}_SHARED`.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
+* Packaging of Debug fails, if generator is multi-config.

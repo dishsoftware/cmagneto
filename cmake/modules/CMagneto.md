@@ -250,7 +250,7 @@ In other words, PUBLIC is effectively a union of `PRIVATE` and `INTERFACE`.
 
 ##### 2.3.1.2. Adding source files to an existing target
 ```cmake
-target_sources(${iLibName}
+target_sources(${iLibTargetName}
     PUBLIC
         $<BUILD_INTERFACE:${iPublicHeadersAbsolutePaths}>
         # Absolute path means something like $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/algo.h>.
@@ -264,13 +264,13 @@ target_sources(${iLibName}
         $<BUILD_INTERFACE:${iSources}>
         # iSources should always be PRIVATE, because they are part of library's internal implementation, not its public interface.
         # When to mark .cpp as PUBLIC sources:
-        # 1) You want them to appear in IDEs under both iLibName and consumer targets;
+        # 1) You want them to appear in IDEs under both iLibTargetName and consumer targets;
         # 2) You want to share source files across multiple libraries and compile them in multiple targets.
 )
 ```
 
 
-| A file marked with a keyword | Compiled into iLibName | Shown in IDE as a file of iLibName | Shown in IDE as a file of consumer targets within the same project | Exported via `install(EXPORT)` [^1] | Compiled by consumers [^2] |
+| A file marked with a keyword | Compiled into iLibTargetName | Shown in IDE as a file of iLibTargetName | Shown in IDE as a file of consumer targets within the same project | Exported via `install(EXPORT)` [^1] | Compiled by consumers [^2] |
 | ----------- | ---------- | --------- | ---------- | ---------- | -----------------------|
 | `PRIVATE`   | ✅ Yes    | ✅ Yes    | ❌ No     | ❌ No      | ❌ No                  |
 | `PUBLIC`    | ✅ Yes    | ✅ Yes    | ✅ Yes    | ✅ Yes     | ❌ No                  |
@@ -280,18 +280,18 @@ target_sources(${iLibName}
 A BS-explanation: a metadata, added to *Config.cmake files, if a file is marked is marked with `INTERFACE` or `PUBLIC`, is used only by CMake-aware IDEs and tooling for display/navigation purposes.
 
 [^2]: Depends on what functions are in the header:
-| Function in header                       | Compiled by         | Safe? | Note                                                                   |
-| ---------------------------------------- | ------------------- | ----- | ---------------------------------------------------------------------- |
-| Template                                 | Consumer            | ✅   | Must be header-defined                                                 |
-| Inline non-template                      | Consumer            | ✅   | One (same signature) definition allowed across translation units (TUs) |
-| Static non-template                      | Consumer            | ✅   | Separate copy per TU                                                   |
-| Regular non-template (not inline/static) | Consumer & iLibName | ❌   | Causes multiple definitions — **don't do this**                        |
+| Function in header                       | Compiled by               | Safe? | Note                                                                   |
+| ---------------------------------------- | ------------------------- | ----- | ---------------------------------------------------------------------- |
+| Template                                 | Consumer                  | ✅   | Must be header-defined                                                 |
+| Inline non-template                      | Consumer                  | ✅   | One (same signature) definition allowed across translation units (TUs) |
+| Static non-template                      | Consumer                  | ✅   | Separate copy per TU                                                   |
+| Regular non-template (not inline/static) | Consumer & iLibTargetName | ❌   | Causes multiple definitions — **don't do this**                        |
 
 or what class methods are in the header:
 | Method in header                          | Compiled by                   | Safe? | Notes                                                      |
 | ----------------------------------------- | ----------------------------- | ----- | ---------------------------------------------------------- |
-| Class declaration (no method definitions) | iLibName                      | ✅   | Header-only declarations are fine                          |
+| Class declaration (no method definitions) | iLibTargetName                | ✅   | Header-only declarations are fine                          |
 | Class with inline method definitions      | Consumer                      | ✅   | Like inline functions — must be same across TUs            |
 | Class with template method definitions    | Consumer                      | ✅   | Must be header-only (or explicitly instantiated elsewhere) |
-| Class with non-inline method definitions  | ❌ Linker error if in header | ❌   | Multiple definitions across TUs — ODR violation            |
+| Class with non-inline method definitions  | ❌ Linker error if in header  | ❌   | Multiple definitions across TUs — ODR violation            |
 | Class with only static methods in header  | Consumer                      | ✅   | Each TU gets its own copy (like static functions)          |

@@ -2,5 +2,5 @@ Enow Contact Holder is open-source software, that gives you full control over ho
 
 This package installs the Enow Contact Holder software and associated development files for use in C++ projects.
 
-Project URL: https://github.com/enowsw/contactholder
+Project URL: https://gitlab.com/enowsw/contactholder
 License: MIT

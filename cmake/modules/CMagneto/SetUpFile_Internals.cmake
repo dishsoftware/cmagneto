@@ -16,7 +16,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
 
 #[[
-    CMagnetoInternal__set_up_file
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE
 
     Places to build directory and installs to ${CMagneto__SUBDIR_EXECUTABLE} a file with name and content,
     which are returned by fileNameGetter(oFileName) and contentGetter(iConfig oContent) functions.
@@ -31,7 +31,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
         iComponentName - name of the component to which the file is installed.
             If iInstall is FALSE, this parameter is ignored.
 ]]
-function(CMagnetoInternal__set_up_file iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
+function(CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE iFileNameGetterName iContentGetterName iAddExePermission iInstall iComponentName)
     CMagneto__is_multiconfig(IS_MULTICONFIG)
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)

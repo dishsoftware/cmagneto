@@ -20,13 +20,19 @@ include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
 # Define constants and functions for handling scripts.
-include("${CMAKE_CURRENT_LIST_DIR}/ScriptTools.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/Platform.cmake")
 
 # Define general-purpose functions generation and installation of arbitrary files.
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpFile.cmake")
 
-# Define general-purpose functions generation and installation of arbitrary files.
+# Define functions and variables for setting up targets (common for static/shared libs and exes).
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget.cmake")
+
+# Define unctions and variables for setting up static/shared library targets.
+include("${CMAKE_CURRENT_LIST_DIR}/SetUpLibTarget.cmake")
+
+# Define unctions and variables for setting up executable targets.
+include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget.cmake")
 
 
 #[[
@@ -181,7 +187,7 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
                     if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
                         set(_libPath ${_nonBuildSpecificLibPath})
                     else()
-                        CMagneto_warning("CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
+                        CMagnetoInternal__message(WARNING "CMagnetoInternal__collect_paths_to_shared_libs(\"${iTargetName}\"): path to ${_config} binary of shared library \"${_lib}\" is not found or invalid: \"${_libPath}\".")
                         continue()
                     endif()
                 endif()
@@ -206,7 +212,7 @@ endfunction()
 
     Returns content of the "3rd_party_shared_libs.json" file.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__3rd_party_shared_libs__content iBuildType oContent)
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
@@ -244,23 +250,20 @@ endfunction()
     The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
     The file may be used to make distributable packages.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__3rd_party_shared_libs__list)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
 set(CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE "set_env")
-set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(CMagnetoInternal__get__set_env__script_file_name oFileName)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
-    else()
-        set(${oFileName} "${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
-    endif()
+    CMagneto__platform__add_script_extension("${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}" _fileName)
+    set(${oFileName} "${_fileName}" PARENT_SCOPE)
 endfunction()
 
 
@@ -269,7 +272,7 @@ endfunction()
 
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
@@ -282,13 +285,9 @@ function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptC
     CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
-    else()
-        set(_template_script_path "${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX_STANDARD}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
-    endif()
+    CMagneto__platform__add_script_suffix_and_extension("${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}" _templateScriptPath)
 
-    file(READ "${_template_script_path}" _scriptContent)
+    file(READ "${_templateScriptPath}" _scriptContent)
     string(REPLACE "${PARAM__SHARED_LIB_DIRS_STRING}" "${_libraryDirsNative}" _scriptContent "${_scriptContent}")
 
     set(${oScriptContent} "${_scriptContent}" PARENT_SCOPE)
@@ -301,10 +300,10 @@ endfunction()
     Generates, places to build directory and installs "set_env" script.
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__set_env__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -324,19 +323,28 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
-
+    # Add paths to dirs with 3rd-party shared libs.
     set(_libraryDirs "")
     CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
-
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(_fileContent "Path=\"${_libraryDirsNative}\"")
     else()
         set(_fileContent "LD_LIBRARY_PATH=\"${_libraryDirsNative}\"")
+    endif()
+
+    # Add a var, containig an entrypoint executable compiled binary name.
+    ## Idea was to set the binary name in VC Code `launch.json` from the `.env.vscode` file.
+    ## But VS Code does not use "envFile" during resolving variables in the "program" configuration property in `launch.json`.
+    CMagneto__get_project_entrypoint(_exeTargetName)
+    if(DEFINED _exeTargetName)
+        CMagneto__compose_binary_OUTPUT_NAME(${_exeTargetName} _binaryOutputName)
+        CMagneto__platform__add_executable_extension("${_binaryOutputName}" _exeName)
+        set(_fileContent "${_fileContent}\nCMagneto__ProjectEntrypointExe=\"${_exeName}\"")
     endif()
 
     set(${oFileContent} "${_fileContent}" PARENT_SCOPE)
@@ -352,55 +360,46 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__env_vscode__file)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
 set(CMagnetoInternal__RUN__SCRIPT_NAME_WE "run")
-set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(CMagnetoInternal__get__run__script_file_name oFileName)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${oFileName} "${CMagnetoInternal__RUN__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}" PARENT_SCOPE)
-    else()
-        set(${oFileName} "${CMagnetoInternal__RUN__SCRIPT_NAME_WE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}" PARENT_SCOPE)
-    endif()
+    CMagneto__platform__add_script_extension("${CMagnetoInternal__RUN__SCRIPT_NAME_WE}" _fileName)
+    set(${oFileName} "${_fileName}" PARENT_SCOPE)
 endfunction()
 
 
 #[[
     CMagnetoInternal__generate__run__script_content
 
-    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
+    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeTargetName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
 
     The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]
 function(CMagnetoInternal__generate__run__script_content iBuildType oScriptContent)
-    # Strings to replace in the template script.
-    set(EXECUTABLE_NAME_WE "param\\nEXECUTABLE_NAME_WE\\nparam")
-    ####################################################################
-
-    get_property(_is_PROJECT_ENTRYPOINT_EXE_set GLOBAL PROPERTY CMagnetoInternal__ProjectEntryPointExe SET)
-    if(NOT (_is_PROJECT_ENTRYPOINT_EXE_set))
-        CMagneto_warning("CMagnetoInternal__generate__run__script_content: The project entrypoint executable is not set.")
+    CMagneto__get_project_entrypoint(_exeTargetName)
+    if(NOT DEFINED _exeTargetName)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__generate__run__script_content: The project entrypoint executable target is not set.")
         return()
     endif()
-    get_property(_exeName GLOBAL PROPERTY CMagnetoInternal__ProjectEntryPointExe)
-    CMagnetoInternal__compose_binary_OUTPUT_NAME(${_exeName} _exeName)
 
-    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(_template_script_path "${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_WINDOWS}.${CMagnetoInternal__SCRIPT_EXTENSION_WINDOWS}")
-    else()
-        set(_template_script_path "${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}${CMagnetoInternal__SCRIPT_NAME_SUFFIX_UNIX}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
-    endif()
+    # Strings to replace in the template script.
+    set(_EXECUTABLE_NAME_WE "param\\nEXECUTABLE_NAME_WE\\nparam")
+    ####################################################################
 
-    file(READ "${_template_script_path}" _scriptContent)
-    string(REPLACE "${EXECUTABLE_NAME_WE}" "${_exeName}" _scriptContent "${_scriptContent}")
+    CMagneto__compose_binary_OUTPUT_NAME(${_exeTargetName} _binaryOutputName)
+    CMagneto__platform__add_script_suffix_and_extension("${CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX}" _templateScriptPath)
+    file(READ "${_templateScriptPath}" _scriptContent)
+    string(REPLACE "${_EXECUTABLE_NAME_WE}" "${_binaryOutputName}" _scriptContent "${_scriptContent}")
 
     set(${oScriptContent} "${_scriptContent}" PARENT_SCOPE)
 endfunction()
@@ -410,11 +409,17 @@ endfunction()
     CMagnetoInternal__set_up__run__script
 
     Generates, places to build directory and installs "run" script.
-    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeName)), "run" script is generated.
+    If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeTargetName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
 
     The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]
 function(CMagnetoInternal__set_up__run__script)
-    CMagnetoInternal__set_up_file("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagneto__get_project_entrypoint(_exeTargetName)
+    if(NOT DEFINED _exeTargetName)
+        CMagnetoInternal__message(WARNING "CMagnetoInternal__generate__run__script_content: The project entrypoint executable target is not set. \"${CMagnetoInternal__RUN__SCRIPT_NAME_WE}\" script is not created.")
+        return()
+    endif()
+
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
