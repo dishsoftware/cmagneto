@@ -258,7 +258,7 @@ endfunction()
 
 
 set(CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE "set_env")
-set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/${CMagnetoInternal__SET_ENV__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(CMagnetoInternal__get__set_env__script_file_name oFileName)
@@ -368,7 +368,7 @@ endfunction()
 
 
 set(CMagnetoInternal__RUN__SCRIPT_NAME_WE "run")
-set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__RUN__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/${CMagnetoInternal__RUN__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 function(CMagnetoInternal__get__run__script_file_name oFileName)

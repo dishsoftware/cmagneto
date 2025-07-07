@@ -90,7 +90,7 @@ function(CMagnetoInternal__add__build_tests__target)
 endfunction()
 
 
-set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
+set(CMagnetoInternal__RUN_TESTS__TEMPLATE_SCRIPT_PATH_PREFIX "${CMAKE_CURRENT_LIST_DIR}/TestTools/${CMagneto__RUN_TESTS__SCRIPT_NAME_WE}__TEMPLATE")
 
 
 #[[
