@@ -11,6 +11,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
+# Load internals of the submodule.
+include("${CMAKE_CURRENT_LIST_DIR}/PathTools_Internals.cmake")
+
+
 #[[
     CMagneto__are_paths_equal
 

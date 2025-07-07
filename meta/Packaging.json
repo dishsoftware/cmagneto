@@ -1,5 +1,5 @@
 {
-    "PackageID": "io.enowsw.contacts",
-    "PackageNamePrefix": "EnowContacts",
+    "PackageID": "io.enowsw.contactholder",
+    "PackageNamePrefix": "Enow_ContactHolder",
     "PackageMaintainer": "Dim Shvydkoy <dmit.shvyd@gmail.com>"
 }

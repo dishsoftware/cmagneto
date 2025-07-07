@@ -11,6 +11,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ]]
 
 
+# Load internals of the submodule.
+include("${CMAKE_CURRENT_LIST_DIR}/Qt_Internals.cmake")
+
+
 function(CMagneto__find__Qt_lrelease_executable oQT_LRELEASE_EXECUTABLE)
     #set(QT_LRELEASE_EXECUTABLE "${QT_LRELEASE_EXECUTABLE}" CACHE FILEPATH "Path to Qt lrelease executable" FORCE)
 

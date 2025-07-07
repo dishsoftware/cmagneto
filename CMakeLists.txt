@@ -37,4 +37,4 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/") # Search of 
 
 
 include(CMagneto)
-CMagneto__finalize_project_set_up()
+CMagneto__set_up__project()

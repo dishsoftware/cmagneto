@@ -2,9 +2,9 @@
     "CompanyName_LEGAL": "Enow Software Foundation",
     "CompanyName_FULL": "Enow SW",
     "CompanyName_SHORT": "Enow",
-    "ProjectNameBase": "Contacts",
-    "ProjectNameForUI": "Enow Contacts",
-    "ProjectDescription": "Enow Contacts provides full control on how, when and where contacts contacts are stored and synchronized.",
-    "ProjectHomepage": "https://enowsw.io/contacts",
+    "ProjectNameBase": "ContactHolder",
+    "ProjectNameForUI": "Enow Contact Holder",
+    "ProjectDescription": "Enow Contact Holder is open-source software, that gives you full control over how, when, and where your contacts are stored and synchronized.",
+    "ProjectHomepage": "https://github.com/enowsw/contactholder",
     "ProjectVersion": "1.0.0"
 }
