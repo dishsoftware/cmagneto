@@ -76,7 +76,12 @@ ProjectRoot/
 │   └── @resources/                  # Package resources root. Under this dir, the resources can be nested arbitrary.
 └── ...
 ```
-**Note: until the end of the list paths are shown relative to the project root.**
+> **Note:** Until the end of the list paths are shown relative to the project root.
+
+> **Note:** Functions, variables and constants of the CMagneto module are only intended to be accessed,<br>
+> if they are defined (not included) in a `*.cmake` file without `_Internal` suffix in its name.<br>
+> Names of such functions, variables and constants start with `CMagneto__`.
+
 
 1) Adjust values in config files inside [`./meta/`](./../../meta/) directory:
     - [`./meta/Project.json`](./../../meta/Project.json)
