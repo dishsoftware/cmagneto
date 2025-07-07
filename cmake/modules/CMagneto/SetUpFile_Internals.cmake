@@ -36,9 +36,6 @@ function(CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE iFileNameGetterNam
     set(_TMP_FILE_DIR "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}")
     cmake_language(CALL ${iFileNameGetterName} _fileName)
 
-    CMagnetoInternal__message(STATUS "CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE(): iFileNameGetterName = ${iFileNameGetterName}")
-    CMagnetoInternal__message(STATUS "CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE(): _fileName = ${_fileName}\n")
-
     if(IS_MULTICONFIG)
         foreach(_config ${CMAKE_CONFIGURATION_TYPES})
             cmake_language(CALL ${iContentGetterName} "${_config}" _fileContent)

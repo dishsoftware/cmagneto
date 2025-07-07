@@ -43,9 +43,6 @@ function(CMagneto__platform__add_script_extension iShellScriptPathWE oShellScrip
     else()
         set(_shellScriptPath "${iShellScriptPathWE}.${CMagnetoInternal__SCRIPT_EXTENSION_UNIX}")
     endif()
-
-    CMagnetoInternal__message(STATUS "CMagneto__platform__add_script_extension(): iShellScriptPathWE = ${iShellScriptPathWE}; _shellScriptPath = ${_shellScriptPath}")
-
     set(${oShellScriptPath} "${_shellScriptPath}" PARENT_SCOPE)
 endfunction()
 
