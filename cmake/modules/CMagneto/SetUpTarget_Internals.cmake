@@ -20,12 +20,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
 
-function(CMagnetoInternal__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
-    set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
-endfunction()
-
-
-# Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeName) is called.
+# Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeTargetName) is called.
 set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "")
 
 

@@ -20,16 +20,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget_Internals.cmake")
 #[[
     CMagneto__set_up__executable
 
-    Sets up the build and installation process for the executable target `${iExeName}`.
-    This function also registers `${iExeName}` in the global property `CMagnetoInternal__RegisteredTargets`.
+    Sets up the build and installation process for the executable target `${iExeTargetName}`.
+    This function also registers `${iExeTargetName}` in the global property `CMagnetoInternal__RegisteredTargets`.
 
     It must be called:
     - Once for the executable target.
-    - After `${iExeName}` has been created and linked against its dependencies.
-    - From the root `CMakeLists.txt` of `${iExeName}`. The root `CMakeLists.txt` must be in the source root of the executable.
+    - After `${iExeTargetName}` has been created and linked against its dependencies.
+    - From the root `CMakeLists.txt` of `${iExeTargetName}`. The root `CMakeLists.txt` must be in the source root of the executable.
 
     Parameters:
-    iExeName           - The name of the executable target to configure.
+    iExeTargetName           - The name of the executable target to configure.
 
     Named arguments (all optional):
     HEADERS         - List of public headers used for compiling the executable.
@@ -48,39 +48,39 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget_Internals.cmake")
       Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
-function(CMagneto__set_up__executable iExeName)
-    CMagnetoInternal__check_target_name_validity(${iExeName})
-    add_executable(${PROJECT_NAME}::${iExeName} ALIAS ${iExeName})
+function(CMagneto__set_up__executable iExeTargetName)
+    CMagnetoInternal__check_target_name_validity(${iExeTargetName})
+    add_executable(${PROJECT_NAME}::${iExeTargetName} ALIAS ${iExeTargetName})
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
-    set(_baseDirDescription "executable target \"${iExeName}\"")
+    set(_baseDirDescription "executable target \"${iExeTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
     #CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
 
     # Add target sources.
-    target_sources(${iExeName} PRIVATE ${_relSources} ${_relHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
+    target_sources(${iExeTargetName} PRIVATE ${_relSources} ${_relHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
     ####################################################################
 
-    target_include_directories(${iExeName} PRIVATE
+    target_include_directories(${iExeTargetName} PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>  # Set up compiler.
     )
 
     # Set up binary.
-    CMagnetoInternal__compose_binary_OUTPUT_NAME(${iExeName} _binaryOutputName)
-    set_target_properties(${iExeName}
+    CMagneto__compose_binary_OUTPUT_NAME(${iExeTargetName} _binaryOutputName)
+    set_target_properties(${iExeTargetName}
         PROPERTIES
-            EXPORT_NAME ${iExeName}
+            EXPORT_NAME ${iExeTargetName}
             OUTPUT_NAME ${_binaryOutputName}
     )
 
     # Install.
     ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeTargetName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
 
-    install(TARGETS ${iExeName}
+    install(TARGETS ${iExeTargetName}
         EXPORT ${PROJECT_NAME}Targets
         DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
         COMPONENT ${CMagneto__COMPONENT__RUNTIME}
@@ -88,7 +88,7 @@ function(CMagneto__set_up__executable iExeName)
     ####################################################################
 
     # Set up Qt TS resources.
-    CMagnetoInternal__set_up_QtTS_files(${iExeName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
+    CMagnetoInternal__set_up_QtTS_files(${iExeTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
     # TODO
@@ -96,10 +96,10 @@ function(CMagneto__set_up__executable iExeName)
 
 
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
-    list(APPEND _registeredTargets ${iExeName})
+    list(APPEND _registeredTargets ${iExeTargetName})
     set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "${_registeredTargets}")
 
-    CMagnetoInternal__collect_paths_to_shared_libs(${iExeName})
+    CMagnetoInternal__collect_paths_to_shared_libs(${iExeTargetName})
 endfunction()
 
 
@@ -112,25 +112,37 @@ endfunction()
     The entry point executable is also run when the project is started in Visual Studio.
 
     Parameters:
-    iExeName - the name of the executable that is the project entry point.
+    iExeTargetName - the name of the executable that is the project entry point.
 ]]
-function(CMagneto__set_project_entrypoint iExeName)
-    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__ProjectEntryPointExe SET)
+function(CMagneto__set_project_entrypoint iExeTargetName)
+    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__ProjectEntrypointExeTargetName SET)
     if(_isSet)
-        get_property(_exeName GLOBAL PROPERTY CMagnetoInternal__ProjectEntryPointExe)
-        if(NOT (_exeName STREQUAL iExeName))
-            CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The project entry point executable target is already set to \"${_exeName}\".")
+        get_property(_exeTargetName GLOBAL PROPERTY CMagnetoInternal__ProjectEntrypointExeTargetName)
+        if(NOT (_exeTargetName STREQUAL iExeTargetName))
+            CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The project entry point executable target is already set to \"${_exeTargetName}\".")
         endif()
     endif()
 
-    get_target_property(_targetType ${iExeName} TYPE)
+    get_target_property(_targetType ${iExeTargetName} TYPE)
     if(NOT (${_targetType} STREQUAL "EXECUTABLE"))
         CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_project_entrypoint: The target type must be EXECUTABLE.")
     endif()
 
-    set_property(GLOBAL PROPERTY CMagnetoInternal__ProjectEntryPointExe ${iExeName})
-    CMagnetoInternal__message(STATUS "\"${iExeName}\" executable target is set as the \"${PROJECT_NAME}\" project entrypoint.")
+    set_property(GLOBAL PROPERTY CMagnetoInternal__ProjectEntrypointExeTargetName ${iExeTargetName})
+    CMagnetoInternal__message(STATUS "\"${iExeTargetName}\" executable target is set as the \"${PROJECT_NAME}\" project entrypoint.")
 
-    # Make ${iExeName} the startup project in Visual Studio.
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeName})
+    # Make ${iExeTargetName} the startup project in Visual Studio.
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${iExeTargetName})
+endfunction()
+
+
+function(CMagneto__get_project_entrypoint oExeTargetName)
+    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__ProjectEntrypointExeTargetName SET)
+    if(NOT _isSet)
+        unset(${oExeTargetName} PARENT_SCOPE)
+        return()
+    endif()
+
+    get_property(_exeTargetName GLOBAL PROPERTY CMagnetoInternal__ProjectEntrypointExeTargetName)
+    set(${oExeTargetName} "${_exeTargetName}" PARENT_SCOPE)
 endfunction()

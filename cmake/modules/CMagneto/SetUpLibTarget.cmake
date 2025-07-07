@@ -148,7 +148,7 @@ function(CMagneto__set_up__library iLibName)
     )
 
     # Set up binary.
-    CMagnetoInternal__compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
+    CMagneto__compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
     set_target_properties(${iLibName}
         PROPERTIES
             EXPORT_NAME ${iLibName}

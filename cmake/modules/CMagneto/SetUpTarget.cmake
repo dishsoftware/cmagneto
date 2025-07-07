@@ -18,6 +18,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget_Internals.cmake")
 
 
 #[[
+    CMagneto__compose_binary_OUTPUT_NAME
+
+    Returns name of target's compiled binary without extension.
+]]
+function(CMagneto__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
+    set(${oBinaryOutputName} "${PROJECT_NAME}${CMAKE_PROJECT_VERSION_MAJOR}_${iTargetName}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
     CMagneto__embed_QtRC_resources
 
     The function does the same as qt_add_resources, but the CMagneto__embed_QtRC_resources also
