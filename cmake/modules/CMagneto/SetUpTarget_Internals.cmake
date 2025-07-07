@@ -20,7 +20,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
 
-# Appended every time CMagneto__set_up__library(iLibName) or CMagneto__set_up__executable(iExeTargetName) is called.
+# Appended every time CMagneto__set_up__library(iLibTargetName) or CMagneto__set_up__executable(iExeTargetName) is called.
 set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "")
 
 

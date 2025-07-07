@@ -10,7 +10,7 @@
     ```
 * ? Make some variables from "./cmake/modules/CMagneto.cmake" accessible only within the file.
 
-* Generate "LibName.h" with exports from a CMake or Python script.
+* Generate "LibTargetName.h" with exports from a CMake or Python script.
 * Add a script, which copies 3rd-party shared libraries to "install/.../3rd_party" directory. The script must also copy ".pdb" or analogues, if they exist.
 * Gather paths to include directories of 3rd-party shared libraries and generate "./vscode/c_cpp_properties.json" using a template file by substituting "includePath" properties with the gathered paths.
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
@@ -27,6 +27,6 @@
 * Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
-* CMagneto__get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibName}_SHARED` instead of `--LIB_{LibName}_SHARED`.
+* CMagneto__get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibTargetName}_SHARED` instead of `--LIB_{LibTargetName}_SHARED`.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
 * Packaging of Debug fails, if generator is multi-config.

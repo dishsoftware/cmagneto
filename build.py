@@ -786,11 +786,11 @@ If a build stage fails during current build, the next stages are not run."
         action="store_true",
         help=\
 f"Build implicit type (DEFAULT) libraries as shared.\n\
-It is possible to override this option for each library, using --LIB_{{LibName}}_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
+It is possible to override this option for each library, using --LIB_{{LibTargetName}}_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
     )
 
     args, unknownArgs = parser.parse_known_args()
-    # Parse unknown arguments that are in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
+    # Parse unknown arguments that are in the form of LIB_{LibTargetName}_SHARED=ON|OFF|DEFAULT.
     libSharedOptions = {}
     for arg in unknownArgs[:]:
         if not arg.startswith("--"):
@@ -799,7 +799,7 @@ It is possible to override this option for each library, using --LIB_{{LibName}}
         # Remove leading "--".
         processedArg = arg[2:]
 
-        # Check if the argument is in the form of LIB_{LibName}_SHARED=ON|OFF|DEFAULT.
+        # Check if the argument is in the form of LIB_{LibTargetName}_SHARED=ON|OFF|DEFAULT.
         optionAndVal = processedArg.split("=")
         if len(optionAndVal) != 2:
             continue
@@ -814,18 +814,18 @@ It is possible to override this option for each library, using --LIB_{{LibName}}
             continue
 
         # Remove "LIB_" prefix and "_SHARED" suffix.
-        libName = option[4:-7]
+        libTargetName = option[4:-7]
 
         # Check if the library name is valid.
-        if re.match(r"^_+$", libName):
-            warning(f"Invalid library name \"{libName}\". It must not be composed only of underscores.")
+        if re.match(r"^_+$", libTargetName):
+            warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
             continue
 
-        if not re.match(r"^[A-Z_][A-Z0-9_]*$", libName):
-            warning(f"Invalid library name \"{libName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
+        if not re.match(r"^[A-Z_][A-Z0-9_]*$", libTargetName):
+            warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
             continue
 
-        libSharedOptions[libName] = optionVal
+        libSharedOptions[libTargetName] = optionVal
         unknownArgs.remove(arg)
 
     toolset = TOOLSET_ENUM[args.toolset]

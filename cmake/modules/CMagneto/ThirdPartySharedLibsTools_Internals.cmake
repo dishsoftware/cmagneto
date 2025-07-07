@@ -212,7 +212,7 @@ endfunction()
 
     Returns content of the "3rd_party_shared_libs.json" file.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__3rd_party_shared_libs__content iBuildType oContent)
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
@@ -250,7 +250,7 @@ endfunction()
     The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
     The file may be used to make distributable packages.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__3rd_party_shared_libs__list)
     CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
@@ -272,7 +272,7 @@ endfunction()
 
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptContent)
     # Strings to replace in the template script.
@@ -300,7 +300,7 @@ endfunction()
     Generates, places to build directory and installs "set_env" script.
     The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__set_env__script)
     CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
@@ -323,7 +323,7 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
@@ -360,7 +360,7 @@ endfunction()
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
 
-    The function must be called after all CMagneto__set_up__library(iLibName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__env_vscode__file)
     CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__env_vscode__file_name" "CMagnetoInternal__generate__env_vscode__file_content" FALSE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})

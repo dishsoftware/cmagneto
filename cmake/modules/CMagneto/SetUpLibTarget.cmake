@@ -20,17 +20,17 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpLibTarget_Internals.cmake")
 #[[
     CMagneto__get_library_type
 
-    Defines cache variable LIB_<iLibName>_SHARED.
-    Returns the type of a library (STATIC or SHARED) according to value of LIB_<iLibName>_SHARED or BUILD_SHARED_LIBS is the LIB_<iLibName>_SHARED is DEFAULT.
-    If iLibName is shared, -DLIB_<iLibName>_SHARED define flag is added to compilation.
+    Defines cache variable LIB_<iLibTargetName>_SHARED.
+    Returns the type of a library (STATIC or SHARED) according to value of LIB_<iLibTargetName>_SHARED or BUILD_SHARED_LIBS is the LIB_<iLibTargetName>_SHARED is DEFAULT.
+    If iLibTargetName is shared, -DLIB_<iLibTargetName>_SHARED define flag is added to compilation.
 ]]
-function(CMagneto__get_library_type iLibName oLibType)
-    string(TOUPPER "${iLibName}" _libNameUC)
-    set(_cacheVarName "LIB_${_libNameUC}_SHARED")
+function(CMagneto__get_library_type iLibTargetName oLibType)
+    string(TOUPPER "${iLibTargetName}" _libTargetNameUC)
+    set(_cacheVarName "LIB_${_libTargetNameUC}_SHARED")
     get_property(_cachedVarVal CACHE "${_cacheVarName}" PROPERTY VALUE)
 
     # Create a cache variable with string input.
-    set("${_cacheVarName}" "DEFAULT" CACHE STRING "Build \"${iLibName}\" as a shared library. Can be ON, OFF, or DEFAULT.")
+    set("${_cacheVarName}" "DEFAULT" CACHE STRING "Build \"${iLibTargetName}\" as a shared library. Can be ON, OFF, or DEFAULT.")
 
     # Restrict allowed values in GUIs like CMake GUI or ccmake.
     set_property(CACHE "${_cacheVarName}" PROPERTY STRINGS ON OFF DEFAULT)
@@ -49,25 +49,25 @@ function(CMagneto__get_library_type iLibName oLibType)
 
     set(${oLibType} ${_libType} PARENT_SCOPE)
     if(${_libType} STREQUAL "SHARED")
-        add_definitions(-D${_cacheVarName}) # Define preproceccor macro LIB_LIBNAME_SHARED.
+        add_definitions(-D${_cacheVarName}) # Define preproceccor macro LIB_LIBTARGETNAME_SHARED.
     endif()
-    CMagnetoInternal__message(STATUS "\"${iLibName}\" library will be built as ${_libType}.")
+    CMagnetoInternal__message(STATUS "\"${iLibTargetName}\" library will be built as ${_libType}.")
 endfunction()
 
 
 #[[
     CMagneto__set_up__library
 
-    Sets up the build and installation process for the library target `${iLibName}`.
-    This function also registers `${iLibName}` in the global property `CMagnetoInternal__RegisteredTargets`.
+    Sets up the build and installation process for the library target `${iLibTargetName}`.
+    This function also registers `${iLibTargetName}` in the global property `CMagnetoInternal__RegisteredTargets`.
 
     It must be called:
     - Once for the library target.
-    - After `${iLibName}` has been created and linked against its dependencies.
-    - From the root `CMakeLists.txt` of `${iLibName}`. The root `CMakeLists.txt` must be in the source root of the lib.
+    - After `${iLibTargetName}` has been created and linked against its dependencies.
+    - From the root `CMakeLists.txt` of `${iLibTargetName}`. The root `CMakeLists.txt` must be in the source root of the lib.
 
     Parameters:
-    iLibName           - The name of the library target to configure.
+    iLibTargetName           - The name of the library target to configure.
 
     Named arguments (all optional):
     PUBLIC_HEADERS     - List of public headers used for compiling the library and to be installed and made available to consumers.
@@ -88,9 +88,9 @@ endfunction()
       Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
-function(CMagneto__set_up__library iLibName)
-    CMagnetoInternal__check_target_name_validity(${iLibName})
-    add_library(${PROJECT_NAME}::${iLibName} ALIAS ${iLibName})
+function(CMagneto__set_up__library iLibTargetName)
+    CMagnetoInternal__check_target_name_validity(${iLibTargetName})
+    add_library(${PROJECT_NAME}::${iLibTargetName} ALIAS ${iLibTargetName})
 
     cmake_parse_arguments(ARG
         "" # Options (boolean flags).
@@ -99,7 +99,7 @@ function(CMagneto__set_up__library iLibName)
         ${ARGN}
     )
 
-    set(_baseDirDescription "library target \"${iLibName}\"")
+    set(_baseDirDescription "library target \"${iLibTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PRIVATE_HEADERS}" OUTPUT_REL_PATHS _relPrivateHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_REL_PATHS _relInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
@@ -108,21 +108,21 @@ function(CMagneto__set_up__library iLibName)
 
     # Add target sources.
     ## Add header sets.
-    target_sources(${iLibName}
+    target_sources(${iLibTargetName}
         PUBLIC
             FILE_SET public_headers TYPE HEADERS
             BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
             FILES ${_relPublicHeaders}
     )
 
-    target_sources(${iLibName}
+    target_sources(${iLibTargetName}
         PRIVATE
             FILE_SET private_headers TYPE HEADERS
             BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
             FILES ${_relPrivateHeaders}
     )
 
-    target_sources(${iLibName}
+    target_sources(${iLibTargetName}
         INTERFACE
             FILE_SET interface_headers TYPE HEADERS
             BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -130,28 +130,28 @@ function(CMagneto__set_up__library iLibName)
     )
 
     ## Assign header set visibility.
-    set_target_properties(${iLibName} PROPERTIES
+    set_target_properties(${iLibTargetName} PROPERTIES
         PUBLIC_HEADER_SET public_headers
         PRIVATE_HEADER_SET private_headers
         INTERFACE_HEADER_SET interface_headers
     )
 
     ## Add sources.
-    target_sources(${iLibName} PRIVATE $<BUILD_INTERFACE:${_relSources}>)
-    #target_sources(${iLibName} PRIVATE ${_relSources})
+    target_sources(${iLibTargetName} PRIVATE $<BUILD_INTERFACE:${_relSources}>)
+    #target_sources(${iLibTargetName} PRIVATE ${_relSources})
     ####################################################################
 
-    target_include_directories(${iLibName}
+    target_include_directories(${iLibTargetName}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}> # Set up compiler.
             $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
     )
 
     # Set up binary.
-    CMagneto__compose_binary_OUTPUT_NAME(${iLibName} _binaryOutputName)
-    set_target_properties(${iLibName}
+    CMagneto__compose_binary_OUTPUT_NAME(${iLibTargetName} _binaryOutputName)
+    set_target_properties(${iLibTargetName}
         PROPERTIES
-            EXPORT_NAME ${iLibName}
+            EXPORT_NAME ${iLibTargetName}
             OUTPUT_NAME ${_binaryOutputName}
             # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
             # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.
@@ -160,9 +160,9 @@ function(CMagneto__set_up__library iLibName)
     # Install.
     ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
     CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
 
-    install(TARGETS ${iLibName}
+    install(TARGETS ${iLibTargetName}
         EXPORT ${PROJECT_NAME}Targets
         ARCHIVE
             DESTINATION ${CMagneto__SUBDIR_STATIC}
@@ -183,7 +183,7 @@ function(CMagneto__set_up__library iLibName)
         #     DESTINATION ...
         #     ...
         # is redundant, because it is effectively set by:
-        # target_include_directories(${iLibName}
+        # target_include_directories(${iLibTargetName}
         #     PUBLIC
         #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
         #         $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}>
@@ -193,7 +193,7 @@ function(CMagneto__set_up__library iLibName)
     ####################################################################
 
     # Set up Qt TS resources.
-    CMagnetoInternal__set_up_QtTS_files(${iLibName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
+    CMagnetoInternal__set_up_QtTS_files(${iLibTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
     # TODO
@@ -201,8 +201,8 @@ function(CMagneto__set_up__library iLibName)
 
 
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
-    list(APPEND _registeredTargets ${iLibName})
+    list(APPEND _registeredTargets ${iLibTargetName})
     set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "${_registeredTargets}")
 
-    CMagnetoInternal__collect_paths_to_shared_libs(${iLibName})
+    CMagnetoInternal__collect_paths_to_shared_libs(${iLibTargetName})
 endfunction()
