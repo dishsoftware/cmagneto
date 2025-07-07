@@ -8,7 +8,7 @@ By default, the library is installed to:
 
 📚 Documentation & Usage:
 Refer to the GitHub repository for full documentation, examples, and API references:
-  https://github.com/enowsw/contactholder
+  https://gitlab.com/enowsw/contactholder
 
 🐛 Reporting Issues:
 Feel free to report bugs or contribute via GitHub.

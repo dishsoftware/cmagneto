@@ -5,6 +5,6 @@
     "ProjectNameBase": "ContactHolder",
     "ProjectNameForUI": "Enow Contact Holder",
     "ProjectDescription": "Enow Contact Holder is open-source software, that gives you full control over how, when, and where your contacts are stored and synchronized.",
-    "ProjectHomepage": "https://github.com/enowsw/contactholder",
+    "ProjectHomepage": "https://gitlab.com/enowsw/contactholder",
     "ProjectVersion": "1.0.0"
 }
