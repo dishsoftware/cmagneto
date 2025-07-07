@@ -216,7 +216,7 @@ DockerFileNameSuffix must be composed as {{Platform}}__{{EnvType}}, e.g. 'Ubuntu
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
 Pushes images to {{DockerRegistry}}/{{DockerRegistrySuffix}}/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\
-An example of pushed image name: registry.gitlab.com/enowsw/contacts/enow_contacts_1.0.0__ubuntu24amd__build.\n\
+An example of pushed image name: registry.gitlab.com/enowsw/contactholder/enow_contactholder_1.0.0__ubuntu24amd__build.\n\
 \n\
 Uses other variables from JSON files in 'meta' to define image labels.",
         formatter_class=argparse.RawTextHelpFormatter

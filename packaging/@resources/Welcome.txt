@@ -1,8 +1,8 @@
-Welcome to the EnowContacts Installer
+Welcome to the Enow Contact Holder Installer
 
-This wizard will guide you through the installation of the EnowContacts library,
-a lightweight and open-source C++ component for managing contact data.
+This wizard will guide you through the installation of the Enow Contact Holder:
+open-source software, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
 Please review the license and follow the instructions to complete installation.
 
-Thank you for choosing EnowContacts and supporting open-source development!
+Thank you for choosing Enow Contact Holder and supporting open-source development!

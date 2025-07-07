@@ -184,4 +184,4 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contacts/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/EnowContacts-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contacts/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/EnowContacts-1.0.0.deb) .
+[https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
