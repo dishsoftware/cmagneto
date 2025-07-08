@@ -4,15 +4,18 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import os
-import sys
-import subprocess
-import shlex
 from enum import Enum
+from typing import NoReturn
+import os
+import shlex
+import subprocess
+import sys
 
 
-# Prohibits modification of class attributes after they are set.
 class ConstMetaClass(type):
+    """
+    Prohibits modification of class attributes after they are set.
+    """
     def __setattr__(cls, key, value):
         if key in cls.__dict__:
             raise AttributeError(f"Cannot modify const member '{key}'")
@@ -38,19 +41,27 @@ def makeColored(iText: str, iColor: PrintColor) -> str:
     RESET_STR = "\033[0m"
     return f"{iColor.value}{iText}{RESET_STR}"
 
-def warning(iText: str) -> None:
-    """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
-    printColored(f"Warning: {iText}", PrintColor.Yellow)
-
-def error(iText: str) -> None:
+def error(iMessage: str) -> NoReturn:
     """ Prints an error message in red color and exits the program. Adds "Error: " prefix."""
-    printColored(f"Error: {iText}", PrintColor.Red)
+    printColored(f"Error: {iMessage}", PrintColor.Red)
     sys.exit(1)
 
-def status(iText: str) -> None:
-    """ Prints an informational message in green color."""
-    printColored(iText, PrintColor.Green)
+def runtimeError(iMessage: str) -> None:
+    """ Makes iMessage in red color and raises RuntimeError."""
+    raise RuntimeError(makeColored(iMessage, PrintColor.Red))
 
+def warning(iMessage: str) -> None:
+    """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
+    printColored(f"Warning: {iMessage}", PrintColor.Yellow)
+
+def message(iMessage: str) -> None:
+    """ Prints a message in default color. """
+    # The function is only needed for consistency.
+    print(iMessage)
+
+def status(iMessage: str) -> None:
+    """ Prints an informational message in green color."""
+    printColored(iMessage, PrintColor.Green)
 
 def runCommand(iCommand: list[str]) -> None:
     print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue), flush=True)

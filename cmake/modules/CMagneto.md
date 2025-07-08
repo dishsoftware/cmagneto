@@ -30,11 +30,15 @@ Look into [`./CMagneto/CodeConventions.md`](./CMagneto/CodeConventions.md).
 
 ```text
 ProjectRoot/
+├── build.py                         # One-command build script.
 ├── CMakeLists.txt                   # [Project] top-level ([project] root) `CMakeLists.txt`. Define project here.
 ├── meta/
 │   ├── project.json
 │   ├── packaging.json
 │   └── ...
+├── scripts/
+│   ├── MetadataHolder.py            # This file.
+│   └── python_utils.py
 ├── cmake/
 │   └── modules/
 │       ├── CMagneto.md              # This file.

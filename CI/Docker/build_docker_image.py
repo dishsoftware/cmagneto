@@ -4,14 +4,26 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import sys
-import re
+"""
+build.py
+
+This one-command Docker image build script is a part of the CMagneto CMake module.
+
+For usage details and available options, run:
+```
+    python ./build_docker_image.py --help
+```
+Relative to the project root location must be preserved, but script can be run from any working directory: it uses paths relative to its own location.
+"""
+
 from enum import Enum
 from pathlib import Path
-from typing import Dict
+from typing import Dict, NoReturn, cast
 import argparse
+import re
+import sys
 
-# Add ./scripts to sys.path
+# Add the project root to `sys.path`.
 scriptsDir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(scriptsDir))
 
@@ -32,6 +44,7 @@ class DockerBuildRunner:
 
 
     # Label names, which must be defined in Dockerfiles. Values of these labels must be defined in a single line with "LABEL labelName=".
+    ## "version": version of an the image, not the project.
     REQUIRED_LABEL_NAMES = {"version"}
 
     @staticmethod
@@ -58,6 +71,7 @@ class DockerBuildRunner:
         return labels
 
     def __init__(self, iDockerfilePath: Path):
+        self.__projectDockerRoot = Path(__file__).resolve().parent # Directory where this file is located.
         self.__dockerFilePath = iDockerfilePath.resolve()
 
         if not self.__dockerFilePath.exists() or not self.__dockerFilePath.is_file():
@@ -73,23 +87,23 @@ class DockerBuildRunner:
         self.__platform: str = getDockerFileNameSuffixSubstring(0)
         self.__envType: str = getDockerFileNameSuffixSubstring(1)
 
-        companyNameShort = MetadataHolder.GET_METADATA_VALUE("Project.json", ["CompanyName_SHORT"])
-        projectNameBase = MetadataHolder.GET_METADATA_VALUE("Project.json", ["ProjectNameBase"])
-        projectVersion = MetadataHolder.GET_METADATA_VALUE("Project.json", ["ProjectVersion"])
+        companyNameShort = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["CompanyName_SHORT"])
+        projectNameBase = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["ProjectNameBase"])
+        projectVersion = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["ProjectVersion"])
         if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str) and isinstance(projectVersion, str)):
             error(f"{__class__.__name__}: can't get required metadata.")
 
         self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{dockerFileNameSuffix}".lower()
         self.__imageDescription = f"{self.__platform} image with {self.__envType} environment for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
 
-        self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistry"])
-        dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerRegistrySuffix"])
+        self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerRegistry"])
+        dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerRegistrySuffix"])
         if not (isinstance(self.__dockerRegistry, str) and isinstance(dockerRegistrySuffix, str)):
             error(f"{__class__.__name__}: can't get required metadata.")
 
         self.__remoteImageName = f"{self.__dockerRegistry}/{dockerRegistrySuffix}/{self.__localImageName}"
 
-        self.__imageMaintainer = MetadataHolder.GET_METADATA_VALUE("CI.json", ["DockerMaintainer"])
+        self.__imageMaintainer = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerMaintainer"])
         if not isinstance(self.__imageMaintainer, str):
             error(f"{__class__.__name__}: can't get required metadata.")
 
@@ -97,6 +111,9 @@ class DockerBuildRunner:
         self.__imageVersion = requiredLabels.get("version")
         if (self.__imageVersion is None):
             error(f"'{self.__dockerFilePath}' must contain 'version' label.")
+
+    def projectDockerRoot(self) -> Path:
+        return self.__projectDockerRoot
 
     def dockerFilePath(self) -> Path:
         return self.__dockerFilePath
@@ -126,7 +143,7 @@ class DockerBuildRunner:
 
     def imageVersion(self) -> str:
         """Returns version (tag) of the image to be built."""
-        return self.__imageVersion
+        return cast(str, self.__imageVersion)
 
     def generateEnvFile(self):
         text = f"Generation of .env file"
@@ -207,18 +224,20 @@ def main():
 f"Builds Docker images.\n\
 The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in DockerBuildRunner.BuildStage])}.\n\
 \n\
-Package name is generated as {{CompanyName_SHORT}}_{{ProjectNameBase}}_{{ProjectVersion}}__{{DockerFileNameSuffix}},\n\
-where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from 'meta/Project.json';\n\
+NOTE! All file paths in the message are given relative to the project root.\n\
+\n\
+Image name is generated as {{CompanyName_SHORT}}_{{ProjectNameBase}}_{{ProjectVersion}}__{{DockerFileNameSuffix}},\n\
+where CompanyName_SHORT, ProjectNameBase and ProjectVersion are variables from './meta/Project.json';\n\
 DockerFileNameSuffix is a substring of a used Dockerfile name: 'Dockerfile.DockerFileNameSuffix'.\n\
 DockerFileNameSuffix must be composed as {{Platform}}__{{EnvType}}, e.g. 'Ubuntu24AMD__build'.\n\
 \n\
 {DockerBuildRunner.__name__} requires Dockerfiles to define the following labels: {', '.join(DockerBuildRunner.REQUIRED_LABEL_NAMES)}.\n\
 Values of these labels must be defined in a single line: 'LABEL labelName=\"labelValue\"'.\n\
 \n\
-Pushes images to {{DockerRegistry}}/{{DockerRegistrySuffix}}/, where DockerRegistry and DockerRegistrySuffix are variables from 'meta/CI.json'.\n\
+Pushes images to {{DockerRegistry}}/{{DockerRegistrySuffix}}/, where DockerRegistry and DockerRegistrySuffix are variables from './meta/CI.json'.\n\
 An example of pushed image name: registry.gitlab.com/enowsw/contactholder/enow_contactholder_1.0.0__ubuntu24amd__build.\n\
 \n\
-Uses other variables from JSON files in 'meta' to define image labels.",
+Uses other variables from JSON files in 'meta/' to define image labels.",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(

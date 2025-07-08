@@ -4,17 +4,40 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+"""
+build.py
+
+This one-command build script is a part of the CMagneto CMake module.
+
+For usage details and available options, run:
+```
+    python ./build.py --help
+```
+Relative to the project root location must be preserved, but script can be run from any working directory: it uses paths relative to its own location.
+"""
+
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from enum import Enum
+from pathlib import Path
 from scripts.python_utils import *
+from typing import cast
+import argparse
+import inspect
 import os
+import platform
+import re
 import subprocess
 import shutil
-import platform
-import argparse
-import re
-from enum import Enum
 
 
-class BuildRunner:
+class BuildRunner(ABC):
+    """
+    Properly calls "cmake" commands. Works in coordination with the CMagneto CMake module.
+    Base class for BuildRunnerSingleConfig and BuildRunnerMultiConfig.
+    """
+
+
     class BuildType(Enum):
         Debug = 0
         Release = 1
@@ -41,11 +64,11 @@ class BuildRunner:
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
-    CMagneto__SUBDIR_STATIC = "lib/"
-    CMagneto__SUBDIR_SHARED = "lib/"
-    CMagneto__SUBDIR_EXECUTABLE = "bin/"
-    CMagneto__SUBDIR_SUMMARY = "summary/"
-    CMagneto__SUBDIR_PACKAGES = "packages/"
+    CMagneto__SUBDIR_STATIC = Path("lib/")
+    CMagneto__SUBDIR_SHARED = Path("lib/")
+    CMagneto__SUBDIR_EXECUTABLE = Path("bin/")
+    CMagneto__SUBDIR_SUMMARY = Path("summary/")
+    CMagneto__SUBDIR_PACKAGES = Path("packages/")
 
     CMagneto__BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
     CMagneto__TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
@@ -53,7 +76,7 @@ class BuildRunner:
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
     ##################################################################################################
 
-    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iSupportsMultiConfig: bool, iBuildTypes: set):
+    def __init__(self, iToolsetName: str, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
         if (iToolsetName is None) or (iToolsetName.isspace()):
             raise ValueError("Toolset name cannot be None or empty.")
 
@@ -62,19 +85,44 @@ class BuildRunner:
 
         self.__toolsetName = iToolsetName
         self.__generatorName = iGeneratorName
+        self.__multiConfig = iMultiConfig
         self.__cppCompilerName = iCPPCompilerName
-        self.__supportsMultiConfig = iSupportsMultiConfig
         self.__buildTypes = iBuildTypes
-        self.__srcDir = os.path.dirname(os.path.abspath(__file__))
-        self.__buildDir   = os.path.join(self.__srcDir, "build",   iToolsetName)
-        self.__installDir = os.path.join(self.__srcDir, "install", iToolsetName)
+        self.__cmakeFlagsFor__generate__command: list[str] = list()
+        self.__projectRoot = Path(__file__).resolve().parent # Directory where this file is located.
+        self.__buildDir    = self.__projectRoot / "build" / iToolsetName
+        self.__installDir  = self.__projectRoot / "install" / iToolsetName
+
+    @staticmethod
+    @abstractmethod
+    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+        """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
+        frame = inspect.currentframe()
+        methodName = frame.f_code.co_name if frame is not None else "<unknown>"
+        error(f"Static method \"{methodName}\" is not implemented by this subclass of the {BuildRunner.__qualname__}.")
 
     def __str__(self) -> str:
-        return f"Toolset name: \"{self.__toolsetName}\"\n" + \
+        text = \
+        f"Toolset name: \"{self.__toolsetName}\"\n" + \
         f"Generator: \"{self.__generatorName}\"\n" + \
-        f"Build directory: \"{os.path.abspath(self.__buildDir)}\"\n" + \
-        f"Install directory: \"{os.path.abspath(self.__installDir)}\"" + \
-        f"Buid types: {', '.join([buildType.name for buildType in self.__buildTypes])}"
+        f"Generator is multi-config: {self.__multiConfig}\n"
+
+        if self.__cppCompilerName is not None:
+            text += f"C++ compiler: \"{self.__cppCompilerName}\"\n"
+        else:
+            text += f"C++ compiler: default\n"
+
+        text += \
+        f"Build types: {', '.join([buildType.name for buildType in self.__buildTypes])}\n"
+
+        if self.__cmakeFlagsFor__generate__command:
+            text += "CMake flags for `generate` command: \"" + " ".join(self.__cmakeFlagsFor__generate__command) + "\"\n"
+
+        text += \
+        f"Project root:      \"{self.__projectRoot}\"\n" + \
+        f"Build directory:   \"{self.__buildDir}\"\n" + \
+        f"Install directory: \"{self.__installDir}\"\n"
+        return text
 
     def toolsetName(self) -> str:
         return self.__toolsetName
@@ -85,44 +133,53 @@ class BuildRunner:
     def cppCompilerName(self) -> str | None:
         return self.__cppCompilerName
 
-    def supportsMultiConfig(self) -> bool:
-        return self.__supportsMultiConfig
+    def multiConfig(self) -> bool:
+        return self.__multiConfig
 
-    def buildTypes(self) -> set:
+    def buildTypes(self) -> set[BuildType]:
         return self.__buildTypes
 
-    def srcDir(self) -> str:
-        """Returns the absolute path to the source directory."""
-        return self.__srcDir
+    def setCMakeFlagsFor__generate__command(self, iFlags: list[str]) -> None:
+        """These flags are passed to CMake on generation stage."""
+        self.__cmakeFlagsFor__generate__command = iFlags
 
-    def buildDir(self) -> str:
+    def cmakeFlagsFor__generate__command(self) -> list[str]:
+        return self.__cmakeFlagsFor__generate__command
+
+    def projectRoot(self) -> Path:
+        """Returns the absolute path to the project root directory."""
+        return self.__projectRoot
+
+    def buildDir(self) -> Path:
         """Returns the absolute path to the build directory."""
         return self.__buildDir
 
-    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildType) -> str:
+    def buildSubDirForBuildType(self, iSubDir: Path, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
-        printColored(self, PrintColor.Red)
-        error(f"{self.__class__.__name__}.run() is not implemented.")
+        frame = inspect.currentframe()
+        methodName = frame.f_code.co_name if frame is not None else "<unknown>"
+        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
-    def buildDirForBuildType(self, iBuildType: BuildType) -> str:
+    def buildDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type."""
-        printColored(self, PrintColor.Red)
-        error(f"{self.__class__.__name__}.run() is not implemented.")
+        frame = inspect.currentframe()
+        methodName = frame.f_code.co_name if frame is not None else "<unknown>"
+        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
-    def exeDirForBuildType(self, iBuildType: BuildType) -> str:
+    def exeDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_EXECUTABLE, iBuildType)
 
-    def sharedLibDirForBuildType(self, iBuildType: BuildType) -> str:
+    def sharedLibDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with shared libs in the build directory for the specified build type.
            Note: on Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts."""
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_SHARED, iBuildType)
 
-    def staticLibDirForBuildType(self, iBuildType: BuildType) -> str:
+    def staticLibDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with static libs in the build directory for the specified build type."""
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_STATIC, iBuildType)
 
-    def summaryDirForBuildType(self, iBuildType: BuildType) -> str:
+    def summaryDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with summary files in the build directory for the specified build type."""
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_SUMMARY, iBuildType)
 
@@ -132,13 +189,8 @@ class BuildRunner:
 
     def isBuildSummaryExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the build summary file exists for the specified build type."""
-        buildSummaryFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagneto__BUILD_SUMMARY__FILE_NAME)
-        return os.path.exists(buildSummaryFilePath)
-
-    def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
-        """Returns True if the compiled tests file exists for the specified build type."""
-        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagneto__TEST_BUILD_SUMMARY__FILE_NAME)
-        return os.path.exists(compiledTestsFilePath)
+        buildSummaryFilePath = self.summaryDirForBuildType(iBuildType) / BuildRunner.CMagneto__BUILD_SUMMARY__FILE_NAME
+        return buildSummaryFilePath.exists()
 
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
@@ -147,49 +199,42 @@ class BuildRunner:
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
         run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
-            warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
-            run_tests__scriptPath = os.path.join(run_tests__scriptDir, run_tests__scriptName)
+            run_tests__scriptPath = run_tests__scriptDir / run_tests__scriptName
             BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
 
         status(text + " finished.\n")
 
-    def isTestReportExistForBuildType(self, iBuildType: BuildType) -> bool:
-        """Returns True if the test report file exists for the specified build type."""
-        testReportFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagneto__TEST_REPORT__FILE_NAME)
-        return os.path.exists(testReportFilePath)
-
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""
-        compiledTestsFilePath = os.path.join(self.summaryDirForBuildType(iBuildType), BuildRunner.CMagneto__TEST_BUILD_SUMMARY__FILE_NAME)
-        return os.path.exists(compiledTestsFilePath)
+        compiledTestsFilePath = self.summaryDirForBuildType(iBuildType) / BuildRunner.CMagneto__TEST_BUILD_SUMMARY__FILE_NAME
+        return compiledTestsFilePath.exists()
 
-    def installDir(self) -> str:
+    def isTestReportExistForBuildType(self, iBuildType: BuildType) -> bool:
+        """Returns True if the test report file exists for the specified build type."""
+        testReportFilePath = self.summaryDirForBuildType(iBuildType) / BuildRunner.CMagneto__TEST_REPORT__FILE_NAME
+        return testReportFilePath.exists()
+
+    def installDir(self) -> Path:
         """Returns the absolute path to the install directory."""
         return self.__installDir
 
-    def installDirForBuildType(self, iBuildType: BuildType) -> str:
+    def installDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to the install directory for the specified build type."""
-        return os.path.join(self.__installDir, iBuildType.name)
+        return self.__installDir / iBuildType.name
 
     def isInstallDirExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the install directory exists for the specified build type."""
-        return os.path.exists(self.installDirForBuildType(iBuildType))
+        return self.installDirForBuildType(iBuildType).exists()
 
     def isPackageExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the 'packages' directory contains at least one file (recursively)."""
-        packagesDir = os.path.join(self.buildDirForBuildType(iBuildType), BuildRunner.CMagneto__SUBDIR_PACKAGES)
+        packagesDir = self.buildDirForBuildType(iBuildType) / BuildRunner.CMagneto__SUBDIR_PACKAGES
         for root, _, files in os.walk(packagesDir):
             if files:
                 return True
         return False
-
-    def setCMakeFlags(self, iFlags: list[str]) -> None:
-        """These flags are passed to CMake on generation stage."""
-        self.__cmakeFlags = iFlags
-
-    def cmakeFlags(self) -> list[str] | None:
-        return self.__cmakeFlags
 
     def isStageRequired(self, iBuildStageOfStage: BuildStage, iBuildType: BuildType, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> bool:
         """Checks if the build stage (iBuildStageOfStage) is required to run based on existence of its artifacts for the iBuildType,
@@ -221,104 +266,151 @@ class BuildRunner:
         status(text + "...")
 
         os.chdir(self.buildDirForBuildType(iBuildType))
-        command = ["cpack"]
+        command: list[str] = ["cpack"]
         runCommand(command)
-        os.chdir(self.srcDir())
+        os.chdir(self.projectRoot())
 
         status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
-        printColored(self, PrintColor.Red)
-        error(f"{self.__class__.__name__}.run() is not implemented.")
+        frame = inspect.currentframe()
+        methodName = frame.f_code.co_name if frame is not None else "<unknown>"
+        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
-    def _set_dependency_paths(self) -> None:
+    def _setDependencyPaths(self) -> None:
         pass
 
     @staticmethod
-    def _PREPARE_DIR(iDir) -> None:
+    def _PREPARE_DIR(iDir: Path) -> None:
         """Creates/cleans iDir."""
-        if os.path.exists(iDir):
+        if iDir.exists():
             shutil.rmtree(iDir)
 
         os.makedirs(iDir, exist_ok=True)
 
     @staticmethod
-    def _ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: str | None) -> None:
+    def _ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
         """
         If environment variable `iVarName` does not exist - exits.
         Otherwise appends {`iVarName`}/`iCMakePathPostfix` to CMAKE_PREFIX_PATH, if the new path is not in CMAKE_PREFIX_PATH already.
 
         :param iCMakePathPostfix must be formatted as "subdir_1/.../subdir_N.
         """
-        varPath = os.environ.get(iVarName)
-        if (not varPath):
-            if (varPath is None):
+        varPathStr = os.environ.get(iVarName)
+        if not varPathStr:
+            if (varPathStr is None):
                 error(f"\"{iVarName}\" environment variable is not set.")
             else:
                 error(f"\"{iVarName}\" environment variable is empty string.")
+        varPath = Path(cast(str, varPathStr))
 
-        pathToAdd = None
-        if (iCMakePathPostfix):
-            pathToAdd = os.path.join(varPath, *iCMakePathPostfix.split("/"))
+        if iCMakePathPostfix:
+            pathToAdd = varPath / iCMakePathPostfix
         else:
-            pathToAdd = os.path.join(varPath)
+            pathToAdd = varPath
+        pathToAdd.resolve()
 
         cmakePrefixPaths = os.environ.get("CMAKE_PREFIX_PATH")
         if (cmakePrefixPaths is None):
-            os.environ["CMAKE_PREFIX_PATH"] = pathToAdd
+            os.environ["CMAKE_PREFIX_PATH"] = str(pathToAdd)
             return
 
-        # Append only if not already in the path
-        if pathToAdd not in cmakePrefixPaths.split(os.pathsep):
-            os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, pathToAdd])
+        # Append only if pathToAdd is not already in the CMAKE_PREFIX_PATH.
+        existingResolvedPaths = [Path(existingPath).resolve() for existingPath in cmakePrefixPaths.split(os.pathsep)]
+        if pathToAdd not in existingResolvedPaths:
+            os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join([cmakePrefixPaths, str(pathToAdd)])
+
 
     class _GraphvizTargetDependencyGraph(metaclass=ConstMetaClass):
-        __GRAPHS_DIR = "graphviz"
+        """
+        Handles creation of dotfiles and a picture of the project target dependency graph.
+        """
+
+        __GRAPHS_DIR = "graphviz/"
         __GRAPH_NAME = "targets"
-        __GRAPH_SRC_SUBDIR = __GRAPH_NAME + "_src"
-        __DOT_FILE_NAME = __GRAPH_NAME + ".dot"
+        __GRAPH_DOTFILES_SUBDIR = __GRAPH_NAME + "_src/"
+        __MAIN_DOTFILE_NAME = __GRAPH_NAME + ".dot"
         __PICTURE_FORMAT = "svg"
 
         @staticmethod
-        def GRAPH_SRC_DIR(iBuildDir: str) -> str:
+        def GRAPH_DOTFILES_DIR(iBuildDir: Path) -> Path:
             """
-            Returns path to the directory where Graphviz source files are generated.
+            Returns a path of the directory, where CMake generates dotfiles (graph's sources) of the project target dependency graph.
             """
-            return os.path.join(iBuildDir, BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR, BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_SRC_SUBDIR)
+            return iBuildDir / BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR / BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_DOTFILES_SUBDIR
 
         @staticmethod
-        def DOT_FILE_PATH(iBuildDir: str) -> str:
+        def MAIN_DOTFILE_PATH(iBuildDir: Path) -> Path:
             """
-            Returns path to the generated dot file.
+            Returns a path of the main dotfile of the project target dependency graph, generated by CMake.
             """
-            return os.path.join(BuildRunner._GraphvizTargetDependencyGraph.GRAPH_SRC_DIR(iBuildDir), BuildRunner._GraphvizTargetDependencyGraph.__DOT_FILE_NAME)
+            return BuildRunner._GraphvizTargetDependencyGraph.GRAPH_DOTFILES_DIR(iBuildDir) / BuildRunner._GraphvizTargetDependencyGraph.__MAIN_DOTFILE_NAME
 
         @staticmethod
-        def ARGS_TO_CMAKE_GENERATE_CMD(iBuildDir: str) -> str:
+        def ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(iBuildDir: Path) -> str:
             """
-            Returns arguments for CMake's "generate" command to generate Graphviz dependency graph.
+            Returns argument for "cmake" command to generate dotfiles of the target dependency graph.
             """
-            return "--graphviz=" + BuildRunner._GraphvizTargetDependencyGraph.DOT_FILE_PATH(iBuildDir)
+            return "--graphviz=" + str(BuildRunner._GraphvizTargetDependencyGraph.MAIN_DOTFILE_PATH(iBuildDir))
 
         @staticmethod
-        def CREATE_PICTURE(iBuildDir: str) -> None:
+        def CREATE_DOT_FILES(iBuildDir: Path) -> None:
             """
-            Creates graph picture using existing dot files.
+            Creates dotfiles of the project target dependency graph.
+
+            The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
+            This results in unnecessarily longer build times and cluttered logs.
+            That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
+            """
+
+            # Delete all existing graph files.
+            ## Delete dotfiles.
+            graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.GRAPH_DOTFILES_DIR(iBuildDir)
+            BuildRunner._PREPARE_DIR(graphSrcDir)
+            # Delete picture.
+            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.PICTURE_FILE_PATH(iBuildDir)
+            if pictureFilePath.exists():
+                os.remove(pictureFilePath)
+
+            # Create dotfiles.
+            try:
+                command: list[str] = [
+                    "cmake",
+                    BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(iBuildDir),
+                    str(iBuildDir)
+                ]
+                runCommand(command)
+            except subprocess.CalledProcessError as e:
+                warning(f"Can't create dotfiles of the target dependency graph: {e}")
+                return
+
+        @staticmethod
+        def PICTURE_FILE_PATH(iBuildDir: Path) -> Path:
+            """
+            Returns path of a picture, generated by Graphviz, using dotfiles of the project target dependency graph.
+            """
+            return iBuildDir / BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR / (BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_NAME + "." + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT)
+
+        @staticmethod
+        def CREATE_PICTURE(iBuildDir: Path) -> None:
+            """
+            If finds Graphviz binaries, creates a picture of the project target dependency graph using existing dotfiles.
             """
             # Set path to Graphviz binaries.
-            graphvizDir = os.environ.get("GRAPHVIZ_DIR")
-            if (graphvizDir):
-                graphvizDir = os.path.join(graphvizDir, "bin")
+            graphvizBinaryDir: Path | None = None
+            graphvizDirStr = os.environ.get("GRAPHVIZ_DIR")
+            if (graphvizDirStr):
+                graphvizBinaryDir = Path(graphvizDirStr) / "bin/"
 
-            # Create picture from dot files.
-            pictureFilePath = os.path.join(iBuildDir, BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR, BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_NAME + "." + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT)
+            # Create a picture from dotfiles.
+            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.PICTURE_FILE_PATH(iBuildDir)
             try:
-                command = [
-                    os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
+                command: list[str] = [
+                    str((graphvizBinaryDir / "dot")) if graphvizBinaryDir else "dot",
                     "-T" + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT.lower(),
-                    BuildRunner._GraphvizTargetDependencyGraph.DOT_FILE_PATH(iBuildDir),
+                    str(BuildRunner._GraphvizTargetDependencyGraph.MAIN_DOTFILE_PATH(iBuildDir)),
                     "-o",
-                    pictureFilePath
+                    str(pictureFilePath)
                 ]
                 runCommand(command)
             except subprocess.CalledProcessError as e:
@@ -328,101 +420,71 @@ class BuildRunner:
                 warning("Graphviz is not found. Target dependency graph picture is not created.")
                 return
 
-    @staticmethod
-    def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir) -> None:
-        GRAPHS_DIR = "graphviz"
-        GRAPH_NAME = "targets"
-        GRAPH_SRC_SUBDIR = GRAPH_NAME + "_src"
-        DOT_FILE_NAME = GRAPH_NAME + ".dot"
-        PICTURE_FORMAT = "svg"
-
-        graphSrcDir = os.path.join(iBuildDir, GRAPHS_DIR, GRAPH_SRC_SUBDIR)
-        pictureFilePath = os.path.join(iBuildDir, GRAPHS_DIR, GRAPH_NAME + "." + PICTURE_FORMAT)
-
-        # Delete existing {GRAPH_NAME} graph files.
-        BuildRunner._PREPARE_DIR(graphSrcDir)
-        if os.path.exists(pictureFilePath):
-            os.remove(pictureFilePath)
-
-        # Create dot files.
-        dotFilePath = os.path.join(graphSrcDir, DOT_FILE_NAME)
-        try:
-            command = [
-                "cmake",
-                "--graphviz=" + dotFilePath,
-                iBuildDir
-            ]
-            runCommand(command)
-        except subprocess.CalledProcessError as e:
-            warning(f"Can't create Graphviz target dependency graph: {e}")
-            return
-
-        # Set path to Graphviz binaries.
-        graphvizDir = os.environ.get("GRAPHVIZ_DIR")
-        if (graphvizDir):
-            graphvizDir = os.path.join(graphvizDir, "bin")
-
-        # Create picture from dot files.
-        try:
-            command = [
-                os.path.join(graphvizDir, "dot") if graphvizDir else "dot",
-                "-T" + PICTURE_FORMAT.lower(),
-                dotFilePath,
-                "-o",
-                pictureFilePath
-            ]
-            runCommand(command)
-        except subprocess.CalledProcessError as e:
-            warning(f"Graphviz can't create target dependency graph picture: {e}")
-            return
-        except FileNotFoundError:
-            warning("Graphviz is not found. Target dependency graph picture is not created.")
-            return
 
     @staticmethod
-    def FIND_IN_DIR_FILE_WITH_NAME_WE(iDir: str, iFileNameWE: str) -> str | None:
+    def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir: Path) -> None:
         """
-        Returns file_name_with_extension of a file with the name_without_extension iFileNameWE in the directory iDir. Search is non-recursive.
-        """
-        for fileName in os.listdir(iDir):
-            fileNameWE, ext = os.path.splitext(fileName)
-            if fileNameWE == iFileNameWE and os.path.isfile(os.path.join(iDir, fileName)):
-                return fileName
+        Creates dotfiles of the project target dependency graph and, if finds Graphviz binaries, creates a picture using the dotfiles.
 
+        The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
+        This results in unnecessarily longer build times and cluttered logs.
+        That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
+        """
+        BuildRunner._GraphvizTargetDependencyGraph.CREATE_DOT_FILES(iBuildDir)
+        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(iBuildDir)
+
+    @staticmethod
+    def FIND_IN_DIR_FILE_WITH_NAME_WE(iDir: Path, iFileNameWE: str) -> Path | None:
+        """
+        Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
+        """
+        for item in iDir.iterdir():
+            if item.is_file() and iFileNameWE == item.stem:
+                return Path(item.name)
         return None
 
     @staticmethod
-    def RUN_SCRIPT(iScriptPath: str, iArgs: list[str] | None = None) -> None:
+    def RUN_SCRIPT(iScriptPath: Path, iArgs: list[str] | None = None) -> None:
         OS_NAME = platform.system()
-        filePathWE, ext = os.path.splitext(iScriptPath)
-        command = None
+        dotExt = iScriptPath.suffix
+        command: list[str] | None = None
         if OS_NAME == "Windows":
-            if ext == ".bat":
-                command = [iScriptPath]
+            if dotExt == ".bat":
+                command = [str(iScriptPath)]
         else: # Linux, MacOS
-            if ext == ".sh":
-                command = [iScriptPath]
+            if dotExt == ".sh":
+                command = [str(iScriptPath)]
 
         if command is None:
-            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{ext}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)
-
             runCommand(command)
 
 
-class BuiildRunnerSingleConfig(BuildRunner):
-    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
-        super().__init__(iToolsetName, iGeneratorName, iCPPCompilerName, False, iBuildTypes)
+class BuildRunnerSingleConfig(BuildRunner):
+    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set[BuildRunner.BuildType]):
+        super().__init__(iToolsetName, iGeneratorName, False, iCPPCompilerName, iBuildTypes)
 
-    def buildDirForBuildType(self, iBuildType) -> str:
+    def __str__(self) -> str:
+        text = super().__str__()
+
+        for buildType in self.buildTypes():
+            extraArgsFor__generate__command = self._extraArgsFor__generate__command(buildType)
+            if not extraArgsFor__generate__command:
+                continue
+            text += f"Extra args for `generate` ${buildType} command: \"" + " ".join(extraArgsFor__generate__command) + "\"\n"
+
+        return text
+
+    def buildDirForBuildType(self, iBuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type.."""
-        return os.path.join(self.buildDir(), iBuildType.name)
+        return self.buildDir() / iBuildType.name
 
-    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildRunner.BuildType) -> str:
+    def buildSubDirForBuildType(self, iSubDir: Path, iBuildType: BuildRunner.BuildType) -> Path:
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
-        return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir)
+        return self.buildDirForBuildType(iBuildType) / iSubDir
 
     def run(self, iBuildStage: BuildRunner.BuildStage, iRunPrecedingStages: BuildRunner.RunPrecedingStages) -> None:
         for buildType in self.buildTypes():
@@ -451,47 +513,46 @@ class BuiildRunnerSingleConfig(BuildRunner):
         buildDir = self.buildDirForBuildType(iBuildType)
         BuildRunner._PREPARE_DIR(buildDir)
         os.chdir(buildDir)
-        self._set_dependency_paths()
-        command = self.__compose_generate_command(iBuildType)
+        self._setDependencyPaths()
+        command: list[str] = self.__compose__generate__command(iBuildType)
         runCommand(command)
-        os.chdir(self.srcDir())
+        os.chdir(self.projectRoot())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
 
         status(text + " finished.\n")
 
-    def __compose_generate_command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
-        command = [ "cmake" ]
-        if self.cmakeFlags() is not None:
-            command.extend(self.cmakeFlags())
+    def __compose__generate__command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
+        command: list[str] = [ "cmake" ]
+        command.extend(self.cmakeFlagsFor__generate__command())
 
         command.extend([
             "-G", self.generatorName()
         ])
 
-        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARGS_TO_CMAKE_GENERATE_CMD(self.buildDirForBuildType(iBuildType)))
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(self.buildDirForBuildType(iBuildType)))
 
         if self.cppCompilerName() is not None:
-            command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
+            command.append("-DCMAKE_CXX_COMPILER=" + str(self.cppCompilerName()))
 
-        command.extend(self._extra_args_for_generate_command(iBuildType))
+        command.extend(self._extraArgsFor__generate__command(iBuildType))
 
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,
-            "-DCMAKE_INSTALL_PREFIX=" + self.installDirForBuildType(iBuildType),
-            self.srcDir()
+            "-DCMAKE_INSTALL_PREFIX=" + str(self.installDirForBuildType(iBuildType)),
+            str(self.projectRoot())
         ])
 
         return command
 
-    def _extra_args_for_generate_command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
+    def _extraArgsFor__generate__command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
         return []
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
         status(text + "...")
 
-        command = ["cmake", "--build", self.buildDirForBuildType(iBuildType)]
+        command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType))]
         runCommand(command)
 
         status(text + " finished.\n")
@@ -500,7 +561,7 @@ class BuiildRunnerSingleConfig(BuildRunner):
         text = f"Compiling tests ({iBuildType.name})"
         status(text + "...")
 
-        command = ["cmake", "--build", self.buildDirForBuildType(iBuildType), "--target", "build_tests"]
+        command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType)), "--target", "build_tests"]
         runCommand(command)
 
         status(text + " finished.\n")
@@ -511,23 +572,32 @@ class BuiildRunnerSingleConfig(BuildRunner):
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
-        command = ["cmake", "--install", self.buildDirForBuildType(iBuildType)]
+        command: list[str] = ["cmake", "--install", str(self.buildDirForBuildType(iBuildType))]
         runCommand(command)
 
         status(text + " finished.\n")
 
 
 class BuildRunnerMultiConfig(BuildRunner):
-    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set):
-        super().__init__(iToolsetName, iGeneratorName, iCPPCompilerName, True, iBuildTypes)
+    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set[BuildRunner.BuildType]):
+        super().__init__(iToolsetName, iGeneratorName, True, iCPPCompilerName, iBuildTypes)
 
-    def buildDirForBuildType(self, iBuildType) -> str:
+    def __str__(self) -> str:
+        text = super().__str__()
+
+        extraArgsFor__generate__command = self._extraArgsFor__generate__command()
+        if extraArgsFor__generate__command:
+            text += f"Extra args for `generate` command: \"" + " ".join(extraArgsFor__generate__command) + "\"\n"
+
+        return text
+
+    def buildDirForBuildType(self, iBuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type.."""
         return self.buildDir()
 
-    def buildSubDirForBuildType(self, iSubDir: str, iBuildType: BuildRunner.BuildType) -> str:
+    def buildSubDirForBuildType(self, iSubDir: Path, iBuildType: BuildRunner.BuildType) -> Path:
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
-        return os.path.join(self.buildDirForBuildType(iBuildType), iSubDir, iBuildType.name)
+        return self.buildDirForBuildType(iBuildType) / iSubDir / iBuildType.name
 
     def run(self, iBuildStage: BuildRunner.BuildStage, iRunPrecedingStages: BuildRunner.RunPrecedingStages) -> None:
         if (self.isStageRequired(BuildRunner.BuildStage.Generate, BuildRunner.BuildType.Release, iBuildStage, iRunPrecedingStages)):
@@ -555,11 +625,11 @@ class BuildRunnerMultiConfig(BuildRunner):
         status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.buildDir())
-        os.chdir(self.buildDir())
-        self._set_dependency_paths()
-        command = self.__compose_generate_command()
+        os.chdir(str(self.buildDir()))
+        self._setDependencyPaths()
+        command: list[str] = self.__compose__generate__command()
         runCommand(command)
-        os.chdir(self.srcDir())
+        os.chdir(str(self.projectRoot()))
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
         # Graphviz creates a target dependecy graph during generation time.
@@ -579,41 +649,40 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         status(text + " finished.\n")
 
-    def __compose_generate_command(self) -> list[str]:
-        command = [ "cmake" ]
-        if self.cmakeFlags() is not None:
-            command.extend(self.cmakeFlags())
+    def __compose__generate__command(self) -> list[str]:
+        command: list[str] = [ "cmake" ]
+        command.extend(self.cmakeFlagsFor__generate__command())
 
         command.extend([
             "-G", self.generatorName()
         ])
 
-        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARGS_TO_CMAKE_GENERATE_CMD(self.buildDir()))
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(self.buildDir()))
 
         if self.cppCompilerName() is not None:
-            command.append("-DCMAKE_CXX_COMPILER=" + self.cppCompilerName())
+            command.append("-DCMAKE_CXX_COMPILER=" + str(self.cppCompilerName()))
 
-        command.extend(self._extra_args_for_generate_command())
+        command.extend(self._extraArgsFor__generate__command())
 
         command.extend([
             # Install directory is overriden in __install.
             # It is set here in case installing is started not using "cmake --install", but from IDE's UI.
             "-DCMAKE_INSTALL_PREFIX=" +  os.path.join(self.installDir(), "INSTALLED_USING_IDE"),
-            self.srcDir()
+            str(self.projectRoot())
         ])
 
         return command
 
-    def _extra_args_for_generate_command(self) -> list[str]:
+    def _extraArgsFor__generate__command(self) -> list[str]:
         return []
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
         status(text + "...")
 
-        command = [
+        command: list[str] = [
             "cmake",
-            "--build", self.buildDir(),
+            "--build", str(self.buildDir()),
             "--config", iBuildType.name
         ]
         runCommand(command)
@@ -624,9 +693,9 @@ class BuildRunnerMultiConfig(BuildRunner):
         text = f"Compiling tests ({iBuildType.name})"
         status(text + "...")
 
-        command = [
+        command: list[str] = [
             "cmake",
-            "--build", self.buildDir(),
+            "--build", str(self.buildDir()),
             "--target", "build_tests",
             "--config", iBuildType.name
         ]
@@ -640,36 +709,48 @@ class BuildRunnerMultiConfig(BuildRunner):
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
-        command = [
+        command: list[str] = [
             "cmake",
-            "--install", self.buildDir(),
+            "--install", str(self.buildDir()),
             "--config", iBuildType.name,
-            "--prefix", self.installDirForBuildType(iBuildType)
+            "--prefix", str(self.installDirForBuildType(iBuildType))
         ]
         runCommand(command)
 
         status(text + " finished.\n")
 
 
-class UnixMakefilesGCCRunner(BuiildRunnerSingleConfig):
-    def __init__(self, iBuildTypes: set):
+class UnixMakefilesGCCRunner(BuildRunnerSingleConfig):
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
         super().__init__("UnixMakefiles_GCC", "Unix Makefiles", "g++", iBuildTypes)
 
+    @staticmethod
+    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+        return UnixMakefilesGCCRunner(iBuildTypes)
 
-class MinGWMakefilesMinGWRunner(BuiildRunnerSingleConfig):
-    def __init__(self, iBuildTypes: set):
+
+class MinGWMakefilesMinGWRunner(BuildRunnerSingleConfig):
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
         super().__init__("MinGW", "MinGW Makefiles", None, iBuildTypes)
+
+    @staticmethod
+    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+        return UnixMakefilesGCCRunner(iBuildTypes)
 
 
 class VS2022MSVCRunner(BuildRunnerMultiConfig):
-    def __init__(self, iBuildTypes: set):
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
         super().__init__("VS2022_MSVC", "Visual Studio 17 2022", None, iBuildTypes)
 
-    def _set_dependency_paths(self) -> None:
-        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", "lib/cmake")
-        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", "cmake")
+    @staticmethod
+    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+        return VS2022MSVCRunner(iBuildTypes)
 
-    def _extra_args_for_generate_command(self) -> list[str]:
+    def _setDependencyPaths(self) -> None:
+        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", Path("lib/cmake"))
+        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", Path("cmake"))
+
+    def _extraArgsFor__generate__command(self) -> list[str]:
         return [
             "-A", "x64"
         ]
@@ -682,7 +763,7 @@ class BuildToolsetHolder(metaclass=ConstMetaClass):
     class LinuxToolset(Enum):
         UnixMakefiles_GCC = 0
 
-    LINUX_BUILD_RUNNERS: dict[LinuxToolset, BuildRunner] = {
+    LINUX_BUILD_RUNNERS: dict[LinuxToolset, type[BuildRunner]] = {
         LinuxToolset.UnixMakefiles_GCC: UnixMakefilesGCCRunner
     }
 
@@ -692,14 +773,14 @@ class BuildToolsetHolder(metaclass=ConstMetaClass):
         # The MinGW name does not follow the accepted naming convention {BuildSystem}_{Compiler}, because for this case the conventional name is too long.
         VS2022_MSVC = 1 # Visual Studio 2022 with MSVC compiler.
 
-    WINDOWS_BUILD_RUNNERS: dict[WindowsToolset, BuildRunner] = {
+    WINDOWS_BUILD_RUNNERS: dict[WindowsToolset, type[BuildRunner]] = {
         WindowsToolset.MinGW: MinGWMakefilesMinGWRunner,
         WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
     }
 
 
     @staticmethod
-    def AVAILABLE_TOOLSETS() -> Enum:
+    def AVAILABLE_TOOLSETS() -> type[Enum]:
         if BuildToolsetHolder.__OS_NAME == "Linux":
             return BuildToolsetHolder.LinuxToolset
         elif BuildToolsetHolder.__OS_NAME == "Windows":
@@ -708,11 +789,11 @@ class BuildToolsetHolder(metaclass=ConstMetaClass):
             error(f"OS \"{BuildToolsetHolder.__OS_NAME}\" is not supported.")
 
     @staticmethod
-    def AVAILABLE_BUILD_RUNNNERS() -> dict[Enum, BuildRunner]:
+    def AVAILABLE_BUILD_RUNNNERS() -> dict[Enum, type[BuildRunner]]:
         if BuildToolsetHolder.__OS_NAME == "Linux":
-            return BuildToolsetHolder.LINUX_BUILD_RUNNERS
+            return BuildToolsetHolder.LINUX_BUILD_RUNNERS  # type: ignore
         elif BuildToolsetHolder.__OS_NAME == "Windows":
-            return BuildToolsetHolder.WINDOWS_BUILD_RUNNERS
+            return BuildToolsetHolder.WINDOWS_BUILD_RUNNERS  # type: ignore
         else: # E.g. "Darwin":
             error(f"OS \"{BuildToolsetHolder.__OS_NAME}\" is not supported.")
 
@@ -832,9 +913,9 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     if toolset not in BUILD_RUNNERS:
         error(f"{toolset} is not supported yet.")
 
-    buildTypes = {BuildRunner.BuildType[buildType] for buildType in args.build_types}
-    buildStage = BuildRunner.BuildStage[args.build_stage]
-    runPrecedingStages = BuildRunner.RunPrecedingStages[args.run_preceding_stages]
+    buildTypes: set[BuildRunner.BuildType] = {BuildRunner.BuildType[argBuildType] for argBuildType in args.build_types}
+    buildStage: BuildRunner.BuildStage = BuildRunner.BuildStage[args.build_stage]
+    runPrecedingStages: BuildRunner.RunPrecedingStages = BuildRunner.RunPrecedingStages[args.run_preceding_stages]
 
     flag__BUILD_SHARED_LIBS = "-DBUILD_SHARED_LIBS=ON" if args.BUILD_SHARED_LIBS else "-DBUILD_SHARED_LIBS=OFF"
     cmakeFlags = [flag__BUILD_SHARED_LIBS]
@@ -853,8 +934,9 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     for processedArg in unknownArgs:
         warning(f"Unknown argument: \"{processedArg}\". Ignored.")
 
-    buildRunner = BUILD_RUNNERS[toolset](buildTypes)
-    buildRunner.setCMakeFlags(cmakeFlags)
+    buildRunner: BuildRunner = BUILD_RUNNERS[toolset].create(buildTypes)
+    buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
+    message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)
 
 

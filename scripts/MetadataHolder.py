@@ -18,7 +18,7 @@ class MetadataHolder:
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
-    CMagneto__SUBDIR_META: Path = "meta/"
+    CMagneto__SUBDIR_META: Path = Path("meta/")
     ##################################################################################################
 
     __METADATA_DIR: Path = (Path(__file__).parent.resolve() / ".." / CMagneto__SUBDIR_META).resolve()
@@ -29,6 +29,7 @@ class MetadataHolder:
         """Returns a base dir, where all metadata files must be placed. Subdirs are allowed."""
         return MetadataHolder.__METADATA_DIR
 
+    @staticmethod
     def __GET_METADATA_BUFFER() -> Dict[Path, Any]:
         if MetadataHolder.__METADATA_BUFFER is None:
             MetadataHolder.__METADATA_BUFFER = {}
