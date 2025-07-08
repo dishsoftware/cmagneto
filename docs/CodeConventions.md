@@ -2,7 +2,7 @@
 
 
 ## 1. CMake Conventions
-The same as [CMake Conventions of the `CMagneto` CMake module](./../cmake/modules/CMagneto/CodeConventions.md).
+The same as [CMake Conventions of the `CMagneto` CMake module](./../cmake/modules/CMagneto/doc/CodeConventions.md).
 
 
 ## 2. C++ Conventions
@@ -15,7 +15,7 @@ The same as [CMake Conventions of the `CMagneto` CMake module](./../cmake/module
    ```c++
   #include <{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp>
   ```
-- The [`CMagneto CMake module imposes restrictions on locations of files`](./../cmake/modules/CMagneto.md#1-how-to-use-the-module).
+- The [`CMagneto CMake module imposes restrictions on locations of files`](./../cmake/modules/CMagneto/README.md#1-how-to-use-the-module).
 
 ### 2.1. C++ Naming Conventions
 - Target/module (library, executable): `ModuleName`.

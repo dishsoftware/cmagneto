@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 # Metadata
+## Version of an the image, not the project.
 LABEL version="1.0.0"
 
 # Avoid interactive prompts during installs.
