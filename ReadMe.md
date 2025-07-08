@@ -10,7 +10,7 @@ The template features:
 - GitLab CI integration for automated building and packaging
 
 The template is shipped with the following major components:
-- CMake module [`CMagneto`](./cmake/modules/CMagneto.md) contains functions to easily define CMake targets,<br>
+- CMake module [`CMagneto`](./cmake/modules/CMagneto/README.md) contains functions to easily define CMake targets,<br>
   generate build stage reports and helper scripts, etc;
 - One-command build script [`./build.py`](./build.py);
 - Pre-configured CTest files in [`./tests/`](./tests/);
@@ -58,7 +58,7 @@ Then proceed to the [Build](#2-build) section.
 ## 2.1. Build Tools
 - CMake 3.28 or later. Bound by the oldest tested version.
 - C++ 17 (or later) compiler (GCC, MinGW, MSVC). Bound by the project source code and CMagneto CMake module.
-- Python 3.10 or later. Bound by the oldest tested version.
+- Python 3.10 or later. Bound by the CMake Magneto module coupled Python code.
 - Graphviz (optional, for target graph).
 - Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files). Bound by the oldest tested version.
 - Qt Installer Framework 4.10 or later (optional, for packaging). Bound by the oldest tested version.
@@ -146,24 +146,24 @@ For builds made with:
 compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
 For other configurations (e.g., Windows MSVC 2022), it may be required to set paths to shared libraries of the dependecies before running.<br>
 <br>
-CMake module [`CMagneto`](./cmake/modules/CMagneto.md) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
+CMake module [`CMagneto`](./cmake/modules/CMagneto/README.md) creates helper scripts inside `bin` subdirectories of `./build/` and `./install/`:
 - `set_env` script sets environment variables for runtime.
 - `run` script executes the entrypoint-executable.
 
-Look for `CMagnetoInternal__set_up__set_env__script()` and `CMagnetoInternal__set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto.md) CMake module.
+Look for `CMagnetoInternal__set_up__set_env__script()` and `CMagnetoInternal__set_up__run__script()` functions of the [`CMagneto`](./cmake/modules/CMagneto/README.md) CMake module.
 
 
 # 4. CI
 Adjust values in [`./meta/CI.json`](./meta/CI.json) before any actions with Docker images and CI pipelines.
 
 ## 4.1. Docker
-Use [`./CI/Docker/build_docker_image.py`](./CI/Docker/build_docker_image.py) to build Docker images:
+Use [`./CI/Docker/build_image.py`](./CI/Docker/build_image.py) to build Docker images:
 ```bash
-python ./CI/Docker/build_docker_image.py --help
+python ./CI/Docker/build_image.py --help
 ```
 
 ## 4.2. GitLab
-- [`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. These must be passed to [`./CI/Docker/build_docker_image.py`](./CI/Docker/build_docker_image.py) before triggering CI.
+- [`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. These must be passed to [`./CI/Docker/build_image.py`](./CI/Docker/build_image.py) before triggering CI.
 - Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/pipeline.yml`](./CI/GitLab/pipeline.yml)\".
 
 ### 4.2.1. CI Triggers

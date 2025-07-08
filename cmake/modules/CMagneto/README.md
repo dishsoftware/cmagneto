@@ -7,17 +7,17 @@ LICENSE file in the root directory of this source tree.
 -->
 
 # CMagneto CMake Module
-CMagneto module consists of [`./CMagneto.cmake`](./CMagneto.cmake), submodules and scripts under [`./CMagneto/`](./CMagneto/) and this file.<br>
-CMagneto module is designed to easily set up and enforce a unified project structure, build logic, and tooling integration for C++ projects.
-
+The CMagneto CMake module is designed to set up CMake C++ projects with ease and enforce a unified structure, build logic, and tooling integration.<br>
+The module consists of submodules, coupled scripts and documentation under the [`CMagneto`](.) directory.
 
 ## Requirements
 - CMake 3.28 or above. Bound by the oldest tested version.
 - C++17 or above. Bound by the GoogleTest CMake module.
+- Python 3.10 or later. Yes, the CMake module has coupled Python code. Bound by the oldest tested version.
 - Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files). Bound by the oldest tested version.
 
 ## Code Conventions
-Look into [`./CMagneto/CodeConventions.md`](./CMagneto/CodeConventions.md).
+Look into [`./doc/CodeConventions.md`](./doc/CodeConventions.md).
 ---
 
 
@@ -36,14 +36,17 @@ ProjectRoot/
 │   ├── project.json
 │   ├── packaging.json
 │   └── ...
-├── scripts/
-│   ├── MetadataHolder.py            # This file.
-│   └── python_utils.py
 ├── cmake/
 │   └── modules/
-│       ├── CMagneto.md              # This file.
-│       ├── CMagneto.cmake           # The CMagneto CMake module entrypoint.
-│       ├── CMagneto/                # CMagneto CMake module submodules, scripts and resources.
+│       ├── CMagneto/                # CMagneto CMake module submodules, scripts, documentation and resources.
+│       |   ├── Main.cmake           # The CMagneto CMake module entrypoint.
+│       |   ├── README.md            # This file.
+│       |   ├── doc/                 # Other documentation.
+│       |   ├── py/                  # Coupled Python code.
+│       |   |   ├── utils.py
+│       |   |   ├── metadata_holder.py
+│       |   |   └──
+│       |   └── ...
 │       └── ...
 ├── src/                             # Project source root.
 │   └── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
@@ -80,21 +83,21 @@ ProjectRoot/
 │   └── @resources/                  # Package resources root. Under this dir, the resources can be nested arbitrary.
 └── ...
 ```
-> **Note:** Until the end of the list paths are shown relative to the project root.
-
 > **Note:** Functions, variables and constants of the CMagneto module are only intended to be accessed,<br>
 > if they are defined (not included) in a `*.cmake` file without `_Internal` suffix in its name.<br>
 > Names of such functions, variables and constants start with `CMagneto__`.
 
+> **Note:** Until the end of the list paths are shown relative to the project root.
 
-1) Adjust values in config files inside [`./meta/`](./../../meta/) directory:
-    - [`./meta/Project.json`](./../../meta/Project.json)
-    - [`./meta/Packaging.json`](./../../meta/Packaging.json)
+1) Adjust values in config files inside [`./meta/`](./../../../meta/) directory:
+    - [`./meta/Project.json`](./../../../meta/Project.json)
+    - [`./meta/Packaging.json`](./../../../meta/Packaging.json)
     - etc.
 
-    and installation package resources in [`./packaging/@resources/`](./../../packaging/@resources/).
+    and installation package resources in [`./packaging/@resources/`](./../../../packaging/@resources/).
 
-2) Include the [`MetaLoader`](./CMagneto/MetaLoader.cmake) submodule in the top-level (root) `CMakeLists.txt` before `project()` command.<br>
+2) Include the [`MetaLoader`](./MetaLoader.cmake) submodule in the top-level (root) `CMakeLists.txt`<br>
+    before `project()` command and inclusion of the rest of the `CMagneto` module.<br>
     Use `CMagneto__PROJECT_JSON__*` variables, defined by `CMagneto__parse__project_json()` function of the submodule, in the `project()` command:
     ```cmake
     cmake_minimum_required(VERSION 3.28)
@@ -114,12 +117,12 @@ ProjectRoot/
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     ```
 
-4) Include the [`CMagneto`](./CMagneto.cmake) module in the root `CMakeLists.txt`:
+4) Include the [`./cmake/modules/CMagneto/Main.cmake`](./Main.cmake) module entrypoint in the root `CMakeLists.txt`:
     ```cmake
-    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto.cmake")
+    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/Main.cmake")
     ```
 
-5) Add library targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../src/):
+5) Add library targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../../src/):
     ```cmake
     CMagneto__get_library_type(TargetName _LIB_TYPE)
     add_library(TargetName ${_LIB_TYPE}) # Don't add any files to the target in the command.
@@ -129,7 +132,7 @@ ProjectRoot/
     )
     ```
 
-6) Add executable targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../src/):
+6) Add executable targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../../src/):
     ```cmake
     add_executable(TargetName) # Don't add any files to the target in the command.
     target_link_libraries(TargetName ...)
@@ -138,7 +141,7 @@ ProjectRoot/
     )
     ```
 
-7) If the project defines an executable target, which is considered as the entrypoint, call
+7) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
@@ -151,10 +154,10 @@ ProjectRoot/
     )
     ```
 
-9) Keep [`./tests/CMakeLists.txt`](./../../tests/CMakeLists.txt) as is,<br>
+9) Keep [`./tests/CMakeLists.txt`](./../../../tests/CMakeLists.txt) as is,<br>
    except `add_subdirectory(...)` commands, if you don't stick to the endorsed `{CompanyName_SHORT}/{ProjectNameBase}/{TargetName}/` nesting scheme.
 
-10) Add test targets in `CMakeLists.txt` under subdirectories of [`./tests/`](./../../tests/):
+10) Add test targets in `CMakeLists.txt` under subdirectories of [`./tests/`](./../../../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 

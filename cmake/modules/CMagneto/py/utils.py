@@ -41,6 +41,16 @@ def makeColored(iText: str, iColor: PrintColor) -> str:
     RESET_STR = "\033[0m"
     return f"{iColor.value}{iText}{RESET_STR}"
 
+def makeIndented(iText: str, iIndent: str | None) -> str:
+    """ If iIndent is non-empty string, every new line is prepended with the indent."""
+    if (iIndent is None or iIndent == ""):
+        return iText
+    else:
+        indentedText = ""
+        for line in iText.splitlines():
+            indentedText += f"{iIndent}{line}\n"
+        return indentedText
+
 def error(iMessage: str) -> NoReturn:
     """ Prints an error message in red color and exits the program. Adds "Error: " prefix."""
     printColored(f"Error: {iMessage}", PrintColor.Red)
@@ -54,10 +64,9 @@ def warning(iMessage: str) -> None:
     """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
     printColored(f"Warning: {iMessage}", PrintColor.Yellow)
 
-def message(iMessage: str) -> None:
-    """ Prints a message in default color. """
-    # The function is only needed for consistency.
-    print(iMessage)
+def message(iMessage: str, iIndent: str | None = None) -> None:
+    """ Prints a message in default color. If iIndent is non-empty string, every new line is prepended with the indent."""
+    print(makeIndented(iMessage, iIndent))
 
 def status(iMessage: str) -> None:
     """ Prints an informational message in green color."""

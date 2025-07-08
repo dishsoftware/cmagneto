@@ -36,5 +36,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/") # Search of modules in directories from CMAKE_MODULE_PATH is not recursive.
 
 
-include(CMagneto)
+include(CMagneto/Main)
 CMagneto__set_up__project()

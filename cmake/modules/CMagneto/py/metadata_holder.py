@@ -4,11 +4,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from scripts.python_utils import warning, error, status
-import json
+from CMagneto.py.utils import error
 from pathlib import Path
-from typing import Dict
 from typing import Any
+import json
 
 
 class MetadataHolder:
@@ -21,8 +20,8 @@ class MetadataHolder:
     CMagneto__SUBDIR_META: Path = Path("meta/")
     ##################################################################################################
 
-    __METADATA_DIR: Path = (Path(__file__).parent.resolve() / ".." / CMagneto__SUBDIR_META).resolve()
-    __METADATA_BUFFER: Dict[Path, Any] | None = None
+    __METADATA_DIR: Path = (Path(__file__).parent.resolve() / "../../../../" / CMagneto__SUBDIR_META).resolve()
+    __METADATA_BUFFER: dict[Path, Any] | None = None
 
     @staticmethod
     def GET_METADATA_DIR() -> Path:
@@ -30,7 +29,7 @@ class MetadataHolder:
         return MetadataHolder.__METADATA_DIR
 
     @staticmethod
-    def __GET_METADATA_BUFFER() -> Dict[Path, Any]:
+    def __GET_METADATA_BUFFER() -> dict[Path, Any]:
         if MetadataHolder.__METADATA_BUFFER is None:
             MetadataHolder.__METADATA_BUFFER = {}
         return MetadataHolder.__METADATA_BUFFER
