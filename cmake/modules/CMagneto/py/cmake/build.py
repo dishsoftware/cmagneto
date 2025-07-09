@@ -33,30 +33,27 @@ import re
 
 
 def buildProject():
-    TOOLSET_ENUM = BuildRunnersHolder.AVAILABLE_TOOLSETS()
-    BUILD_RUNNERS = BuildRunnersHolder.AVAILABLE_BUILD_RUNNNERS()
-
-    if len(TOOLSET_ENUM) == 0:
-        error("No toolsets are supportted for the OS. Exiting.")
+    BUILD_RUNNERS = BuildRunnersHolder().availableBuildRunners()
+    TOOLSET_NAMES = BUILD_RUNNERS.keys()
 
     parser = argparse.ArgumentParser(
         description=\
 f"Builds the CMake project.\n\
 The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildRunner.BuildStage])}.\n\
-Supported OSes: Linux, Windows.\n\
+Supported OSes: {', '.join(os.name for os in BuildRunnersHolder().supportedOSes())}.\n\
 \n\
 NOTE! All relative paths in the doc are given relative to the project root.\n\
 \n",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    DEFAULT_TOOLSET = list(TOOLSET_ENUM)[0]
     parser.add_argument(
         "--toolset",
-        choices=[toolset.name for toolset in TOOLSET_ENUM],
-        default=DEFAULT_TOOLSET.name,
+        choices=TOOLSET_NAMES,
+        required=True,  # <--- Make this argument required
         help=\
-f"Select a toolset. Default is {DEFAULT_TOOLSET.name}.\n\
-Note: the set of available toolsets depends on the OS the script is run on."
+f"Select a toolset. The parameter is reqired.\n\
+Note: the set of available toolsets depends on the OS the script is run on." \
+        if len(TOOLSET_NAMES) > 0 else makeColored("No toolsets available for the OS!", PrintColor.Yellow)
     )
     DEFAULT_BUILD_TYPE = BuildRunner.BuildType.Release
     parser.add_argument(
@@ -109,7 +106,7 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
 
     args, unknownArgs = parser.parse_known_args()
     # Parse unknown arguments that are in the form of LIB_{LibTargetName}_SHARED=ON|OFF|DEFAULT.
-    libSharedOptions = {}
+    libSharedOptions: dict[str, str] = dict()
     for arg in unknownArgs[:]:
         if not arg.startswith("--"):
             continue
@@ -146,9 +143,10 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
         libSharedOptions[libTargetName] = optionVal
         unknownArgs.remove(arg)
 
-    toolset = TOOLSET_ENUM[args.toolset]
-    if toolset not in BUILD_RUNNERS:
-        error(f"{toolset} is not supported yet.")
+    toolsetName = args.toolset
+    # The check is redundant: ArgumentParser requires --toolset argument to be in TOOLSET_NAMES. And handles empty lists correctly.
+    if toolsetName not in TOOLSET_NAMES:
+        error(f"{toolsetName} is not supported yet.")
 
     buildTypes: set[BuildRunner.BuildType] = {BuildRunner.BuildType[argBuildType] for argBuildType in args.build_types}
     buildStage: BuildRunner.BuildStage = BuildRunner.BuildStage[args.build_stage]
@@ -168,10 +166,10 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
         else:
             error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
 
-    for processedArg in unknownArgs:
-        warning(f"Unknown argument: \"{processedArg}\". Ignored.")
+    if (len(unknownArgs) > 0):
+        error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = BUILD_RUNNERS[toolset].create(buildTypes)
+    buildRunner: BuildRunner = BUILD_RUNNERS[toolsetName].create(buildTypes)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)

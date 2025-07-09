@@ -31,7 +31,7 @@ class MetadataHolder:
     @staticmethod
     def __GET_METADATA_BUFFER() -> dict[Path, Any]:
         if MetadataHolder.__METADATA_BUFFER is None:
-            MetadataHolder.__METADATA_BUFFER = {}
+            MetadataHolder.__METADATA_BUFFER = dict()
         return MetadataHolder.__METADATA_BUFFER
 
     @staticmethod

@@ -7,6 +7,7 @@
 from enum import Enum
 from typing import NoReturn
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -75,3 +76,24 @@ def status(iMessage: str) -> None:
 def runCommand(iCommand: list[str]) -> None:
     print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue), flush=True)
     subprocess.run(iCommand, check=True)
+
+# Regex to allow only safe characters
+SAFE_DIRNAME_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
+
+# Reserved Windows names (case-insensitive)
+WINDOWS_RESERVED_NAMES = {
+    "CON", "PRN", "AUX", "NUL",
+    *(f"COM{i}" for i in range(1, 10)),
+    *(f"LPT{i}" for i in range(1, 10)),
+}
+
+def isDirNamePortable(iDirName: str) -> bool:
+    if not iDirName:
+        return False
+    if not SAFE_DIRNAME_PATTERN.fullmatch(iDirName):
+        return False
+    if iDirName.upper() in WINDOWS_RESERVED_NAMES:
+        return False
+    if iDirName[0] == "." or iDirName[-1] in {" ", "."}:
+        return False
+    return True

@@ -11,8 +11,8 @@ import os
 
 
 class MultiConfigBuildRunner(BuildRunner):
-    def __init__(self, iToolsetName: str, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set[BuildRunner.BuildType]):
-        super().__init__(iToolsetName, iGeneratorName, True, iCPPCompilerName, iBuildTypes)
+    def __init__(self, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set[BuildRunner.BuildType]):
+        super().__init__(iGeneratorName, True, iCPPCompilerName, iBuildTypes)
 
     def __str__(self) -> str:
         text = super().__str__()
