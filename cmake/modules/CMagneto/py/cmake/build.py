@@ -49,7 +49,7 @@ NOTE! All relative paths in the doc are given relative to the project root.\n\
     parser.add_argument(
         "--toolset",
         choices=TOOLSET_NAMES,
-        required=True,  # <--- Make this argument required
+        required=True,
         help=\
 f"Select a toolset. The parameter is reqired.\n\
 Note: the set of available toolsets depends on the OS the script is run on." \
@@ -60,7 +60,7 @@ Note: the set of available toolsets depends on the OS the script is run on." \
         "--build_types",
         type=str,
         choices=[buildType.name for buildType in BuildRunner.BuildType],
-        nargs="+",  # Allow one or more values
+        nargs="+", # Allow one or more values
         default=[DEFAULT_BUILD_TYPE.name],
         help=\
 f"Specify build types. Default is {DEFAULT_BUILD_TYPE.name}.\n\
@@ -144,10 +144,6 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
         unknownArgs.remove(arg)
 
     toolsetName = args.toolset
-    # The check is redundant: ArgumentParser requires --toolset argument to be in TOOLSET_NAMES. And handles empty lists correctly.
-    if toolsetName not in TOOLSET_NAMES:
-        error(f"{toolsetName} is not supported yet.")
-
     buildTypes: set[BuildRunner.BuildType] = {BuildRunner.BuildType[argBuildType] for argBuildType in args.build_types}
     buildStage: BuildRunner.BuildStage = BuildRunner.BuildStage[args.build_stage]
     runPrecedingStages: BuildRunner.RunPrecedingStages = BuildRunner.RunPrecedingStages[args.run_preceding_stages]

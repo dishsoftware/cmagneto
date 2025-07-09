@@ -77,10 +77,10 @@ def runCommand(iCommand: list[str]) -> None:
     print(makeColored("Running command: ", PrintColor.Cyan) + makeColored(f"{os.getcwd()}> ", PrintColor.Magenta) + makeColored(shlex.join(iCommand), PrintColor.Blue), flush=True)
     subprocess.run(iCommand, check=True)
 
-# Regex to allow only safe characters
+# Regex to allow only safe characters.
 SAFE_DIRNAME_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
 
-# Reserved Windows names (case-insensitive)
+# Reserved Windows names (case-insensitive).
 WINDOWS_RESERVED_NAMES = {
     "CON", "PRN", "AUX", "NUL",
     *(f"COM{i}" for i in range(1, 10)),
