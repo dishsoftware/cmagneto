@@ -107,7 +107,7 @@ Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
 **Caveat:** [`./.vscode/launch.json`](./.vscode/launch.json) contains a hardcoded path to an entrypoint-executable. If you edit files in [`./meta/`](./meta/), the path may break.
 
 ## 2.5. Windows 11 With UCRT
-Use the `MinGWMakefiles_MinGW` toolset.<br>
+Use the `MinGW` toolset.<br>
 
 ### 2.5.1. Installation Of Dependecies
 MSYS2 is expected to be installed in `C:/msys64`.<br>

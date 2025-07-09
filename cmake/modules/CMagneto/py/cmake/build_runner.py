@@ -12,6 +12,7 @@ The location relative to the project root must be preserved.
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.utils import *
 from enum import Enum
 from pathlib import Path
@@ -69,14 +70,26 @@ class BuildRunner(ABC):
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
     ##################################################################################################
 
-    def __init__(self, iToolsetName: str, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
-        if (iToolsetName is None) or (iToolsetName.isspace()):
-            raise ValueError("Toolset name cannot be None or empty.")
+    @staticmethod
+    @abstractmethod
+    def toolsetName() -> str:
+        """Toolset name should be composed as {BuildSystemName}_{CompilerName}.\n
+           Toolset names are used to register concrete BuildRunner subclasses in BuildRunnerHolder and must be unique."""
 
-        if (iGeneratorName is None) or (iGeneratorName.isspace()):
-            raise ValueError("Generator name cannot be None or empty.")
+    @staticmethod
+    @abstractmethod
+    def supportedOSes() -> set[BuildPlatform.OS]:
+        """Returns OS set, the BuildRunner subclass supports."""
 
-        self.__toolsetName = iToolsetName
+    @staticmethod
+    @abstractmethod
+    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+        """Creates an instance of the BuildRunner subclass."""
+
+    def __init__(self, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
+        assert isDirNamePortable(type(self).toolsetName())
+        assert not iGeneratorName.isspace()
+
         self.__generatorName = iGeneratorName
         self.__multiConfig = iMultiConfig
         self.__cppCompilerName = iCPPCompilerName
@@ -84,20 +97,12 @@ class BuildRunner(ABC):
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         thisDir = Path(__file__).resolve().parent # Directory where this file is located.
         self.__projectRoot = (thisDir / "../../../../../").resolve()
-        self.__buildDir    = self.__projectRoot / "build" / iToolsetName
-        self.__installDir  = self.__projectRoot / "install" / iToolsetName
-
-    @staticmethod
-    @abstractmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
-        """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
-        frame = inspect.currentframe()
-        methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        error(f"Static method \"{methodName}\" is not implemented by this subclass of the {BuildRunner.__qualname__}.")
+        self.__buildDir    = self.__projectRoot / "build" / type(self).toolsetName()
+        self.__installDir  = self.__projectRoot / "install" / type(self).toolsetName()
 
     def __str__(self) -> str:
         text = \
-        f"Toolset name: \"{self.__toolsetName}\"\n" + \
+        f"Toolset name: \"{type(self).toolsetName()}\"\n" + \
         f"Generator: \"{self.__generatorName}\"\n" + \
         f"Generator is multi-config: {self.__multiConfig}\n"
 
@@ -117,9 +122,6 @@ class BuildRunner(ABC):
         f"Build directory:   \"{self.__buildDir}\"\n" + \
         f"Install directory: \"{self.__installDir}\"\n"
         return text
-
-    def toolsetName(self) -> str:
-        return self.__toolsetName
 
     def generatorName(self) -> str:
         return self.__generatorName
@@ -165,7 +167,7 @@ class BuildRunner(ABC):
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_EXECUTABLE, iBuildType)
 
     def sharedLibDirForBuildType(self, iBuildType: BuildType) -> Path:
-        """Returns the absolute path to a subdirectory with shared libs in the build directory for the specified build type.
+        """Returns the absolute path to a subdirectory with shared libs in the build directory for the specified build type.\n
            Note: on Windows, .dll files are the shared libraries, but CMake treats them as runtime artifacts, not library artifacts."""
         return self.buildSubDirForBuildType(BuildRunner.CMagneto__SUBDIR_SHARED, iBuildType)
 
@@ -285,7 +287,7 @@ class BuildRunner(ABC):
     @staticmethod
     def _ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
         """
-        If environment variable `iVarName` does not exist - exits.
+        If environment variable `iVarName` does not exist - exits.\n
         Otherwise appends {`iVarName`}/`iCMakePathPostfix` to CMAKE_PREFIX_PATH, if the new path is not in CMAKE_PREFIX_PATH already.
 
         :param iCMakePathPostfix must be formatted as "subdir_1/.../subdir_N.
@@ -350,10 +352,10 @@ class BuildRunner(ABC):
         @staticmethod
         def CREATE_DOT_FILES(iBuildDir: Path) -> None:
             """
-            Creates dotfiles of the project target dependency graph.
+            Creates dotfiles of the project target dependency graph.\n
 
-            The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
-            This results in unnecessarily longer build times and cluttered logs.
+            The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.\n
+            This results in unnecessarily longer build times and cluttered logs.\n
             That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
             """
 
@@ -418,10 +420,10 @@ class BuildRunner(ABC):
     @staticmethod
     def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir: Path) -> None:
         """
-        Creates dotfiles of the project target dependency graph and, if finds Graphviz binaries, creates a picture using the dotfiles.
+        Creates dotfiles of the project target dependency graph and, if finds Graphviz binaries, creates a picture using the dotfiles.\n
 
-        The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
-        This results in unnecessarily longer build times and cluttered logs.
+        The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.\n
+        This results in unnecessarily longer build times and cluttered logs.\n
         That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
         """
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_DOT_FILES(iBuildDir)

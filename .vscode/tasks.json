@@ -44,7 +44,7 @@
             "command": "python",
             "args": [
                 "${workspaceFolder}\\build.py",
-                "--toolset", "MinGWMakefiles_MinGW",
+                "--toolset", "MinGW",
                 "--build_types", "${input:buildType}",
                 "--build_stage", "Compile"
             ],

@@ -4,58 +4,54 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.build_runners.linux.unix_makefiles_gcc_runner import UnixMakefilesGCCRunner
-from CMagneto.py.cmake.build_runners.windows.mingw_makefiles_mingw_runner import MinGWMakefilesMinGWRunner
-from CMagneto.py.cmake.build_runners.windows.vs2022_msvc_runner import VS2022MSVCRunner
 from CMagneto.py.utils import *
-from enum import Enum
-import platform
+from typing import Callable
 
 
-class BuildRunnersHolder(metaclass=ConstMetaClass):
-    __OS_NAME = platform.system()
+class BuildRunnersHolder():
+    __instance = None
+    __initialized = False
+
+    def __new__(cls):
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+        return cls.__instance
+
+    def __init__(self):
+        if self.__initialized:
+            return
+        # { buildRunnerToolsetName, buildRunnerClass }[]
+        self.__registeredBuildRunners: dict[str, type[BuildRunner]] = dict()
+        self.__initialized = True
+
+    def registerBuildRunner(self, iBuildRunnerClass: type[BuildRunner]) -> None:
+        """Call the function after definition of every concrete BuildRunner subclass."""
+        registeredBuildRunner = self.__registeredBuildRunners.get(iBuildRunnerClass.toolsetName())
+        if registeredBuildRunner is not None:
+            print("Not None")
+            if registeredBuildRunner == iBuildRunnerClass:
+                return
+            else:
+                raise KeyError(f"Another BuildRunner subclass with the toolset name \"{iBuildRunnerClass.toolsetName()}\" is already registered.")
+        self.__registeredBuildRunners[iBuildRunnerClass.toolsetName()] = iBuildRunnerClass
+
+    def registeredBuildRunners(self) -> dict[str, type[BuildRunner]]:
+        return self.__registeredBuildRunners
+
+    def supportedOSes(self) -> set[BuildPlatform.OS]:
+        """Returns supported OSes of all registered concrete BuildRunner subclasses."""
+        oses: set[BuildPlatform.OS] = set()
+        for runner in self.__registeredBuildRunners.values():
+            oses.update(runner.supportedOSes())
+        return oses
+
+    def availableBuildRunners(self) -> dict[str, type[BuildRunner]]:
+        """Returns { buildRunnerToolsetName, buildRunnerClass }[], with BuildRunner subclasses, which support the OS the script is run on."""
+        predicate: Callable[[type[BuildRunner]], bool] = lambda iBuildRunnerClass: BuildPlatform().hostOS() in iBuildRunnerClass.supportedOSes()
+        availableRunners: dict[str, type[BuildRunner]] = {k: v for k, v in self.__registeredBuildRunners.items() if predicate(v)}
+        return availableRunners
 
 
-    class LinuxToolset(Enum):
-        UnixMakefiles_GCC = 0
-
-    LINUX_BUILD_RUNNERS: dict[LinuxToolset, type[BuildRunner]] = {
-        LinuxToolset.UnixMakefiles_GCC: UnixMakefilesGCCRunner
-    }
-
-
-    class WindowsToolset(Enum):
-        MinGW = 0 # MinGW Makefiles and MinGW compiler.
-        # The MinGW name does not follow the accepted naming convention {BuildSystem}_{Compiler}, because for this case the conventional name is too long.
-        VS2022_MSVC = 1 # Visual Studio 2022 with MSVC compiler.
-
-    WINDOWS_BUILD_RUNNERS: dict[WindowsToolset, type[BuildRunner]] = {
-        WindowsToolset.MinGW: MinGWMakefilesMinGWRunner,
-        WindowsToolset.VS2022_MSVC: VS2022MSVCRunner
-    }
-
-
-    @staticmethod
-    def AVAILABLE_TOOLSETS() -> type[Enum]:
-        """
-        Returns platfom-dependent list of toolset names. A toolset is a pair [build system; compiler].
-        """
-        if BuildRunnersHolder.__OS_NAME == "Linux":
-            return BuildRunnersHolder.LinuxToolset
-        elif BuildRunnersHolder.__OS_NAME == "Windows":
-            return BuildRunnersHolder.WindowsToolset
-        else: # E.g. "Darwin":
-            error(f"OS \"{BuildRunnersHolder.__OS_NAME}\" is not supported.")
-
-    @staticmethod
-    def AVAILABLE_BUILD_RUNNNERS() -> dict[Enum, type[BuildRunner]]:
-        """
-        Returns platfom-dependent map [toolset name; BuildRunner class]
-        """
-        if BuildRunnersHolder.__OS_NAME == "Linux":
-            return BuildRunnersHolder.LINUX_BUILD_RUNNERS  # type: ignore
-        elif BuildRunnersHolder.__OS_NAME == "Windows":
-            return BuildRunnersHolder.WINDOWS_BUILD_RUNNERS  # type: ignore
-        else: # E.g. "Darwin":
-            error(f"OS \"{BuildRunnersHolder.__OS_NAME}\" is not supported.")
+from CMagneto.py.cmake.build_runners import concrete

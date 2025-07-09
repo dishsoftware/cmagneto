@@ -38,7 +38,7 @@ class ImageBuildRunner:
     def EXTRACT_REQUIRED_LABELS(iDockerfilePath: Path) -> dict[str, str]:
         iDockerfilePath = iDockerfilePath.resolve()
 
-        labels: dict[str, str] = {}
+        labels: dict[str, str] = dict()
         with iDockerfilePath.open() as textFile:
             for line in textFile:
                 for labelName in ImageBuildRunner.REQUIRED_LABEL_NAMES:
