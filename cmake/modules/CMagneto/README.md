@@ -352,7 +352,7 @@ Packages produced during pipelines are stored at:<br>
 `https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
 
 where:
-- `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. `67161006`;
+- `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. `71534203`;
 - `DockerRegistrySuffix` is defined in [`./meta/CI.json`](./../../../meta/CI.json);
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
 - `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./../../../CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform==`Ubuntu24AMD`;
@@ -361,7 +361,7 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./../../../packaging/CPackConfig.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
 
 
 ## 2. Knowledge Base
