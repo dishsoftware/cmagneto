@@ -104,6 +104,7 @@ target_sources(${iLibTargetName}
 A BS-explanation: a metadata, added to *Config.cmake files, if a file is marked is marked with `INTERFACE` or `PUBLIC`, is used only by CMake-aware IDEs and tooling for display/navigation purposes.
 
 [^2]: Depends on what functions are in the header:
+
 | Function in header                       | Compiled by               | Safe? | Note                                                                   |
 | ---------------------------------------- | ------------------------- | ----- | ---------------------------------------------------------------------- |
 | Template                                 | Consumer                  | ✅   | Must be header-defined                                                 |
@@ -111,7 +112,7 @@ A BS-explanation: a metadata, added to *Config.cmake files, if a file is marked 
 | Static non-template                      | Consumer                  | ✅   | Separate copy per TU                                                   |
 | Regular non-template (not inline/static) | Consumer & iLibTargetName | ❌   | Causes multiple definitions — **don't do this**                        |
 
-or what class methods are in the header:
+Or what class methods are in the header:
 | Method in header                          | Compiled by                   | Safe? | Notes                                                      |
 | ----------------------------------------- | ----------------------------- | ----- | ---------------------------------------------------------- |
 | Class declaration (no method definitions) | iLibTargetName                | ✅   | Header-only declarations are fine                          |

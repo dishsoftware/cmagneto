@@ -18,7 +18,7 @@
 ---
 
 ![Project Banner](./doc/assets/header/Header.jpg)
-# Contact Holder.
+# Contact Holder
 Open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
 ## License
