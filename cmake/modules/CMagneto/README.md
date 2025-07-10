@@ -6,31 +6,74 @@ This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
 -->
 
-# CMagneto CMake Module
-The CMagneto CMake module is designed to set up CMake C++ projects with ease and enforce a unified structure, build logic, and tooling integration.<br>
-The module consists of submodules, coupled scripts and documentation under the [`CMagneto`](.) directory.
+![Framework Banner](./doc/assets/header/Header.jpg)
+# CMagneto Framework
+🔗 GitLab repository: [https://gitlab.com/enowsw/cmagneto](https://gitlab.com/enowsw/cmagneto)
 
-## Requirements
-- CMake 3.28 or above. Bound by the oldest tested version.
-- C++17 or above. Bound by the GoogleTest CMake module.
-- Python 3.10 or later. Yes, the CMake module has coupled Python code. Bound by the oldest tested version.
-- Qt lrelease 6.4.2 or later (if any target in the project has Qt *.ts files). Bound by the oldest tested version.
+The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration.<br>
+> **Note:** Paths in the doc are shown relative to the project root.
 
-## Code Conventions
-Look into [`./doc/CodeConventions.md`](./doc/CodeConventions.md).
----
+The framework is shipped with the following major components:
+- [`CMagneto CMake module`](./Main.cmake) and [`primary coupled Python scripts`](./py/) under the [`./cmake/modules/CMagneto/`](.) directory;
+    * The [`CMagneto CMake module`](./Main.cmake) contains functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
+    * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
+- Template configuration files in [`./meta/`](./../../../meta/);
+- One-command build script [`./build.py`](./../../../build.py);
+- Pre-configured CTest files in [`./tests/`](./../../../tests/);
+- Pre-configured CPack files in [`./packaging/`](./../../../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../../../packaging/@resources/);
+- Pre-configured [`Dockerfiles`](./../../../CI/Docker/), one-command [`Docker image build script`](./../../../CI/Docker/build_image.py) and [`GitLab CI pipeline`](./../../../CI/GitLab/pipeline.yml) in [`./CI/`](./../../../CI/);
+- Pre-configured VS Code files at [`./.vscode/`](./../../../.vscode/).
 
 
-## 1. How To Use The Module
-0) The module mandates or endorses restrictions on locations of:
-    - target headers, sources and resources;
-    - test targets' headers, sources and resources;
-    - packaging resources.
-    Adhere to the **project structure**:
+## License
+This framework is licensed under the [MIT License](./LICENSE).
 
+### Third-Party Components
+- [`./cmake/modules/CMagneto/QtWrappers.cmake`](./QtWrappers.cmake) is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
+See [the file](./QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+
+### Third-Party Dependencies
+The CMagneto Framefork does not include distributable packages or source code,<br>
+but integrates with or fetches the following external tools during project builds:
+- **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
+- **Google Test** is used nder the terms of the BSD 3-Clause License. See [https://github.com/google/googletest/blob/main/LICENSE](https://github.com/google/googletest/blob/main/LICENSE).
+
+Users are responsible for complying with the licenses of these tools when using them in their own projects.
+> **Note:** Users do not need to include the Google Test license in their repositories or distributions,<br>
+> if they just use Google Test APIs and not bundle respositories or distributions of the Google Test.
+
+
+## Documentation Conventions
+- Paths, names of variables and options, and their values are `highlighted` and not wrapped in quotes.
+- If a path, name or value includes `a {placeholder}, wrapped in curly braces,` the `placeholder` is a required value that must be substituted.
+- If `a [{placeholder}] is wrapped in square brackets`, the `placeholder` is optional.
+- Always use relative paths, unless an absolute path is genuinely required.
+
+
+## Project Build Tools
+The CMagneto framework needs on the following software to build your project:
+- CMake 3.28 or later. Version bound by the oldest tested version.
+- C++ 17 (or later) compiler (e.g. GCC, MinGW, MSVC). Version bound by the GoogleTest CMake module.
+- Python 3.10 or later. Version bound by the coupled Python code.
+- Graphviz (optional, for target graph).
+- Qt lrelease 6.4.2 or later (if any target in the project has Qt `*.ts` files). Version bound by the oldest tested version.
+- Qt Installer Framework 4.10 or later (optional, for packaging). Version bound by the oldest tested version.
+
+> **Note:**
+> If CMake target dependency graph picture is desired, Graphviz must be installed.<br>
+> Output is located at `./build/{toolset}/[{build_type}]/graphviz/`.<br>
+> If Graphviz is installed, but no image is generated, define the `GRAPHVIZ_DIR` environment variable, e.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
+
+> **Note:** The easiest way to get Qt Installer Framework - install it using QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source.<br>
+> Another option is to compile it from [sources](https://download.qt.io/official_releases/qt-installer-framework/).<br>
+> Add the Qt Installer Framework’s `bin/` directory to your system `PATH`, e.g. `C:\Qt\Tools\QtInstallerFramework\4.10\bin`.
+
+
+## Project Structure
+The framework mandates or endorses restrictions on locations of project files.
 ```text
 ProjectRoot/
-├── build.py                         # One-command build script.
+├── build.py                         # One-command project build script.
 ├── CMakeLists.txt                   # [Project] top-level ([project] root) `CMakeLists.txt`. Define project here.
 ├── meta/
 │   ├── project.json
@@ -38,20 +81,17 @@ ProjectRoot/
 │   └── ...
 ├── cmake/
 │   └── modules/
-│       ├── CMagneto/                # CMagneto CMake module submodules, scripts, documentation and resources.
+│       ├── CMagneto/                # CMagneto framework CMake submodules, primary scripts, documentation and resources.
 │       |   ├── Main.cmake           # The CMagneto CMake module entrypoint.
 │       |   ├── README.md            # This file.
 │       |   ├── doc/                 # Other documentation.
 │       |   ├── py/                  # Coupled Python code.
-│       |   |   ├── utils.py
-│       |   |   ├── metadata_holder.py
-│       |   |   └──
 │       |   └── ...
 │       └── ...
 ├── src/                             # Project source root.
 │   └── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
 │       └── {ProjectNameBase}/       # ^
-│           └── TargetName/          # Target source root.
+│           └── TargetName/          # Target source root. Code of the target can be nested arbitrary under this dir.
 |               ├── CMakeLists.txt   # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
 |               ├── Header.hpp
 |               ├── Source.cpp
@@ -66,12 +106,12 @@ ProjectRoot/
 |                   ├── QtRC/        # Resources to embed into target's binary using Qt RCC. Under this dir, the resources can be nested arbitrary.
 |                   ├── QtTS/        # Qt `*.ts` files to compile `*.qm` external resource files. Under this dir, `*.ts` files can be nested arbitrary.
 |                   └── other/       # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
-├── tests/                           # Project tests' root. Under this dir, test headers and sources can be nested arbitrary.
-|   ├── CMakeLists.txt               # Set up GoogleTest here.
+├── tests/                           # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
+|   ├── CMakeLists.txt               # GoogleTest is set up here. No need to change the file.
 │   ├── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
 │   |   └── {ProjectNameBase}/       # ^
 │   |       ├── TargetName/          # Test target source root.
-|   |       |   ├── CMakeLists.txt   # Add test target TESTS_TargetName here and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+|   |       |   ├── CMakeLists.txt   # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
 |   |       |   |                    # ^ The naming of test targets is not mandated, but endorsed.
 |   |       |   ├── TEST_Header.hpp  # The naming is not mandated, but endorsed.
 |   |       |   ├── TEST_Source.cpp  # The naming is not mandated, but endorsed.
@@ -81,8 +121,49 @@ ProjectRoot/
 ├── packaging/
 │   ├── CPackConfig.cmake
 │   └── @resources/                  # Package resources root. Under this dir, the resources can be nested arbitrary.
+├── CI/
+│   ├── Docker/                      # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
+|   |   ├── build_image.py           # One-command Docker image build script.
+│   |   └── ...
+│   └── GitLab/                      # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
 └── ...
 ```
+
+
+## Code Conventions
+Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
+
+---
+
+
+## 1. How To Use The CMagneto Framework
+### 1.1. Initialize Your Project
+1) Copy all content from the [root of the dummy project](./../../../) into the root of your empty project repo.<br>
+    Open `./vscode/Project.code-workspace` from your project repository and close everything from the [`CMagneto framework repository`](./../../../).<br>
+    Open the copy of this file from your repo. <br>
+    ⏳...<br>
+    Now [this](./../../../) should be the root of your project.
+
+2) Consider everything in your repo, except [`./cmake/modules/CMagneto/`](.) and its contents, as a **ready-to-use CMake C++ project template**.
+    You may hop to [`1.2. Build Project`](#12-build-project) section of the doc to verify the build pipeline succeeds.
+
+    > **Note:** Since `CMagneto` is licensed under the MIT License, you're free to use, modify, and extend the framework.<br>
+    > If you do make improvements, please consider sharing them on the [CMagneto GitLab repository](https://gitlab.com/enowsw/cmagneto) — contributions are always welcome!
+
+3) Configure project.<br>
+    The [`./meta/`](./../../../meta/) directory contains JSON files for high-level project metadata.<br>
+    Adjust values in:
+    - [`./meta/Project.json`](./../../../meta/Project.json)
+    - [`./meta/Packaging.json`](./../../../meta/Packaging.json)
+
+    and installation package resources in [`./packaging/@resources/`](./packaging/@resources/).
+
+3) Change contents of the project's [`./LICENSE`](./../../../LICENSE), [`./README.md`](./../../../ReadMe.md), [`./TODO.md`](./../../../TODO.md) and [`./doc/`](./../../../doc/). Don't forget to mention CMagneto and its LICENSE!
+
+4) Proceed to writing code of the project. Adhere to the [project structure](#project-structure).<br>
+
+
+### 1.2. Use The CMagneto CMake Module.
 > **Note:** Functions, variables and constants of the CMagneto module are only intended to be accessed,<br>
 > if they are defined (not included) in a `*.cmake` file without `_Internal` suffix in its name.<br>
 > Names of such functions, variables and constants start with `CMagneto__`.
@@ -176,129 +257,114 @@ ProjectRoot/
 
 11) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function Sets up:
-    - CMake package configuration files, auxilliary targets, reports, helper scripts, etc.;
+    - CPack package configuration files, auxilliary targets, reports, helper scripts, etc.;
     - Unit and integration test compilation and `run_tests` scripts;
     - Packaging.
 
 
-## 2. General CMake Knowledge
-Why was this section even added?
-
-A developer seldom sets up projects - starting from scratch is even rarer. As a result, deep CMake knowledge is unlikely to land into a developer's procedural memory. The situation is aggravated by how extremely unintuitive CMake is as a language: ask someone unfamiliar with it, what `CMAKE_CURRENT_LIST_DIR` and `CMAKE_CURRENT_SOURCE_DIR` variables are or try to use a comma-containing string variable in a generator expression.<br>
-
-At the same time, the [`official CMake documentation`](https://cmake.org/documentation/) **sucks**. At best, it helps clarify minor details - like function arguments and options - but beyond that, it’s practically useless. There’s little to no explanation of how features are intended to be used or what the recommended practices are. And I can't say any other material I've come across, devoted to CMake, is good enough either. I recommend [`Scott C. Professional CMake: A Practical Guide [Internet]. 2018`](https://crascit.com/professional-cmake/). But even after reading the book, a developer still needs to vigorously experiment, google, and chat with AI bots to figure out how things actually work. And I hate that. I want clear, concise instructions all in one place and available offline. At least, this section covers the major sources of confusion.
-
-### 2.1. Stages (Times) of the CMake Build Pipeline
-#### 2.1.1. Configuration Time
-CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.
-
-#### 2.1.2. Generation Time
-CMake generates the build system files (e.g., Makefiles, Visual Studio project files) based on the configuration.
-These files are written under the specified **build directory**.
-Build rules and dependency graphs are created at this stage.
-
-#### 2.1.3. Build Time
-The actual build process begins.
-CMake (or the underlying build system) compiles the source code and links the binaries using the previously generated build system files.
-
-#### 2.1.4. Test Build Time (optional)
-The project’s unit and integration test targets are compiled if they exist. This stage may be part of the regular [Build Time](#213-build-time) or triggered separately.
-
-#### 2.1.5. Install Time
-If installation rules are defined, CMake installs the built targets and other specified files under the defined **install directory**.
-Note that the **install directory** is not necessarily the same location, where [**installation packages**](#216-package-time-optional) (if generated) will install the software.
-Optionally, during this phase, CMake may adjust RPATH (or similar) properties of the compiled binaries.
-
-#### 2.1.6. Package Time (optional)
-CPack invokes one or more package generators to create **installation packages** in a specified output directory.
-A package is essentially an archive that contains selected files from the **install directory**, along with optional metadata (e.g., for package managers like APT). The **installation packages** are the primary distribution format for the software, intended to be installed and run on a users' devices locally (not SaaS).
-
-In addition to the specific actions described above, CMake can be programmed to perform virtually any task during the build, install, and package times.
-
-
-### 2.2. CMake variables
-#### 2.2.1. `CMAKE_CURRENT_LIST_DIR`, `CMAKE_CURRENT_SOURCE_DIR` and `CMAKE_SOURCE_DIR`
-Consider these variables not as variables, but rather as getter functions: their returned values vary depending on the call context without explicit reassignment.
-
-`CMAKE_CURRENT_LIST_DIR`<br>
-**Definition**: The directory of the currently parsed CMake file, which can be a `CMakeLists.txt` or any included `.cmake` file or script.<br>
-**Scope**: changes whenever<br>
-1) CMake enters a new file, including modules or scripts included by include() or find_package();
-2)  `CMAKE_CURRENT_LIST_DIR` is evaluated in file outside of a function.<br>
-    If `CMAKE_CURRENT_LIST_DIR` is evaluated in a function, it evaluates to the directory of a file where the function is called (recursively).<br>
-
-**Typical use**: To refer to the directory of the script file currently being executed, often used inside .cmake modules to locate helper files or resources relative to the module.
-
-`CMAKE_CURRENT_SOURCE_DIR`<br>
-**Definition**: The directory where the currently processed CMakeLists.txt file is located.<br>
-**Scope**: Changes when CMake processes a new CMakeLists.txt via `add_subdirectory()` or similar.<br>
-**Typical use**: To refer to the current source directory of the build, usually the directory of the current subproject or subdirectory being configured.
-
-`CMAKE_SOURCE_DIR` equals `CMAKE_CURRENT_SOURCE_DIR`, if:
-1) The project is not nested within a parent project directory (the project is the top level project);
-2) Even if the project is nested within a parent project directory, the nested project is considered top level, if:
-    * 2.1) CMake is run from the nested project root directory;
-    * 2.2) The parent project calls `ExternalProject_Add()` to add the nested project.
-
-Proper names that should have been used instead of the confusing-as-hell CMake variable names mentioned above:<br>
-`CMAKE_CURRENT_LIST_DIR`   is `CMAKE_CURRENT_SCRIPT_DIR`.<br>
-`CMAKE_CURRENT_SOURCE_DIR` is `CMAKE_CURRENT_CMAKELISTS_DIR`.<br>
-`CMAKE_SOURCE_DIR `        is `CMAKE_ROOT_CMAKELISTS_DIR`.<br>
-
-
-### 2.3. CMake Commands
-#### 2.3.1. Setting Up A Target
-##### 2.3.1.1. `PRIVATE`, `INTERFACE` and `PUBLIC`
-In CMake, the keywords `PRIVATE`, `INTERFACE`, and `PUBLIC` control the propagation of properties such as sources, include directories, compile definitions, and compile options between targets:
-- `PRIVATE`: The property is used only when compiling the target itself. It is not exposed to consumers of the target.
-- `INTERFACE`: The property is not used when compiling the target, but is used by targets that link against the target.
-- `PUBLIC`: The property is used both when compiling the target and when compiling consumers that link against the target.
-In other words, PUBLIC is effectively a union of `PRIVATE` and `INTERFACE`.
-
-##### 2.3.1.2. Adding source files to an existing target
-```cmake
-target_sources(${iLibTargetName}
-    PUBLIC
-        $<BUILD_INTERFACE:${iPublicHeadersAbsolutePaths}>
-        # Absolute path means something like $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/algo.h>.
-        # See https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/ .
-        $<INSTALL_INTERFACE:${iPublicHeaders}>
-    INTERFACE
-        $<BUILD_INTERFACE:${iInterfaceHeaders}>
-        $<INSTALL_INTERFACE:${iInterfaceHeaders}>
-    PRIVATE
-        $<BUILD_INTERFACE:${iPrivateHeaders}>
-        $<BUILD_INTERFACE:${iSources}>
-        # iSources should always be PRIVATE, because they are part of library's internal implementation, not its public interface.
-        # When to mark .cpp as PUBLIC sources:
-        # 1) You want them to appear in IDEs under both iLibTargetName and consumer targets;
-        # 2) You want to share source files across multiple libraries and compile them in multiple targets.
-)
+### 1.2. Build Project
+Use [`./cmake/modules/CMagneto/py/cmake/build.py`](./py/cmake/build.py) or its proxy [`./build.py`](./../../../build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the project and generate installation packages.<br>
+To see available options, run:
+```bash
+python ./build.py --help
 ```
+The [`./build.py`](./py/cmake/build.py) supports multiple toolsets (pairs of a build system and a compiler). The toolsets were tested on the following platforms:
+- [Ubuntu 24 with Make and GCC](#121-ubuntu-24-with-make-and-gcc);
+- [Windows 11 with Make and MinGW UCRT](#122-windows-11-with-make-and-mingw-ucrt);
+- [Windows 11 with MSVS2022 and MSVC](#123-windows-11-with-msvs-2022-and-msvc).
 
 
-| A file marked with a keyword | Compiled into iLibTargetName | Shown in IDE as a file of iLibTargetName | Shown in IDE as a file of consumer targets within the same project | Exported via `install(EXPORT)` [^1] | Compiled by consumers [^2] |
-| ----------- | ---------- | --------- | ---------- | ---------- | -----------------------|
-| `PRIVATE`   | ✅ Yes    | ✅ Yes    | ❌ No     | ❌ No      | ❌ No                  |
-| `PUBLIC`    | ✅ Yes    | ✅ Yes    | ✅ Yes    | ✅ Yes     | ❌ No                  |
-| `INTERFACE` | ❌ No     | ❌ No     | ✅ Yes    | ✅ Yes     | ❌ Yes, if `#include`d |
+#### 1.2.1. Ubuntu 24 With Make And GCC
+Use the `UnixMakefiles_GCC` toolset.
+##### 1.2.1.1. Installation Of Dependecies
+To install most of build tools and dependencies (all, but Qt Installer Framework), run:
+```bash
+sudo apt update && sudo apt-get install -y \
+  dpkg-dev \
+  qt6-base-dev \
+  qt6-tools-dev
+```
+##### 1.2.1.2. VS Code
+Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
+[`./.vscode/launch.json`](./../../../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
 
-[^1]: Compilation, installed files, and included paths are not affected. Essentially, `INTERFACE` or `PUBLIC` file is shown in IDEs as a file of consumer targets within consumer projects.<br>
-A BS-explanation: a metadata, added to *Config.cmake files, if a file is marked is marked with `INTERFACE` or `PUBLIC`, is used only by CMake-aware IDEs and tooling for display/navigation purposes.
 
-[^2]: Depends on what functions are in the header:
-| Function in header                       | Compiled by               | Safe? | Note                                                                   |
-| ---------------------------------------- | ------------------------- | ----- | ---------------------------------------------------------------------- |
-| Template                                 | Consumer                  | ✅   | Must be header-defined                                                 |
-| Inline non-template                      | Consumer                  | ✅   | One (same signature) definition allowed across translation units (TUs) |
-| Static non-template                      | Consumer                  | ✅   | Separate copy per TU                                                   |
-| Regular non-template (not inline/static) | Consumer & iLibTargetName | ❌   | Causes multiple definitions — **don't do this**                        |
+#### 1.2.2. Windows 11 With Make And MinGW UCRT
+Use the `MinGW` toolset.
+##### 1.2.2.1. Installation Of Dependecies
+MSYS2 is expected to be installed in `C:/msys64`.<br>
+To install the required dependencies, run:
+```bash
+pacman -S mingw-w64-ucrt-x86_64-qt6
+```
+##### 1.2.2.2. VS Code
+Define the environment variable `MSYS2_HOME=C:\msys64`.<br>
+Use the `Windows_MinGW_UCRT` configuration in the `C/C++ Configuration` settings.<br>
+[`./.vscode/launch.json`](./../../../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
 
-or what class methods are in the header:
-| Method in header                          | Compiled by                   | Safe? | Notes                                                      |
-| ----------------------------------------- | ----------------------------- | ----- | ---------------------------------------------------------- |
-| Class declaration (no method definitions) | iLibTargetName                | ✅   | Header-only declarations are fine                          |
-| Class with inline method definitions      | Consumer                      | ✅   | Like inline functions — must be same across TUs            |
-| Class with template method definitions    | Consumer                      | ✅   | Must be header-only (or explicitly instantiated elsewhere) |
-| Class with non-inline method definitions  | ❌ Linker error if in header  | ❌   | Multiple definitions across TUs — ODR violation            |
-| Class with only static methods in header  | Consumer                      | ✅   | Each TU gets its own copy (like static functions)          |
+
+#### 1.2.3. Windows 11 With MSVS 2022 and MSVC
+Use the `VS2022_MSVC` toolset.
+##### 1.2.3.1. Installation Of Dependecies
+Tested with:
+- Qt 6.8.2. The easiest way to get it - run QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source and install "Qt/Qt 6.8.2/MSVC 2022 64-bit" component.
+
+Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
+##### 1.2.3.2. VS Code
+Define the environment variable `VC2022ToolsInstallDir`.<br>
+E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.<br>
+Use the `Windows_MSVC2022` configuration in the `C/C++ Configuration` settings.<br>
+[`./.vscode/launch.json`](./../../../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
+
+
+### 1.3. Run Project
+For builds made on:
+- [Ubuntu 24 with Make and GCC](#121-ubuntu-24-with-make-and-gcc);
+- [Windows 11 with Make and MinGW UCRT](#122-windows-11-with-make-and-mingw-ucrt);
+
+compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
+For other configurations (e.g., [Windows 11 with MSVS2022 and MSVC](#123-windows-11-with-msvs-2022-and-msvc)), it may be required to set paths to shared libraries of the dependecies before running.<br>
+
+CMagneto CMake submodule [`ThirdPartySharedLibsTools`](./ThirdPartySharedLibsTools.cmake) creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
+- `set_env` script sets environment variables for runtime, including paths to directories with 3rd-party shared libs;
+- `run` script executes a `set_env` script and the runs the project entrypoint-executable.
+
+
+### 1.4. Engage Continuous Integration (CI)
+Adjust values in [`./meta/CI.json`](./../../../meta/CI.json) before any actions with [Docker images](./../../../CI/Docker/) and [CI pipeline](./../../../CI/GitLab/pipeline.yml).
+
+#### 1.4.1. Build Docker Images
+Use [`./cmake/modules/Docker/build_image.py`](./py/docker/build_image.py) or its proxy [`./CI/Docker/build_image.py`](./../../../CI/Docker/build_image.py) to build [Docker images](./../../../CI/Docker/):
+```bash
+python ./build_image.py --help
+```
+[`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. They must be fed to [`./CI/Docker/build_image.py`](./../../../CI/Docker/build_image.py) before triggering CI pipeline.
+
+#### 1.4.2. GitLab
+Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/pipeline.yml`](./../../../CI/GitLab/pipeline.yml)\".
+
+##### 1.4.2.1. CI Triggers
+The [`./CI/GitLab/pipeline.yml`](./../../../CI/GitLab/pipeline.yml) instructs GitLab to create a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
+To create the pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
+
+##### 1.4.2.2. CI Artifact Output
+Packages produced during pipelines are stored at:<br>
+`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
+
+where:
+- `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. `67161006`;
+- `DockerRegistrySuffix` is defined in [`./meta/CI.json`](./../../../meta/CI.json);
+- `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
+- `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./../../../CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform==`Ubuntu24AMD`;
+- `toolset` is the argument, passed to [`./build.py --toolset`](./../../../build.py);
+- `PackageNamePrefix` and `ProjectVersion` are defined in [`./meta/Packaging.json`](./../../../meta/Packaging.json) and [`./meta/Project.json`](./../../../meta/Project.json);
+- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./../../../packaging/CPackConfig.cmake) and depends on platform and toolset.
+
+The resulting URL may look like:<br>
+[https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
+
+
+## 2. Knowledge Base
+This Knowledge Base serves as a centralized collection of technical notes, clarifications, code excerpts, and curated content from books, documentation, and online resources. It is designed for quick reference during development to reduce repetitive searches.
+
+- [CMake](./doc/CMakeKnowledge.md)

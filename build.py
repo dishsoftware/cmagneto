@@ -7,7 +7,7 @@
 """
 build.py
 
-This one-command project build script is a part of the CMagneto CMake module.
+This one-command project build script is a part of the CMagneto framework.
 
 For usage details and available options, run:
 ```

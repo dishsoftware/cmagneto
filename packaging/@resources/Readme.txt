@@ -1,6 +1,6 @@
 Thank you for installing Enow Contact Holder!
 
-Enow Contact Holder is open-source software, that gives you full control over how, when, and where your contacts are stored and synchronized.
+Enow Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
 📦 Installation Path:
 By default, the library is installed to:
