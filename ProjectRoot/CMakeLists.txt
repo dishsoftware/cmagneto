@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24
 ## Define functions to load project data.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
+include("${CMAKE_SOURCE_DIR}/CMagneto/MetaLoader.cmake")
 CMagneto__parse__project_json()
 
 

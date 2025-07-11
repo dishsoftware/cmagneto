@@ -14,7 +14,7 @@ The CMagneto framework is designed to set up CMake C++ projects with ease and en
 > **Note:** Paths in the doc are shown relative to the project root.
 
 The framework is shipped with the following major components:
-- [`CMagneto CMake module`](./Main.cmake) and [`primary coupled Python scripts`](./py/) under the [`./cmake/modules/CMagneto/`](.) directory;
+- [`CMagneto CMake module`](./Main.cmake) and [`primary coupled Python scripts`](./py/) under the [`./CMagneto/`](.) directory;
     * The [`CMagneto CMake module`](./Main.cmake) contains functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
     * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
 - Template configuration files in [`./meta/`](./../../../meta/);
@@ -29,7 +29,7 @@ The framework is shipped with the following major components:
 This framework is licensed under the [MIT License](./LICENSE).
 
 ### Third-Party Components
-- [`./cmake/modules/CMagneto/QtWrappers.cmake`](./QtWrappers.cmake) is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
+- [`./CMagneto/QtWrappers.cmake`](./QtWrappers.cmake) is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
 See [the file](./QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 
 ### Third-Party Dependencies
@@ -131,7 +131,7 @@ ProjectRoot/
 
 
 ## Code Conventions
-Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
+Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
 ---
 
@@ -144,7 +144,7 @@ Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventi
     ⏳...<br>
     Now [this](./../../../) should be the root of your project.
 
-2) Consider everything in your repo, except [`./cmake/modules/CMagneto/`](.) and its contents, as a **ready-to-use CMake C++ project template**.
+2) Consider everything in your repo, except [`./CMagneto/`](.) and its contents, as a **ready-to-use CMake C++ project template**.
     You may hop to [`1.2. Build Project`](#12-build-project) section of the doc to verify the build pipeline succeeds.
 
     > **Note:** Since `CMagneto` is licensed under the MIT License, you're free to use, modify, and extend the framework.<br>
@@ -182,7 +182,7 @@ Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventi
     Use `CMagneto__PROJECT_JSON__*` variables, defined by `CMagneto__parse__project_json()` function of the submodule, in the `project()` command:
     ```cmake
     cmake_minimum_required(VERSION 3.28)
-    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/MetaLoader.cmake")
+    include("${CMAKE_SOURCE_DIR}/CMagneto/MetaLoader.cmake")
     CMagneto__parse__project_json()
     project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
         DESCRIPTION "${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
@@ -198,9 +198,9 @@ Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventi
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     ```
 
-4) Include the [`./cmake/modules/CMagneto/Main.cmake`](./Main.cmake) module entrypoint in the root `CMakeLists.txt`:
+4) Include the [`./CMagneto/Main.cmake`](./Main.cmake) module entrypoint in the root `CMakeLists.txt`:
     ```cmake
-    include("${CMAKE_SOURCE_DIR}/cmake/modules/CMagneto/Main.cmake")
+    include("${CMAKE_SOURCE_DIR}/CMagneto/Main.cmake")
     ```
 
 5) Add library targets in `CMakeLists.txt` under subdirectories of [`./src/`](./../../../src/):
@@ -263,7 +263,7 @@ Look into [`./cmake/modules/CMagneto/doc/CodeConventions.md`](./doc/CodeConventi
 
 
 ### 1.2. Build Project
-Use [`./cmake/modules/CMagneto/py/cmake/build.py`](./py/cmake/build.py) or its proxy [`./build.py`](./../../../build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the project and generate installation packages.<br>
+Use [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) or its proxy [`./build.py`](./../../../build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the project and generate installation packages.<br>
 To see available options, run:
 ```bash
 python ./build.py --help

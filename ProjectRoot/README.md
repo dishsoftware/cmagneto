@@ -8,10 +8,10 @@
 - *GitLab CI integration;*
 - *Preconfigured Visual Studio Code settings.*
 
-*Consider everything in the directory, except [`./cmake/modules/CMagneto/`](./cmake/modules/CMagneto/) and its contents,*<br>
+*Consider everything in the directory, except [`./CMagneto/`](./CMagneto/) and its contents,*<br>
 *as a **ready-to-use CMake C++ project template**.*
 
-*Look into [`How To Use The CMagneto Framework`](./cmake/modules/CMagneto/README.md#1-how-to-use-the-cmagneto-framework) section of CMagneto doc.*
+*Look into [`How To Use The CMagneto Framework`](./CMagneto/README.md#1-how-to-use-the-cmagneto-framework) section of CMagneto doc.*
 
 ---
 ---
@@ -25,15 +25,15 @@ Open-source contact manager, that gives you full control over how, when, and whe
 This project is licensed under the [MIT License](./LICENSE).
 
 ### Third-party Components
-- [**CMagneto**](./cmake/modules/CMagneto/README.md) framewok is used under the terms of the [MIT License](./cmake/modules/CMagneto/README.md#license).<br>
-    The framework contains [`QtWrappers CMake Module`](./cmake/modules/CMagneto/QtWrappers.cmake), which is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
-    See [the file](./cmake/modules/CMagneto/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+- [**CMagneto**](./CMagneto/README.md) framewok is used under the terms of the [MIT License](./CMagneto/README.md#license).<br>
+    The framework contains [`QtWrappers CMake Module`](./CMagneto/QtWrappers.cmake), which is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
+    See [the file](./CMagneto/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
 
 
 ## Documentation Conventions
-The same as [CMagneto framework documentation conventions](./cmake/modules/CMagneto/README.md#documentation-conventions)
+The same as [CMagneto framework documentation conventions](./CMagneto/README.md#documentation-conventions)
 
 
 ## Code Conventions
@@ -44,7 +44,7 @@ Look into [`./doc/CodeConventions.md`](./doc/CodeConventions.md) .
 
 ## 1. Build
 ### 1.1. Build Tools
-The same as in [`Project Build Tools` section the CMagneto framework doc](./cmake/modules/CMagneto/README.md#project-build-tools).
+The same as in [`Project Build Tools` section the CMagneto framework doc](./CMagneto/README.md#project-build-tools).
 
 
 ### 1.2. Dependencies
