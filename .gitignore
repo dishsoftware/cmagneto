@@ -1,7 +1,7 @@
-/build/
-/install/
-/CI/Docker/.tmp/
-/CI/Docker/**/.tmp/
+/ProjectRoot/build/
+/ProjectRoot/install/
+/ProjectRoot/CI/Docker/.tmp/
+/ProjectRoot/CI/Docker/**/.tmp/
 *.directory
 *.pyc
 *.odg#
