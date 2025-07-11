@@ -94,9 +94,8 @@ class BuildRunner(ABC):
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
         self.__cmakeFlagsFor__generate__command: list[str] = list()
-        self.__projectRoot = Utils.projectRoot()
-        self.__buildDir    = self.__projectRoot / "build" / type(self).toolsetName()
-        self.__installDir  = self.__projectRoot / "install" / type(self).toolsetName()
+        self.__buildDir    = Utils.projectRoot() / "build" / type(self).toolsetName()
+        self.__installDir  = Utils.projectRoot() / "install" / type(self).toolsetName()
 
     def __str__(self) -> str:
         text = \
@@ -116,7 +115,7 @@ class BuildRunner(ABC):
             text += "CMake flags for `generate` command: \"" + " ".join(self.__cmakeFlagsFor__generate__command) + "\"\n"
 
         text += \
-        f"Project root:      \"{self.__projectRoot}\"\n" + \
+        f"Project root:      \"{Utils.projectRoot()}\"\n" + \
         f"Build directory:   \"{self.__buildDir}\"\n" + \
         f"Install directory: \"{self.__installDir}\"\n"
         return text
@@ -139,10 +138,6 @@ class BuildRunner(ABC):
 
     def cmakeFlagsFor__generate__command(self) -> list[str]:
         return self.__cmakeFlagsFor__generate__command
-
-    def projectRoot(self) -> Path:
-        """Returns the absolute path to the project root directory."""
-        return self.__projectRoot
 
     def buildDir(self) -> Path:
         """Returns the absolute path to the build directory."""
@@ -262,7 +257,7 @@ class BuildRunner(ABC):
         os.chdir(self.buildDirForBuildType(iBuildType))
         command: list[str] = ["cpack"]
         Utils.runCommand(command)
-        os.chdir(self.projectRoot())
+        os.chdir(Utils.projectRoot())
 
         Utils.status(text + " finished.\n")
 

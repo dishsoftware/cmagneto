@@ -63,7 +63,7 @@ class SingleConfigBuildRunner(BuildRunner):
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
         Utils.runCommand(command)
-        os.chdir(self.projectRoot())
+        os.chdir(Utils.projectRoot())
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(buildDir)
 
@@ -87,7 +87,7 @@ class SingleConfigBuildRunner(BuildRunner):
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,
             "-DCMAKE_INSTALL_PREFIX=" + str(self.installDirForBuildType(iBuildType)),
-            str(self.projectRoot())
+            str(Utils.projectRoot())
         ])
 
         return command

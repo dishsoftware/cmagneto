@@ -30,9 +30,18 @@ class ImageBuildRunner:
         Skip = 1 # Skip preceding stages.
 
 
+    __PROJECT_DOCKERFILES_ROOT: Path = Utils.projectRoot() / "CI" / "Docker"
+
     # Label names, which must be defined in Dockerfiles. Values of these labels must be defined in a single line with "LABEL labelName=".
     ## "version": version of an the image, not the project.
-    REQUIRED_LABEL_NAMES = {"version"}
+    REQUIRED_LABEL_NAMES: set[str] = {"version"}
+
+    @staticmethod
+    def projectDockerfilesRoot() -> Path:
+        """
+        Absolute path to the base dir with Dockerfiles of the project.
+        """
+        return ImageBuildRunner.__PROJECT_DOCKERFILES_ROOT
 
     @staticmethod
     def extractRequiredLabels(iDockerfilePath: Path) -> dict[str, str]:
@@ -58,17 +67,15 @@ class ImageBuildRunner:
         return labels
 
     def __init__(self, iDockerfilePath: Path):
-        self.__projectDockerfilesRoot = Utils.projectRoot() / "CI" / "Docker"
-
         dockerFileAbsolutePath: Path | None = None
         if iDockerfilePath.absolute():
             dockerFileAbsolutePath = iDockerfilePath.resolve()
         else:
-            dockerFileAbsolutePath = (self.__projectDockerfilesRoot / iDockerfilePath).resolve()
+            dockerFileAbsolutePath = (ImageBuildRunner.projectDockerfilesRoot() / iDockerfilePath).resolve()
 
-        if not dockerFileAbsolutePath.is_relative_to(self.__projectDockerfilesRoot):
+        if not dockerFileAbsolutePath.is_relative_to(ImageBuildRunner.projectDockerfilesRoot()):
             Utils.error(
-f"Dockerfile path must be under the Dockerfiles' root of the project \"{self.__projectDockerfilesRoot}\".\
+f"Dockerfile path must be under the Dockerfiles' root of the project \"{ImageBuildRunner.projectDockerfilesRoot()}\".\
 Input Dockerfile path: \"{iDockerfilePath}\".\
             ")
 
@@ -76,7 +83,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         if not self.__dockerFilePath.exists() or not self.__dockerFilePath.is_file():
             Utils.error(f"Invalid file: \"${self.__dockerFilePath}\".")
 
-        dockerFileSubdirStr = str(dockerFileAbsolutePath.parent.relative_to(self.__projectDockerfilesRoot).as_posix())
+        dockerFileSubdirStr = str(dockerFileAbsolutePath.parent.relative_to(ImageBuildRunner.projectDockerfilesRoot()).as_posix())
         dockerFileName = str(self.__dockerFilePath.name)
         dockerFileNameSuffix = dockerFileName.removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
         dockerFileNameSuffixSubstrings = dockerFileNameSuffix.split("__")
@@ -111,12 +118,6 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         self.__imageVersion = requiredLabels.get("version")
         if (self.__imageVersion is None):
             Utils.error(f"'{self.__dockerFilePath}' must contain 'version' label.")
-
-    def projectDockerfilesRoot(self) -> Path:
-        """
-        Absolute path to the base dir with Dockerfiles of the project.
-        """
-        return self.__projectDockerfilesRoot
 
     def dockerFilePath(self) -> Path:
         """
