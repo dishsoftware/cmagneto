@@ -49,7 +49,7 @@ variables:
   stage: build-test-package
   image: python:3
   variables:
-    Dockerfile: "Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden. The file must be located in ./CI/Docker/.
+    Dockerfile: "Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden. The file must be located under ./CI/Docker/.
   script:
     - python3 ./CI/Docker/build_image.py --file ./CI/Docker/${Dockerfile} --build_stage GenerateEnvFile
     - cat ./CI/Docker/.tmp/${Dockerfile}.env # Display the contents of the file.
@@ -72,7 +72,7 @@ variables:
 
 .build-test-package__template:
   stage: build-test-package
-  # needs: [.deduce_image__template]
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
     TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
@@ -99,21 +99,21 @@ variables:
   extends:
     - .on_tag__template
     - .build-test-package__template
-  # needs: [.deduce_image__template]
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 .on_main__build-test-package__template:
   extends:
     - .on_main__template
     - .build-test-package__template
-  # needs: [.deduce_image__template]
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 .on_branch__build-test-package__template:
   extends:
     - .on_branch__template
     - .build-test-package__template
-  # needs: [.deduce_image__template]
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 # Upload generated packages to "GitLab generic packages repository".
@@ -138,18 +138,18 @@ variables:
   extends:
     - .on_tag__template
     - .upload_packages__template
-  # needs: [.build-test-package__template]
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 .on_main__upload_packages__template:
   extends:
     - .on_main__template
     - .upload_packages__template
-  # needs: [.build-test-package__template]
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 .on_branch__upload_packages__template:
   extends:
     - .on_branch__template
     - .upload_packages__template
-  # needs: [.build-test-package__template]
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
