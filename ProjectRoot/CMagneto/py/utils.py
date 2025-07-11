@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from enum import Enum
+from pathlib import Path
 from typing import NoReturn
 import os
 import re
@@ -24,6 +25,12 @@ class ConstMetaClass(type):
 
 
 class Utils(metaclass=ConstMetaClass):
+    __PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
+
+    @staticmethod
+    def projectRoot() -> Path:
+        """Returns absolute path of the project root."""
+        return Utils.__PROJECT_ROOT
 
 
     class PrintColor(Enum):

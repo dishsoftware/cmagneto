@@ -94,8 +94,7 @@ class BuildRunner(ABC):
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
         self.__cmakeFlagsFor__generate__command: list[str] = list()
-        thisDir = Path(__file__).resolve().parent
-        self.__projectRoot = thisDir.parent.parent.parent
+        self.__projectRoot = Utils.projectRoot()
         self.__buildDir    = self.__projectRoot / "build" / type(self).toolsetName()
         self.__installDir  = self.__projectRoot / "install" / type(self).toolsetName()
 
@@ -153,13 +152,13 @@ class BuildRunner(ABC):
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def buildDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def exeDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
@@ -192,12 +191,12 @@ class BuildRunner(ABC):
         Utils.status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
-        run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
+        run_tests__scriptName = BuildRunner.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
             Utils.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = run_tests__scriptDir / run_tests__scriptName
-            BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
+            BuildRunner.runScript(run_tests__scriptPath)
 
         Utils.status(text + " finished.\n")
 
@@ -270,13 +269,13 @@ class BuildRunner(ABC):
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
         pass
 
     @staticmethod
-    def _PREPARE_DIR(iDir: Path) -> None:
+    def _prepareDir(iDir: Path) -> None:
         """Creates/cleans iDir."""
         if iDir.exists():
             shutil.rmtree(iDir)
@@ -284,7 +283,7 @@ class BuildRunner(ABC):
         os.makedirs(iDir, exist_ok=True)
 
     @staticmethod
-    def _ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
+    def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
         """
         If environment variable `iVarName` does not exist - exits.\n
         Otherwise appends {`iVarName`}/`iCMakePathPostfix` to CMAKE_PREFIX_PATH, if the new path is not in CMAKE_PREFIX_PATH already.
@@ -318,7 +317,7 @@ class BuildRunner(ABC):
 
     class _GraphvizTargetDependencyGraph(metaclass=ConstMetaClass):
         """
-        Handles creation of dotfiles and a picture of the project target dependency graph.
+        Handles generation of dotfiles and a picture of the project target dependency graph.
         """
 
         __GRAPHS_DIR = "graphviz/"
@@ -328,68 +327,68 @@ class BuildRunner(ABC):
         __PICTURE_FORMAT = "svg"
 
         @staticmethod
-        def GRAPH_DOTFILES_DIR(iBuildDir: Path) -> Path:
+        def dotfilesDir(iBuildDir: Path) -> Path:
             """
             Returns a path of the directory, where CMake generates dotfiles (graph's sources) of the project target dependency graph.
             """
             return iBuildDir / BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR / BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_DOTFILES_SUBDIR
 
         @staticmethod
-        def MAIN_DOTFILE_PATH(iBuildDir: Path) -> Path:
+        def mainDotfilePath(iBuildDir: Path) -> Path:
             """
             Returns a path of the main dotfile of the project target dependency graph, generated by CMake.
             """
-            return BuildRunner._GraphvizTargetDependencyGraph.GRAPH_DOTFILES_DIR(iBuildDir) / BuildRunner._GraphvizTargetDependencyGraph.__MAIN_DOTFILE_NAME
+            return BuildRunner._GraphvizTargetDependencyGraph.dotfilesDir(iBuildDir) / BuildRunner._GraphvizTargetDependencyGraph.__MAIN_DOTFILE_NAME
 
         @staticmethod
-        def ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(iBuildDir: Path) -> str:
+        def argForCMakeToGenerateDotfiles(iBuildDir: Path) -> str:
             """
             Returns argument for "cmake" command to generate dotfiles of the target dependency graph.
             """
-            return "--graphviz=" + str(BuildRunner._GraphvizTargetDependencyGraph.MAIN_DOTFILE_PATH(iBuildDir))
+            return "--graphviz=" + str(BuildRunner._GraphvizTargetDependencyGraph.mainDotfilePath(iBuildDir))
 
         @staticmethod
-        def CREATE_DOT_FILES(iBuildDir: Path) -> None:
+        def generateDotfiles(iBuildDir: Path) -> None:
             """
-            Creates dotfiles of the project target dependency graph.\n
+            Generates dotfiles of the project target dependency graph.\n
 
             The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.\n
             This results in unnecessarily longer build times and cluttered logs.\n
-            That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
+            That's why it is not called in this script. Instead, all BuildRunners should add `argForCMakeToGenerateDotfiles()` result to a CMake generate ("cmake ... -G ...") command.
             """
 
             # Delete all existing graph files.
             ## Delete dotfiles.
-            graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.GRAPH_DOTFILES_DIR(iBuildDir)
-            BuildRunner._PREPARE_DIR(graphSrcDir)
+            graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.dotfilesDir(iBuildDir)
+            BuildRunner._prepareDir(graphSrcDir)
             # Delete picture.
-            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.PICTURE_FILE_PATH(iBuildDir)
+            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.pictureFilePath(iBuildDir)
             if pictureFilePath.exists():
                 os.remove(pictureFilePath)
 
-            # Create dotfiles.
+            # Generate dotfiles.
             try:
                 command: list[str] = [
                     "cmake",
-                    BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(iBuildDir),
+                    BuildRunner._GraphvizTargetDependencyGraph.argForCMakeToGenerateDotfiles(iBuildDir),
                     str(iBuildDir)
                 ]
                 Utils.runCommand(command)
             except subprocess.CalledProcessError as e:
-                Utils.warning(f"Can't create dotfiles of the target dependency graph: {e}")
+                Utils.warning(f"Can't generate dotfiles of the target dependency graph: {e}")
                 return
 
         @staticmethod
-        def PICTURE_FILE_PATH(iBuildDir: Path) -> Path:
+        def pictureFilePath(iBuildDir: Path) -> Path:
             """
             Returns path of a picture, generated by Graphviz, using dotfiles of the project target dependency graph.
             """
             return iBuildDir / BuildRunner._GraphvizTargetDependencyGraph.__GRAPHS_DIR / (BuildRunner._GraphvizTargetDependencyGraph.__GRAPH_NAME + "." + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT)
 
         @staticmethod
-        def CREATE_PICTURE(iBuildDir: Path) -> None:
+        def generatePicture(iBuildDir: Path) -> None:
             """
-            If finds Graphviz binaries, creates a picture of the project target dependency graph using existing dotfiles.
+            If finds Graphviz binaries, generates a picture of the project target dependency graph using existing dotfiles.
             """
             # Set path to Graphviz binaries.
             graphvizBinaryDir: Path | None = None
@@ -397,39 +396,39 @@ class BuildRunner(ABC):
             if (graphvizDirStr):
                 graphvizBinaryDir = Path(graphvizDirStr) / "bin/"
 
-            # Create a picture from dotfiles.
-            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.PICTURE_FILE_PATH(iBuildDir)
+            # Generate a picture from dotfiles.
+            pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.pictureFilePath(iBuildDir)
             try:
                 command: list[str] = [
                     str((graphvizBinaryDir / "dot")) if graphvizBinaryDir else "dot",
                     "-T" + BuildRunner._GraphvizTargetDependencyGraph.__PICTURE_FORMAT.lower(),
-                    str(BuildRunner._GraphvizTargetDependencyGraph.MAIN_DOTFILE_PATH(iBuildDir)),
+                    str(BuildRunner._GraphvizTargetDependencyGraph.mainDotfilePath(iBuildDir)),
                     "-o",
                     str(pictureFilePath)
                 ]
                 Utils.runCommand(command)
             except subprocess.CalledProcessError as e:
-                Utils.warning(f"Graphviz can't create target dependency graph picture: {e}")
+                Utils.warning(f"Graphviz can't generate target dependency graph picture: {e}")
                 return
             except FileNotFoundError:
-                Utils.warning("Graphviz is not found. Target dependency graph picture is not created.")
+                Utils.warning("Graphviz is not found. Target dependency graph picture is not generated.")
                 return
 
 
     @staticmethod
-    def CREATE_GRAPHVIZ_TARGET_DEPENDENCY_GRAPH(iBuildDir: Path) -> None:
+    def generateGrpahvizTargetDependencyGraph(iBuildDir: Path) -> None:
         """
-        Creates dotfiles of the project target dependency graph and, if finds Graphviz binaries, creates a picture using the dotfiles.\n
+        Generates dotfiles of the project target dependency graph and, if finds Graphviz binaries, generates a picture using the dotfiles.\n
 
         The method Makes CMake to run project configuration stage again: CMake processes the top-level CMakeLists.txt and all included subdirectories to understand the project’s structure, options, and dependencies.\n
         This results in unnecessarily longer build times and cluttered logs.\n
-        That's why it is not called in this script. Instead, all BuildRunners should add ARG_FOR_CMAKE_TO_GENERATE_DOTFILES() result to a CMake generate ("cmake ... -G ...") command.
+        That's why it is not called in this script. Instead, all BuildRunners should add `argForCMakeToGenerateDotfiles()` result to a CMake generate ("cmake ... -G ...") command.
         """
-        BuildRunner._GraphvizTargetDependencyGraph.CREATE_DOT_FILES(iBuildDir)
-        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(iBuildDir)
+        BuildRunner._GraphvizTargetDependencyGraph.generateDotfiles(iBuildDir)
+        BuildRunner._GraphvizTargetDependencyGraph.generatePicture(iBuildDir)
 
     @staticmethod
-    def FIND_IN_DIR_FILE_WITH_NAME_WE(iDir: Path, iFileNameWE: str) -> Path | None:
+    def findInDirFileWithNameWE(iDir: Path, iFileNameWE: str) -> Path | None:
         """
         Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
         """
@@ -439,7 +438,7 @@ class BuildRunner(ABC):
         return None
 
     @staticmethod
-    def RUN_SCRIPT(iScriptPath: Path, iArgs: list[str] | None = None) -> None:
+    def runScript(iScriptPath: Path, iArgs: list[str] | None = None) -> None:
         OS_NAME = platform.system()
         dotExt = iScriptPath.suffix
         command: list[str] | None = None
@@ -451,7 +450,7 @@ class BuildRunner(ABC):
                 command = [str(iScriptPath)]
 
         if command is None:
-            Utils.error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            Utils.error(f"Method \"{inspect.currentframe().f_code.co_name}\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)

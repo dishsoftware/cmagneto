@@ -58,14 +58,14 @@ class SingleConfigBuildRunner(BuildRunner):
         Utils.status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
-        BuildRunner._PREPARE_DIR(buildDir)
+        BuildRunner._prepareDir(buildDir)
         os.chdir(buildDir)
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
         Utils.runCommand(command)
         os.chdir(self.projectRoot())
 
-        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
+        BuildRunner._GraphvizTargetDependencyGraph.generatePicture(buildDir)
 
         Utils.status(text + " finished.\n")
 
@@ -77,7 +77,7 @@ class SingleConfigBuildRunner(BuildRunner):
             "-G", self.generatorName()
         ])
 
-        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(self.buildDirForBuildType(iBuildType)))
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.argForCMakeToGenerateDotfiles(self.buildDirForBuildType(iBuildType)))
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + str(self.cppCompilerName()))
@@ -117,7 +117,7 @@ class SingleConfigBuildRunner(BuildRunner):
         text = f"Installing ({iBuildType.name})"
         Utils.status(text + "...")
 
-        BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
+        BuildRunner._prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = ["cmake", "--install", str(self.buildDirForBuildType(iBuildType))]
         Utils.runCommand(command)

@@ -29,8 +29,8 @@ class VS2022MSVCRunner(MultiConfigBuildRunner):
         super().__init__("Visual Studio 17 2022", None, iBuildTypes)
 
     def _setDependencyPaths(self) -> None:
-        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", Path("lib/cmake"))
-        BuildRunner._ADD_VAR_PATH_TO_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", Path("cmake"))
+        BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", Path("lib/cmake"))
+        BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH("BOOST_MSVC2022_DIR", Path("cmake"))
 
     def _extraArgsFor__generate__command(self) -> list[str]:
         return [

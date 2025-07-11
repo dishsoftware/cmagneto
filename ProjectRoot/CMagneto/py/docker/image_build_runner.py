@@ -35,7 +35,7 @@ class ImageBuildRunner:
     REQUIRED_LABEL_NAMES = {"version"}
 
     @staticmethod
-    def EXTRACT_REQUIRED_LABELS(iDockerfilePath: Path) -> dict[str, str]:
+    def extractRequiredLabels(iDockerfilePath: Path) -> dict[str, str]:
         iDockerfilePath = iDockerfilePath.resolve()
 
         labels: dict[str, str] = dict()
@@ -58,9 +58,7 @@ class ImageBuildRunner:
         return labels
 
     def __init__(self, iDockerfilePath: Path):
-        thisDir = Path(__file__).resolve().parent                     # Absolute dir path.
-        projectRoot = thisDir.parent.parent.parent                    # Absolute dir path.
-        self.__projectDockerfilesRoot = projectRoot / "CI" / "Docker" # Absolute dir path.
+        self.__projectDockerfilesRoot = Utils.projectRoot() / "CI" / "Docker"
 
         dockerFileAbsolutePath: Path | None = None
         if iDockerfilePath.absolute():
@@ -89,27 +87,27 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         self.__platform: str = getDockerFileNameSuffixSubstring(0)
         self.__envType: str = getDockerFileNameSuffixSubstring(1)
 
-        companyNameShort = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["CompanyName_SHORT"])
-        projectNameBase = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["ProjectNameBase"])
-        projectVersion = MetadataHolder.GET_METADATA_VALUE(Path("./Project.json"), ["ProjectVersion"])
+        companyNameShort = MetadataHolder().getMetadataValue(Path("./Project.json"), ["CompanyName_SHORT"])
+        projectNameBase = MetadataHolder().getMetadataValue(Path("./Project.json"), ["ProjectNameBase"])
+        projectVersion = MetadataHolder().getMetadataValue(Path("./Project.json"), ["ProjectVersion"])
         if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str) and isinstance(projectVersion, str)):
             Utils.error(f"{__class__.__name__}: can't get required metadata.")
 
         self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{"" if dockerFileSubdirStr == "." else (dockerFileSubdirStr + "/")}{dockerFileNameSuffix}".lower()
         self.__imageDescription = f"{self.__platform} image with {self.__envType} environment for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
 
-        self.__dockerRegistry = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerRegistry"])
-        dockerRegistrySuffix = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerRegistrySuffix"])
+        self.__dockerRegistry = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerRegistry"])
+        dockerRegistrySuffix = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerRegistrySuffix"])
         if not (isinstance(self.__dockerRegistry, str) and isinstance(dockerRegistrySuffix, str)):
             Utils.error(f"{__class__.__name__}: can't get required metadata.")
 
         self.__remoteImageName = f"{self.__dockerRegistry}/{dockerRegistrySuffix}/{self.__localImageName}"
 
-        self.__imageMaintainer = MetadataHolder.GET_METADATA_VALUE(Path("./CI.json"), ["DockerMaintainer"])
+        self.__imageMaintainer = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerMaintainer"])
         if not isinstance(self.__imageMaintainer, str):
             Utils.error(f"{__class__.__name__}: can't get required metadata.")
 
-        requiredLabels = ImageBuildRunner.EXTRACT_REQUIRED_LABELS(self.__dockerFilePath)
+        requiredLabels = ImageBuildRunner.extractRequiredLabels(self.__dockerFilePath)
         self.__imageVersion = requiredLabels.get("version")
         if (self.__imageVersion is None):
             Utils.error(f"'{self.__dockerFilePath}' must contain 'version' label.")

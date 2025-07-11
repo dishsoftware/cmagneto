@@ -33,7 +33,7 @@
 - Private member of a class: prepended with `_`.
 - Non-static field of a class/struct: `classFieldName`.
 - Static non-const field of a class/struct: `sClassFieldName`.
-- Static const field of a class/struct, enum option, const standalone variable: `COSNT_NAME`.
+- Static const field of a class/struct, enum option, const standalone variable: `CONST_NAME`.
 - Standalone non-const variable: `varName`.
 - Function's/method's parameter:
     * Purely input parameter: `iParamName`.
@@ -62,18 +62,17 @@
 
         class Inner:
             __sInstance = None
-            __sInitialized = False
 
             def __new__(cls):
-                """Members of the same class (except inner classes) are separated from each other by a blank line."""
                 if cls.__sInstance is None:
                     cls.__sInstance = super().__new__(cls)
+                    cls.__sInstance.__initialized = False
                 return cls.__sInstance
 
             def __init__(self):
-                if self.__sInitialized:
+                if self.__initialized:
                     return
-                self.__sInitialized = True
+                self.__initialized = True
 
     ```
 

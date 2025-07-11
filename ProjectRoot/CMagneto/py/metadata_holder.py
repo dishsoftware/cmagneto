@@ -20,47 +20,55 @@ class MetadataHolder:
     CMagneto__SUBDIR_META: Path = Path("meta/")
     ##################################################################################################
 
-    __PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-    __METADATA_DIR: Path = (__PROJECT_ROOT / CMagneto__SUBDIR_META).resolve()
-    __METADATA_BUFFER: dict[Path, Any] | None = None
+    __METADDATA_ROOT: Path = (Utils.projectRoot() / CMagneto__SUBDIR_META).resolve()
+    __sInstance = None
+
+    def __new__(cls):
+        if cls.__sInstance is None:
+            cls.__sInstance = super().__new__(cls)
+            cls.__sInstance.__initialized = False
+        return cls.__sInstance
+
+    def __init__(self):
+        if self.__initialized:
+            return
+        # {fileName, fileContent}[]
+        self.__metadataBuffer: dict[Path, Any] = dict()
+        self.__initialized = True
 
     @staticmethod
-    def GET_METADATA_DIR() -> Path:
+    def getMetadataRoot() -> Path:
         """Returns a base dir, where all metadata files must be placed. Subdirs are allowed."""
-        return MetadataHolder.__METADATA_DIR
+        return MetadataHolder.__METADDATA_ROOT
 
-    @staticmethod
-    def __GET_METADATA_BUFFER() -> dict[Path, Any]:
-        if MetadataHolder.__METADATA_BUFFER is None:
-            MetadataHolder.__METADATA_BUFFER = dict()
-        return MetadataHolder.__METADATA_BUFFER
-
-    @staticmethod
-    def __READ_METADATA_FILE(iFilePathInMetadataDir: Path) -> Any:
+    def __readMetadataFile(self, iFilePathInMetadataDir: Path) -> Any:
         """Returns data of iFilePathInMetadataDir"""
 
-        data = MetadataHolder.__GET_METADATA_BUFFER().get(iFilePathInMetadataDir)
-        if data is not None:
+        # Check if the buffer contains iFilePathInMetadataDir and return key in single lookup.
+        try:
+            data = self.__metadataBuffer[iFilePathInMetadataDir]
+            # iFilePathInMetadataDir was read previously.
             return data
+        except KeyError:
+            # iFilePathInMetadataDir was not read previously.
+            if not iFilePathInMetadataDir.exists():
+                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
 
-        if not iFilePathInMetadataDir.exists():
-            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
+            if not iFilePathInMetadataDir.is_file():
+                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
 
-        if not iFilePathInMetadataDir.is_file():
-            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
+            if not iFilePathInMetadataDir.is_relative_to(MetadataHolder.getMetadataRoot()):
+                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.getMetadataRoot()}\".")
 
-        if not iFilePathInMetadataDir.is_relative_to(MetadataHolder.GET_METADATA_DIR()):
-            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.GET_METADATA_DIR()}\".")
+            with iFilePathInMetadataDir.open("r", encoding="utf-8") as textFile:
+                data = json.load(textFile)
 
-        with iFilePathInMetadataDir.open("r", encoding="utf-8") as textFile:
-            data = json.load(textFile)
-
-        MetadataHolder.__GET_METADATA_BUFFER()[iFilePathInMetadataDir] = data
+            self.__metadataBuffer[iFilePathInMetadataDir] = data
         return data
 
     @staticmethod
-    def __GET_NESTED_VALUE(iData: dict, iKeys: list[str]) -> Any:
-        for key in iKeys:
+    def __getNestedValue(iData: dict[str, Any], iKeySequence: list[str]) -> Any:
+        for key in iKeySequence:
             if isinstance(iData, dict):
                 data = iData.get(key)
                 if data is not None:
@@ -69,17 +77,16 @@ class MetadataHolder:
                 return None
         return iData
 
-    @staticmethod
-    def GET_METADATA_VALUE(iFilePathRelativeToMetadataDir: Path, iKeys: list[str]) -> Any:
+    def getMetadataValue(self, iFilePathRelativeToMetadataDir: Path, iKeys: list[str]) -> Any:
         """
         Returns value of a nested structure in a JSON file.
 
         :param iFilePathRelativeToMetadataDir must refer to a file within 'meta' or its subdirectory.
         :param iKeys is a sequence of names of ancestor structures.
         """
-        filePath = (MetadataHolder.GET_METADATA_DIR() / iFilePathRelativeToMetadataDir).resolve()
-        data = MetadataHolder.__READ_METADATA_FILE(filePath)
+        filePath = (MetadataHolder.getMetadataRoot() / iFilePathRelativeToMetadataDir).resolve()
+        data = self.__readMetadataFile(filePath)
         if (data is None):
             return None
 
-        return MetadataHolder.__GET_NESTED_VALUE(data, iKeys)
+        return MetadataHolder.__getNestedValue(data, iKeys)

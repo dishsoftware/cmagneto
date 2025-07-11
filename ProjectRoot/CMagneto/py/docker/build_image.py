@@ -76,21 +76,21 @@ Uses other variables from JSON files in './meta/' to define image labels.",
         required=True,
         help="Path to a Dockerfile."
     )
-    DEFAULT_BUILD_STAGE = max(ImageBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
+    defaultBuildStage = max(ImageBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(
         "--build_stage",
         type=str,
         choices=[buildStage.name for buildStage in ImageBuildRunner.BuildStage],
-        default=DEFAULT_BUILD_STAGE.name,
-        help=f"Specify build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
+        default=defaultBuildStage.name,
+        help=f"Specify build stage to run. Default is {defaultBuildStage.name}."
     )
-    DEFAULT_RPS = ImageBuildRunner.RunPrecedingStages.Run
+    defaultRPS = ImageBuildRunner.RunPrecedingStages.Run
     parser.add_argument(
         "--run_preceding_stages", "--RPS",
         type=str,
         choices=[rps.name for rps in ImageBuildRunner.RunPrecedingStages],
-        default=DEFAULT_RPS.name,
-        help=f"Specify whether to run preceding build stages. Default is {DEFAULT_RPS.name}."
+        default=defaultRPS.name,
+        help=f"Specify whether to run preceding build stages. Default is {defaultRPS.name}."
     )
 
     args = parser.parse_args()

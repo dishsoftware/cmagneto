@@ -33,8 +33,8 @@ import re
 
 
 def buildProject():
-    BUILD_RUNNERS = BuildRunnersHolder().availableBuildRunners()
-    TOOLSET_NAMES = BUILD_RUNNERS.keys()
+    buildRunners = BuildRunnersHolder().availableBuildRunners()
+    toolsetNames = buildRunners.keys()
 
     parser = argparse.ArgumentParser(
         description=\
@@ -48,40 +48,40 @@ NOTE! All relative paths in the doc are given relative to the project root.\n\
     )
     parser.add_argument(
         "--toolset",
-        choices=TOOLSET_NAMES,
+        choices=toolsetNames,
         required=True,
         help=\
 f"Select a toolset. The parameter is reqired.\n\
 Note: the set of available toolsets depends on the OS the script is run on." \
-        if len(TOOLSET_NAMES) > 0 else Utils.makeColored("No toolsets available for the OS!", Utils.PrintColor.Yellow)
+        if len(toolsetNames) > 0 else Utils.makeColored("No toolsets available for the OS!", Utils.PrintColor.Yellow)
     )
-    DEFAULT_BUILD_TYPE = BuildRunner.BuildType.Release
+    defaultBuildType = BuildRunner.BuildType.Release
     parser.add_argument(
         "--build_types",
         type=str,
         choices=[buildType.name for buildType in BuildRunner.BuildType],
         nargs="+", # Allow one or more values
-        default=[DEFAULT_BUILD_TYPE.name],
+        default=[defaultBuildType.name],
         help=\
-f"Specify build types. Default is {DEFAULT_BUILD_TYPE.name}.\n\
+f"Specify build types. Default is {defaultBuildType.name}.\n\
 Example: \"--build_types {BuildRunner.BuildType.Debug.name} {BuildRunner.BuildType.Release.name}\"."
     )
-    DEFAULT_BUILD_STAGE = max(BuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
+    defaultBuildStage = max(BuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(
         "--build_stage",
         type=str,
         choices=[buildStage.name for buildStage in BuildRunner.BuildStage],
-        default=DEFAULT_BUILD_STAGE.name,
-        help=f"Specify a build stage to run. Default is {DEFAULT_BUILD_STAGE.name}."
+        default=defaultBuildStage.name,
+        help=f"Specify a build stage to run. Default is {defaultBuildStage.name}."
     )
-    DEFAULT_RPS = BuildRunner.RunPrecedingStages.Run
+    defaultRPS = BuildRunner.RunPrecedingStages.Run
     parser.add_argument(
         "--run_preceding_stages", "--RPS",
         type=str,
         choices=[rps.name for rps in BuildRunner.RunPrecedingStages],
-        default=DEFAULT_RPS.name,
+        default=defaultRPS.name,
         help=\
-f"Specify whether to run preceding build stages. Default is {DEFAULT_RPS.name}.\n\
+f"Specify whether to run preceding build stages. Default is {defaultRPS.name}.\n\
 {BuildRunner.RunPrecedingStages.Run.name}: if artifacts of preceding build stages, left from a previous build, do not exist, the stages are run too.\n\
 {BuildRunner.RunPrecedingStages.Rerun.name}: run preceding build stages even if their artifacts exist.\n\
 {BuildRunner.RunPrecedingStages.Skip.name}: skip preceding build stages, even if their artifacts do not exist.\n\
@@ -165,7 +165,7 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     if (len(unknownArgs) > 0):
         Utils.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = BUILD_RUNNERS[toolsetName].create(buildTypes)
+    buildRunner: BuildRunner = buildRunners[toolsetName].create(buildTypes)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     Utils.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)

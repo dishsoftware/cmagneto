@@ -56,14 +56,14 @@ class MultiConfigBuildRunner(BuildRunner):
         text = "Generation of build system files (multi-config)"
         Utils.status(text + "...")
 
-        BuildRunner._PREPARE_DIR(self.buildDir())
+        BuildRunner._prepareDir(self.buildDir())
         os.chdir(str(self.buildDir()))
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
         Utils.runCommand(command)
         os.chdir(str(self.projectRoot()))
 
-        BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
+        BuildRunner._GraphvizTargetDependencyGraph.generatePicture(self.buildDir())
         # Graphviz creates a target dependecy graph during generation time.
         # If a single-config generator is used, the graph is unambiguously created for CMAKE_BUILD_TYPE.
         # But what is going on, if a multi-config generator is used and linking logics depends on $<CONFIG>?
@@ -89,7 +89,7 @@ class MultiConfigBuildRunner(BuildRunner):
             "-G", self.generatorName()
         ])
 
-        command.append(BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(self.buildDir()))
+        command.append(BuildRunner._GraphvizTargetDependencyGraph.argForCMakeToGenerateDotfiles(self.buildDir()))
 
         if self.cppCompilerName() is not None:
             command.append("-DCMAKE_CXX_COMPILER=" + str(self.cppCompilerName()))
@@ -139,7 +139,7 @@ class MultiConfigBuildRunner(BuildRunner):
         text = f"Installing ({iBuildType.name})"
         Utils.status(text + "...")
 
-        BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
+        BuildRunner._prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = [
             "cmake",

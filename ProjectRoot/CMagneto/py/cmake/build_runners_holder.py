@@ -10,13 +10,13 @@ from typing import Callable
 
 
 class BuildRunnersHolder():
-    __instance = None
-    __initialized = False
+    __sInstance = None
 
     def __new__(cls):
-        if cls.__instance is None:
-            cls.__instance = super().__new__(cls)
-        return cls.__instance
+        if cls.__sInstance is None:
+            cls.__sInstance = super().__new__(cls)
+            cls.__sInstance.__initialized = False
+        return cls.__sInstance
 
     def __init__(self):
         if self.__initialized:
