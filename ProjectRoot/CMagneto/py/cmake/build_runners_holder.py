@@ -6,7 +6,6 @@
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.utils import *
 from typing import Callable
 
 
@@ -30,7 +29,6 @@ class BuildRunnersHolder():
         """Call the function after definition of every concrete BuildRunner subclass."""
         registeredBuildRunner = self.__registeredBuildRunners.get(iBuildRunnerClass.toolsetName())
         if registeredBuildRunner is not None:
-            print("Not None")
             if registeredBuildRunner == iBuildRunnerClass:
                 return
             else:
@@ -54,4 +52,5 @@ class BuildRunnersHolder():
         return availableRunners
 
 
+# Import all concrete BuildRunners. The import is requried.
 from CMagneto.py.cmake.build_runners import concrete

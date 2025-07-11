@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.utils import *
+from CMagneto.py.utils import Utils
 from pathlib import Path
 import os
 
@@ -54,13 +54,13 @@ class MultiConfigBuildRunner(BuildRunner):
 
     def __generate(self) -> None:
         text = "Generation of build system files (multi-config)"
-        status(text + "...")
+        Utils.status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.buildDir())
         os.chdir(str(self.buildDir()))
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
-        runCommand(command)
+        Utils.runCommand(command)
         os.chdir(str(self.projectRoot()))
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(self.buildDir())
@@ -79,7 +79,7 @@ class MultiConfigBuildRunner(BuildRunner):
         #    or be omitted altogether, depending on how conditional linking logics is and how CMake interprets the generator expressions during graph creation.
         # The graph may be ambiguous or incomplete, compared to what actually gets built under a specific configuration like Release.
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __compose__generate__command(self) -> list[str]:
         command: list[str] = [ "cmake" ]
@@ -110,20 +110,20 @@ class MultiConfigBuildRunner(BuildRunner):
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         command: list[str] = [
             "cmake",
             "--build", str(self.buildDir()),
             "--config", iBuildType.name
         ]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __compileTests(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling tests ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         command: list[str] = [
             "cmake",
@@ -131,13 +131,13 @@ class MultiConfigBuildRunner(BuildRunner):
             "--target", "build_tests",
             "--config", iBuildType.name
         ]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
@@ -147,6 +147,6 @@ class MultiConfigBuildRunner(BuildRunner):
             "--config", iBuildType.name,
             "--prefix", str(self.installDirForBuildType(iBuildType))
         ]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")

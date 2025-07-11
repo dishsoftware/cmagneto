@@ -13,7 +13,7 @@ The location relative to the project root must be preserved.
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.utils import *
+from CMagneto.py.utils import ConstMetaClass, Utils
 from enum import Enum
 from pathlib import Path
 from typing import cast
@@ -86,7 +86,7 @@ class BuildRunner(ABC):
         """Creates an instance of the BuildRunner subclass."""
 
     def __init__(self, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
-        assert isDirNamePortable(type(self).toolsetName())
+        assert Utils.isDirNamePortable(type(self).toolsetName())
         assert not iGeneratorName.isspace()
 
         self.__generatorName = iGeneratorName
@@ -94,8 +94,8 @@ class BuildRunner(ABC):
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
         self.__cmakeFlagsFor__generate__command: list[str] = list()
-        thisDir = Path(__file__).resolve().parent # Directory where this file is located.
-        self.__projectRoot = (thisDir / "../../../../../").resolve()
+        thisDir = Path(__file__).resolve().parent
+        self.__projectRoot = thisDir.parent.parent.parent
         self.__buildDir    = self.__projectRoot / "build" / type(self).toolsetName()
         self.__installDir  = self.__projectRoot / "install" / type(self).toolsetName()
 
@@ -153,13 +153,13 @@ class BuildRunner(ABC):
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
     def buildDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
     def exeDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
@@ -189,17 +189,17 @@ class BuildRunner(ABC):
 
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
         run_tests__scriptName = BuildRunner.FIND_IN_DIR_FILE_WITH_NAME_WE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
-            warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            Utils.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = run_tests__scriptDir / run_tests__scriptName
             BuildRunner.RUN_SCRIPT(run_tests__scriptPath)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""
@@ -254,23 +254,23 @@ class BuildRunner(ABC):
             case BuildRunner.BuildStage.Package:
                 return isStageRequiredLambda(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
             case _:
-                error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
+                Utils.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 
     def _package(self, iBuildType: BuildType) -> None:
         text = f"Packaging ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         os.chdir(self.buildDirForBuildType(iBuildType))
         command: list[str] = ["cpack"]
-        runCommand(command)
+        Utils.runCommand(command)
         os.chdir(self.projectRoot())
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        error(f"{self.__class__.__name__}.{methodName} is not implemented.")
+        Utils.error(f"{self.__class__.__name__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
         pass
@@ -294,9 +294,9 @@ class BuildRunner(ABC):
         varPathStr = os.environ.get(iVarName)
         if not varPathStr:
             if (varPathStr is None):
-                error(f"\"{iVarName}\" environment variable is not set.")
+                Utils.error(f"\"{iVarName}\" environment variable is not set.")
             else:
-                error(f"\"{iVarName}\" environment variable is empty string.")
+                Utils.error(f"\"{iVarName}\" environment variable is empty string.")
         varPath = Path(cast(str, varPathStr))
 
         if iCMakePathPostfix:
@@ -374,9 +374,9 @@ class BuildRunner(ABC):
                     BuildRunner._GraphvizTargetDependencyGraph.ARG_FOR_CMAKE_TO_GENERATE_DOTFILES(iBuildDir),
                     str(iBuildDir)
                 ]
-                runCommand(command)
+                Utils.runCommand(command)
             except subprocess.CalledProcessError as e:
-                warning(f"Can't create dotfiles of the target dependency graph: {e}")
+                Utils.warning(f"Can't create dotfiles of the target dependency graph: {e}")
                 return
 
         @staticmethod
@@ -407,12 +407,12 @@ class BuildRunner(ABC):
                     "-o",
                     str(pictureFilePath)
                 ]
-                runCommand(command)
+                Utils.runCommand(command)
             except subprocess.CalledProcessError as e:
-                warning(f"Graphviz can't create target dependency graph picture: {e}")
+                Utils.warning(f"Graphviz can't create target dependency graph picture: {e}")
                 return
             except FileNotFoundError:
-                warning("Graphviz is not found. Target dependency graph picture is not created.")
+                Utils.warning("Graphviz is not found. Target dependency graph picture is not created.")
                 return
 
 
@@ -451,8 +451,8 @@ class BuildRunner(ABC):
                 command = [str(iScriptPath)]
 
         if command is None:
-            error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            Utils.error(f"Method \"RUN_SCRIPT\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)
-            runCommand(command)
+            Utils.runCommand(command)

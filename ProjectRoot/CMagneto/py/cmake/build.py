@@ -27,7 +27,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
-from CMagneto.py.utils import *
+from CMagneto.py.utils import Utils
 import argparse
 import re
 
@@ -53,7 +53,7 @@ NOTE! All relative paths in the doc are given relative to the project root.\n\
         help=\
 f"Select a toolset. The parameter is reqired.\n\
 Note: the set of available toolsets depends on the OS the script is run on." \
-        if len(TOOLSET_NAMES) > 0 else makeColored("No toolsets available for the OS!", PrintColor.Yellow)
+        if len(TOOLSET_NAMES) > 0 else Utils.makeColored("No toolsets available for the OS!", Utils.PrintColor.Yellow)
     )
     DEFAULT_BUILD_TYPE = BuildRunner.BuildType.Release
     parser.add_argument(
@@ -133,11 +133,11 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
 
         # Check if the library name is valid.
         if re.match(r"^_+$", libTargetName):
-            warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
+            Utils.warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
             continue
 
         if not re.match(r"^[A-Z_][A-Z0-9_]*$", libTargetName):
-            warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
+            Utils.warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
             continue
 
         libSharedOptions[libTargetName] = optionVal
@@ -160,14 +160,14 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
             # Do nothing.
             pass
         else:
-            error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
+            Utils.error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
 
     if (len(unknownArgs) > 0):
-        error(f"Unknown arguments: {', '.join(unknownArgs)}.")
+        Utils.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
     buildRunner: BuildRunner = BUILD_RUNNERS[toolsetName].create(buildTypes)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
-    message(str(buildRunner))
+    Utils.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)
 
 

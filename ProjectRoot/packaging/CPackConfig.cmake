@@ -10,4 +10,4 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # Configure generation of installation packages.
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
-include("${CMAKE_SOURCE_DIR}/CMagneto/Packager.cmake")
+include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Packager.cmake")

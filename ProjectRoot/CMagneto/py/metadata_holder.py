@@ -4,7 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from CMagneto.py.utils import error
+from CMagneto.py.utils import Utils
 from pathlib import Path
 from typing import Any
 import json
@@ -20,7 +20,8 @@ class MetadataHolder:
     CMagneto__SUBDIR_META: Path = Path("meta/")
     ##################################################################################################
 
-    __METADATA_DIR: Path = (Path(__file__).parent.resolve() / "../../../../" / CMagneto__SUBDIR_META).resolve()
+    __PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
+    __METADATA_DIR: Path = (__PROJECT_ROOT / CMagneto__SUBDIR_META).resolve()
     __METADATA_BUFFER: dict[Path, Any] | None = None
 
     @staticmethod
@@ -43,13 +44,13 @@ class MetadataHolder:
             return data
 
         if not iFilePathInMetadataDir.exists():
-            error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
+            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
 
         if not iFilePathInMetadataDir.is_file():
-            error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
+            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
 
         if not iFilePathInMetadataDir.is_relative_to(MetadataHolder.GET_METADATA_DIR()):
-            error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.GET_METADATA_DIR()}\".")
+            Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.GET_METADATA_DIR()}\".")
 
         with iFilePathInMetadataDir.open("r", encoding="utf-8") as textFile:
             data = json.load(textFile)

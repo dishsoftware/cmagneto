@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.utils import *
+from CMagneto.py.utils import Utils
 from pathlib import Path
 import os
 
@@ -55,19 +55,19 @@ class SingleConfigBuildRunner(BuildRunner):
 
     def __generate(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Generation of build system files ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
         BuildRunner._PREPARE_DIR(buildDir)
         os.chdir(buildDir)
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
-        runCommand(command)
+        Utils.runCommand(command)
         os.chdir(self.projectRoot())
 
         BuildRunner._GraphvizTargetDependencyGraph.CREATE_PICTURE(buildDir)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __compose__generate__command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
         command: list[str] = [ "cmake" ]
@@ -97,29 +97,29 @@ class SingleConfigBuildRunner(BuildRunner):
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType))]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __compileTests(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling tests ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType)), "--target", "build_tests"]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        status(text + "...")
+        Utils.status(text + "...")
 
         BuildRunner._PREPARE_DIR(self.installDirForBuildType(iBuildType))
 
         command: list[str] = ["cmake", "--install", str(self.buildDirForBuildType(iBuildType))]
-        runCommand(command)
+        Utils.runCommand(command)
 
-        status(text + " finished.\n")
+        Utils.status(text + " finished.\n")
