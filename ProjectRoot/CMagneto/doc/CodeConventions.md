@@ -3,10 +3,10 @@
 
 ## 1. CMake Conventions
 ### 1.1. CMake Naming Conventions
-- File of a module: `cmake/modules/ModuleName.cmake`.
-- File of a module's submodule: `cmake/modules/ModuleName/SubModule.cmake`.
+- File of a module: `cmake/ModuleName.cmake`.
+- File of a module's submodule: `cmake/ModuleName/SubModule.cmake`.
 - File of a module's submodule with internal functions, constants and variables,<br>
-  intended for usage only within the module: `cmake/modules/ModuleName/SubModule_Internals.cmake`.
+  intended for usage only within the module: `cmake/ModuleName/SubModule_Internals.cmake`.
 - Script file: `script_file.cmake`.
 - Function in a module: `ModuleName__function_name`.
 - Function in a module, intended for usage only within the module: `ModuleNameInternal__function_name`.
@@ -26,6 +26,8 @@
 ## 2. Python Conventions
 ### 2.1. Python Naming Conventions
 - Module (file) name: `module_name.py`.
+    > **Note:** CMagneto framework Python files are under `CMagneto/py/` dir.<br>
+    > Thus, import names of CMagneto Python packages are `CMagneto.py.*` and are exceptions from this convention.
 - Class, struct, enum: `ClassName`.
 - Protected member of a class: prepended with `__`.
 - Private member of a class: prepended with `_`.
@@ -40,8 +42,9 @@
 - Standalone function or class'/struct' method (static or regular): `functionName`.
 
 ### 2.2. `import` And `from` Directives Order And Blank Lines
-- sorted lexicographically.
-- ```python
+- Sort lexicographically.
+- Python file example:
+    ```python
     # License text.
 
     """
@@ -72,7 +75,24 @@
                     return
                 self.__sInitialized = True
 
-  ```
+    ```
+
+### 2.3. Types
+- Use type hints consistently across function signatures, class attributes, and variables. Prefer explicit typing over relying on inference, especially in public APIs.
+- All code must pass static type checking in VS Code with the setting:
+    ```json
+    "python.analysis.typeCheckingMode": "standard"
+    ```
+- Use `mypy` or `pyright` (the engine behind VS Code’s type checker) to ensure compatibility and catch type errors early.
+- Annotate all function arguments and return types, including those for lambda functions where applicable.
+- For variables with complex or unclear types, prefer explicit annotations:
+    ```python
+    users: list[User] = []
+    config: dict[str, Any] = dict()
+    ```
+- Use `T | None` instead of leaving values implicitly nullable.
+- Avoid `Any` unless necessary. If unavoidable, isolate its use and document the reasoning.
+- Prefer `collections.abc` interfaces (`Iterable`, `Mapping`, etc.) over concrete types like `list`, `dict`, when only behavior is required.
 
 
 ## 3. C++ Conventions

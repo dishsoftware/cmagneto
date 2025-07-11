@@ -26,8 +26,8 @@ This project is licensed under the [MIT License](./LICENSE).
 
 ### Third-party Components
 - [**CMagneto**](./CMagneto/README.md) framewok is used under the terms of the [MIT License](./CMagneto/README.md#license).<br>
-    The framework contains [`QtWrappers CMake Module`](./CMagneto/QtWrappers.cmake), which is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
-    See [the file](./CMagneto/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+    The framework contains [`QtWrappers CMake Module`](./CMagneto/cmake/QtWrappers.cmake), which is based on [`Salome`](https://www.salome-platform.org/) code and licensed under the GNU LGPL 2.1 or later.<br>
+    See [the file](./CMagneto/cmake/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
 
@@ -60,9 +60,9 @@ To see available options, run:
 python ./build.py --help
 ```
 The [`./build.py`](./build.py) supports multiple toolsets (pairs of a build system and a compiler). The toolsets were tested on the following platforms:
-- [Ubuntu 24 with Make and GCC](#14-ubuntu-24) (Make and GCC);
-- [Windows 11 with Make and MinGW UCRT](#15-windows-11-with-ucrt) (Make and MinGW UCRT);
-- [Windows 11 with MSVS2022 and MSVC](#16-windows-11-with-msvs-2022-and-msvc) (MSVS2022 and MSVC).
+- [Ubuntu 24 with Make and GCC](#131-ubuntu-24-with-make-and-gcc) (Make and GCC);
+- [Windows 11 with Make and MinGW UCRT](#132-windows-11-with-make-and-mingw-ucrt) (Make and MinGW UCRT);
+- [Windows 11 with MSVS2022 and MSVC](#133-windows-11-with-msvs2022-and-msvc) (MSVS2022 and MSVC).
 
 
 #### 1.3.1. Ubuntu 24 With Make And GCC
@@ -115,17 +115,14 @@ The following helper scripts are created inside `bin/` subdirectories of `./buil
 
 
 ## 3. Continuous Integration (CI)
-Adjust values in [`./meta/CI.json`](./meta/CI.json) before any actions with Docker images and CI pipelines.
-
 ### 3.1. Docker
 Use [`./CI/Docker/build_image.py`](./CI/Docker/build_image.py) to build Docker images:
 ```bash
 python ./CI/Docker/build_image.py --help
 ```
-[`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. They must be fed to [`./CI/Docker/build_image.py`](./CI/Docker/build_image.py) before triggering CI.
+[`./CI/Docker/`](./CI/Docker/) contains Dockerfiles. They must be fed to [`./CI/Docker/build_image.py`](./CI/Docker/build_image.py) every time they are changed before triggering CI.
 
 ### 3.2. GitLab
-
 #### 3.2.1. CI Triggers
 The [`./CI/GitLab/pipeline.yml`](./CI/GitLab/pipeline.yml) instructs GitLab to create a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
 To create the pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
@@ -136,7 +133,7 @@ Packages produced during pipelines are stored at:<br>
 
 where:
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
-- `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform==`Ubuntu24AMD`;
+- `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform=`Ubuntu24AMD`;
 - `toolset` is the argument, passed to [`./build.py --toolset`](./build.py);
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
 

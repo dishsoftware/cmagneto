@@ -17,13 +17,13 @@ The script can be run from any working directory.
 The location relative to the project root must be preserved.
 """
 
-# Add `./cmake/modules/` (relative to the project root) dir to `sys.path`
+# Add project root to `sys.path`
 # to be able to import CMagneto python scripts as `CMagneto.py.*`,
 # even if the script is run not from its parent dir.
 from pathlib import Path
-CMAKE_MODULES_DIR = Path(__file__).resolve().parent.parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 import sys
-sys.path.append(str(CMAKE_MODULES_DIR))
+sys.path.append(str(PROJECT_ROOT))
 
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder

@@ -18,13 +18,13 @@ The location relative to the project root must be preserved.
 """
 
 # Add project root to `sys.path`
-# to be able to import CMagneto python scripts as `cmake.modules.CMagneto.py.*`
+# to be able to import CMagneto python scripts as `CMagneto.py.*`
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 import sys
 sys.path.append(str(PROJECT_ROOT))
 
-from cmake.modules.CMagneto.py.docker.build_image import buildImage
+from CMagneto.py.docker.build_image import buildImage
 
 
 if __name__ == "__main__":

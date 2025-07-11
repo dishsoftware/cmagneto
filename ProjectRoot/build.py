@@ -17,7 +17,7 @@ The script can be run from any working directory.
 The location relative to the project root must be preserved.
 """
 
-from cmake.modules.CMagneto.py.cmake.build import buildProject
+from CMagneto.py.cmake.build import buildProject
 
 
 if __name__ == "__main__":

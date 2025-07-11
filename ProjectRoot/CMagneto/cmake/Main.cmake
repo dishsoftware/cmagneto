@@ -47,7 +47,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
 
 ## Load the QtWrappers CMake module to use a workaround for a bug in MOC preprocessor of Qt 5.6.0 and newer.
-include("${CMAKE_CURRENT_LIST_DIR}/../QtWrappers.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/QtWrappers.cmake")
 
 ## Load functions to set up static/shared lib targets, exe targets and project.
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget.cmake")
