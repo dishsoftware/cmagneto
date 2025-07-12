@@ -121,60 +121,60 @@
 - Namespace:
     * Namespaces, encapsulating entities of a module, are composed as: `{CompanyName_SHORT}::{ProjectNameBase}::{ModuleName}`.
         ```c++
-        namespace Enow::ContactHolder::GUI {
+        namespace Dish::ContactHolder::GUI {
             ...
-        } // namespace Enow::ContactHolder::GUI
+        } // namespace Dish::ContactHolder::GUI
         ```
     * Namespace, encapsulating `enum class Enum` or its helper functions: CamelCase.
         ```c++
-        namespace Enow::ContactHolder::Contacts::FieldType {
+        namespace Dish::ContactHolder::Contacts::FieldType {
             enum class CONTACTS_EXPORT Enum : std::uint8_t {
                 kString, // Generic string without restrictions.
                 kPhoneNumber
             };
 
             CONTACTS_EXPORT const QString& toString(const Enum iEnum);
-        } // namespace Enow::ContactHolder::Contacts::FieldType
+        } // namespace Dish::ContactHolder::Contacts::FieldType
         ```
     * Other namspaces: camelCase.
 - Subdirectory structure and header naming convention follows naming conventions of entity or namespace the header contains:
     * Header contains a class, struct or enum:
         ```c++
-        // src/Enow/ContactHolder/Contacts/fields/EmailAddress.hpp
-        namespace Enow::ContactHolder::Contacts::fields {
+        // src/Dish/ContactHolder/Contacts/fields/EmailAddress.hpp
+        namespace Dish::ContactHolder::Contacts::fields {
             class CONTACTS_EXPORT EmailAddress {
             ...
             };
-        } // namespace Enow::ContactHolder::Contacts::fields
+        } // namespace Dish::ContactHolder::Contacts::fields
         ```
     * Header contains `enum class Enum` or its helper functions:
         ```c++
-        // src/Enow/ContactHolder/Contacts/FieldType.hpp
-        namespace Enow::ContactHolder::Contacts::FieldType {
+        // src/Dish/ContactHolder/Contacts/FieldType.hpp
+        namespace Dish::ContactHolder::Contacts::FieldType {
             enum class CONTACTS_EXPORT Enum : std::uint8_t {
                 kString, // Generic string without restrictions.
                 kPhoneNumber
             };
-        } // namespace Enow::ContactHolder::Contacts::FieldType
+        } // namespace Dish::ContactHolder::Contacts::FieldType
         ```
         ```c++
-        // src/Enow/ContactHolder/Contacts/FieldTypeExtension.hpp
-        namespace Enow::ContactHolder::Contacts::FieldType {
+        // src/Dish/ContactHolder/Contacts/FieldTypeExtension.hpp
+        namespace Dish::ContactHolder::Contacts::FieldType {
             CONTACTS_EXPORT const QString& toString(const Enum iEnum);
-        } // namespace Enow::ContactHolder::Contacts::FieldType
+        } // namespace Dish::ContactHolder::Contacts::FieldType
         ```
     * Header contains a namespace with standalone functions (which are not helpers of `enum class Enum`) or a standalone function:
         ```c++
-        // src/Enow/ContactHolder/GUI/namespaceWithStandaloneFunctions.hpp
-        namespace Enow::ContactHolder::GUI::namespaceWithStandaloneFunctions {
+        // src/Dish/ContactHolder/GUI/namespaceWithStandaloneFunctions.hpp
+        namespace Dish::ContactHolder::GUI::namespaceWithStandaloneFunctions {
             const QString& standaloneFunction();
-        } // namespace Enow::ContactHolder::GUI::namespaceWithStandaloneFunctions
+        } // namespace Dish::ContactHolder::GUI::namespaceWithStandaloneFunctions
         ```
         ```c++
-        // src/Enow/ContactHolder/GUI/standaloneFunction.hpp
-        namespace Enow::ContactHolder::GUI {
+        // src/Dish/ContactHolder/GUI/standaloneFunction.hpp
+        namespace Dish::ContactHolder::GUI {
             const QString& standaloneFunction();
-        } // namespace Enow::ContactHolder::GUI
+        } // namespace Dish::ContactHolder::GUI
         ```
     * Names of headers, containing module-related definitions, are appended with `_DEFS`.
 

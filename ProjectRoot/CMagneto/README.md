@@ -8,7 +8,7 @@ LICENSE file in the root directory of this source tree.
 
 ![Framework Banner](./doc/assets/header/Header.jpg)
 # CMagneto Framework
-🔗 GitLab repository: [https://gitlab.com/enowsw/cmagneto](https://gitlab.com/enowsw/cmagneto)
+🔗 GitLab repository: [https://gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)
 
 The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration.<br>
 
@@ -152,7 +152,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     You may hop to [`1.2. Build Project`](#12-build-project) section of the doc to verify the build pipeline succeeds.
 
     > **Note:** Since `CMagneto` is licensed under the MIT License, you're free to use, modify, and extend the framework.<br>
-    > If you do make improvements, please consider sharing them on the [CMagneto GitLab repository](https://gitlab.com/enowsw/cmagneto) — contributions are always welcome!
+    > If you do make improvements, please consider sharing them on the [CMagneto GitLab repository](https://gitlab.com/dishsoftware/cmagneto) — contributions are always welcome!
 
 3) Configure project.<br>
     The [`./meta/`](./../meta/) directory contains JSON files for high-level project metadata.<br>
@@ -363,7 +363,7 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb) .
 
 
 ## 2. Knowledge Base

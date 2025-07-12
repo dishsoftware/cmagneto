@@ -129,7 +129,7 @@ To create the pipeline for an untagged commit to another branch, push the commit
 
 #### 3.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/{BranchName_or_Tag}/{Platform}/{toolset}/Enow_ContactHolder-{ProjectVersion}.{PackageExtension}`,
+`https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/{BranchName_or_Tag}/{Platform}/{toolset}/Dish_ContactHolder-{ProjectVersion}.{PackageExtension}`,
 
 where:
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
@@ -138,4 +138,4 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/enowsw/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Enow_ContactHolder-1.0.0.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/67161006/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb) .

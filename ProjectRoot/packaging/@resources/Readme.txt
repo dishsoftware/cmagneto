@@ -4,11 +4,11 @@ DishSW Contact Holder is open-source contact manager, that gives you full contro
 
 📦 Installation Path:
 By default, the library is installed to:
-  C:\Program Files\Enow\ContactHolder
+  C:\Program Files\Dish\ContactHolder
 
 📚 Documentation & Usage:
 Refer to the GitHub repository for full documentation, examples, and API references:
-  https://gitlab.com/enowsw/contactholder
+  https://gitlab.com/dishsoftware/contactholder
 
 🐛 Reporting Issues:
 Feel free to report bugs or contribute via GitHub.

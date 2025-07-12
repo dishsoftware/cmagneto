@@ -56,16 +56,16 @@ Values of these labels must be defined in a single line: 'LABEL labelName=\"labe
 \n\
 Pushes images to {{DockerRegistry}}/{{DockerRegistrySuffix}}/, where DockerRegistry and DockerRegistrySuffix are variables from './meta/CI.json'.\n\
 An example:\n\
-    CompanyName_SHORT = Enow\n\
+    CompanyName_SHORT = Dish\n\
     ProjectNameBase = ContactHolder\n\
     ProjectVersion = 1.0.0\n\
     DockerRegistry = registry.gitlab.com\n\
-    DockerRegistrySuffix = enowsw/contactholder\n\
+    DockerRegistrySuffix = dishsoftware/contactholder\n\
     \n\
     1) DockerfilePath = ./Dockerfile.Ubuntu24AMD__build\n\
-       Pushed image name: registry.gitlab.com/enowsw/contactholder/enow_contactholder_1.0.0__ubuntu24amd__build.\n\
+       Pushed image name: registry.gitlab.com/dishsoftware/contactholder/dish_contactholder_1.0.0__ubuntu24amd__build.\n\
     2) DockerfilePath = ./Test/Coverage/Dockerfile.Ubuntu24AMD__build\n\
-       Pushed image name: registry.gitlab.com/enowsw/contactholder/enow_contactholder_1.0.0__test/coverage/ubuntu24amd__build.\n\
+       Pushed image name: registry.gitlab.com/dishsoftware/contactholder/dish_contactholder_1.0.0__test/coverage/ubuntu24amd__build.\n\
 \n\
 Uses other variables from JSON files in './meta/' to define image labels.",
         formatter_class=argparse.RawTextHelpFormatter
