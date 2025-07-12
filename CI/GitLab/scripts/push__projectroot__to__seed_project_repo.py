@@ -45,6 +45,7 @@ def push__projectroot__to__seed_project_repo():
     CMagnetoRoot = Path(os.getcwd())
     seedProjectRoot = CMagnetoRoot.parent / SEED_PROJECT__REPO_NAME
     seedProjectRepoURL = SEED_PROJECT__REPO_URL.format(token=CMagneto__CI_JOB_TOKEN)
+    print(f"seedProjectRepoURL = {seedProjectRepoURL}")
 
     Utils.runCommand(["git", "clone", "--depth=1", seedProjectRepoURL, str(seedProjectRoot)])
 
@@ -54,6 +55,8 @@ def push__projectroot__to__seed_project_repo():
 
     # Checkout/create branch (in the seed project repo) with the same name as the branch of CMagneto, where CI pipeline trigger happened.
     Utils.runCommand(["git", "checkout", "-B", CMagneto__CI_COMMIT_REF_NAME], seedProjectRoot)
+    # git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/dishsoftware/contactholder.git
+    Utils.runCommand(["git", "remote", "set-url", "origin", seedProjectRepoURL], seedProjectRoot)
 
     # Delete all content of the seed project root, except `.git/`.
     for item in seedProjectRoot.iterdir():
