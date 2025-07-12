@@ -1,3 +1,29 @@
-# Start pipeline of the dummy project.
-include:
-  - local: 'ProjectRoot/CI/GitLab/pipeline.yml'
+stages:
+  - trigger__dependent_projects__pipelines
+  - wait__dependent_projects__pipelines
+
+
+push__projectroot__to__seed_project_repo:
+  stage: trigger__dependent_projects__pipelines
+  image: python:3
+  script:
+    - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py
+
+
+trigger__seed_project__pipeline:
+  stage: trigger__dependent_projects__pipelines
+  needs:
+    - job: push__projectroot__to__seed_project_repo
+  trigger:
+    project: dishsoftware/contactholder
+    branch: $CI_COMMIT_REF_NAME
+    strategy: depend
+
+
+wait__seed_project__pipeline:
+  stage: wait__dependent_projects__pipelines
+  needs:
+    - job: trigger__seed_project__pipeline
+      artifacts: false
+  script:
+    - echo "Seed project 'ContactHolder' pipeline has finished."

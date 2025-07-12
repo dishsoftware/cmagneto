@@ -94,6 +94,7 @@ class BuildRunner(ABC):
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
         self.__cmakeFlagsFor__generate__command: list[str] = list()
+        os.chdir(Utils.projectRoot())
         self.__buildDir    = Utils.projectRoot() / "build" / type(self).toolsetName()
         self.__installDir  = Utils.projectRoot() / "install" / type(self).toolsetName()
 
@@ -440,7 +441,8 @@ class BuildRunner(ABC):
                 command = [str(iScriptPath)]
 
         if command is None:
-            Utils.error(f"Method \"{inspect.currentframe().f_code.co_name}\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
+            currentFrame = inspect.currentframe()
+            Utils.error(f"Method \"{currentFrame.f_code.co_name if currentFrame else "runScript"}\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)

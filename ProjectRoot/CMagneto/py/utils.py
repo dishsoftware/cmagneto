@@ -66,47 +66,69 @@ class Utils(metaclass=ConstMetaClass):
                 indentedText += f"{iIndent}{line}\n"
             return indentedText
 
+    __LOG_MESSAGE_PREFIX = "[CMagneto] "
+
     @staticmethod
     def error(iMessage: str) -> NoReturn:
-        """ Prints an error message in red color and exits the program. Adds "Error: " prefix."""
-        Utils.printColored(f"Error: {iMessage}", Utils.PrintColor.Red)
+        """ Prints an error message in red color and exits the program. Adds "[CMagneto] Error: " prefix."""
+        Utils.printColored(f"{Utils.__LOG_MESSAGE_PREFIX}Error: {iMessage}", Utils.PrintColor.Red)
         sys.exit(1)
 
     @staticmethod
     def runtimeError(iMessage: str) -> None:
         """ Makes iMessage in red color and raises RuntimeError."""
-        raise RuntimeError(Utils.makeColored(iMessage, Utils.PrintColor.Red))
+        raise RuntimeError(Utils.makeColored(Utils.__LOG_MESSAGE_PREFIX + iMessage, Utils.PrintColor.Red))
 
     @staticmethod
     def warning(iMessage: str) -> None:
-        """ Prints a warning message in yellow color. Adds "Warning: " prefix."""
-        Utils.printColored(f"Warning: {iMessage}", Utils.PrintColor.Yellow)
+        """ Prints a warning message in yellow color. Adds "[CMagneto] Warning: " prefix."""
+        Utils.printColored(f"{Utils.__LOG_MESSAGE_PREFIX}Warning: {iMessage}", Utils.PrintColor.Yellow)
 
     @staticmethod
     def message(iMessage: str, iIndent: str | None = None) -> None:
-        """ Prints a message in default color. If iIndent is non-empty string, every new line is prepended with the indent."""
-        print(Utils.makeIndented(iMessage, iIndent))
+        """ Prints a message in default color. If iIndent is non-empty string, every new line is prepended with the indent and "[CMagneto] " prefix."""
+        print(Utils.makeIndented(iMessage, Utils.__LOG_MESSAGE_PREFIX + iIndent if iIndent else Utils.__LOG_MESSAGE_PREFIX))
 
     @staticmethod
     def status(iMessage: str) -> None:
         """ Prints an informational message in green color."""
-        Utils.printColored(iMessage, Utils.PrintColor.Green)
+        Utils.printColored(Utils.__LOG_MESSAGE_PREFIX + iMessage, Utils.PrintColor.Green)
 
     @staticmethod
-    def runCommand(iCommand: list[str], iCWD: Path | None = None, iCheck: bool = True) -> None:
+    def runCommand(iCommand: list[str], iCWD: Path | None = None, *, iCheck: bool = True, iCaptureOutput: bool = False) -> subprocess.CompletedProcess | None:
         currentCWD: str = os.getcwd()
         if iCWD is not None:
             os.chdir(iCWD)
 
-        print(Utils.makeColored("Running command: ", Utils.PrintColor.Cyan) + \
+        print(Utils.makeColored(f"{Utils.__LOG_MESSAGE_PREFIX}Running command: ", Utils.PrintColor.Cyan) + \
               Utils.makeColored(f"{os.getcwd()}> ", Utils.PrintColor.Magenta) + \
               Utils.makeColored(shlex.join(iCommand), Utils.PrintColor.Blue),
               flush=True
         )
-        subprocess.run(iCommand, check=iCheck)
 
-        if iCWD is not None:
-            os.chdir(currentCWD)
+        try:
+            output = subprocess.run(
+                iCommand,
+                check=iCheck,
+                capture_output=True,   # Always capture so you can print stderr on failure
+                text=True
+            )
+            if iCaptureOutput:
+                return output
+            else:
+                print(output.stdout, end='')
+                print(output.stderr, end='')
+                return None
+
+        except subprocess.CalledProcessError as e:
+            print(e.stdout or "", end='')
+            Utils.printColored(f"{Utils.__LOG_MESSAGE_PREFIX}Command failed with error:", Utils.PrintColor.Red)
+            print(e.stderr or "", end='')
+            raise
+
+        finally:
+            if iCWD is not None:
+                os.chdir(currentCWD)
 
     # Regex to allow only safe characters.
     SAFE_DIRNAME_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
