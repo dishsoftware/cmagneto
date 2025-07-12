@@ -10,7 +10,8 @@ LICENSE file in the root directory of this source tree.
 # CMagneto Framework
 🔗 GitLab repository: [https://gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)
 
-The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration.<br>
+The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
+including VS Code, Graphviz, Qt, GoogleTest, CPack, Docker and GitLab CI.
 
 > **Note:** Paths in the doc are shown relative to the project root.
 
