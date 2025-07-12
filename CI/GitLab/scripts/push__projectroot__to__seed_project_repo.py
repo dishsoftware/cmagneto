@@ -38,7 +38,7 @@ def push__projectroot__to__seed_project_repo():
     CMagneto__CI_COMMIT_TAG = os.environ.get("CI_COMMIT_TAG")  # May be not set.
     CMagneto__CI_JOB_TOKEN = os.environ["CI_JOB_TOKEN"]
 
-    statusText = f"Syncing branch/tag \"{CMagneto__CI_COMMIT_REF_NAME}\" into ContactHolder seed project repo"
+    statusText = f"Synching branch/tag \"{CMagneto__CI_COMMIT_REF_NAME}\" into ContactHolder seed project repo"
     Utils.status(statusText + "...")
 
     # Clone the seed project repo.
@@ -79,12 +79,12 @@ def push__projectroot__to__seed_project_repo():
     # Commit and push to the seed project repo.
     Utils.runCommand(["git", "add", "."], seedProjectRoot)
     Utils.runCommand(["git", "commit", "-m", f"{CMagneto__CI_COMMIT_SHA}\n\n{CMagneto__CI_COMMIT_MESSAGE}"], seedProjectRoot)
-    Utils.runCommand(["git", "push", "origin", CMagneto__CI_COMMIT_REF_NAME], seedProjectRoot)
+    Utils.runCommand(["git", "push", "--force", seedProjectRepoURL, f"HEAD:{CMagneto__CI_COMMIT_REF_NAME}"], seedProjectRoot)
 
     # Tag the seed project repo commit, if the CMagneto pipeline trigger was a tag push.
     if CMagneto__CI_COMMIT_TAG:
         Utils.runCommand(["git", "tag", CMagneto__CI_COMMIT_TAG], seedProjectRoot)
-        Utils.runCommand(["git", "push", "origin", CMagneto__CI_COMMIT_TAG], seedProjectRoot)
+        Utils.runCommand(["git", "push", seedProjectRepoURL, CMagneto__CI_COMMIT_TAG], seedProjectRoot)
 
     Utils.status(statusText + " finished.\n")
 
