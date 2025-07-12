@@ -1,5 +1,5 @@
-*This is a dummy CMake C++ project, which is distributed as a part of the CMagneto framework repository.*<br>
-*The template features:*
+*This is a seed CMake C++ project, which is distributed as a part of the CMagneto framework repository.*<br>
+*The seed project features:*
 - *Cross-platform development support;*
 - *Modular source layout;*
 - *Integrated unit testing;*

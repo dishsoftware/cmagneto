@@ -1,0 +1,3 @@
+# Start pipeline of the dummy project.
+include:
+  - local: 'ProjectRoot/CI/GitLab/pipeline.yml'

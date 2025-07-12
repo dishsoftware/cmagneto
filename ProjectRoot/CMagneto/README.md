@@ -142,7 +142,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
 ## 1. How To Use The CMagneto Framework
 ### 1.1. Initialize Your Project
-1) Copy all content from the [root of the dummy project](./../) into the root of your empty project repo.<br>
+1) Copy all content from the [root of the seed project](./../) into the root of your empty project repo.<br>
     Open `./vscode/Project.code-workspace` from your project repository and close everything from the [`CMagneto framework repository`](./../../).<br>
     Open the copy of this file from your repo. <br>
     ⏳...<br>

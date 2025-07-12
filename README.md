@@ -12,7 +12,7 @@ LICENSE file in the root directory of this source tree.
 The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration.<br>
 
 The framework repo is organized as follows:
-- The framework code is mixed with a code of a dummy (template) project under [`./ProjectRoot/`](./ProjectRoot/).
+- The framework code is mixed with a code of a seed (template) project under [`./ProjectRoot/`](./ProjectRoot/).
 - Core files of the CMagneto framework is in [./ProjectRoot/CMagneto/](./ProjectRoot/CMagneto/).
 
 This file is a proxy for the actual [CMagneto framework README.md](./ProjectRoot/CMagneto/README.md).

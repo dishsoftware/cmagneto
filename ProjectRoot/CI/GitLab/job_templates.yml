@@ -123,8 +123,12 @@ variables:
   script:
     - |
       packagesDir="./build/${TOOLSET}/Release/packages"
-      #  Iterate over all files recursively under packagesDir.
-      for file in $(find "${packagesDir}" -type f); do
+
+      # Iterate over all files recursively under packagesDir.
+      ## `find ... |`         — lists all files under packagesDir, one per line.
+      ## `while read -r file` — reads each full line (i.e., full file path) without breaking on spaces or special characters.
+      ## `-r`                 — tells read not to interpret backslashes (\) as escape characters. Safer for filenames like file\name.txt.
+      find "${packagesDir}" -type f | while read -r file; do
         # Compute file path relative to packagesDir.
         relative_path="${file#${packagesDir}/}"
 
