@@ -124,8 +124,8 @@ python ./CI/Docker/build_image.py --help
 
 ### 3.2. GitLab
 #### 3.2.1. CI Triggers
-The [`./CI/GitLab/pipeline.yml`](./CI/GitLab/pipeline.yml) instructs GitLab to create a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
-To create the pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
+The [`./CI/GitLab/workflow.yml`](./CI/GitLab/workflow.yml) instructs GitLab to trigger (create) a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
+To trigger a pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
 
 #### 3.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>

@@ -333,7 +333,7 @@ CMagneto CMake function `CMagneto__set_up__project()` creates helper scripts ins
 
 
 ### 1.4. Engage Continuous Integration (CI)
-Adjust values in [`./meta/CI.json`](./../meta/CI.json) before any actions with [Docker images](./../CI/Docker/) and [CI pipeline](./../CI/GitLab/pipeline.yml).
+Adjust values in [`./meta/CI.json`](./../meta/CI.json) before any actions with [Docker images](./../CI/Docker/) and [CI workflow (pipeline triggering rules)](./../CI/GitLab/workflow.yml) and [pipeline](./../CI/GitLab/pipeline.yml).
 
 #### 1.4.1. Build Docker Images
 Use [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) or its proxy [`./CI/Docker/build_image.py`](./../CI/Docker/build_image.py) to build [Docker images](./../CI/Docker/):
@@ -343,11 +343,11 @@ python ./build_image.py --help
 [`./CI/Docker/`](./../CI/Docker/) contains Dockerfiles. They must be fed to [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) every time they are changed before triggering CI pipeline.
 
 #### 1.4.2. GitLab
-Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/pipeline.yml`](./../CI/GitLab/pipeline.yml)\".
+Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml)\".
 
 ##### 1.4.2.1. CI Triggers
-The [`./CI/GitLab/pipeline.yml`](./../CI/GitLab/pipeline.yml) instructs GitLab to create a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
-To create the pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
+The [`./CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml) instructs GitLab to trigger (create) a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
+To trigger a pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
 
 ##### 1.4.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
