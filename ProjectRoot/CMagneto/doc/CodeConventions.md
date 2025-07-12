@@ -1,4 +1,43 @@
 # Code Conventions
+## 0. Code Documentation.
+### Documentation Hot-Takes
+1) An urge to consult authors to understand their code, means:<br>
+    - The major part of the code is kept by authors as a commercial secret;<br>
+    - Available part of the code is obfuscated.
+
+2) Getting acknowledged with such a code is a variant of reverse engineering process.<br>
+   A need to reverse-engineer a code to understand what it actually does usually signifies dealing with malware.
+
+3) Code is either proprietary or open-source.
+    - An owner of a proprietary code has all rights for it.<br>
+        If developers think they can keep private a good piece of other's property as "tribal knowledge",
+        the owner should sue them. Or enslave. And probably torture untill the documentation is ready, because
+        lifespan of some projects is longer than average human adult life.
+
+        No need to mention, a poorely documented code decreases productivity of developers working on it.
+        The only persons, who gain benefit of producing undocumented code are its authors.<br>
+        And even they will be cooked eventually, if the stolen documentation is only stored on creasy meatball drives.
+
+    -  Poorely documented open-source code is not open-source (see item 1).<br>
+        Moreover, at the moment an undocumented open-source project is abandoned by its author,
+        it is not a good anymore. It turns into yet another layer of paint on a graffity covered, urinated wall<br>
+        in a back alley of internet.
+
+
+**That's why clear and verbose documentation is absolutely necessary.**<br>
+
+
+- Type down not only how a code works, but also:
+    * How it should work;
+    * What was the intent of writing the code;
+    * Why a way the intent is implemented was choosen among other options.
+- Add comments to files, classes, functions constants, variables and parameters.
+- Use semantically meaningful names.
+- For intricate containers/collections add comments, which describe what is inside the container, e.g.:
+    ```python
+    # {fileName, fileContent}[]
+    self.__metadataBuffer: dict[Path, Any] = dict()
+    ```
 
 
 ## 1. CMake Conventions
