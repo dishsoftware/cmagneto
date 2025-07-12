@@ -1,4 +1,12 @@
-from ProjectRoot.CMagneto.py.utils import Utils
+# Add seed project root to `sys.path`
+# to be able to import CMagneto python scripts as `CMagneto.py.*`.
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent / "ProjectRoot"
+import sys
+sys.path.append(str(PROJECT_ROOT))
+
+
+from CMagneto.py.utils import Utils
 from pathlib import Path
 import os
 import shutil
