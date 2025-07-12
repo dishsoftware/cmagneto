@@ -1,5 +1,5 @@
 {
-    "PackageID": "io.enowsw.contactholder",
-    "PackageNamePrefix": "Enow_ContactHolder",
+    "PackageID": "org.dishsoftware.contactholder",
+    "PackageNamePrefix": "DishSW_ContactHolder",
     "PackageMaintainer": "Dim Shvydkoy <dmit.shvyd@gmail.com>"
 }

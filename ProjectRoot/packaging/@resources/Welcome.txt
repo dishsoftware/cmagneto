@@ -1,8 +1,8 @@
-Welcome to the Enow Contact Holder Installer
+Welcome to the DishSW Contact Holder Installer
 
-This wizard will guide you through the installation of the Enow Contact Holder:
+This wizard will guide you through the installation of the DishSW Contact Holder:
 open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
 Please review the license and follow the instructions to complete installation.
 
-Thank you for choosing Enow Contact Holder and supporting open-source development!
+Thank you for choosing DishSW Contact Holder and supporting open-source development!

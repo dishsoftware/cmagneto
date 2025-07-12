@@ -1,6 +1,6 @@
-Thank you for installing Enow Contact Holder!
+Thank you for installing DishSW Contact Holder!
 
-Enow Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
+DishSW Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
 📦 Installation Path:
 By default, the library is installed to:

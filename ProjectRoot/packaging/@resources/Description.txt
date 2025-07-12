@@ -1,6 +1,6 @@
-Enow Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
+DishSW Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
 
-This package installs the Enow Contact Holder software and associated development files for use in C++ projects.
+This package installs the EnowSW Contact Holder software and associated development files for use in C++ projects.
 
 Project URL: https://gitlab.com/enowsw/contactholder
 License: MIT
