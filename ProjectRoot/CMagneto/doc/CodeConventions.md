@@ -1,43 +1,42 @@
 # Code Conventions
-## 0. Code Documentation.
+## 0. Documenting Code.
 ### Documentation Hot-Takes
 1) An urge to consult authors to understand their code, means:<br>
-    - The major part of the code is kept by authors as a commercial secret;<br>
-    - Available part of the code is obfuscated.
+    - The [major part](#0-code-documentation) of the code is kept by authors as a commercial secret;<br>
+    - Available part of the code is obfuscated garbage.
 
-2) Getting acknowledged with such a code is a variant of reverse engineering process.<br>
-   A need to reverse-engineer a code to understand what it actually does usually signifies dealing with malware.
+2) Getting acquainted with such code is a form of reverse engineering.<br>
+    A need to reverse-engineer a code to figure out what it does signifies dealing with malware.
 
-3) Code is either proprietary or open-source.
-    - An owner of a proprietary code has all rights for it.<br>
-        If developers think they can keep private a good piece of other's property as "tribal knowledge",
-        the owner should sue them. Or enslave. And probably torture untill the documentation is ready, because
-        lifespan of some projects is longer than average human adult life.
+3) Owners of a proprietary code have full rights to their property.<br>
+    If hired developers retain just a piece of it as "tribal knowledge", the owners can sue them.<br>
+    Or enslave. And probably torture until the proper documentation is ready,<br>
+    because some projects are meant to outlive their creators.
 
-        No need to mention, a poorely documented code decreases productivity of developers working on it.
-        The only persons, who gain benefit of producing undocumented code are its authors.<br>
-        And even they will be cooked eventually, if the stolen documentation is only stored on creasy meatball drives.
+    Needless to say, poorely documented code drops productivity of developers.
 
-    -  Poorely documented open-source code is not open-source (see item 1).<br>
-        Moreover, at the moment an undocumented open-source project is abandoned by its author,
-        it is not a good anymore. It turns into yet another layer of paint on a graffity covered, urinated wall<br>
-        in a back alley of internet.
+    The only persons, who gain by ~~plaing dirty~~ producing undocumented code are its authors.<br>
+    And even they will suffer, if the stolen documentation is only stored on creasy meatball drives.
 
+4) An open-source project without proper documentation is not open-source (see item 1).<br>
+    Worse — the moment such a project is abandoned by its authors, it becomes worthless.
+    It is yet another layer of digital graffiti on some piss-stained wall in the back alley of the internet.
 
-**That's why clear and verbose documentation is absolutely necessary.**<br>
+**That's why clear and verbose documentation is strictly obligatory.**<br>
 
-
-- Type down not only how a code works, but also:
-    * How it should work;
-    * What was the intent of writing the code;
-    * Why a way the intent is implemented was choosen among other options.
+- Document not only how code works, but also:
+    * How it’s supposed to work;
+    * What the original intent was;
+    * WWhy that specific implementation was chosen over others;
+    * If it’s not in the repo and offline-accessible, it doesn’t exist. Task trackers, forums, and chat logs don’t count.
 - Add comments to files, classes, functions constants, variables and parameters.
 - Use semantically meaningful names.
-- For intricate containers/collections add comments, which describe what is inside the container, e.g.:
+- If it’s a mess of types, comment what’s in there — don’t make others guess:
     ```python
-    # {fileName, fileContent}[]
+    # {metadataFileName, fileContent}[] or `Pairs of metadata filenames and contents of the files`.
     self.__metadataBuffer: dict[Path, Any] = dict()
     ```
+- Consider writing documentation as an integral part of software design, code review, and refactoring.
 
 
 ## 1. CMake Conventions
