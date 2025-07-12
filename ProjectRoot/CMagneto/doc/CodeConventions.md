@@ -1,5 +1,5 @@
 # Code Conventions
-## 0. Documenting Code.
+## 0. Code Documentation.
 ### Documentation Hot-Takes
 1) An urge to consult authors to understand their code, means:<br>
     - The [major part](#0-code-documentation) of the code is kept by authors as a commercial secret;<br>
