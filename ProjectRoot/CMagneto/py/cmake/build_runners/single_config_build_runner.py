@@ -59,11 +59,9 @@ class SingleConfigBuildRunner(BuildRunner):
 
         buildDir = self.buildDirForBuildType(iBuildType)
         BuildRunner._prepareDir(buildDir)
-        os.chdir(buildDir)
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
-        Utils.runCommand(command)
-        os.chdir(Utils.projectRoot())
+        Utils.runCommand(command, buildDir)
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(buildDir)
 

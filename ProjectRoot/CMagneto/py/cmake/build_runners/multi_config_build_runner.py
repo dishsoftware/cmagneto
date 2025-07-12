@@ -57,11 +57,9 @@ class MultiConfigBuildRunner(BuildRunner):
         Utils.status(text + "...")
 
         BuildRunner._prepareDir(self.buildDir())
-        os.chdir(str(self.buildDir()))
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
-        Utils.runCommand(command)
-        os.chdir(str(Utils.projectRoot()))
+        Utils.runCommand(command, self.buildDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(self.buildDir())
         # Graphviz creates a target dependecy graph during generation time.

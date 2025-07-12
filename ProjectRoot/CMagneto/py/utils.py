@@ -93,13 +93,20 @@ class Utils(metaclass=ConstMetaClass):
         Utils.printColored(iMessage, Utils.PrintColor.Green)
 
     @staticmethod
-    def runCommand(iCommand: list[str]) -> None:
+    def runCommand(iCommand: list[str], iCWD: Path | None = None, iCheck: bool = True) -> None:
+        currentCWD: str = os.getcwd()
+        if iCWD is not None:
+            os.chdir(iCWD)
+
         print(Utils.makeColored("Running command: ", Utils.PrintColor.Cyan) + \
               Utils.makeColored(f"{os.getcwd()}> ", Utils.PrintColor.Magenta) + \
               Utils.makeColored(shlex.join(iCommand), Utils.PrintColor.Blue),
               flush=True
         )
-        subprocess.run(iCommand, check=True)
+        subprocess.run(iCommand, check=iCheck)
+
+        if iCWD is not None:
+            os.chdir(currentCWD)
 
     # Regex to allow only safe characters.
     SAFE_DIRNAME_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")

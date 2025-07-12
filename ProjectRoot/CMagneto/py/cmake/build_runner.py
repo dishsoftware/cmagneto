@@ -253,12 +253,7 @@ class BuildRunner(ABC):
     def _package(self, iBuildType: BuildType) -> None:
         text = f"Packaging ({iBuildType.name})"
         Utils.status(text + "...")
-
-        os.chdir(self.buildDirForBuildType(iBuildType))
-        command: list[str] = ["cpack"]
-        Utils.runCommand(command)
-        os.chdir(Utils.projectRoot())
-
+        Utils.runCommand(["cpack"], self.buildDirForBuildType(iBuildType))
         Utils.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
