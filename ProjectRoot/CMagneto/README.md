@@ -92,8 +92,8 @@ ProjectRoot/
 │   ├── Packaging.json
 │   └── CI.json
 ├── src/                             # Project source root.
-│   └── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
-│       └── {ProjectNameBase}/       # ^
+│   └── {CompanyName_SHORT}/         # The nesting is mandated.
+│       └── {ProjectNameBase}/       # The nesting is mandated.
 │           └── TargetName/          # Target source root. Code of the target can be nested arbitrary under this dir.
 |               ├── CMakeLists.txt   # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
 |               ├── Header.hpp
@@ -111,8 +111,8 @@ ProjectRoot/
 |                   └── other/       # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
 ├── tests/                           # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
 |   ├── CMakeLists.txt               # GoogleTest is set up here. No need to change the file.
-│   ├── {CompanyName_SHORT}/         # The nesting is not mandated, but endorsed.
-│   |   └── {ProjectNameBase}/       # ^
+│   ├── {CompanyName_SHORT}/         # The nesting is mandated.
+│   |   └── {ProjectNameBase}/       # The nesting is mandated.
 │   |       ├── TargetName/          # Test target source root.
 |   |       |   ├── CMakeLists.txt   # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
 |   |       |   |                    # ^ The naming of test targets is not mandated, but endorsed.
@@ -234,9 +234,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     )
     ```
 
-8) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is,<br>
-   or change `add_subdirectory("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")` command arguments, if you don't stick to the endorsed `{CompanyName_SHORT}/{ProjectNameBase}/{TargetName}/` nesting scheme.
-    ```
+8) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
 
 9) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
