@@ -68,7 +68,7 @@ push__projectroot__to__seed_project_repo:
     - chmod 700 ~/.ssh
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py
+    - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py "./ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
 
 
 trigger__seed_project__pipeline:

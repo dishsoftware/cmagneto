@@ -27,11 +27,17 @@ class ConstMetaClass(type):
 
 class Utils(metaclass=ConstMetaClass):
     __PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
+    __CMAGNETO_FRAMEWORK_ROOT: Path = __PROJECT_ROOT / "CMagneto/"
 
     @staticmethod
     def projectRoot() -> Path:
-        """Returns absolute path of the project root."""
+        """Returns absolute path of this project root."""
         return Utils.__PROJECT_ROOT
+
+    @staticmethod
+    def CMagnetoFrameworkRoot() -> Path:
+        """Returns absolute path of the CMagneto framework root inside this project."""
+        return Utils.__CMAGNETO_FRAMEWORK_ROOT
 
 
     class PrintColor(Enum):
@@ -183,3 +189,28 @@ class Utils(metaclass=ConstMetaClass):
             if item.is_file() and iFileNameWE == item.stem:
                 return Path(item.name)
         return None
+
+
+    class PathType(Enum):
+        Absolute = "absolute",
+        Relative = "relative",
+        DontCare = "absolute or relative"
+
+
+    @staticmethod
+    def getPathRelativeToBaseDir(iPath: Path, iBaseDir: Path, iPathType: PathType = PathType.DontCare, iRequirePathUnderBase: bool = True):
+        """Does not check whether the files or directories actually exist on the file system."""
+
+        pathIsAbsolute = iPath.is_absolute()
+        if iPathType == Utils.PathType.Relative and pathIsAbsolute:
+            Utils.error(f"iPath must be relative. iPath = `{iPath}`")
+        elif iPathType == Utils.PathType.Absolute and not pathIsAbsolute:
+            Utils.error(f"iPath must be absolute. iPath = `{iPath}`")
+
+        try:
+            pathRelativeToBase = iPath.relative_to(iBaseDir) # Raises, if iPath is not under iBaseDir. iPath == iBaseDir is considered `under` and yields ".".
+        except ValueError:
+            if (iRequirePathUnderBase):
+                Utils.error(f"iPath must be under iBaseDir\n:\tiPath = `{iPath}`\n\tiBaseDir = `{iBaseDir}`")
+            pathRelativeToBase = Path(os.path.relpath(iPath, iBaseDir)) # Calculates relative path with ".." components as needed.
+        return pathRelativeToBase
