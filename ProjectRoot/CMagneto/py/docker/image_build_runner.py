@@ -126,6 +126,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         return self.__dockerFilePath
 
     def platform(self) -> str:
+        """The base operating system of the image."""
         return self.__platform
 
     def envType(self) -> str:

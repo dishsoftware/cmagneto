@@ -58,7 +58,7 @@ class SingleConfigBuildRunner(BuildRunner):
         Utils.status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
-        BuildRunner._prepareDir(buildDir)
+        Utils.prepareDir(buildDir)
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
         Utils.runCommand(command, buildDir)
@@ -115,7 +115,7 @@ class SingleConfigBuildRunner(BuildRunner):
         text = f"Installing ({iBuildType.name})"
         Utils.status(text + "...")
 
-        BuildRunner._prepareDir(self.installDirForBuildType(iBuildType))
+        Utils.prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = ["cmake", "--install", str(self.buildDirForBuildType(iBuildType))]
         Utils.runCommand(command)

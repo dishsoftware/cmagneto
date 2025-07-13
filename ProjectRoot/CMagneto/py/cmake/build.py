@@ -25,6 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 import sys
 sys.path.append(str(PROJECT_ROOT))
 
+from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
 from CMagneto.py.utils import Utils
@@ -33,6 +34,7 @@ import re
 
 
 def buildProject():
+    Utils.status(f"Host OS: {BuildPlatform().hostOS().value}")
     buildRunners = BuildRunnersHolder().availableBuildRunners()
     toolsetNames = buildRunners.keys()
 

@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import cast
 import inspect
 import os
-import platform
-import shutil
 import subprocess
 
 
@@ -187,12 +185,12 @@ class BuildRunner(ABC):
         Utils.status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
-        run_tests__scriptName = BuildRunner.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
+        run_tests__scriptName = Utils.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
             Utils.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = run_tests__scriptDir / run_tests__scriptName
-            BuildRunner.runScript(run_tests__scriptPath)
+            BuildPlatform().runScript(run_tests__scriptPath)
 
         Utils.status(text + " finished.\n")
 
@@ -264,14 +262,6 @@ class BuildRunner(ABC):
 
     def _setDependencyPaths(self) -> None:
         pass
-
-    @staticmethod
-    def _prepareDir(iDir: Path) -> None:
-        """Creates/cleans iDir."""
-        if iDir.exists():
-            shutil.rmtree(iDir)
-
-        os.makedirs(iDir, exist_ok=True)
 
     @staticmethod
     def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
@@ -351,7 +341,7 @@ class BuildRunner(ABC):
             # Delete all existing graph files.
             ## Delete dotfiles.
             graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.dotfilesDir(iBuildDir)
-            BuildRunner._prepareDir(graphSrcDir)
+            Utils.prepareDir(graphSrcDir)
             # Delete picture.
             pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.pictureFilePath(iBuildDir)
             if pictureFilePath.exists():
@@ -417,33 +407,3 @@ class BuildRunner(ABC):
         """
         BuildRunner._GraphvizTargetDependencyGraph.generateDotfiles(iBuildDir)
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(iBuildDir)
-
-    @staticmethod
-    def findInDirFileWithNameWE(iDir: Path, iFileNameWE: str) -> Path | None:
-        """
-        Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
-        """
-        for item in iDir.iterdir():
-            if item.is_file() and iFileNameWE == item.stem:
-                return Path(item.name)
-        return None
-
-    @staticmethod
-    def runScript(iScriptPath: Path, iArgs: list[str] | None = None) -> None:
-        OS_NAME = platform.system()
-        dotExt = iScriptPath.suffix
-        command: list[str] | None = None
-        if OS_NAME == "Windows":
-            if dotExt == ".bat":
-                command = [str(iScriptPath)]
-        else: # Linux, MacOS
-            if dotExt == ".sh":
-                command = [str(iScriptPath)]
-
-        if command is None:
-            currentFrame = inspect.currentframe()
-            Utils.error(f"Method \"{currentFrame.f_code.co_name if currentFrame else "runScript"}\" does not support scripts with extension \"{dotExt}\" on OS \"{OS_NAME}\". \"{iScriptPath} has not been run.")
-        else:
-            if iArgs is not None:
-                command.extend(iArgs)
-            Utils.runCommand(command)

@@ -6,6 +6,56 @@ stages:
 push__projectroot__to__seed_project_repo:
   stage: trigger__dependent_projects__pipelines
   image: python:3
+  # The script in the `script` property needs to push to and trigger pipeline of the seed project repo.
+  # And, while triggering a pipeline can be permitted just by adding CMagneto GitLab page to the list of "CI/CD job token allowlist" of the seed project repo,
+  # pushing to the repo requires:
+  #   1) Using a `Project access token` issued in the seed project repo, but the `Project access tokens` feature is only available on paid GitLab plans;
+  #   2) Using an SSH deploy key, registred in the seed project repo.
+  # The second option is chosen.
+  # The `before-script` adds a private SSH key, whose public counterpart is registered as
+  # a publicly available deploy key with a write (push) permission of the seed project repo.
+  before_script:
+    # A private SSH key can't be saved as a masked CI/CD variable - GitLab shows the error:
+    # ```
+    #   Unable to create masked variable because:
+    #   The value cannot contain the following characters: whitespace characters."
+    # ```
+    # The CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO CI/CD variable of type "Variable (default)".
+    # It is a private SSH key, converted into a single line without whitespaces using `base64`:
+    # ```bash
+    # base64 pathToThePrivateKey | tr -d '\n'
+    # ```
+    # The shenanigans with `base64` can be avoided by uploading the private key file into CMagneto -> Settings -> CI/CD -> Secret files.
+    # In that case it could be used as "$CI_SECURE_FILES_DIR/thePrivateKey.
+    #
+    # But the approach with an environment variable is more flexible:
+    #   A variable can be "protected" and become only available when a CI pipeline deals with protected branches; It is not used, but I like the option;
+    #   Secure file is always available both in protected and regular branches.
+
+    # Convert the single-line-base64 string back into a private key.
+    - echo "$CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO" | base64 -d > ./privateSSHKey__SeedProjectRepo
+
+    # Set file permissions so only the owner can read/write (a requirement for SSH to trust the key).
+    # Without this, `ssh-add` will likely fail with a "bad permissions" error.
+    - chmod 600 ./privateSSHKey__SeedProjectRepo
+
+    # Print correponding public key for debug.
+    - ssh-keygen -y -f ./privateSSHKey__SeedProjectRepo
+
+    # Start the SSH agent.
+    - eval "$(ssh-agent -s)"
+
+    # Load the key into the running SSH agent.
+    - ssh-add ./privateSSHKey__SeedProjectRepo
+
+    # Without the following block:
+    #   Git couldn't verify the SSH host key fingerprint - a security check to prevent man-in-the-middle attacks.
+    #   SSH expects the remote server's key to be listed in the `~/.ssh/known_hosts` file,
+    #   but in Docker-based CI runner, that file is empty unless populated explicitly.
+    - mkdir -p ~/.ssh
+    - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+    - chmod 700 ~/.ssh
+    - chmod 644 ~/.ssh/known_hosts
   script:
     - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py
 

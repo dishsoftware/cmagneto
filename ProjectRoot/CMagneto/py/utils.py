@@ -10,6 +10,7 @@ from typing import NoReturn
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 
@@ -164,3 +165,21 @@ class Utils(metaclass=ConstMetaClass):
         if iDirName[0] == "." or iDirName[-1] in {" ", "."}:
             return False
         return True
+
+    @staticmethod
+    def prepareDir(iDir: Path) -> None:
+        """Creates/cleans iDir."""
+        if iDir.exists():
+            shutil.rmtree(iDir)
+
+        os.makedirs(iDir, exist_ok=True)
+
+    @staticmethod
+    def findInDirFileWithNameWE(iDir: Path, iFileNameWE: str) -> Path | None:
+        """
+        Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
+        """
+        for item in iDir.iterdir():
+            if item.is_file() and iFileNameWE == item.stem:
+                return Path(item.name)
+        return None
