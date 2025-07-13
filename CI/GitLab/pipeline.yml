@@ -1,3 +1,14 @@
+# There is a GitLab project ContactHolder, which is not meant to be cloned.
+# Code in the repo is the synched content of [`./ProjectRoot/`](https://gitlab.com/dishsoftware/cmagneto/-/tree/main/ProjectRoot) of the [CMagneto framework](https://gitlab.com/dishsoftware/cmagneto) repo, pushed by a CMagneto CI Bot.
+# The mentioned subdir of the CMagneto repo contains source files of the framework itself,
+# and source files of a seed (template) project. It is just easier to test and distribute these files together.
+#
+# The seed project serves just as:
+# 1) Docker image registry;
+# 3) Runner of CI jobs, related to the seed project;
+# 2) Package registry for built installation packages of the seed project.
+
+
 stages:
   - trigger__dependent_projects__pipelines
   - wait__dependent_projects__pipelines
