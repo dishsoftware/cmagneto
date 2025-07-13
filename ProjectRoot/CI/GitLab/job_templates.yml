@@ -1,0 +1,159 @@
+variables:
+  GIT_DEPTH: 1 # Get only the latest commit.
+
+
+.on_tag__template:
+  rules:
+    # If trigger is an assigned tag.
+    - if: '$CI_COMMIT_TAG'
+      when: always
+
+    # In other cases don't run the job.
+    - when: never
+  artifacts:
+    expire_in: never
+
+
+.on_main__template:
+  rules:
+    # If trigger is:
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    # - merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
+      when: always
+
+    # In other cases don't run the job.
+    - when: never
+  artifacts:
+    expire_in: 30 days
+
+
+.on_branch__template:
+  rules:
+    # If trigger is NOT:
+    # - assigned tag;
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    # - merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_COMMIT_TAG == null && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
+      when: always
+
+    # In other cases don't run the job.
+    - when: never
+  artifacts:
+    expire_in: 15 days
+
+
+# Generate .env file, which contains variables: REMOTE_IMAGE_NAME, IMAGE_VERSION, PLATFORM, ENV_TYPE, etc.
+# These variables describe a remote Docker image, which was built using ${Dockerfile}.
+.deduce_image__template:
+  stage: build-test-package
+  image: python:3
+  variables:
+    Dockerfile: "Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden. The file must be located under ./CI/Docker/.
+  script:
+    - python3 ./CI/Docker/build_image.py --file ./CI/Docker/${Dockerfile} --build_stage GenerateEnvFile
+    - cat ./CI/Docker/.tmp/${Dockerfile}.env # Display the contents of the file.
+  artifacts:
+    reports:
+      dotenv: ./CI/Docker/.tmp/${Dockerfile}.env
+  rules:
+    # Start the first job (i.e. the whole job DAG) manually, if trigger is a merge request of a forked project.
+    # INTENT
+    # Any GitLab user can create a fork project and then create a merge request, even if the user is not a Member of the original project.
+    # To prevent abuse and wasting CI runners' quota, in such cases the job DAG is created, but requires a manual start.
+    # Only Members of the original project can run a job manually.
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != null && $CI_MERGE_REQUEST_PROJECT_NAMESPACE != $CI_PROJECT_NAMESPACE' # $CI_MERGE_REQUEST_PROJECT_NAMESPACE only exists when the pipeline is triggered by a merge request.
+      when: manual
+
+    # Start automatically, if previous job has succeeded (default behaviour).
+    # If there are no previous jobs, the condition is implicitly satisfied.
+    - when: on_success
+
+
+.build-test-package__template:
+  stage: build-test-package
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+  script:
+    - python3 build.py --toolset ${TOOLSET} --build_types Release
+
+    # Append variables to inherited.env report artifact, in order to pass the variables to a following job(s). Newline in the end is added automatically.
+    - echo "PLATFORM=${PLATFORM}" >> inherited.env
+    - echo "TOOLSET=${TOOLSET}" >> inherited.env
+  artifacts:
+    when: always
+    paths:
+      - build/${TOOLSET}/Release/summary/test_report.xml
+      - build/${TOOLSET}/Release/packages/** # Everything within ".../packages/" recursively.
+    exclude:
+      # Recursively exclude _CPack_Packages (the dir itself is also excluded). _CPack_Packages contains CPack temp files.
+      - build/${TOOLSET}/Release/packages/_CPack_Packages/**
+    reports:
+      junit: build/${TOOLSET}/Release/summary/test_report.xml
+      dotenv: inherited.env
+
+
+.on_tag__build-test-package__template:
+  extends:
+    - .on_tag__template
+    - .build-test-package__template
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_main__build-test-package__template:
+  extends:
+    - .on_main__template
+    - .build-test-package__template
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_branch__build-test-package__template:
+  extends:
+    - .on_branch__template
+    - .build-test-package__template
+  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+# Upload generated packages to "GitLab generic packages repository".
+.upload_packages__template:
+  stage: upload_packages
+  # needs: [.build-test-package__template]
+  script:
+    - |
+      packagesDir="./build/${TOOLSET}/Release/packages"
+
+      # Iterate over all files recursively under packagesDir.
+      ## `find ... |`         — lists all files under packagesDir, one per line.
+      ## `while read -r file` — reads each full line (i.e., full file path) without breaking on spaces or special characters.
+      ## `-r`                 — tells read not to interpret backslashes (\) as escape characters. Safer for filenames like file\name.txt.
+      find "${packagesDir}" -type f | while read -r file; do
+        # Compute file path relative to packagesDir.
+        relative_path="${file#${packagesDir}/}"
+
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/${relative_path}"
+        echo "Uploading ${file} to ${url}"
+        curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
+      done
+
+
+.on_tag__upload_packages__template:
+  extends:
+    - .on_tag__template
+    - .upload_packages__template
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_main__upload_packages__template:
+  extends:
+    - .on_main__template
+    - .upload_packages__template
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_branch__upload_packages__template:
+  extends:
+    - .on_branch__template
+    - .upload_packages__template
+  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.

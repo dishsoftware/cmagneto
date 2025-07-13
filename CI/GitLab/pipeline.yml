@@ -1,49 +1,79 @@
-# Glossary
-# - Pipeline: The full set of jobs, created in response to a trigger event.
-#
-# - Trigger [event]: AKA pipeline source. Push, merge request, or tag.
-#
-# - Job DAG (directed acyclic graph): A subset of pipeline jobs connected via `needs:` (and optionally `dependencies:`),
-#   where each job depends only on other jobs within the subset.
-#   These jobs inherently form a DAG, as GitLab prohibits cyclic dependencies between jobs.
-#
-# - Root job DAG: a job DAG, which is not a subgraph or component of a larger job DAG.
-#
-# - Pipeline creation: A pipeline is created, if
-#   there is at least one job that serves as an entry point to a root job DAG,
-#   and the `workflow:` (pipeline-general) rules and the individual job `rules:`
-#   do not evaluate the job's `when:` property to `never` for the given trigger and conditions.
-
-
-workflow:
-  rules:
-    # If trigger is an assigned tag.
-    - if: '$CI_COMMIT_TAG'
-      when: always
-
-    # If trigger is a commit into $CI_DEFAULT_BRANCH branch.
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: always
-
-    # If trigger is a merge request into $CI_DEFAULT_BRANCH branch.
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
-      when: always
-
-    # If trigger is a commit with a message, ending with 'RUN_CI_PIPELINE'.
-    - if: '$CI_COMMIT_MESSAGE =~ /RUN_CI_PIPELINE\s*$/'
-      when: always
-
-    # In other cases do not create the pipeline.
-    - when: never
-
-
 stages:
-  - build-test-package
-  - upload_packages
+  - trigger__dependent_projects__pipelines
+  - wait__dependent_projects__pipelines
 
 
-include:
-  # GitLab resolves local paths relative to the repo root dir, not to a path of an entry .yml file ("CI/CD configuration file" option in GitLab UI).
-  - local: 'CI/GitLab/job_templates.yml'
-  - local: 'CI/GitLab/job_DAGs/ubuntu24amd.yml'
-  - local: 'CI/GitLab/job_DAGs/debian12amd.yml'
+push__projectroot__to__seed_project_repo:
+  stage: trigger__dependent_projects__pipelines
+  image: python:3
+  # The script in the `script` property needs to push to and trigger pipeline of the seed project repo.
+  # And, while triggering a pipeline can be permitted just by adding CMagneto GitLab page to the list of "CI/CD job token allowlist" of the seed project repo,
+  # pushing to the repo requires:
+  #   1) Using a `Project access token` issued in the seed project repo, but the `Project access tokens` feature is only available on paid GitLab plans;
+  #   2) Using an SSH deploy key, registred in the seed project repo.
+  # The second option is chosen.
+  # The `before-script` adds a private SSH key, whose public counterpart is registered as
+  # a publicly available deploy key with a write (push) permission of the seed project repo.
+  before_script:
+    # A private SSH key can't be saved as a masked CI/CD variable - GitLab shows the error:
+    # ```
+    #   Unable to create masked variable because:
+    #   The value cannot contain the following characters: whitespace characters."
+    # ```
+    # The CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO CI/CD variable of type "Variable (default)".
+    # It is a private SSH key, converted into a single line without whitespaces using `base64`:
+    # ```bash
+    # base64 pathToThePrivateKey | tr -d '\n'
+    # ```
+    # The shenanigans with `base64` can be avoided by uploading the private key file into CMagneto -> Settings -> CI/CD -> Secret files.
+    # In that case it could be used as "$CI_SECURE_FILES_DIR/thePrivateKey.
+    #
+    # But the approach with an environment variable is more flexible:
+    #   A variable can be "protected" and become only available when a CI pipeline deals with protected branches; It is not used, but I like the option;
+    #   Secure file is always available both in protected and regular branches.
+
+    # Convert the single-line-base64 string back into a private key.
+    - echo "$CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO" | base64 -d > ./privateSSHKey__SeedProjectRepo
+
+    # Set file permissions so only the owner can read/write (a requirement for SSH to trust the key).
+    # Without this, `ssh-add` will likely fail with a "bad permissions" error.
+    - chmod 600 ./privateSSHKey__SeedProjectRepo
+
+    # Print correponding public key for debug.
+    - ssh-keygen -y -f ./privateSSHKey__SeedProjectRepo
+
+    # Start the SSH agent.
+    - eval "$(ssh-agent -s)"
+
+    # Load the key into the running SSH agent.
+    - ssh-add ./privateSSHKey__SeedProjectRepo
+
+    # Without the following block:
+    #   Git couldn't verify the SSH host key fingerprint - a security check to prevent man-in-the-middle attacks.
+    #   SSH expects the remote server's key to be listed in the `~/.ssh/known_hosts` file,
+    #   but in Docker-based CI runner, that file is empty unless populated explicitly.
+    - mkdir -p ~/.ssh
+    - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+    - chmod 700 ~/.ssh
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py
+
+
+trigger__seed_project__pipeline:
+  stage: trigger__dependent_projects__pipelines
+  needs:
+    - job: push__projectroot__to__seed_project_repo
+  trigger:
+    project: dishsoftware/contactholder
+    branch: $CI_COMMIT_REF_NAME
+    strategy: depend
+
+
+wait__seed_project__pipeline:
+  stage: wait__dependent_projects__pipelines
+  needs:
+    - job: trigger__seed_project__pipeline
+      artifacts: false
+  script:
+    - echo "Seed project 'ContactHolder' pipeline has finished."

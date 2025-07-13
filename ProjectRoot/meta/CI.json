@@ -1,0 +1,5 @@
+{
+    "DockerRegistry": "registry.gitlab.com",
+    "DockerRegistrySuffix": "dishsoftware/contactholder",
+    "DockerMaintainer": "Dim Shvydkoy <dmit.shvyd@gmail.com>"
+}

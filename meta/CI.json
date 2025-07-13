@@ -1,5 +1,0 @@
-{
-    "DockerRegistry": "registry.gitlab.com",
-    "DockerRegistrySuffix": "enowsw/cmagneto",
-    "DockerMaintainer": "Dim Shvydkoy <dmit.shvyd@gmail.com>"
-}

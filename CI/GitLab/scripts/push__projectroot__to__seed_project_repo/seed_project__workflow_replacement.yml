@@ -1,0 +1,18 @@
+workflow:
+  # This block prevents running of the seed project CI at all, because
+  # the CMagneto-CI-Bot@dishsoftware.org is not an email of a GitLab user.
+  ## Always trigger the pipeline when the CMagneto CI Bot pushes.
+  ## Note: anyone can spoof the commit email, so this is more of a convention
+  ## than a strict security measure — it signals intent rather than enforces it.
+  ## rules:
+  ##  - if: '$GITLAB_USER_EMAIL == "CMagneto-CI-Bot@dishsoftware.org"'
+  ##    when: always
+  ##  - when: never  # Reject all other committers.
+
+  rules:
+    - when: always
+
+
+# Start pipeline.
+include:
+  - local: 'CI/GitLab/pipeline.yml'

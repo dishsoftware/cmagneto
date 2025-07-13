@@ -1,0 +1,6 @@
+DishSW Contact Holder is open-source contact manager, that gives you full control over how, when, and where your contacts are stored and synchronized.
+
+This package installs the DishSW Contact Holder software and associated development files for use in C++ projects.
+
+Project URL: https://gitlab.com/dishsoftware/contactholder
+License: MIT
