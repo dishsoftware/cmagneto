@@ -58,7 +58,7 @@ def push__test_projectroot__to__test_project_repo(iTestProjectPathSrcStr: str, i
         # the content of `test_project__workflow_replacement.yml`, located in the subdir `push__test_projectroot__to__seed_project_repo` in the repo of CMagneto project.
         ```
     """
-    CMagnetoProjectRoot = Path(__file__).parent
+    CMagnetoProjectRoot = Path(__file__).parent.parent.parent.parent
     testProjectRootSrcRelativeToCMagnetoProjectRoot = Utils.getPathRelativeToBaseDir(
         Path(iTestProjectPathSrcStr),
         CMagnetoProjectRoot,

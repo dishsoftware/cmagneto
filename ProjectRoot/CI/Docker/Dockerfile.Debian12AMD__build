@@ -23,6 +23,7 @@ RUN apt update && apt install -y \
     libboost-all-dev \
     dpkg-dev \
     wget \
+    tree \
     && apt clean
 
 # Download and install newer CMake.

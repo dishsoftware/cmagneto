@@ -19,6 +19,7 @@ RUN apt update && apt install -y \
     qt6-tools-dev \
     libboost-all-dev \
     dpkg-dev \
+    tree \
     && apt clean
 
 WORKDIR /project

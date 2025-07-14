@@ -67,8 +67,11 @@ push__projectroot__to__seed_project_repo:
     - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
     - chmod 700 ~/.ssh
     - chmod 644 ~/.ssh/known_hosts
+
+    - apt update && apt install -y tree
+    - tree .. -a -L 5 -I '.git'
   script:
-    - python3 ./CI/GitLab/scripts/push__projectroot__to__seed_project_repo.py "./ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
+    - python3 ./CI/GitLab/scripts/push__test_projectroot__to__seed_project_repo.py "ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
 
 
 trigger__seed_project__pipeline:
