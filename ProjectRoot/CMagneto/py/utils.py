@@ -305,7 +305,8 @@ class Utils(metaclass=ConstMetaClass):
 
             forbiddenSubstrings = Utils.GoodPath.getForbiddenSubstringsInPath(iPath)
             if len(forbiddenSubstrings) != 0:
-                raise ValueError(f"iRawPath '{iPath}' is not good. Issues:\n{Utils.makeIndented(';\n'.join(forbiddenSubstrings), '\t')}")
+                msg = Utils.makeIndented(';\n'.join(forbiddenSubstrings), '\t')
+                raise ValueError(f"iRawPath '{iPath}' is not good. Issues:\n{msg}")
             self.__raw: str = iPath
 
             # Normalize '\' with '/'.
