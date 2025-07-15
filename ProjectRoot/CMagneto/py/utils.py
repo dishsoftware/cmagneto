@@ -7,7 +7,7 @@
 from __future__ import annotations
 from enum import Enum
 from pathlib import Path
-from typing import cast, NoReturn
+from typing import cast, Iterator, NoReturn
 import os
 import re
 import shlex
@@ -98,7 +98,7 @@ class Utils(metaclass=ConstMetaClass):
         Utils.printColored(Utils.__LOG_MESSAGE_PREFIX + iMessage, Utils.PrintColor.Green)
 
     @staticmethod
-    def runCommand(iCommand: list[str], iCWD: Path | None = None, *, iCheck: bool = True, iCaptureOutput: bool = False) -> subprocess.CompletedProcess | None:
+    def runCommand(iCommand: list[str], iCWD: os.PathLike | str | None = None, *, iCheck: bool = True, iCaptureOutput: bool = False) -> subprocess.CompletedProcess | None:
         currentCWD = os.getcwd()
         if iCWD is not None:
             os.chdir(iCWD)
@@ -267,7 +267,7 @@ class Utils(metaclass=ConstMetaClass):
 
             forbiddenSubstrings: set[str] = set()
             for itemIndex, itemName in enumerate(itemNames):
-                if (itemIndex == 0 or itemIndex == len(itemNames) - 1) and itemName == "": # '/p/' is split into '', 'p' and ''.
+                if itemName == "": # '/p//' is split into '', 'p', '' and ''. # Allow consecutive '/'.
                     continue
                 if itemIndex == 0 and ":" in itemName:
                     if not (len(itemName) == 2 and itemName[0].isalpha()):
@@ -276,38 +276,72 @@ class Utils(metaclass=ConstMetaClass):
                 forbiddenSubstrings.update(Utils.GoodPath.getForbiddenSubstringsInName(itemName))
             return forbiddenSubstrings
 
-        def __init__(self, iRawPath: str):
-            forbiddenSubstrings = Utils.GoodPath.getForbiddenSubstringsInPath(iRawPath)
-            if len(forbiddenSubstrings) != 0:
-                raise ValueError(f"iRawPath is not good. Issues:\n{Utils.makeIndented(';\n'.join(forbiddenSubstrings), '\t')}")
+        @staticmethod
+        def getCWD() -> Utils.GoodPath:
+            return Utils.GoodPath(os.getcwd(), iForceDir=True)
 
-            self.__raw: str = iRawPath
-            # Normalize Windows drive descriptor.
-            iRawPath = iRawPath.replace('\\', '/')
-            if iRawPath[-1] == ':':
-                iRawPath += '/'
-            itemNames = iRawPath.split('/') # Is not empty, because empty strings are prohibited by Utils.GoodPath.getForbiddenSubstringsInPath().
+        @staticmethod
+        def fromPath(iPath: Path, iIsDir: bool) -> Utils.GoodPath:
+            """
+            Caution:
+                Path classifies path string system-depently. E.g.:
+                - '/a' is a relative path on Windows;
+                - trailing path separator is discarded on Path.normalize();
+                - etc.
+            """
+            return Utils.GoodPath(str(iPath), iIsDir)
+
+        def __init__(self, iPath: str | Utils.GoodPath, iForceDir: bool = False):
+            if isinstance(iPath, Utils.GoodPath):
+                iPath = iPath.raw
+
+            """If iForceDir, creates a dir path, even if trailing '/' is missing."""
+            if iForceDir:
+                if len(iPath) > 0 and iPath[-1] != '/':
+                    iPath += '/'
+
+            forbiddenSubstrings = Utils.GoodPath.getForbiddenSubstringsInPath(iPath)
+            if len(forbiddenSubstrings) != 0:
+                raise ValueError(f"iRawPath '{iPath}' is not good. Issues:\n{Utils.makeIndented(';\n'.join(forbiddenSubstrings), '\t')}")
+            self.__raw: str = iPath
+
+            # Normalize '\' with '/'.
+            rawPath = iPath.replace('\\', '/')
+            # Replace consecutive '/' with sigular '/'.
+            rawPath = re.sub(r"/+", "/", rawPath)
+
+            if rawPath.endswith(':'): # Allow such a mistake.
+                pawPath += '/'
+
+            itemNames = rawPath.split('/') # Is not empty, because empty strings are prohibited by Utils.GoodPath.getForbiddenSubstringsInPath().
             if len(itemNames[0]) == 2 and itemNames[0][1] == ':':
                 itemNames[0] = itemNames[0].upper()
 
-            self.__posix = iRawPath
-            self.__posixNormalized = os.path.normpath(self.__posix).replace('\\', '/') + ('/' if iRawPath.endswith('/') else '')
+            posixPath = '/'.join(itemNames)
+            self.__posix = posixPath
+
+            posixNormPath = os.path.normpath(self.__posix).replace('\\', '/') # TODO Get rid of os.path dependency. Does it check if path is above anchor (FS root)?
+            posixNormPath += ('/' if self.__posix.endswith('/') and not posixNormPath.endswith('/') else '')
+            self.__posixNormalized = posixNormPath
 
             if self.__posixNormalized.startswith('/'):
                 self.__isAbsolute = True
                 self.__platform = Utils.GoodPath.Platform.Unix
-                self.__isRoot = len(self.__posixNormalized) == 1
+                self.__isAnchor = len(self.__posixNormalized) == 1
             elif len(self.__posixNormalized) > 1 and self.__posixNormalized[1] == ':':
                 self.__isAbsolute = True
                 self.__platform = Utils.GoodPath.Platform.Windows
-                self.__isRoot = len(self.__posixNormalized) == 3
+                self.__isAnchor = len(self.__posixNormalized) == 3
             else:
                 self.__isAbsolute = False
                 self.__platform = Utils.GoodPath.Platform.Relative
-                self.__isRoot = False
+                self.__isAnchor = False
 
             self.__isDir = self.__posixNormalized[-1] == '/'
             self.__name = itemNames[-2] if self.__isDir else itemNames[-1] # The '/p/' is split into '', 'p', ''; '/p' is split into '', 'p'.
+
+        def __fspath__(self) -> str:
+            return self.__posixNormalized
 
         def __str__(self):
             return str(self.__posixNormalized)
@@ -340,8 +374,9 @@ class Utils(metaclass=ConstMetaClass):
             return self.__platform
 
         @property
-        def isRoot(self) -> bool:
-            return self.__isRoot
+        def isAnchor(self) -> bool:
+            """FS root."""
+            return self.__isAnchor
 
         @property
         def isDir(self) -> bool:
@@ -357,7 +392,7 @@ class Utils(metaclass=ConstMetaClass):
             if isinstance(iOther, str):
                 iOther = Utils.GoodPath(iOther)
                 return self.__posixNormalized == iOther.__posixNormalized
-            raise ValueError(f"{self.__class__.__qualname__}: iOther is not instance of {self.__class__.__qualname__} or str.")
+            return False
 
         def __truediv__(self, iOther: Utils.GoodPath | str) -> Utils.GoodPath:
             if not self.isDir:
@@ -404,50 +439,105 @@ class Utils(metaclass=ConstMetaClass):
             """Resulting path Platform depends on whether iNewWExt ends with '/'."""
             nameWEStr = self.nameWE(iNumOfExtComponentsToDiscard)
             newName = Utils.GoodPath(nameWEStr + (iNewExt if iNewExt.startswith('.') else '.' + iNewExt))
-            parent = self.parent()
+            parent = self.getParent()
             if parent is not None:
                 return parent / newName
             else:
                 return newName
 
-        def getRoot(self) -> Utils.GoodPath | None:
+        def getAnchor(self) -> Utils.GoodPath | None:
             if not self.isAbsolute:
                 return None
-            if self.isRoot:
+            if self.isAnchor:
                 return self
             if self.platform == Utils.GoodPath.Platform.Unix:
                 return Utils.GoodPath('/')
             elif self.platform == Utils.GoodPath.Platform.Windows:
                 return Utils.GoodPath(self.posixNormalized[:3])
 
-        def parent(self) -> Utils.GoodPath | None:
-            if self.isRoot:
+        def getParent(self) -> Utils.GoodPath | None:
+            if self.isAnchor:
                 return None
             itemNames = self.posixNormalized.split("/")
             if self.isDir:
-                itemNames = itemNames[:-3] # The last is empty string.
+                itemNames = itemNames[:-2] # The last is empty string.
             else:
-                itemNames = itemNames[:-2]
+                itemNames = itemNames[:-1]
             return Utils.GoodPath('/'.join(itemNames) + '/')
 
         def getRelativeTo(self, iOther: Utils.GoodPath | str, iAllowAscend: bool = False) -> Utils.GoodPath | None:
-            """This relative to other."""
+            """
+            This relative to other.
+            Relative self is relative to any dir.
+            Does not take into account CWD.
+            """
             if isinstance(iOther, str):
                 iOther = Utils.GoodPath(iOther)
             if not iOther.isDir:
                 return None
             if self.isAbsolute and iOther.isRelative:
                 return None
-            relPathStr = os.path.relpath(self.posixNormalized, iOther.posixNormalized)
+            if self.isAbsolute and iOther.isAbsolute and self.getAnchor() != iOther.getAnchor():
+                return None
+            # TODO If both are relative, how does the os.path.relpath behaves?
+            relPathStr = None
+            if self.isRelative:
+                relPathStr = self.posixNormalized
+            else:
+                # TODO Get rid of os.path dependency.
+                relPathStr = os.path.relpath(self.posixNormalized, iOther.posixNormalized) # If seld.isRelative, treats self.posixNormalized relative to CWD.
             components = re.split(r'[\\/]', relPathStr)
             if not iAllowAscend and ".." in components:
                 return None
+            if self.isDir and relPathStr[-1] != '/':
+                relPathStr += '/'
             return Utils.GoodPath(relPathStr)
 
         def isRelativeTo(self, iOther: Utils.GoodPath | str, iAllowAscend: bool = False) -> bool:
+            """
+            This relative to other.
+            Relative self is relative to any dir.
+            Does not take into account CWD.
+            """
             return self.getRelativeTo(iOther, iAllowAscend) != None
 
-        def exists(self) -> bool:
+        def isDescendant(self, iOther: Utils.GoodPath | str) -> bool:
+            """
+            This relative to other.
+            Relative self is relative to any dir.
+            Does not take into account CWD.
+            """
+            return self.getRelativeTo(iOther, iAllowAscend=False) != None
+
+        def checkIfRelativeAndDescendantAndGetAbsPath(self, iSelfDescription: str, iOther: Utils.GoodPath | str, iOtherDescription: str, iExitNotRaise = True) -> Utils.GoodPath:
+            res = self.getRelativeTo(iOther, iAllowAscend=False)
+            if res is not None:
+                return res
+            msg = f"{iSelfDescription} '{self}' must be relative and descendant of {iOtherDescription} '{iOther}'."
+            if iExitNotRaise:
+                Utils.error(msg)
+            else:
+                raise ValueError(msg)
+
+        def getAscendant(self, iNumOfAscends: int = 1) -> Utils.GoodPath | None:
+            if (iNumOfAscends < 0):
+                raise ValueError(f"iNumOfAscends must not be negative.")
+            if iNumOfAscends == 0:
+                return Utils.GoodPath(self)
+            parent = self.getParent()
+            if parent is None:
+                return None
+            if iNumOfAscends == 1:
+                return parent
+            return Utils.GoodPath(parent.posixNormalized + "../" * (iNumOfAscends - 1))
+
+        def exists(self) -> bool | None:
+            """
+            CWD is not taken into account, thus
+            if self is relative, returns None.
+            """
+            if self.isRelative:
+                return None
             if not os.path.exists(self.posixNormalized):
                 return False
             isDirInFS = os.path.isdir(self.posixNormalized)
@@ -457,3 +547,46 @@ class Utils(metaclass=ConstMetaClass):
                 return True
             else:
                 return False # Item types differ.
+
+        def iterdir(self) -> Iterator[Utils.GoodPath]:
+            if not self.isDir or self.isRelative:
+                raise NotADirectoryError(f"'{self.raw}' is not an absolute directory.")
+            return (Utils.GoodPath(child.as_posix(), child.is_dir()) for child in Path(self).iterdir())
+
+        def rglob(self, iPattern: str) -> Iterator[Utils.GoodPath]:
+            """Recursively yield GoodPath objects matching the pattern."""
+            if not self.isDir:
+                raise NotADirectoryError(f"`{self.raw}` is not a directory")
+
+            for matchedDescendant in Path(self).rglob(iPattern):
+                yield Utils.GoodPath(matchedDescendant.as_posix(), matchedDescendant.is_dir())
+
+        def delete(self) -> None:
+            if self.isRelative:
+                raise FileNotFoundError(f"'{self.raw}' is relative path.")
+            if self.isDir:
+                shutil.rmtree(self)
+            else:
+                Path(self).unlink()
+
+        def create(self, iExistsOk: bool = True) -> None:
+            if self.isRelative:
+                raise FileNotFoundError(f"'{self.raw}' is relative path.")
+            if self.isDir:
+                Path(self).mkdir(exist_ok=iExistsOk, parents=True)
+            else:
+                parent = self.getParent()
+                if parent is None:
+                    return
+                parent.create(iExistsOk)  # Ensure parent dirs exist.
+                Path(self).touch(exist_ok=iExistsOk)  # Create the file if it doesn't exist.
+
+        def isFile(self) -> bool:
+            if self.isRelative:
+                raise FileNotFoundError(f"'{self.raw}' is relative path.")
+            return Path(self).is_file()
+
+        def isSymLink(self) -> bool:
+            if self.isRelative:
+                raise FileNotFoundError(f"'{self.raw}' is relative path.")
+            return Path(self).is_symlink()
