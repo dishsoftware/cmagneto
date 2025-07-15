@@ -254,7 +254,10 @@ class Utils(metaclass=ConstMetaClass):
                 forbiddenSubstrings.add(f"reserved Windows item name `{iItemName}`")
                 return forbiddenSubstrings
             if any(char in iItemName for char in ['\\', '/', ':', '\0']):
-                forbiddenSubstrings.add(f"item name '{iItemName}' contains `/`, `\\`, `:` or null character (ASCII {ord('\0')})")
+                nullCharASCINum = ord('\0')
+                forbiddenSubstrings.add(
+                    f"item name '{iItemName}' contains `/`, `\\`, `:` or null character (ASCII {nullCharASCINum})"
+                )
             forbiddenSubstrings.update({char for char in iItemName if char in Utils.GoodPath.__WINDOWS_FORBIDDEN_PATH_CHARS_EXCEPT_CONTROL})
             forbiddenSubstrings.update({f"ASCII {ord(char)}" for char in iItemName if ord(char) < 32})
             return forbiddenSubstrings
