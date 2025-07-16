@@ -1,0 +1,17 @@
+FROM python:3-slim
+
+# Avoid interactive prompts during installs.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and dev tools.
+RUN apt update && apt install -y --no-install-recommends \
+        python-is-python3 \
+        git \
+        git-lfs \
+        openssh-client \
+        ca-certificates \
+        tree \
+    && git lfs install --system \
+    && apt clean
+
+WORKDIR /project

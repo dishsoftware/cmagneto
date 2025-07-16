@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 import re
 
+from CMagneto.py.docker.check_docker import checkDocker
 from CMagneto.py.metadata_holder import MetadataHolder
 from CMagneto.py.utils import Utils
 
@@ -68,8 +69,9 @@ class ImageBuildRunner:
 
     def __init__(self, iDockerfilePath: Path):
         dockerFileAbsolutePath: Path | None = None
-        if iDockerfilePath.absolute():
-            dockerFileAbsolutePath = iDockerfilePath.resolve()
+        goodPath = Utils.GoodPath(iDockerfilePath.as_posix())
+        if goodPath.isAbsolute:
+            dockerFileAbsolutePath= Path(goodPath.posixNormalized)
         else:
             dockerFileAbsolutePath = (ImageBuildRunner.projectDockerfilesRoot() / iDockerfilePath).resolve()
 
@@ -119,7 +121,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         if (self.__imageVersion is None):
             Utils.error(f"'{self.__dockerFilePath}' must contain 'version' label.")
 
-    def dockerFilePath(self) -> Path:
+    def dockerfilePath(self) -> Path:
         """
         Absolute path to the Dockerfile.
         """
@@ -164,7 +166,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         envFileContent += f"REMOTE_IMAGE_NAME={self.remoteImageName()}\n"
         envFileContent += f"IMAGE_VERSION={self.imageVersion()}"
 
-        envFilePath = self.dockerFilePath().parent / ".tmp" / (str(self.dockerFilePath().name) + ".env")
+        envFilePath = self.dockerfilePath().parent / ".tmp" / (str(self.dockerfilePath().name) + ".env")
 
         envFilePath.parent.mkdir(parents=True, exist_ok=True)
         with open(envFilePath, "w", encoding="utf-8") as file:
@@ -180,12 +182,12 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
 
         command = [
             "docker", "build",
-            "-f", str(self.dockerFilePath()),
+            "-f", str(self.dockerfilePath()),
             "-t", f"{self.localImageName()}:{self.imageVersion()}",
             "--label", f"name={self.localImageName()}",
             "--label", f"description={self.imageDescription()}",
             "--label", f"maintainer={self.imageMaintainer()}",
-            str(self.dockerFilePath().parent)
+            str(self.dockerfilePath().parent)
         ]
         Utils.runCommand(command)
 
@@ -214,6 +216,8 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         Utils.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages):
+        checkDocker()
+
         isStageRequiredLamda = lambda iBuildStageOfStage, iBuildStage:  \
             iBuildStage == iBuildStageOfStage or \
             iRunPrecedingStages == ImageBuildRunner.RunPrecedingStages.Run and iBuildStage.value > iBuildStageOfStage.value

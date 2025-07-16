@@ -185,7 +185,7 @@ class BuildRunner(ABC):
         Utils.status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
-        run_tests__scriptName = Utils.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
+        run_tests__scriptName = Utils.GoodPath.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
             Utils.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
@@ -341,7 +341,7 @@ class BuildRunner(ABC):
             # Delete all existing graph files.
             ## Delete dotfiles.
             graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.dotfilesDir(iBuildDir)
-            Utils.prepareDir(graphSrcDir)
+            Utils.GoodPath.prepareDir(graphSrcDir)
             # Delete picture.
             pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.pictureFilePath(iBuildDir)
             if pictureFilePath.exists():

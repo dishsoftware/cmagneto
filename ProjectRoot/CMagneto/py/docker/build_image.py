@@ -93,7 +93,7 @@ Uses other variables from JSON files in './meta/' to define image labels.",
 
     args = parser.parse_args()
 
-    dockerFilePath = Path(args.file)
+    dockerFilePath: Path = args.file
     buildStage = ImageBuildRunner.BuildStage[args.build_stage]
     runPrecedingStages = ImageBuildRunner.RunPrecedingStages[args.run_preceding_stages]
 

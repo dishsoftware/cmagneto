@@ -1,22 +1,66 @@
+# Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+# SPDX-License-Identifier: MIT
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 # Add test project root to `sys.path`
 # to be able to import CMagneto python scripts as `CMagneto.py.*`.
 from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent / "ProjectRoot"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
 import sys
 sys.path.append(str(PROJECT_ROOT))
 
 
 from CMagneto.py.utils import Utils
+from dataclasses import dataclass
 from itertools import chain
 from typing import cast
 import os
 import shutil
 
 
-def push__test_projectroot__to__test_project_repo(
-        iTestProjectRootRelToCMagnetoProjectRoot: str,
-        iTestProjectRepoURL: str,
-        iSpecialItemSetsPyRelToCMagnetoProjectRoot: str | None = None
+@dataclass
+class PushParams:
+    # Name of a branch or a tag of CMagneto project repo, from where to copy files of a test project.
+    # push__testProjectRoot__to__testProjectRepo will commit to a branch with such name (even if it is tag).
+    sourceGitReference: str
+
+    # Set to True, if sourceGitReference is a tag.
+    sourceIsTag: bool
+
+    # Dir inside the CMagneto project repo, from where to copy files of a test project.
+    # E.g. './ProjectRoot/' or './tests/system/testProjects/ProjectA/'.
+    testProjectRootRelToCMagnetoProjectRoot: str
+
+    # Address of a GitLab project for the test project repo.
+    # E.g. `git@gitlab.com:dishsoftware/cmagneto_testprojects/projectA.git`.
+    testProjectRepoURL: str
+
+    # Commit message for the test project repo.
+    # Compose it as '{SourceCommitSHA}\n\n{SourceCommitMessage}'.
+    # For GitLab CI/CD it should be '{CMagneto__CI_COMMIT_SHA}\n\n{CMagneto__CI_COMMIT_MESSAGE}'.
+    testProjectRepoCommitMessage: str
+
+    # Path to a python file in the CMagneto project repo relative to the CMagneto project root, with content:
+    # # The paths in the following sets must be relative and lead to dirs and files under ther test project root.
+    # # Dir structure of the test project repo and corresponding test project dir in CMagneto project repo must the same.
+
+    # # These files and dirs won't be deleted during cleanup of the test project repo
+    # # by `push__testProjectRoot__to__testProjectRepo`
+    # EXISTING_ITEMS_TO_RETAIN: set[Utils.GoodPath] = { ... }
+
+    # # These files and dirs won't be copied from a subdir of the test project inside the CMagneto project repo into the test project repo.
+    # # by `push__testProjectRoot__to__testProjectRepo`
+    # INCOMING_ITEMS_TO_IGNORE: set[Utils.GoodPath] = { ... }
+
+    # # `./CI/GitLab/workflow.yml` is a special path in the test project repo: `push__testProjectRoot__to__testProjectRepo` always creates it with
+    # # the content of './CI/GitLab/test_project__workflow_replacement.yml` in the repo of CMagneto project.
+    specialItemSetsPyRelToCMagnetoProjectRoot: str | None
+
+
+def push__testProjectRoot__to__testProjectRepo(
+        iParams: PushParams
     ):
     """
     CMagneto project repo can contain, aside from the seed project under "./ProjectRoot/", directories with files of other test projects, e.g. for system tests.
@@ -25,44 +69,21 @@ def push__test_projectroot__to__test_project_repo(
         B) Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to "CI/GitLab/workflow.yml.
         C) Register a public SSH key as publicly availaible deploy key with write (push) access in the GitLab test project.
         D) Add private counterpart of the key as a masked protected hidden CI/CD variable.
-        E) During a CI job in a pipeline of the CMagneto project, add the private to an ssh-agent.
+        E) During a CI job in a pipeline of the CMagneto project, add the private to an SSH-agent.
         D) Call this function, to mirror tag or last commit of the trigger-branch to the test project repo.
         F) Wait in the pipeline of CMagneto project until a pipeline of the test project finishes.
 
     0) The script is meant to be executed on a CI job runner of CMagneto project.
        Thus, `cwd` in the script is the root of a cloned CMagneto project repo.
-    1) Clones a test project repo.
-    2) Replaces its content with content of `./iTestProjectPath/` of CMagneto project repo.
-    3) Overrides `./CI/GitLab/scripts/workflow.yml` in the cloned test project repo dir
-       with `test_project__workflow_replacement.yml`, located in the
-       eponymous with this script dir alongside this script in the repo of CMagneto project.
-    4) Pushes the changes into the test project repo into an eponymous branch.
-    5) The test project repo commit's message is composed as "{CI_COMMIT_SHA}\n\n{CI_COMMIT_MESSAGE}",
-       where CI_COMMIT_SHA and CI_COMMIT_MESSAGE are GitLab CI vars of the CMagneto project pipeline.
-    6) If the CMagneto project pipeline trigger was a tag push, pushes the same tag on the test project repo commit.
-
-    Args:
-        iTestProjectRootRelToCMagnetoProjectRoot (str): path to the test project in the CMagneto project repo relative to the CMagneto project root.
-        iTestProjectRepoURL (str): SSH URL, used to clone the test project repo. E.g. `git@gitlab.com:dishsoftware/contactholder.git`.
-        iSpecialItemSetsPyRelToCMagnetoProjectRoot (str | None): path to a python file in the CMagneto project repo relative to the CMagneto project root, with content:
-        ```python
-        # special_item_sets.py
-
-        # The paths in the following sets must be relative to test project root and lead to dirs and files under ther test project root.
-        # Dir structure of the test project repo and corresponding test project dir in CMagneto project repo must the same.
-
-        # These files and dirs won't be deleted during cleanup of the test project repo
-        # by `push__test_projectroot__to__test_project_repo`
-        EXISTING_ITEMS_TO_RETAIN: set[Utils.GoodPath] = { ... }
-
-        # These files and dirs won't be copied from a subdir of a test project inside the CMagneto project repo into a test project repo.
-        # by `push__test_projectroot__to__test_project_repo`
-        INCOMING_ITEMS_TO_IGNORE: set[Utils.GoodPath] = { ... }
-
-        # `./CI/GitLab/workflow.yml` is a special path: `push__test_projectroot__to__test_project_repo` always replaces (creates) it with
-        # the content of `test_project__workflow_replacement.yml`, located in the subdir `push__test_projectroot__to__seed_project_repo` in the repo of CMagneto project.
-        ```
+    1) Clones a test project repo. Requires to Git LFS be installed on the machine/container.
+    2) Replaces its content with content of {iParams.testProjectRootRelToCMagnetoProjectRoot} of CMagneto project repo.
+    3) Copies `./CI/GitLab/test_project__workflow_replacement.yml` from the repo of CMagneto project
+       into `./CI/GitLab/workflow.yml` of the cloned test project repo dir.
+    4) Pushes the changes into the test project repo into {iParams.sourceGitReference} branch
+       with commit message {iParams.testProjectRepoCommitMessage}.
+    6) If {iParams.sourceIsTag}, pushes the tag {iParams.sourceGitReference} (the same name as branch) on the test project repo commit.
     """
+
     CMagnetoProjectRoot = Utils.GoodPath(__file__, iForceDir=True).getAscendant(4)
     if CMagnetoProjectRoot is None:
         Utils.error(f"Probably error in logic of '{__file__}'. CMagneto project root is resolved above FS root.")
@@ -71,7 +92,7 @@ def push__test_projectroot__to__test_project_repo(
     if CMagnetoProjectRootParent is None:
         Utils.error(f"CMagneto project root is in FS root. Nest the CMagneto project at least on level deeper.")
 
-    testProjectRootRelToCMagnetoProjectRoot = Utils.GoodPath(iTestProjectRootRelToCMagnetoProjectRoot, iForceDir=True)
+    testProjectRootRelToCMagnetoProjectRoot = Utils.GoodPath(iParams.testProjectRootRelToCMagnetoProjectRoot, iForceDir=True)
     testProjectRootRelToCMagnetoProjectRoot.checkIfRelativeAndDescendantAndGetAbsPath(
         "iTestProjectRelPathSrcStr",
         CMagnetoProjectRoot,
@@ -86,8 +107,8 @@ def push__test_projectroot__to__test_project_repo(
         Utils.error(f"Test project root does not exist: '{testProjectRootSrc}'.")
 
     specItemsPySrc: Utils.GoodPath | None = None
-    if iSpecialItemSetsPyRelToCMagnetoProjectRoot is not None:
-        specialItemSetsPyRelToCMagnetoProjectRoot = Utils.GoodPath(iSpecialItemSetsPyRelToCMagnetoProjectRoot)
+    if iParams.specialItemSetsPyRelToCMagnetoProjectRoot is not None:
+        specialItemSetsPyRelToCMagnetoProjectRoot = Utils.GoodPath(iParams.specialItemSetsPyRelToCMagnetoProjectRoot)
         specItemsPySrc = specialItemSetsPyRelToCMagnetoProjectRoot.checkIfRelativeAndDescendantAndGetAbsPath(
             "Special items py-file path",
             CMagnetoProjectRoot,
@@ -98,25 +119,28 @@ def push__test_projectroot__to__test_project_repo(
     # Configuration.
     CMagneto__CI_BOT__GIT_NAME  = "CMagneto CI Bot"
     CMagneto__CI_BOT__GIT_EMAIL = "CMagneto-CI-Bot@dishsoftware.org"
-    # GitLab CI variables.
-    CMagneto__CI_COMMIT_SHA = os.environ["CI_COMMIT_SHA"]
-    CMagneto__CI_COMMIT_MESSAGE = os.environ["CI_COMMIT_MESSAGE"]
-    CMagneto__CI_COMMIT_REF_NAME = os.environ["CI_COMMIT_REF_NAME"]
-    CMagneto__CI_COMMIT_TAG = os.environ.get("CI_COMMIT_TAG")  # May be not set.
 
-    statusText = f"Synching branch/tag \"{CMagneto__CI_COMMIT_REF_NAME}\" into ContactHolder test project repo"
+
+    statusText = f"Synching branch/tag \"{iParams.sourceGitReference}\" into ContactHolder test project repo"
     Utils.status(statusText + "...")
 
+    Utils.runCommand(["git", "lfs", "install", "--local"]) # Install Git LFS in CMagneto repo.
+    Utils.runCommand(["git", "lfs", "pull"])  # Pull Git LFS-managed files of CMagneto repo.
+
     # Clone the test project repo.
-    Utils.runCommand(["git", "clone", "--depth=1", iTestProjectRepoURL, str(testProjectRootDest)])
+    os.environ["GIT_CLONE_PROTECTION_ACTIVE"] = "false" # Let Git LFS do its job in test project repo.
+    Utils.runCommand(["git", "clone", "--depth=1", iParams.testProjectRepoURL, str(testProjectRootDest)])
+    Utils.runCommand(["git", "lfs", "install", "--local"], testProjectRootDest) # Install Git LFS in test project repo.
+    Utils.runCommand(["git", "lfs", "pull"], testProjectRootDest)  # Pull Git LFS-managed files of test project repo.
 
     # Setup Git user in the test project repo.
     Utils.runCommand(["git", "config", "user.email", CMagneto__CI_BOT__GIT_EMAIL], testProjectRootDest)
     Utils.runCommand(["git", "config", "user.name", CMagneto__CI_BOT__GIT_NAME],   testProjectRootDest)
 
     # Checkout/create branch (in the test project repo) with the same name as the branch of CMagneto, where CI pipeline trigger happened.
-    Utils.runCommand(["git", "checkout", "-B", CMagneto__CI_COMMIT_REF_NAME],     testProjectRootDest)
-    Utils.runCommand(["git", "remote", "set-url", "origin", iTestProjectRepoURL], testProjectRootDest)
+    Utils.runCommand(["git", "checkout", "-B", iParams.sourceGitReference],     testProjectRootDest)
+    Utils.runCommand(["git", "remote", "set-url", "origin", iParams.testProjectRepoURL], testProjectRootDest)
+    Utils.runCommand(["git", "config", "lfs.locksverify", "false"], testProjectRootDest) # Don't inform that locking is available.
 
     # Get special item sets.
     INCOMING_ITEMS_TO_IGNORE: set[Utils.GoodPath] = set()
@@ -130,7 +154,7 @@ def push__test_projectroot__to__test_project_repo(
         import importlib.util
         spec = importlib.util.spec_from_file_location(moduleName, modulePath)
         if (spec is None or spec.loader is None):
-            Utils.error(f"Can't load special items py file `{iSpecialItemSetsPyRelToCMagnetoProjectRoot}`.")
+            Utils.error(f"Can't load special items py file `{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}`.")
 
         module = importlib.util.module_from_spec(spec)
         sys.modules[moduleName] = module
@@ -139,10 +163,10 @@ def push__test_projectroot__to__test_project_repo(
         isSetOfPaths = lambda iInstance: isinstance(iInstance, set) and all(isinstance(setIem, Utils.GoodPath) for setIem in iInstance)
 
         if not isSetOfPaths(module.EXISTING_ITEMS_TO_RETAIN):
-            Utils.error(f"`{iSpecialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable EXISTING_ITEMS_TO_RETAIN. It must be of type `set[Utils.GoodPath]`.")
+            Utils.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable EXISTING_ITEMS_TO_RETAIN. It must be of type `set[Utils.GoodPath]`.")
 
         if not isSetOfPaths(module.INCOMING_ITEMS_TO_IGNORE):
-            Utils.error(f"`{iSpecialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable INCOMING_ITEMS_TO_IGNORE. It must be of type `set[Utils.GoodPath]`.")
+            Utils.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable INCOMING_ITEMS_TO_IGNORE. It must be of type `set[Utils.GoodPath]`.")
 
         EXISTING_ITEMS_TO_RETAIN = module.EXISTING_ITEMS_TO_RETAIN
         INCOMING_ITEMS_TO_IGNORE = module.INCOMING_ITEMS_TO_IGNORE
@@ -185,33 +209,21 @@ def push__test_projectroot__to__test_project_repo(
             target = os.readlink(itemSrc)
             os.symlink(target, itemDest)
 
-    # Copy `./__thisScriptNameWE__/test_project__workflow_replacement.yml` (located relative to this script in CMagneto repo dir)
+    # Copy `./__thisScriptNameWE__/push__testProjectRoot__to__testProjectRepo.yml` (located relative to this script in CMagneto repo dir)
     # into `./CI/GitLab/workflow.yml` of the test project root.
-    workflowReplacementSrc = Path(__file__).resolve().with_suffix('') / "test_project__workflow_replacement.yml"
+    workflowReplacementSrc = Path(__file__).resolve().with_suffix('') / "push__testProjectRoot__to__testProjectRepo.yml"
     workflowDest = testProjectRootDest / "CI/" / "GitLab/" / "workflow.yml"
     cast(Utils.GoodPath, workflowDest.getParent()).create(iExistsOk=True)
     shutil.copy2(workflowReplacementSrc, workflowDest)
 
     # Commit and push to the test project repo.
     Utils.runCommand(["git", "add", "."], testProjectRootDest)
-    Utils.runCommand(["git", "commit", "-m", f"{CMagneto__CI_COMMIT_SHA}\n\n{CMagneto__CI_COMMIT_MESSAGE}"], testProjectRootDest)
-    Utils.runCommand(["git", "push", "--force", iTestProjectRepoURL, f"HEAD:{CMagneto__CI_COMMIT_REF_NAME}"], testProjectRootDest)
+    Utils.runCommand(["git", "commit", "-m", f"{iParams.testProjectRepoCommitMessage}"], testProjectRootDest)
+    Utils.runCommand(["git", "push", "--force", iParams.testProjectRepoURL, f"HEAD:{iParams.sourceGitReference}"], testProjectRootDest)
 
     # Tag the test project repo commit, if the CMagneto pipeline trigger was a tag push.
-    if CMagneto__CI_COMMIT_TAG:
-        Utils.runCommand(["git", "tag", CMagneto__CI_COMMIT_TAG], testProjectRootDest)
-        Utils.runCommand(["git", "push", iTestProjectRepoURL, CMagneto__CI_COMMIT_TAG], testProjectRootDest)
+    if iParams.sourceIsTag:
+        Utils.runCommand(["git", "tag", iParams.sourceGitReference], testProjectRootDest)
+        Utils.runCommand(["git", "push", iParams.testProjectRepoURL, iParams.sourceGitReference], testProjectRootDest)
 
     Utils.status(statusText + " finished.\n")
-
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 3:
-        Utils.error("Usage: python push__test_projectroot__to__test_project_repo.py <iTestProjectPathSrcStr> <iTestProjectRepoURL> [iPathToSpecialItemSetsPy]")
-    if len(sys.argv) > 4:
-        Utils.warning(f"Usage: python push__test_projectroot__to__test_project_repo.py <iTestProjectPathSrcStr> <iTestProjectRepoURL> [iPathToSpecialItemSetsPy].\n\
-                      \tIgnored extra args: {" ".join(sys.argv[4:])}.")
-
-    pathArg = sys.argv[1]
-    push__test_projectroot__to__test_project_repo(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)

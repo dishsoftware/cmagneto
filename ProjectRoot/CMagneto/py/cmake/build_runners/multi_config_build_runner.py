@@ -56,7 +56,7 @@ class MultiConfigBuildRunner(BuildRunner):
         text = "Generation of build system files (multi-config)"
         Utils.status(text + "...")
 
-        Utils.prepareDir(self.buildDir())
+        Utils.GoodPath.prepareDir(self.buildDir())
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
         Utils.runCommand(command, self.buildDir())
@@ -137,7 +137,7 @@ class MultiConfigBuildRunner(BuildRunner):
         text = f"Installing ({iBuildType.name})"
         Utils.status(text + "...")
 
-        Utils.prepareDir(self.installDirForBuildType(iBuildType))
+        Utils.GoodPath.prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = [
             "cmake",

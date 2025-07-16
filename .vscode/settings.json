@@ -4,6 +4,7 @@
     "editor.insertSpaces": true,
     "editor.detectIndentation": false,
     "python.analysis.extraPaths": [
-        "./ProjectRoot/"
+        "./ProjectRoot/",
+        "."
     ]
 }
