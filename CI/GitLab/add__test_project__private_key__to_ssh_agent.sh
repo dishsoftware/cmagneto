@@ -69,8 +69,12 @@ eval "$(ssh-agent -s)"
 # Load the key into the running SSH-agent.
 ssh-add "$KEY_PATH"
 
+ssh -T git@gitlab.com
+
 # Immediately delete the key file for security. It is already buffered by the SSH-agent.
 rm -f "$KEY_PATH"
+
+ssh -T git@gitlab.com
 
 # Without the following block:
 #   Git couldn't verify the SSH host key fingerprint - a security check to prevent man-in-the-middle attacks.
