@@ -122,13 +122,13 @@ def push__testProjectRoot__to__testProjectRepo(
     CMagneto__CI_BOT__GIT_EMAIL = "CMagneto-CI-Bot@dishsoftware.org"
 
 
-    statusText = f"Synching branch/tag \"{iParams.sourceGitReference}\" into ContactHolder test project repo"
-    Utils.status(statusText + "...")
+
 
     Utils.runCommand(["git", "lfs", "install", "--local"]) # Install Git LFS in CMagneto repo.
     Utils.runCommand(["git", "lfs", "pull"])  # Pull Git LFS-managed files of CMagneto repo.
 
     # Clone the test project repo.
+    Utils.status(f"Cloning test project repo '{iParams.testProjectRepoURL}' into '{testProjectRootDest}'...")
     os.environ["GIT_CLONE_PROTECTION_ACTIVE"] = "false" # Let Git LFS do its job in test project repo.
     Utils.runCommand(["git", "clone", "--depth=1", iParams.testProjectRepoURL, str(testProjectRootDest)])
     Utils.runCommand(["git", "lfs", "install", "--local"], testProjectRootDest) # Install Git LFS in test project repo.
@@ -139,6 +139,7 @@ def push__testProjectRoot__to__testProjectRepo(
     Utils.runCommand(["git", "config", "user.name", CMagneto__CI_BOT__GIT_NAME],   testProjectRootDest)
 
     # Checkout/create branch (in the test project repo) with the same name as the branch of CMagneto, where CI pipeline trigger happened.
+    Utils.status(f"Creating/checking-out branch \"{iParams.sourceGitReference}\" in the test project repo '{testProjectRootDest}'...")
     Utils.runCommand(["git", "checkout", "-B", iParams.sourceGitReference],     testProjectRootDest)
     Utils.runCommand(["git", "remote", "set-url", "origin", iParams.testProjectRepoURL], testProjectRootDest)
     Utils.runCommand(["git", "config", "lfs.locksverify", "false"], testProjectRootDest) # Don't inform that locking is available.
@@ -147,6 +148,7 @@ def push__testProjectRoot__to__testProjectRepo(
     INCOMING_ITEMS_TO_IGNORE: set[Utils.GoodPath] = set()
     EXISTING_ITEMS_TO_RETAIN: set[Utils.GoodPath] = set()
     if specItemsPySrc is not None:
+        Utils.status(f"Importing INCOMING_ITEMS_TO_IGNORE and EXISTING_ITEMS_TO_RETAIN sets from '{specItemsPySrc}'...")
         sys.path.append(str(specItemsPySrc))
 
         modulePath = str(specItemsPySrc)
@@ -184,6 +186,7 @@ def push__testProjectRoot__to__testProjectRepo(
     isPathUnderPathFromSet = lambda iPath, iBases: any(iPath.isDescendant(base) for base in iBases)
 
     # Delete all content of the test project root, except `.git/` and EXISTING_ITEMS_TO_RETAIN.
+    Utils.status(f"Deleting old content from the cloned repo '{testProjectRootDest}' of the test project...")
     for itemDest in testProjectRootDest.iterdir():
         itemRel = cast(Utils.GoodPath, itemDest.getRelativeTo(testProjectRootDest))
         if itemRel == ".git/" or isPathUnderPathFromSet(itemRel, EXISTING_ITEMS_TO_RETAIN):
@@ -191,6 +194,7 @@ def push__testProjectRoot__to__testProjectRepo(
         itemDest.delete()
 
     # Copy from dir with the test project inside CMagneto project repo into the test project repo root.
+    Utils.status(f"Copying content of '{testProjectRootSrc}' of the CMagneto project repo into the cloned repo '{testProjectRootDest}' of the test project...")
     for itemSrc in testProjectRootSrc.rglob("*"): # Recursively walk all files and dirs.
         itemRel = cast(Utils.GoodPath, itemSrc.getRelativeTo(testProjectRootSrc))
         if isPathUnderPathFromSet(itemRel, INCOMING_ITEMS_TO_IGNORE):
@@ -216,15 +220,21 @@ def push__testProjectRoot__to__testProjectRepo(
     workflowDest = testProjectRootDest / "CI/" / "GitLab/" / "workflow.yml"
     cast(Utils.GoodPath, workflowDest.getParent()).create(iExistsOk=True)
     shutil.copy2(workflowReplacementSrc, workflowDest)
+    Utils.status(f"Copied '{workflowReplacementSrc}' into '{workflowDest}'.")
 
     # Commit and push to the test project repo.
+    Utils.status(
+f"Commiting and pushing into '{iParams.testProjectRepoURL}' into branch '{iParams.sourceGitReference}' with message:\n\
+\"{iParams.testProjectRepoCommitMessage}\"\n..."
+    )
     Utils.runCommand(["git", "add", "."], testProjectRootDest)
     Utils.runCommand(["git", "commit", "-m", f"{iParams.testProjectRepoCommitMessage}"], testProjectRootDest)
     Utils.runCommand(["git", "push", "--force", iParams.testProjectRepoURL, f"HEAD:{iParams.sourceGitReference}"], testProjectRootDest)
 
     # Tag the test project repo commit, if the CMagneto pipeline trigger was a tag push.
     if iParams.sourceIsTag:
+        Utils.status(f"Pushing tag '{iParams.sourceGitReference}'...")
         Utils.runCommand(["git", "tag", iParams.sourceGitReference], testProjectRootDest)
         Utils.runCommand(["git", "push", iParams.testProjectRepoURL, iParams.sourceGitReference], testProjectRootDest)
 
-    Utils.status(statusText + " finished.\n")
+    Utils.status(f"Function '{push__testProjectRoot__to__testProjectRepo.__name__}' succeded.\n")
