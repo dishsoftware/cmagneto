@@ -49,9 +49,10 @@ variables:
   stage: build-test-package
   image: python:3
   variables:
-    Dockerfile: "Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden. The file must be located under ./CI/Docker/.
+    # The path must be and under `./CI/Docker/`. If relative, must be defined relative to the dir.
+    Dockerfile: "./Dockerfile.Ubuntu24AMD__build" # Default value, should be overridden.
   script:
-    - python3 ./CI/Docker/build_image.py --file ./CI/Docker/${Dockerfile} --build_stage GenerateEnvFile
+    - python3 ./CI/Docker/build_image.py --file ${Dockerfile} --build_stage GenerateEnvFile
     - cat ./CI/Docker/.tmp/${Dockerfile}.env # Display the contents of the file.
   artifacts:
     reports:

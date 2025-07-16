@@ -71,7 +71,7 @@ class ImageBuildRunner:
         dockerFileAbsolutePath: Path | None = None
         goodPath = Utils.GoodPath(iDockerfilePath.as_posix())
         if goodPath.isAbsolute:
-            dockerFileAbsolutePath= Path(goodPath.posixNormalized)
+            dockerFileAbsolutePath = Path(goodPath.posixNormalized)
         else:
             dockerFileAbsolutePath = (ImageBuildRunner.projectDockerfilesRoot() / iDockerfilePath).resolve()
 
@@ -83,7 +83,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
 
         self.__dockerFilePath = dockerFileAbsolutePath
         if not self.__dockerFilePath.exists() or not self.__dockerFilePath.is_file():
-            Utils.error(f"Invalid file: \"${self.__dockerFilePath}\".")
+            Utils.error(f"Invalid file: \"{self.__dockerFilePath}\".")
 
         dockerFileSubdirStr = str(dockerFileAbsolutePath.parent.relative_to(ImageBuildRunner.projectDockerfilesRoot()).as_posix())
         dockerFileName = str(self.__dockerFilePath.name)
@@ -216,8 +216,6 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         Utils.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages):
-        checkDocker()
-
         isStageRequiredLamda = lambda iBuildStageOfStage, iBuildStage:  \
             iBuildStage == iBuildStageOfStage or \
             iRunPrecedingStages == ImageBuildRunner.RunPrecedingStages.Run and iBuildStage.value > iBuildStageOfStage.value
@@ -226,7 +224,9 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
             self.generateEnvFile()
 
         if isStageRequiredLamda(ImageBuildRunner.BuildStage.Build, iBuildStage):
+            checkDocker()
             self.build()
 
         if isStageRequiredLamda(ImageBuildRunner.BuildStage.Push, iBuildStage):
+            checkDocker()
             self.push()

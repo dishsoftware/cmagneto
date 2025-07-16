@@ -72,7 +72,7 @@ Uses other variables from JSON files in './meta/' to define image labels.",
         "--file", "-f",
         type=Path,
         required=True,
-        help="Path to a Dockerfile."
+        help=f"Path to a Dockerfile. The path must be under '{ImageBuildRunner.projectDockerfilesRoot()}/'. If relative, must be defined relative to the dir."
     )
     defaultBuildStage = max(ImageBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(
