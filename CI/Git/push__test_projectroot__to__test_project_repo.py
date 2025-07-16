@@ -121,24 +121,24 @@ def push__testProjectRoot__to__testProjectRepo(
     CMagneto__CI_BOT__GIT_NAME  = "CMagneto CI Bot"
     CMagneto__CI_BOT__GIT_EMAIL = "CMagneto-CI-Bot@dishsoftware.org"
 
-
-
-
-    Utils.runCommand(["git", "lfs", "install", "--local"]) # Install Git LFS in CMagneto repo.
+    # Install Git LFS in CMagneto repo. "--force" to prevent conflict after "git lfs install --system".
+    Utils.runCommand(["git", "lfs", "install", "--local", "--force"])
     Utils.runCommand(["git", "lfs", "pull"])  # Pull Git LFS-managed files of CMagneto repo.
 
     # Clone the test project repo.
     Utils.status(f"Cloning test project repo '{iParams.testProjectRepoURL}' into '{testProjectRootDest}'...")
     os.environ["GIT_CLONE_PROTECTION_ACTIVE"] = "false" # Let Git LFS do its job in test project repo.
     Utils.runCommand(["git", "clone", "--depth=1", iParams.testProjectRepoURL, str(testProjectRootDest)])
-    Utils.runCommand(["git", "lfs", "install", "--local"], testProjectRootDest) # Install Git LFS in test project repo.
+
+    ## Install Git LFS in test project repo. "--force" to prevent conflict after "git lfs install --system".
+    Utils.runCommand(["git", "lfs", "install", "--local", "--force"], testProjectRootDest)
     Utils.runCommand(["git", "lfs", "pull"], testProjectRootDest)  # Pull Git LFS-managed files of test project repo.
 
-    # Setup Git user in the test project repo.
+    ## Setup Git user in the test project repo.
     Utils.runCommand(["git", "config", "user.email", CMagneto__CI_BOT__GIT_EMAIL], testProjectRootDest)
     Utils.runCommand(["git", "config", "user.name", CMagneto__CI_BOT__GIT_NAME],   testProjectRootDest)
 
-    # Checkout/create branch (in the test project repo) with the same name as the branch of CMagneto, where CI pipeline trigger happened.
+    ## Checkout/create branch (in the test project repo) with the same name as the branch of CMagneto, where CI pipeline trigger happened.
     Utils.status(f"Creating/checking-out branch \"{iParams.sourceGitReference}\" in the test project repo '{testProjectRootDest}'...")
     Utils.runCommand(["git", "checkout", "-B", iParams.sourceGitReference],     testProjectRootDest)
     Utils.runCommand(["git", "remote", "set-url", "origin", iParams.testProjectRepoURL], testProjectRootDest)
