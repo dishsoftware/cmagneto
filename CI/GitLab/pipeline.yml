@@ -1,93 +1,50 @@
-# There is a GitLab project ContactHolder, which is not meant to be cloned.
-# Code in the repo is the synched content of [`./ProjectRoot/`](https://gitlab.com/dishsoftware/cmagneto/-/tree/main/ProjectRoot) of the [CMagneto framework](https://gitlab.com/dishsoftware/cmagneto) repo, pushed by a CMagneto CI Bot.
-# The mentioned subdir of the CMagneto repo contains source files of the framework itself,
-# and source files of a seed (template) project. It is just easier to test and distribute these files together.
+# There are GitLab projects, whose repos are not meant to be cloned.
+# Code in these repos is synched with corresponding subdirs of the [CMagneto project](https://gitlab.com/dishsoftware/cmagneto) repo
+# and is pushed by a CMagneto CI Bot.
 #
-# The seed project serves just as:
-# 1) Docker image registry;
-# 3) Runner of CI jobs, related to the seed project;
-# 2) Package registry for built installation packages of the seed project.
+# Each of these test projects serves just as:
+# 1) Registry of Docker images, related to the test project;
+# 2) Runner of CI jobs, related to the test project;
+# 3) Package registry for built installation packages of the test project.
 
 
 stages:
-  - trigger__dependent_projects__pipelines
-  - wait__dependent_projects__pipelines
+  # Seed project is in './ProjectRoot/'. Its pipelines are run according to the pipeline wokflow.
+  - trigger__seed_project__pipeline
+  - wait__seed_project__pipeline
+
+  # Test projects are in './tests/system/testProjects/'. Their pipelines are run only if there is a push into 'main'.
+  # - trigger__test_projects__pipelines
+  # - wait__test_projects__pipelines
 
 
-push__projectroot__to__seed_project_repo:
-  stage: trigger__dependent_projects__pipelines
-  image: python:3
-  # The script in the `script` property needs to push to and trigger pipeline of the seed project repo.
-  # And, while triggering a pipeline can be permitted just by adding CMagneto GitLab page to the list of "CI/CD job token allowlist" of the seed project repo,
-  # pushing to the repo requires:
-  #   1) Using a `Project access token` issued in the seed project repo, but the `Project access tokens` feature is only available on paid GitLab plans;
-  #   2) Using an SSH deploy key, registred in the seed project repo.
-  # The second option is chosen.
-  # The `before-script` adds a private SSH key, whose public counterpart is registered as
-  # a publicly available deploy key with a write (push) permission of the seed project repo.
+JOB~sync__seed_project__to__seed_project_repo: # Prefix 'JOB~' to be consistent with 'JOB~trigger__seed_project__pipeline', etc.
+  stage: trigger__seed_project__pipeline
+
+  # Run `./CI/Docker/build_image__for_repo_shenanigans.py` to build and push the image.
+  image: registry.gitlab.com/dishsoftware/cmagneto/for_repo_shenanigans:1.0.0
+
   before_script:
-    # A private SSH key can't be saved as a masked CI/CD variable - GitLab shows the error:
-    # ```
-    #   Unable to create masked variable because:
-    #   The value cannot contain the following characters: whitespace characters."
-    # ```
-    # The CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO CI/CD variable of type "Variable (default)".
-    # It is a private SSH key, converted into a single line without whitespaces using `base64`:
-    # ```bash
-    # base64 pathToThePrivateKey | tr -d '\n'
-    # ```
-    # The shenanigans with `base64` can be avoided by uploading the private key file into CMagneto -> Settings -> CI/CD -> Secret files.
-    # In that case it could be used as "$CI_SECURE_FILES_DIR/thePrivateKey.
-    #
-    # But the approach with an environment variable is more flexible:
-    #   A variable can be "protected" and become only available when a CI pipeline deals with protected branches; It is not used, but I like the option;
-    #   Secure file is always available both in protected and regular branches.
-
-    # Convert the single-line-base64 string back into a private key.
-    - echo "$CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO" | base64 -d > ./privateSSHKey__SeedProjectRepo
-
-    # Set file permissions so only the owner can read/write (a requirement for SSH to trust the key).
-    # Without this, `ssh-add` will likely fail with a "bad permissions" error.
-    - chmod 600 ./privateSSHKey__SeedProjectRepo
-
-    # Print correponding public key for debug.
-    - ssh-keygen -y -f ./privateSSHKey__SeedProjectRepo
-
-    # Start the SSH agent.
-    - eval "$(ssh-agent -s)"
-
-    # Load the key into the running SSH agent.
-    - ssh-add ./privateSSHKey__SeedProjectRepo
-
-    # Without the following block:
-    #   Git couldn't verify the SSH host key fingerprint - a security check to prevent man-in-the-middle attacks.
-    #   SSH expects the remote server's key to be listed in the `~/.ssh/known_hosts` file,
-    #   but in Docker-based CI runner, that file is empty unless populated explicitly.
-    - mkdir -p ~/.ssh
-    - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
-    - chmod 700 ~/.ssh
-    - chmod 644 ~/.ssh/known_hosts
-
-    - apt update && apt install -y tree
-    - tree .. -a -L 5 -I '.git'
+    # "Source" the script, because otherwise the SSH-setup is done in a child process and has no effect on the job.
+    - source ./CI/GitLab/add__test_project__private_key__to_ssh_agent.sh "CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO"
   script:
-    - python3 ./CI/GitLab/scripts/push__test_projectroot__to__seed_project_repo.py "ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
+    - python3 ./CI/GitLab/sync__test_projectroot__to__test_project_repo.py "ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
 
 
-trigger__seed_project__pipeline:
-  stage: trigger__dependent_projects__pipelines
+JOB~trigger__seed_project__pipeline: # Prefix 'JOB~' to not confuse the job with the stage.
+  stage: trigger__seed_project__pipeline
   needs:
-    - job: push__projectroot__to__seed_project_repo
+    - job: JOB~sync__seed_project__to__seed_project_repo
   trigger:
     project: dishsoftware/contactholder
     branch: $CI_COMMIT_REF_NAME
     strategy: depend
 
 
-wait__seed_project__pipeline:
-  stage: wait__dependent_projects__pipelines
+JOB~wait__seed_project__pipeline:    # Prefix 'JOB~' to not confuse the job with the stage.
+  stage: wait__seed_project__pipeline
   needs:
-    - job: trigger__seed_project__pipeline
+    - job: JOB~trigger__seed_project__pipeline
       artifacts: false
   script:
-    - echo "Seed project 'ContactHolder' pipeline has finished."
+    - echo "Seed project pipeline has finished."

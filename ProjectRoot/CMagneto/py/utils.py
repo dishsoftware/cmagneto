@@ -168,55 +168,6 @@ class Utils(metaclass=ConstMetaClass):
             return False
         return True
 
-    @staticmethod
-    def prepareDir(iDir: Path) -> None:
-        """Creates/cleans iDir."""
-        if iDir.exists():
-            shutil.rmtree(iDir)
-
-        os.makedirs(iDir, exist_ok=True)
-
-    @staticmethod
-    def findInDirFileWithNameWE(iDir: Path, iFileNameWE: str) -> Path | None:
-        """
-        Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
-        """
-        for item in iDir.iterdir():
-            if item.is_file() and iFileNameWE == item.stem:
-                return Path(item.name)
-        return None
-
-
-    class PathType(Enum):
-        Absolute = "absolute",
-        Relative = "relative",
-        DontCare = "absolute or relative"
-
-
-    @staticmethod
-    def getPathRelativeToBaseDir(iPath: Path, iBaseDir: Path, iPathType: PathType = PathType.DontCare, iRequirePathUnderBase: bool = True):
-        """Does not check whether the files or directories actually exist on the file system."""
-        pathIsAbsolute = iPath.is_absolute()
-
-        if iPathType == Utils.PathType.Relative and pathIsAbsolute:
-            Utils.error(f"iPath must be relative. iPath = `{iPath}`.")
-        elif iPathType == Utils.PathType.Absolute and not pathIsAbsolute:
-            Utils.error(f"iPath must be absolute. iPath = `{iPath}`.")
-
-        if not pathIsAbsolute:
-            if not iRequirePathUnderBase:
-                return iPath
-            iPath = (iBaseDir / iPath).resolve()
-
-        iBaseDir = iBaseDir.resolve()
-
-        try:
-            return iPath.relative_to(iBaseDir)
-        except ValueError:
-            if iRequirePathUnderBase:
-                Utils.error(f"iPath must be under iBaseDir\n:\tiPath = `{iPath}`\n\tiBaseDir = `{iBaseDir}`")
-            return Path(os.path.relpath(iPath, iBaseDir))
-
 
     class GoodPath(metaclass=ConstMetaClass):
         """
@@ -594,3 +545,22 @@ class Utils(metaclass=ConstMetaClass):
             if self.isRelative:
                 raise FileNotFoundError(f"'{self.raw}' is relative path.")
             return Path(self).is_symlink()
+
+        @staticmethod
+        def prepareDir(iDir: Path) -> None:
+            """Creates/cleans iDir."""
+            if iDir.exists():
+                shutil.rmtree(iDir)
+            os.makedirs(iDir, exist_ok=True)
+
+        @staticmethod
+        def findInDirFileWithNameWE(iDir: Utils.GoodPath | Path, iFileNameWE: str) -> Path | None:
+            """
+            Returns fileName of a file with the iFileNameWE (name without extension), which is found first in the iDir (non-recursively).
+            """
+            if isinstance(iDir, Utils.GoodPath):
+                iDir = Path(iDir)
+            for item in iDir.iterdir():
+                if item.is_file() and iFileNameWE == item.stem:
+                    return Path(item.name)
+            return None
