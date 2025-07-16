@@ -43,10 +43,10 @@ if [ $# -ne 1 ]; then
 fi
 
 CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME="$1"
-CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_TEST_PROJECT_REPO="${!CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME}"
+CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO="${!CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME}"
 
 # Checks if the environment variable is empty or unset.
-if [ -z "$CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_TEST_PROJECT_REPO" ]; then
+if [ -z "$CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO" ]; then
   echo "Missing base64-encoded private SSH key for CMagneto CI Bot."
   exit 1
 fi
@@ -54,7 +54,7 @@ fi
 KEY_PATH="../testProjectRepoKey"
 
 # Convert the single-line-base64 string back into a private key.
-echo "$CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_TEST_PROJECT_REPO" | base64 -d > "$KEY_PATH"
+echo "$CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO" | base64 -d > "$KEY_PATH"
 
 # Set file permissions so only the owner can read/write (a requirement for SSH-client to trust the key).
 # Without this, `ssh-add` will likely fail with a "bad permissions" error.
