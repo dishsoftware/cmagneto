@@ -22,7 +22,7 @@ JOB~sync__seed_project__to__seed_project_repo: # Prefix 'JOB~' to be consistent 
   stage: trigger__seed_project__pipeline
 
   # Run `./CI/Docker/build_image__for_repo_shenanigans.py` to build and push the image.
-  image: registry.gitlab.com/dishsoftware/cmagneto/for_repo_shenanigans
+  image: registry.gitlab.com/dishsoftware/cmagneto/for_repo_shenanigans:1.0.0
 
   script:
     - python3 ./CI/GitLab/sync__test_projectroot__to__test_project_repo.py \
