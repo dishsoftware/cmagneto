@@ -51,34 +51,44 @@ def filePipelineRelDot() -> Utils.GoodPath:
     """Returns the GoodPath instance for the relative dotted     (stats with './'   ) file 'pipeline.yml' in the './CI/GitLab/'."""
     return Utils.GoodPath("./CI/GitLab/pipeline.yml")
 
+NONEXISTENT_A = "C:/nonexistentA/"
+
 @pytest.fixture(scope="module")
 def dirNonexistentAAbs() -> Utils.GoodPath:
     """Returns the GoodPath instance for the absolute dir 'C:/nonexistentA/`."""
-    return Utils.GoodPath("C:/nonexistentA/")
+    return Utils.GoodPath(NONEXISTENT_A)
 
 def dirNonexistentAAbs_relTo_CMagnetoProjectRoot() -> str | None:
-    if str(CMAGNETO_PROJECT_ROOT.anchor)[0] != 'C':
+    if os.name != "nt": # Path("C:/a").anchor == '/' on Linux!
         return None
-    return os.path.relpath("C:/nonexistentA/", CMAGNETO_PROJECT_ROOT_STR) + "/"
+    if str(CMAGNETO_PROJECT_ROOT_STR.anchor)[0] != 'C':
+        return None
+    return os.path.relpath(NONEXISTENT_A, CMAGNETO_PROJECT_ROOT_STR) + "/"
 
 def dirNonexistentAAbs_relTo_SeedProjectRoot() -> str | None:
+    if os.name != "nt": # Path("C:/a").anchor == '/' on Linux!
+        return None
     if str(SEED_PROJECT_ROOT.anchor)[0] != 'C':
         return None
-    return os.path.relpath("C:/nonexistentA/", SEED_PROJECT_ROOT_STR) + "/"
+    return os.path.relpath(NONEXISTENT_A, SEED_PROJECT_ROOT_STR) + "/"
+
+NONEXISTENT_B = "/nonexistentB/"
 
 @pytest.fixture(scope="module")
 def dirNonexistentBAbs() -> Utils.GoodPath:
     """Returns the GoodPath instance for the absolute dir '/nonexistentB/`."""
-    return Utils.GoodPath("/nonexistentB/")
+    return Utils.GoodPath(NONEXISTENT_B)
 
 def dirNonexistentBAbs_relTo_CMagnetoProjectRoot() -> str | None:
+    if os.name == "nt":
+        return None
     if str(CMAGNETO_PROJECT_ROOT.anchor)[0] != '/':
         return None
-    relPath = os.path.relpath("C:/nonexistentB/", CMAGNETO_PROJECT_ROOT_STR) + "/"
-    print(f"{relPath}")
+    return os.path.relpath(NONEXISTENT_B, CMAGNETO_PROJECT_ROOT_STR) + "/"
 
 def dirNonexistentBAbs_relTo_SeedProjectRoot() -> str | None:
+    if os.name == "nt":
+        return None
     if str(SEED_PROJECT_ROOT.anchor)[0] != '/':
         return None
-    relPath = os.path.relpath("C:/nonexistentB/", SEED_PROJECT_ROOT_STR) + "/"
-    print(f"{relPath}")
+    return os.path.relpath(NONEXISTENT_B, SEED_PROJECT_ROOT_STR) + "/"
