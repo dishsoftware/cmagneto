@@ -4,16 +4,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Add test project root to `sys.path`
-# to be able to import CMagneto python scripts as `CMagneto.py.*`.
+# Add these paths to `sys.path`
+# to be able to import python scripts from CMagneto project repo.
 from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
+CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
 import sys
-sys.path.append(str(PROJECT_ROOT))
+sys.path.append(str(CMAGNETO_PROJECT_ROOT))
+sys.path.append(str(SEED_PROJECT_ROOT))
 
-
-from CMagneto.py.utils import Utils
 from CI.Git.push__test_projectroot__to__test_project_repo import push__testProjectRoot__to__testProjectRepo, PushParams
+from CMagneto.py.utils import Utils
 import os
 import subprocess
 
