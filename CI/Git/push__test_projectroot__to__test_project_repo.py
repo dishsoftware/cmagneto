@@ -228,7 +228,7 @@ f"Commiting and pushing into '{iParams.testProjectRepoURL}' into branch '{iParam
 \"{iParams.testProjectRepoCommitMessage}\"\n..."
     )
     Utils.runCommand(["git", "add", "."], testProjectRootDest)
-    Utils.runCommand(["git", "commit", "-m", f"{iParams.testProjectRepoCommitMessage}"], testProjectRootDest)
+    Utils.runCommand(["git", "commit", "--allow-empty", "-m", f"{iParams.testProjectRepoCommitMessage}"], testProjectRootDest)
     Utils.runCommand(["git", "push", "--force", iParams.testProjectRepoURL, f"HEAD:{iParams.sourceGitReference}"], testProjectRootDest)
 
     # Tag the test project repo commit, if the CMagneto pipeline trigger was a tag push.
