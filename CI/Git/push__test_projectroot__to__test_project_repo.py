@@ -126,7 +126,6 @@ def push__testProjectRoot__to__testProjectRepo(
     Utils.runCommand(["git", "lfs", "pull"])  # Pull Git LFS-managed files of CMagneto repo.
 
     # Clone the test project repo.
-    Utils.runCommand(["ssh", "-T", "git@gitlab.com"])
     Utils.status(f"Cloning test project repo '{iParams.testProjectRepoURL}' into '{testProjectRootDest}'...")
     os.environ["GIT_CLONE_PROTECTION_ACTIVE"] = "false" # Let Git LFS do its job in test project repo.
     Utils.runCommand(["git", "clone", "--depth=1", iParams.testProjectRepoURL, str(testProjectRootDest)])

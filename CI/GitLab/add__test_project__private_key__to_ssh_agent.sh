@@ -6,6 +6,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# There is a need to push to a test GitLab project and trigger its pipeline from a CI runner of CMagneto GitLab project.
+# While triggering the pipeline can be permitted just by adding CMagneto GitLab project address
+# to the list of "CI/CD job token allowlist" of the test project,
+# pushing into the repo requires:
+#     1) Using a `Project access token` issued in the test project, but the `Project access tokens` feature is only available on paid GitLab plans;
+#     2) Using an SSH deploy key, registred in the test project.
+# The second option was chosen.
+#
 # The scipt must be called as "<SCRIPT_NAME> <CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME>".
 #
 # The CMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME must be a name of
@@ -80,7 +88,5 @@ mkdir -p ~/.ssh
 ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
 chmod 700 ~/.ssh
 chmod 644 ~/.ssh/known_hosts
-
-ssh -T git@gitlab.com
 
 # tree .. -a -L 5 -I '.git' # Debug.
