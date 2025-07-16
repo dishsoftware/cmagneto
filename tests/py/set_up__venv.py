@@ -24,8 +24,9 @@ def create() -> Path:
     print("Virtual environment created.")
 
     # Path to the python executable inside venv.
-    pythonBin = VENV_PATH / "bin" / "python.exe"
+    pythonBin = VENV_PATH / "bin" / "python"
     if os.name == "nt":
+        pythonBin = VENV_PATH / "bin" / "python.exe"
         if not pythonBin.exists():
             pythonBin = VENV_PATH / "Scripts" / "python.exe"
         if not pythonBin.exists():

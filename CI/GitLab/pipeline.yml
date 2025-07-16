@@ -9,6 +9,7 @@
 
 
 stages:
+  - run_unit_and_integration_tests
   # Seed project is in './ProjectRoot/'. Its pipelines are run according to the pipeline wokflow.
   - trigger__seed_project__pipeline
   - wait__seed_project__pipeline
@@ -18,8 +19,30 @@ stages:
   # - wait__test_projects__pipelines
 
 
+JOB~run_unit_and_integration_tests:
+  stage: run_unit_and_integration_tests
+
+  # Run `./CI/Docker/build_image__unit_and_integration_tests.py` to build and push the image.
+  image: registry.gitlab.com/dishsoftware/cmagneto/unit_and_integration_tests:1.0.0
+
+  script:
+    - python3 ./tests/py/set_up__venv.py
+    - source './.venv/bin/activate'
+    - pytest tests/ --junitxml=./tests/summary/pytest-report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: ./tests/summary/pytest-report.xml
+    paths:
+      - ./tests/summary/pytest-report.xml
+    expire_in: 30 days
+
+
 JOB~sync__seed_project__to__seed_project_repo: # Prefix 'JOB~' to be consistent with 'JOB~trigger__seed_project__pipeline', etc.
   stage: trigger__seed_project__pipeline
+  needs:
+  - job: JOB~run_unit_and_integration_tests
+    artifacts: false
 
   # Run `./CI/Docker/build_image__for_repo_shenanigans.py` to build and push the image.
   image: registry.gitlab.com/dishsoftware/cmagneto/for_repo_shenanigans:1.0.0
@@ -35,6 +58,7 @@ JOB~trigger__seed_project__pipeline: # Prefix 'JOB~' to not confuse the job with
   stage: trigger__seed_project__pipeline
   needs:
     - job: JOB~sync__seed_project__to__seed_project_repo
+      artifacts: false
   trigger:
     project: dishsoftware/contactholder
     branch: $CI_COMMIT_REF_NAME
