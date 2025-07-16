@@ -73,8 +73,9 @@ def push__testProjectRoot__to__testProjectRepo(
         D) Call this function, to mirror tag or last commit of the trigger-branch to the test project repo.
         F) Wait in the pipeline of CMagneto project until a pipeline of the test project finishes.
 
-    0) The script is meant to be executed on a CI job runner of CMagneto project.
-       Thus, `cwd` in the script is the root of a cloned CMagneto project repo.
+    0) The script is meant to be executed under conditions:
+        A) CMagneto project repo is already cloned;
+        B) `cwd` is the root of the cloned CMagneto project repo.
     1) Clones a test project repo. Requires to Git LFS be installed on the machine/container.
     2) Replaces its content with content of {iParams.testProjectRootRelToCMagnetoProjectRoot} of CMagneto project repo.
     3) Copies `./CI/GitLab/test_project__workflow_replacement.yml` from the repo of CMagneto project
@@ -84,7 +85,7 @@ def push__testProjectRoot__to__testProjectRepo(
     6) If {iParams.sourceIsTag}, pushes the tag {iParams.sourceGitReference} (the same name as branch) on the test project repo commit.
     """
 
-    CMagnetoProjectRoot = Utils.GoodPath(__file__, iForceDir=True).getAscendant(4)
+    CMagnetoProjectRoot = Utils.GoodPath(__file__, iForceDir=True).getAscendant(3)
     if CMagnetoProjectRoot is None:
         Utils.error(f"Probably error in logic of '{__file__}'. CMagneto project root is resolved above FS root.")
 
