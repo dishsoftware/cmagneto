@@ -216,7 +216,7 @@ def push__testProjectRoot__to__testProjectRepo(
 
     # Copy `./__thisScriptNameWE__/push__testProjectRoot__to__testProjectRepo.yml` (located relative to this script in CMagneto repo dir)
     # into `./CI/GitLab/workflow.yml` of the test project root.
-    workflowReplacementSrc = Path(__file__).resolve().with_suffix('') / "push__testProjectRoot__to__testProjectRepo.yml"
+    workflowReplacementSrc = Path(__file__).parent.parent / "GitLab/test_project__workflow_replacement.yml"
     workflowDest = testProjectRootDest / "CI/" / "GitLab/" / "workflow.yml"
     cast(Utils.GoodPath, workflowDest.getParent()).create(iExistsOk=True)
     shutil.copy2(workflowReplacementSrc, workflowDest)
