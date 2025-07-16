@@ -50,7 +50,7 @@ def sync__testProjectRoot__to__testProjectRepo(
     # Add a deploy key with write repo access for the test GitLab project to SSH-agent
     # in order to clone (if the test project is private) and push into the test project repo.\
     shScriptPath = Path(__file__).parent / "add__test_project__private_key__to_ssh_agent.sh"
-    subprocess.run(["bash", shScriptPath.as_posix(), iCMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME], check=True)
+    subprocess.run([shScriptPath.as_posix(), iCMAGNETO_CI_BOT__PRIV_KEY_BASE64__FOR_TEST_PROJECT_REPO__VAR_NAME], check=True)
 
     params = PushParams(
         sourceGitReference = CMagneto__CI_COMMIT_REF_NAME,
