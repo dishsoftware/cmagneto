@@ -27,14 +27,14 @@ JOB~run_unit_and_integration_tests:
 
   script:
     - python3 ./tests/py/set_up__venv.py
-    - source '/.venv/bin/activate'
-    - pytest -s tests/ --junitxml=tests/summary/pytest-report.xml
+    - source './.venv/bin/activate'
+    - pytest tests/ --junitxml=./tests/summary/pytest-report.xml
   artifacts:
     when: always
     reports:
-      junit: tests/summary/pytest-report.xml
+      junit: ./tests/summary/pytest-report.xml
     paths:
-      - tests/summary/pytest-report.xml
+      - ./tests/summary/pytest-report.xml
     expire_in: 30 days
 
 
