@@ -44,7 +44,7 @@ JOB~trigger__seed_project__pipeline: # Prefix 'JOB~' to not confuse the job with
 JOB~wait__seed_project__pipeline:    # Prefix 'JOB~' to not confuse the job with the stage.
   stage: wait__seed_project__pipeline
   needs:
-    - job: trigger__seed_project__pipeline
+    - job: JOB~trigger__seed_project__pipeline
       artifacts: false
   script:
     - echo "Seed project pipeline has finished."
