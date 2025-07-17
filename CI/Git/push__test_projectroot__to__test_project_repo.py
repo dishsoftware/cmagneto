@@ -9,8 +9,8 @@
 from pathlib import Path
 SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
-sys.path.append(str(SEED_PROJECT_ROOT))
-
+if str(SEED_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SEED_PROJECT_ROOT))
 
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
@@ -151,7 +151,7 @@ def push__testProjectRoot__to__testProjectRepo(
     EXISTING_ITEMS_TO_RETAIN: set[GoodPath] = set()
     if specItemsPySrc is not None:
         Log.status(f"Importing INCOMING_ITEMS_TO_IGNORE and EXISTING_ITEMS_TO_RETAIN sets from '{specItemsPySrc}'...")
-        sys.path.append(str(specItemsPySrc))
+        sys.path.insert(0, str(specItemsPySrc))
 
         modulePath = str(specItemsPySrc)
         moduleName = str(specItemsPySrc.nameWE())  # module name without extension

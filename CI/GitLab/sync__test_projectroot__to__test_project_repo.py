@@ -10,8 +10,10 @@ from pathlib import Path
 CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
-sys.path.append(str(CMAGNETO_PROJECT_ROOT))
-sys.path.append(str(SEED_PROJECT_ROOT))
+if CMAGNETO_PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, str(CMAGNETO_PROJECT_ROOT))
+if str(SEED_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SEED_PROJECT_ROOT))
 
 from CI.Git.push__test_projectroot__to__test_project_repo import push__testProjectRoot__to__testProjectRepo, PushParams
 from CMagneto.py.utils.log import Log

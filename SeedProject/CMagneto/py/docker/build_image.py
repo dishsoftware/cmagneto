@@ -27,7 +27,8 @@ The location relative to the project root must be preserved.
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 import sys
-sys.path.append(str(PROJECT_ROOT))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from CMagneto.py.docker.image_build_runner import ImageBuildRunner
 from pathlib import Path
