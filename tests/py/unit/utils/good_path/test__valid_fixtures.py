@@ -17,11 +17,11 @@ import pytest
     "pathFixtureName              , isAbsolute, isDir , exists, name                       , isUnderCMagnetoProjectRoot, relPathToCMagnetoProjectRoot                  , isUnderSeedProjectRoot, relPathToSeedProjectRoot                    , relPathToRelDirCI                           ",
     [
         ("dirCMagnetoProjectRoot" , True      , True  , True  , CMAGNETO_PROJECT_ROOT.name , True                      , "./"                                          , False                 , "../"                                       , None                                        ),
-        ("dirSeedProjectRoot"     , True      , True  , True  , "ProjectRoot"              , True                      , "ProjectRoot/"                                , True                  , "./"                                        , None                                        ),
-        ("dirCIAbs"               , True      , True  , True  , "CI"                       , True                      , "ProjectRoot/CI/"                             , True                  , "CI/"                                       , None                                        ),
+        ("dirSeedProjectRoot"     , True      , True  , True  , "SeedProject"              , True                      , "SeedProject/"                                , True                  , "./"                                        , None                                        ),
+        ("dirCIAbs"               , True      , True  , True  , "CI"                       , True                      , "SeedProject/CI/"                             , True                  , "CI/"                                       , None                                        ),
         ("dirCIRel"               , False     , True  , None  , "CI"                       , True                      , "CI/"                                         , True                  , "CI/"                                       , "./"                                        ),
         ("dirCIRelDot"            , False     , True  , None  , "CI"                       , True                      , "CI/"                                         , True                  , "CI/"                                       , "./"                                        ),
-        ("filePipelineAbs"        , True      , False , True  , "pipeline.yml"             , True                      , "ProjectRoot/CI/GitLab/pipeline.yml"          , True                  , "CI/GitLab/pipeline.yml"                    , None                                        ),
+        ("filePipelineAbs"        , True      , False , True  , "pipeline.yml"             , True                      , "SeedProject/CI/GitLab/pipeline.yml"          , True                  , "CI/GitLab/pipeline.yml"                    , None                                        ),
         ("filePipelineRel"        , False     , False , None  , "pipeline.yml"             , True                      , "CI/GitLab/pipeline.yml"                      , True                  , "CI/GitLab/pipeline.yml"                    , "GitLab/pipeline.yml"                       ),
         ("filePipelineRelDot"     , False     , False , None  , "pipeline.yml"             , True                      , "CI/GitLab/pipeline.yml"                      , True                  , "CI/GitLab/pipeline.yml"                    , "GitLab/pipeline.yml"                       ),
         ("dirNonexistentAAbs"     , True      , True  , False , "nonexistentA"             , False                     , dirNonexistentAAbs_relTo_CMagnetoProjectRoot(), False                 , dirNonexistentAAbs_relTo_SeedProjectRoot()  , None                                        ),
@@ -40,7 +40,7 @@ def test__validFixtures(request: pytest.FixtureRequest,
         relPathToSeedProjectRoot: str | None,
         relPathToRelDirCI: str | None
     ):
-    iPath: Utils.GoodPath = request.getfixturevalue(pathFixtureName)
+    iPath: GoodPath = request.getfixturevalue(pathFixtureName)
 
     assert iPath.isAbsolute == isAbsolute, \
         f"{iPath.raw} → Expected isAbsolute={isAbsolute}, got {iPath.isAbsolute}"

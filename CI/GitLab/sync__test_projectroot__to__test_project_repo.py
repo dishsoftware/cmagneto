@@ -8,13 +8,15 @@
 # to be able to import python scripts from CMagneto project repo.
 from pathlib import Path
 CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
+SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
-sys.path.append(str(CMAGNETO_PROJECT_ROOT))
-sys.path.append(str(SEED_PROJECT_ROOT))
+if str(CMAGNETO_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(CMAGNETO_PROJECT_ROOT))
+if str(SEED_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SEED_PROJECT_ROOT))
 
 from CI.Git.push__test_projectroot__to__test_project_repo import push__testProjectRoot__to__testProjectRepo, PushParams
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.log import Log
 import os
 
 
@@ -56,9 +58,9 @@ f"Usage: {__name__} \\\n\
 
     import sys
     if len(sys.argv) < 3:
-        Utils.error(USAGE)
+        Log.error(USAGE)
     if len(sys.argv) > 4:
-        Utils.warning(USAGE + f"\nIgnored extra args: {" ".join(sys.argv[4:])}.")
+        Log.warning(USAGE + f"\nIgnored extra args: {" ".join(sys.argv[4:])}.")
 
     pathArg = sys.argv[1]
     sync__testProjectRoot__to__testProjectRepo(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
