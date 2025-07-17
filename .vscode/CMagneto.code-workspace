@@ -1,12 +1,12 @@
 {
     "folders": [
         {
-            "name": "CMagneto repo root",
+            "name": "CMagneto project root",
             "path": "./../"
         },
         {
-            "name": "ProjectRoot",
-            "path": "./../ProjectRoot/"
+            "name": "Seed project root",
+            "path": "./../SeedProject/"
         },
     ],
 	"settings": {
