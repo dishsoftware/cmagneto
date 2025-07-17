@@ -10,7 +10,7 @@ from pathlib import Path
 CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
-if CMAGNETO_PROJECT_ROOT not in sys.path:
+if str(CMAGNETO_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(CMAGNETO_PROJECT_ROOT))
 if str(SEED_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(SEED_PROJECT_ROOT))
