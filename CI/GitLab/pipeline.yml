@@ -26,15 +26,13 @@ JOB~run_unit_and_integration_tests:
   image: registry.gitlab.com/dishsoftware/cmagneto/unit_and_integration_tests:1.0.0
 
   script:
-    - python3 ./tests/py/set_up__venv.py
-    - source './.venv/bin/activate'
-    - pytest tests/ --junitxml=./tests/summary/pytest-report.xml
+    - python3 ./tests/run_tests.py
   artifacts:
     when: always
     reports:
       junit: ./tests/summary/pytest-report.xml
     paths:
-      - ./tests/summary/pytest-report.xml
+      - ./tests/summary/
     expire_in: 30 days
 
 
