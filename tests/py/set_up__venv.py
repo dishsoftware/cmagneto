@@ -14,6 +14,27 @@ VENV_DIR_NAME = ".venv"
 CMAGNETO_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
 VENV_PATH = CMAGNETO_PROJECT_ROOT / VENV_DIR_NAME
 
+def getPythonBinInsideVEnvPath() -> Path:
+    """
+    Returns the path to the Python binary inside an existing virtual environment dir.
+    Raises an error if the environment dir or binary cannot be found.
+    """
+    if not VENV_PATH.exists():
+        raise FileExistsError(
+f"Can't find venv dir '{VENV_PATH}'.\n\
+At first, call function '{create.__name__}' from module '{__name__}'.")
+    if os.name == "nt":
+        pythonBinPath = VENV_PATH / "Scripts" / "python.exe"
+        if not pythonBinPath.exists():
+            pythonBinPath = VENV_PATH / "bin" / "python.exe" # MSYS2 Python.
+        if not pythonBinPath.exists():
+            raise FileNotFoundError(f"Python binary is not found inside created virtual environment dir `{str(VENV_PATH)}`.")
+    else:
+        pythonBinPath = VENV_PATH / "bin" / "python"
+        if not pythonBinPath.exists():
+            raise FileNotFoundError(f"Python binary is not found inside created virtual environment dir `{str(VENV_PATH)}`.")
+    return pythonBinPath
+
 def create() -> Path:
     """
     Creates ./.venv/ in the root of CMagneto project and
@@ -22,16 +43,11 @@ def create() -> Path:
     print(f"Creating virtual environment in {VENV_PATH} ...")
     venv.create(VENV_PATH, with_pip=True)
     print("Virtual environment created.")
-
-    # Path to the python executable inside venv.
-    pythonBin = VENV_PATH / "bin" / "python"
-    if os.name == "nt":
-        pythonBin = VENV_PATH / "bin" / "python.exe"
-        if not pythonBin.exists():
-            pythonBin = VENV_PATH / "Scripts" / "python.exe"
-        if not pythonBin.exists():
-            raise FileNotFoundError(f"Python binary is not found inside created virtual environment dir `{str(VENV_PATH)}`.")
-    return pythonBin
+    pythonBinPath = getPythonBinInsideVEnvPath()
+    print(f"Updating pip...")
+    subprocess.run([str(pythonBinPath), "-m", "pip", "install", "--upgrade", "pip"], check=True)
+    print(f"pip updated.")
+    return pythonBinPath
 
 def installPackages(iPythonBin: Path) -> None:
     print("Installing packages inside the virtual environment...")
@@ -39,14 +55,23 @@ def installPackages(iPythonBin: Path) -> None:
         raise FileNotFoundError(f"Python binary is not found inside created `{str(VENV_PATH)}`.")
     subprocess.check_call([str(iPythonBin), "-m", "pip", "install", "pytest"])
 
-if __name__ == "__main__":
-    pythonBin = create()
-    installPackages(pythonBin)
-    print(f"Python venv has been created. To activate the venv, run", end='')
+def setUpVEnv(iPrintVEnvActivationInstruction: bool) -> Path:
+    pythonBinPath = create()
+    installPackages(pythonBinPath)
+
+    instruction = f"Python venv has been created. To activate the venv, run"
     if os.name == "nt":
-        if pythonBin.parent.name == "Scripts":
-            print(f":\n'{str(pythonBin.parent / "activate")}'")
+        if pythonBinPath.parent.name == "Scripts":
+            instruction += f":\n'{str(pythonBinPath.parent / "activate")}'"
         else:
-            print(f" in MSYS2 console:\nsource '{(pythonBin.parent / "activate").as_posix()}'") # MSYS2 Python.
+            instruction += f" in MSYS2 console:\nsource '{pythonBinPath.parent / "activate"}'" # MSYS2 Python.
     else:
-        print(f":\nsource '{str(pythonBin.parent / "activate")}'")
+        instruction += f":\nsource '{pythonBinPath.parent / "activate"}'"
+
+    if (iPrintVEnvActivationInstruction):
+        print(instruction)
+    return pythonBinPath
+
+
+if __name__ == "__main__":
+    setUpVEnv(iPrintVEnvActivationInstruction=True)

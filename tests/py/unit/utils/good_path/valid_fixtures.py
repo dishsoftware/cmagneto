@@ -61,7 +61,7 @@ def dirNonexistentAAbs() -> Utils.GoodPath:
 def dirNonexistentAAbs_relTo_CMagnetoProjectRoot() -> str | None:
     if os.name != "nt": # Path("C:/a").anchor == '/' on Linux!
         return None
-    if str(CMAGNETO_PROJECT_ROOT_STR.anchor)[0] != 'C':
+    if str(CMAGNETO_PROJECT_ROOT.anchor)[0] != 'C':
         return None
     return os.path.relpath(NONEXISTENT_A, CMAGNETO_PROJECT_ROOT_STR) + "/"
 
