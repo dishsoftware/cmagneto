@@ -7,7 +7,7 @@
 # Add test project root to `sys.path`
 # to be able to import CMagneto python scripts as `CMagneto.py.*`.
 from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
 sys.path.append(str(PROJECT_ROOT))
 
@@ -30,7 +30,7 @@ class PushParams:
     sourceIsTag: bool
 
     # Dir inside the CMagneto project repo, from where to copy files of a test project.
-    # E.g. './ProjectRoot/' or './tests/system/testProjects/ProjectA/'.
+    # E.g. './SeedProject/' or './tests/system/testProjects/ProjectA/'.
     testProjectRootRelToCMagnetoProjectRoot: str
 
     # Address of a GitLab project for the test project repo.
@@ -63,7 +63,7 @@ def push__testProjectRoot__to__testProjectRepo(
         iParams: PushParams
     ):
     """
-    CMagneto project repo can contain, aside from the seed project under "./ProjectRoot/", directories with files of other test projects, e.g. for system tests.
+    CMagneto project repo can contain, aside from the seed project under "./SeedProject/", directories with files of other test projects, e.g. for system tests.
     To test such a project a developer must:
         A) Create a GitLab project for a test project repo.
         B) Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to "CI/GitLab/workflow.yml.

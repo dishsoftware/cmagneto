@@ -10,7 +10,7 @@
 
 stages:
   - run_unit_and_integration_tests
-  # Seed project is in './ProjectRoot/'. Its pipelines are run according to the pipeline wokflow.
+  # Seed project is in './SeedProject/'. Its pipelines are run according to the pipeline wokflow.
   - trigger__seed_project__pipeline
   - wait__seed_project__pipeline
 
@@ -49,7 +49,7 @@ JOB~sync__seed_project__to__seed_project_repo: # Prefix 'JOB~' to be consistent 
     # "Source" the script, because otherwise the SSH-setup is done in a child process and has no effect on the job.
     - source ./CI/GitLab/add__test_project__private_key__to_ssh_agent.sh "CMAGNETO_CI_BOT__PRIVATE_SSH_KEY_BASE64__FOR_SEED_PROJECT_REPO"
   script:
-    - python3 ./CI/GitLab/sync__test_projectroot__to__test_project_repo.py "ProjectRoot/" "git@gitlab.com:dishsoftware/contactholder.git"
+    - python3 ./CI/GitLab/sync__test_projectroot__to__test_project_repo.py "SeedProject/" "git@gitlab.com:dishsoftware/contactholder.git"
 
 
 JOB~trigger__seed_project__pipeline: # Prefix 'JOB~' to not confuse the job with the stage.

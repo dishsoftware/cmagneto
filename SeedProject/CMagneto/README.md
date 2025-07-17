@@ -74,7 +74,7 @@ The CMagneto framework needs on the following software to build your project:
 ## Project Structure
 The framework mandates or endorses restrictions on locations of project files.
 ```text
-ProjectRoot/
+SeedProject/
 ├── build.py                         # One-command project build script.
 ├── CMakeLists.txt                   # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
 ├── CMagneto/                        # CMagneto framework core files.

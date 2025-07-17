@@ -8,7 +8,7 @@
 # to be able to import python scripts from CMagneto project repo.
 from pathlib import Path
 CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "ProjectRoot"
+SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
 sys.path.append(str(CMAGNETO_PROJECT_ROOT))
 sys.path.append(str(SEED_PROJECT_ROOT))

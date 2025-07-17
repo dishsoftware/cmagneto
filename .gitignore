@@ -1,8 +1,8 @@
 /tests/summary/
-/ProjectRoot/build/
-/ProjectRoot/install/
-/ProjectRoot/CI/Docker/.tmp/
-/ProjectRoot/CI/Docker/**/.tmp/
+/SeedProject/build/
+/SeedProject/install/
+/SeedProject/CI/Docker/.tmp/
+/SeedProject/CI/Docker/**/.tmp/
 *.directory
 *.pyc
 *.odg#
