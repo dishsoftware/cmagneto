@@ -4,12 +4,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Add test project root to `sys.path`
+# Add seed project root to `sys.path`
 # to be able to import CMagneto python scripts as `CMagneto.py.*`.
 from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
+SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
 import sys
-sys.path.append(str(PROJECT_ROOT))
+sys.path.append(str(SEED_PROJECT_ROOT))
 
 
 from CMagneto.py.utils import Utils
