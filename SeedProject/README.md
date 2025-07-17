@@ -1,3 +1,11 @@
+<!--
+Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+SPDX-License-Identifier: MIT
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+-->
+
 *This is a seed CMake C++ project, which is distributed as a part of the CMagneto framework repository.*<br>
 *The seed project features:*
 - *Cross-platform development support;*
