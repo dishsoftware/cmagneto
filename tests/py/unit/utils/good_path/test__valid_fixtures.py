@@ -40,7 +40,7 @@ def test__validFixtures(request: pytest.FixtureRequest,
         relPathToSeedProjectRoot: str | None,
         relPathToRelDirCI: str | None
     ):
-    iPath: Utils.GoodPath = request.getfixturevalue(pathFixtureName)
+    iPath: GoodPath = request.getfixturevalue(pathFixtureName)
 
     assert iPath.isAbsolute == isAbsolute, \
         f"{iPath.raw} → Expected isAbsolute={isAbsolute}, got {iPath.isAbsolute}"

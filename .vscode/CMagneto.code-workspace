@@ -7,7 +7,7 @@
         {
             "name": "Seed project root",
             "path": "./../SeedProject/"
-        },
+        }
     ],
 	"settings": {
 		"files.associations": {

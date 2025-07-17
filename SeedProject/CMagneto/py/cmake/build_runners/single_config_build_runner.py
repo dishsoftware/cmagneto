@@ -9,7 +9,9 @@
 # but consumers may relocate it as needed.
 
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.good_path import GoodPath
+from CMagneto.py.utils.log import Log
+from CMagneto.py.utils.process import Process
 from pathlib import Path
 import os
 
@@ -59,17 +61,17 @@ class SingleConfigBuildRunner(BuildRunner):
 
     def __generate(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Generation of build system files ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         buildDir = self.buildDirForBuildType(iBuildType)
-        Utils.GoodPath.prepareDir(buildDir)
+        GoodPath.prepareDir(buildDir)
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
-        Utils.runCommand(command, buildDir)
+        Process.runCommand(command, buildDir)
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(buildDir)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __compose__generate__command(self, iBuildType: BuildRunner.BuildType) -> list[str]:
         command: list[str] = [ "cmake" ]
@@ -89,7 +91,7 @@ class SingleConfigBuildRunner(BuildRunner):
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,
             "-DCMAKE_INSTALL_PREFIX=" + str(self.installDirForBuildType(iBuildType)),
-            str(Utils.projectRoot())
+            str(GoodPath.projectRoot())
         ])
 
         return command
@@ -99,29 +101,29 @@ class SingleConfigBuildRunner(BuildRunner):
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType))]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __compileTests(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling tests ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType)), "--target", "build_tests"]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
-        Utils.GoodPath.prepareDir(self.installDirForBuildType(iBuildType))
+        GoodPath.prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = ["cmake", "--install", str(self.buildDirForBuildType(iBuildType))]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")

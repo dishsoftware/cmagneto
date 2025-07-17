@@ -6,57 +6,57 @@
 
 from __future__ import annotations
 from cmagneto_project_root import *
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.good_path import GoodPath
 import os
 import pytest
 
 
 @pytest.fixture(scope="module")
-def dirCMagnetoProjectRoot() -> Utils.GoodPath:
+def dirCMagnetoProjectRoot() -> GoodPath:
     """Returns the absolute path to the CMagneto project root."""
-    return Utils.GoodPath(CMAGNETO_PROJECT_ROOT_STR)
+    return GoodPath(CMAGNETO_PROJECT_ROOT_STR)
 
 @pytest.fixture(scope="module")
-def dirSeedProjectRoot() -> Utils.GoodPath:
+def dirSeedProjectRoot() -> GoodPath:
     """Returns the absolute path to the seed project root."""
-    return Utils.GoodPath(SEED_PROJECT_ROOT_STR)
+    return GoodPath(SEED_PROJECT_ROOT_STR)
 
 @pytest.fixture(scope="module")
-def dirCIAbs() -> Utils.GoodPath:
+def dirCIAbs() -> GoodPath:
     """Returns the GoodPath instance for the absolute 'CI' directory in the seed project root."""
-    return Utils.GoodPath(SEED_PROJECT_ROOT_STR + "CI/")
+    return GoodPath(SEED_PROJECT_ROOT_STR + "CI/")
 
 @pytest.fixture(scope="module")
-def dirCIRel() -> Utils.GoodPath:
+def dirCIRel() -> GoodPath:
     """Returns the GoodPath instance for the relative not-dotted (stats without './') 'CI' directory."""
-    return Utils.GoodPath("CI/")
+    return GoodPath("CI/")
 
 @pytest.fixture(scope="module")
-def dirCIRelDot() -> Utils.GoodPath:
+def dirCIRelDot() -> GoodPath:
     """Returns the GoodPath instance for the relative dotted     (stats with './'   ) 'CI' directory."""
-    return Utils.GoodPath("./CI/")
+    return GoodPath("./CI/")
 
 @pytest.fixture(scope="module")
-def filePipelineAbs() -> Utils.GoodPath:
+def filePipelineAbs() -> GoodPath:
     """Returns the GoodPath instance for the absolute file 'pipeline.yml' in the './CI/GitLab/' relative to the seed project root."""
-    return Utils.GoodPath(SEED_PROJECT_ROOT_STR + "CI/GitLab/pipeline.yml")
+    return GoodPath(SEED_PROJECT_ROOT_STR + "CI/GitLab/pipeline.yml")
 
 @pytest.fixture(scope="module")
-def filePipelineRel() -> Utils.GoodPath:
+def filePipelineRel() -> GoodPath:
     """Returns the GoodPath instance for the relative not-dotted (stats without './') file 'pipeline.yml' in the './CI/GitLab/'."""
-    return Utils.GoodPath("CI/GitLab/pipeline.yml")
+    return GoodPath("CI/GitLab/pipeline.yml")
 
 @pytest.fixture(scope="module")
-def filePipelineRelDot() -> Utils.GoodPath:
+def filePipelineRelDot() -> GoodPath:
     """Returns the GoodPath instance for the relative dotted     (stats with './'   ) file 'pipeline.yml' in the './CI/GitLab/'."""
-    return Utils.GoodPath("./CI/GitLab/pipeline.yml")
+    return GoodPath("./CI/GitLab/pipeline.yml")
 
 NONEXISTENT_A = "C:/nonexistentA/"
 
 @pytest.fixture(scope="module")
-def dirNonexistentAAbs() -> Utils.GoodPath:
+def dirNonexistentAAbs() -> GoodPath:
     """Returns the GoodPath instance for the absolute dir 'C:/nonexistentA/`."""
-    return Utils.GoodPath(NONEXISTENT_A)
+    return GoodPath(NONEXISTENT_A)
 
 def dirNonexistentAAbs_relTo_CMagnetoProjectRoot() -> str | None:
     if os.name != "nt": # Path("C:/a").anchor == '/' on Linux!
@@ -75,9 +75,9 @@ def dirNonexistentAAbs_relTo_SeedProjectRoot() -> str | None:
 NONEXISTENT_B = "/nonexistentB/"
 
 @pytest.fixture(scope="module")
-def dirNonexistentBAbs() -> Utils.GoodPath:
+def dirNonexistentBAbs() -> GoodPath:
     """Returns the GoodPath instance for the absolute dir '/nonexistentB/`."""
-    return Utils.GoodPath(NONEXISTENT_B)
+    return GoodPath(NONEXISTENT_B)
 
 def dirNonexistentBAbs_relTo_CMagnetoProjectRoot() -> str | None:
     if os.name == "nt":

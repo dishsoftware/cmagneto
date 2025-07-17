@@ -8,7 +8,8 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
-from CMagneto.py.utils import Utils
+from .utils.good_path import GoodPath
+from .utils.log import Log
 from pathlib import Path
 from typing import Any
 import json
@@ -24,7 +25,7 @@ class MetadataHolder:
     CMagneto__SUBDIR_META: Path = Path("meta/")
     ##################################################################################################
 
-    __METADDATA_ROOT: Path = (Utils.projectRoot() / CMagneto__SUBDIR_META).resolve()
+    __METADDATA_ROOT: Path = (GoodPath.projectRoot() / CMagneto__SUBDIR_META).resolve()
     __sInstance = None
 
     def __new__(cls):
@@ -56,13 +57,13 @@ class MetadataHolder:
         except KeyError:
             # iFilePathInMetadataDir was not read previously.
             if not iFilePathInMetadataDir.exists():
-                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
+                Log.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" file not found.")
 
             if not iFilePathInMetadataDir.is_file():
-                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
+                Log.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" is not a file.")
 
             if not iFilePathInMetadataDir.is_relative_to(MetadataHolder.getMetadataRoot()):
-                Utils.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.getMetadataRoot()}\".")
+                Log.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.getMetadataRoot()}\".")
 
             with iFilePathInMetadataDir.open("r", encoding="utf-8") as textFile:
                 data = json.load(textFile)

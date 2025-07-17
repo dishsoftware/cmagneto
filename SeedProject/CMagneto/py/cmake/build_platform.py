@@ -8,7 +8,8 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.log import Log
+from CMagneto.py.utils.process import Process
 from enum import Enum
 from pathlib import Path
 import inspect
@@ -56,8 +57,8 @@ class BuildPlatform:
 
         if command is None:
             currentFrame = inspect.currentframe()
-            Utils.error(f"Method '{currentFrame.f_code.co_name if currentFrame else 'runScript'}' does not support scripts with extension '{dotExt}' on OS '{hostOS}'. '{iScriptPath}' has not been run.")
+            Log.error(f"Method '{currentFrame.f_code.co_name if currentFrame else 'runScript'}' does not support scripts with extension '{dotExt}' on OS '{hostOS}'. '{iScriptPath}' has not been run.")
         else:
             if iArgs is not None:
                 command.extend(iArgs)
-            Utils.runCommand(command)
+            Process.runCommand(command)

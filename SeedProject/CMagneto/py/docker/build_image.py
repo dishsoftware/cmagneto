@@ -21,7 +21,6 @@ The script can be run from any working directory.
 The location relative to the project root must be preserved.
 """
 
-
 # Add project root to `sys.path`
 # to be able to import CMagneto python scripts as `CMagneto.py.*`,
 # even if the script is run not from its parent dir.
@@ -31,6 +30,7 @@ import sys
 sys.path.append(str(PROJECT_ROOT))
 
 from CMagneto.py.docker.image_build_runner import ImageBuildRunner
+from pathlib import Path
 import argparse
 
 

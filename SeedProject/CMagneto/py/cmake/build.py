@@ -32,13 +32,13 @@ sys.path.append(str(PROJECT_ROOT))
 from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.log import Log
 import argparse
 import re
 
 
 def buildProject():
-    Utils.status(f"Host OS: {BuildPlatform().hostOS().value}")
+    Log.status(f"Host OS: {BuildPlatform().hostOS().value}")
     buildRunners = BuildRunnersHolder().availableBuildRunners()
     toolsetNames = buildRunners.keys()
 
@@ -59,7 +59,7 @@ NOTE! All relative paths in the doc are given relative to the project root.\n\
         help=\
 f"Select a toolset. The parameter is reqired.\n\
 Note: the set of available toolsets depends on the OS the script is run on." \
-        if len(toolsetNames) > 0 else Utils.makeColored("No toolsets available for the OS!", Utils.PrintColor.Yellow)
+        if len(toolsetNames) > 0 else Log.makeColored("No toolsets available for the OS!", Log.PrintColor.Yellow)
     )
     defaultBuildType = BuildRunner.BuildType.Release
     parser.add_argument(
@@ -139,11 +139,11 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
 
         # Check if the library name is valid.
         if re.match(r"^_+$", libTargetName):
-            Utils.warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
+            Log.warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
             continue
 
         if not re.match(r"^[A-Z_][A-Z0-9_]*$", libTargetName):
-            Utils.warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
+            Log.warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
             continue
 
         libSharedOptions[libTargetName] = optionVal
@@ -166,14 +166,14 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
             # Do nothing.
             pass
         else:
-            Utils.error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
+            Log.error(f"Invalid logics of \"{__file__}\": LIB_{lib}_SHARED is of invalid value \"{sharedOption}\". \"ON\", \"OFF\" or \"DEFAULT\" are expected.")
 
     if (len(unknownArgs) > 0):
-        Utils.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
+        Log.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
     buildRunner: BuildRunner = buildRunners[toolsetName].create(buildTypes)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
-    Utils.message(str(buildRunner))
+    Log.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)
 
 

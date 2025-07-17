@@ -15,9 +15,12 @@ The location relative to the project root must be preserved.
 """
 
 from __future__ import annotations
+from .build_platform import BuildPlatform
 from abc import ABC, abstractmethod
-from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.utils import ConstMetaClass, Utils
+from CMagneto.py.utils.const_meta_class import ConstMetaClass
+from CMagneto.py.utils.good_path import GoodPath
+from CMagneto.py.utils.log import Log
+from CMagneto.py.utils.process import Process
 from enum import Enum
 from pathlib import Path
 from typing import cast
@@ -88,7 +91,7 @@ class BuildRunner(ABC):
         """Creates an instance of the BuildRunner subclass."""
 
     def __init__(self, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
-        assert Utils.isDirNamePortable(type(self).toolsetName())
+        assert GoodPath.isNameGood(type(self).toolsetName())
         assert not iGeneratorName.isspace()
 
         self.__generatorName = iGeneratorName
@@ -96,9 +99,9 @@ class BuildRunner(ABC):
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
         self.__cmakeFlagsFor__generate__command: list[str] = list()
-        os.chdir(Utils.projectRoot())
-        self.__buildDir    = Utils.projectRoot() / "build" / type(self).toolsetName()
-        self.__installDir  = Utils.projectRoot() / "install" / type(self).toolsetName()
+        os.chdir(GoodPath.projectRoot())
+        self.__buildDir    = GoodPath.projectRoot() / "build" / type(self).toolsetName()
+        self.__installDir  = GoodPath.projectRoot() / "install" / type(self).toolsetName()
 
     def __str__(self) -> str:
         text = \
@@ -118,7 +121,7 @@ class BuildRunner(ABC):
             text += "CMake flags for `generate` command: \"" + " ".join(self.__cmakeFlagsFor__generate__command) + "\"\n"
 
         text += \
-        f"Project root:      \"{Utils.projectRoot()}\"\n" + \
+        f"Project root:      \"{GoodPath.projectRoot()}\"\n" + \
         f"Build directory:   \"{self.__buildDir}\"\n" + \
         f"Install directory: \"{self.__installDir}\"\n"
         return text
@@ -150,13 +153,13 @@ class BuildRunner(ABC):
         """Returns the absolute path to a subdirectory in the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
+        Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def buildDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type."""
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
+        Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def exeDirForBuildType(self, iBuildType: BuildType) -> Path:
         """Returns the absolute path to a subdirectory with executables in the build directory for the specified build type."""
@@ -186,17 +189,17 @@ class BuildRunner(ABC):
 
     def _runTests(self, iBuildType: BuildType) -> None:
         text = f"Running tests ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         run_tests__scriptDir = self.exeDirForBuildType(iBuildType)
-        run_tests__scriptName = Utils.GoodPath.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
+        run_tests__scriptName = GoodPath.findInDirFileWithNameWE(run_tests__scriptDir, BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE)
         if run_tests__scriptName is None:
-            Utils.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
+            Log.warning(f"Script \"{BuildRunner.CMagneto__RUN_TESTS__SCRIPT_NAME_WE}\" was not found in \"{run_tests__scriptDir}\". Tests have not been run. Call CMagnetoInternal__set_up__run_tests__script() in the root CMakeLists.txt to set up the script.")
         else:
             run_tests__scriptPath = run_tests__scriptDir / run_tests__scriptName
             BuildPlatform().runScript(run_tests__scriptPath)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""
@@ -251,18 +254,18 @@ class BuildRunner(ABC):
             case BuildRunner.BuildStage.Package:
                 return isStageRequiredLambda(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
             case _:
-                Utils.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
+                Log.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 
     def _package(self, iBuildType: BuildType) -> None:
         text = f"Packaging ({iBuildType.name})"
-        Utils.status(text + "...")
-        Utils.runCommand(["cpack"], self.buildDirForBuildType(iBuildType))
-        Utils.status(text + " finished.\n")
+        Log.status(text + "...")
+        Process.runCommand(["cpack"], self.buildDirForBuildType(iBuildType))
+        Log.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
         frame = inspect.currentframe()
         methodName = frame.f_code.co_name if frame is not None else "<unknown>"
-        Utils.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
+        Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
         pass
@@ -278,9 +281,9 @@ class BuildRunner(ABC):
         varPathStr = os.environ.get(iVarName)
         if not varPathStr:
             if (varPathStr is None):
-                Utils.error(f"\"{iVarName}\" environment variable is not set.")
+                Log.error(f"\"{iVarName}\" environment variable is not set.")
             else:
-                Utils.error(f"\"{iVarName}\" environment variable is empty string.")
+                Log.error(f"\"{iVarName}\" environment variable is empty string.")
         varPath = Path(cast(str, varPathStr))
 
         if iCMakePathPostfix:
@@ -345,7 +348,7 @@ class BuildRunner(ABC):
             # Delete all existing graph files.
             ## Delete dotfiles.
             graphSrcDir = BuildRunner._GraphvizTargetDependencyGraph.dotfilesDir(iBuildDir)
-            Utils.GoodPath.prepareDir(graphSrcDir)
+            GoodPath.prepareDir(graphSrcDir)
             # Delete picture.
             pictureFilePath = BuildRunner._GraphvizTargetDependencyGraph.pictureFilePath(iBuildDir)
             if pictureFilePath.exists():
@@ -358,9 +361,9 @@ class BuildRunner(ABC):
                     BuildRunner._GraphvizTargetDependencyGraph.argForCMakeToGenerateDotfiles(iBuildDir),
                     str(iBuildDir)
                 ]
-                Utils.runCommand(command)
+                Process.runCommand(command)
             except subprocess.CalledProcessError as e:
-                Utils.warning(f"Can't generate dotfiles of the target dependency graph: {e}")
+                Log.warning(f"Can't generate dotfiles of the target dependency graph: {e}")
                 return
 
         @staticmethod
@@ -391,12 +394,12 @@ class BuildRunner(ABC):
                     "-o",
                     str(pictureFilePath)
                 ]
-                Utils.runCommand(command)
+                Process.runCommand(command)
             except subprocess.CalledProcessError as e:
-                Utils.warning(f"Graphviz can't generate target dependency graph picture: {e}")
+                Log.warning(f"Graphviz can't generate target dependency graph picture: {e}")
                 return
             except FileNotFoundError:
-                Utils.warning("Graphviz is not found. Target dependency graph picture is not generated.")
+                Log.warning("Graphviz is not found. Target dependency graph picture is not generated.")
                 return
 
 

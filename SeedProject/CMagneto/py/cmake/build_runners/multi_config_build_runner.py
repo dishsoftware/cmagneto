@@ -9,7 +9,9 @@
 # but consumers may relocate it as needed.
 
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.good_path import GoodPath
+from CMagneto.py.utils.log import Log
+from CMagneto.py.utils.process import Process
 from pathlib import Path
 import os
 
@@ -58,12 +60,12 @@ class MultiConfigBuildRunner(BuildRunner):
 
     def __generate(self) -> None:
         text = "Generation of build system files (multi-config)"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
-        Utils.GoodPath.prepareDir(self.buildDir())
+        GoodPath.prepareDir(self.buildDir())
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
-        Utils.runCommand(command, self.buildDir())
+        Process.runCommand(command, self.buildDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(self.buildDir())
         # Graphviz creates a target dependecy graph during generation time.
@@ -81,7 +83,7 @@ class MultiConfigBuildRunner(BuildRunner):
         #    or be omitted altogether, depending on how conditional linking logics is and how CMake interprets the generator expressions during graph creation.
         # The graph may be ambiguous or incomplete, compared to what actually gets built under a specific configuration like Release.
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __compose__generate__command(self) -> list[str]:
         command: list[str] = [ "cmake" ]
@@ -102,7 +104,7 @@ class MultiConfigBuildRunner(BuildRunner):
             # Install directory is overriden in __install.
             # It is set here in case installing is started not using "cmake --install", but from IDE's UI.
             "-DCMAKE_INSTALL_PREFIX=" +  os.path.join(self.installDir(), "INSTALLED_USING_IDE"),
-            str(Utils.projectRoot())
+            str(GoodPath.projectRoot())
         ])
 
         return command
@@ -112,20 +114,20 @@ class MultiConfigBuildRunner(BuildRunner):
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         command: list[str] = [
             "cmake",
             "--build", str(self.buildDir()),
             "--config", iBuildType.name
         ]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __compileTests(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling tests ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
         command: list[str] = [
             "cmake",
@@ -133,15 +135,15 @@ class MultiConfigBuildRunner(BuildRunner):
             "--target", "build_tests",
             "--config", iBuildType.name
         ]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")
 
     def __install(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Installing ({iBuildType.name})"
-        Utils.status(text + "...")
+        Log.status(text + "...")
 
-        Utils.GoodPath.prepareDir(self.installDirForBuildType(iBuildType))
+        GoodPath.prepareDir(self.installDirForBuildType(iBuildType))
 
         command: list[str] = [
             "cmake",
@@ -149,6 +151,6 @@ class MultiConfigBuildRunner(BuildRunner):
             "--config", iBuildType.name,
             "--prefix", str(self.installDirForBuildType(iBuildType))
         ]
-        Utils.runCommand(command)
+        Process.runCommand(command)
 
-        Utils.status(text + " finished.\n")
+        Log.status(text + " finished.\n")

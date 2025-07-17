@@ -6,7 +6,7 @@
 
 import pytest
 from cmagneto_project_root import *
-from CMagneto.py.utils import Utils
+from CMagneto.py.utils.good_path import GoodPath
 
 
 @pytest.mark.parametrize(
@@ -39,9 +39,9 @@ def test__goodpath_invalid_type(
     posixNormalized: str
 ):
     if isValid:
-        path = Utils.GoodPath(pathString)
+        path = GoodPath(pathString)
         assert path.posixNormalized == posixNormalized, \
             f"{pathString} → Expected posix normalized = '{posixNormalized}'; got '{path.posixNormalized}'."
     else:
         with pytest.raises((ValueError, TypeError)):
-            Utils.GoodPath(pathString)
+            GoodPath(pathString)
