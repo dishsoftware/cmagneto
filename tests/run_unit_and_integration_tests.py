@@ -22,7 +22,9 @@ def runPyUnitAndIntegrationTestsInsideVEnv(iPythonBinPathInsideVEnv: Path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description=f"Do all preparations and run CMagneto project tests. Tests of the seed project and test projects are not run.",
+        description= \
+f"Do all preparations and run CMagneto project init and integration tests.\n\
+Tests of the seed project and test projects are considered as stages system tests and not run.",
         formatter_class=argparse.RawTextHelpFormatter
     )
 

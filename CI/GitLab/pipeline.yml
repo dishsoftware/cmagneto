@@ -26,7 +26,7 @@ JOB~run_unit_and_integration_tests:
   image: registry.gitlab.com/dishsoftware/cmagneto/unit_and_integration_tests:1.0.0
 
   script:
-    - python3 ./tests/run_tests.py
+    - python3 ./tests/run_unit_and_integration_tests.py
   artifacts:
     when: always
     reports:
