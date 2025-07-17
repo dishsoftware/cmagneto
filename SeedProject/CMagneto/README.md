@@ -46,6 +46,16 @@ Users are responsible for complying with the licenses of these tools when using 
 > if they just use Google Test APIs and not bundle respositories or distributions of the Google Test.
 
 
+## Git History Policy
+Avoid resetting even non-protected branches, except when fixing trivial issues (e.g., typos in recent commits).<br>
+Preserving full commit history — including mistakes and work-in-progress — serves several important purposes:
+* 🛡 **Protect against fraudulent forks or mirrors**: If history is rewritten, bad actors could replicate the project, strip or rewrite authorship, and falsely claim original ownership or prior invention.
+* 🧠 **Document the development process**: Mistakes and revisions are part of real-world software development. Keeping them in the history shows how decisions evolved.
+* 📊 **Communicate progress transparently**: The Git log itself reflects the status and evolution of a feature, reducing reliance on external tracking tools.
+
+In short: **commit freely, but rewrite with caution**. Let the repo tell the whole story.
+
+
 ## Documentation Conventions
 - Paths, names of variables and options, and their values are `highlighted` and not wrapped in quotes.
 - If a path, name or value includes `a {placeholder}, wrapped in curly braces,` the `placeholder` is a required value that must be substituted.

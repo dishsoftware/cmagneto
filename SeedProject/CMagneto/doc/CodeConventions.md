@@ -8,7 +8,10 @@
 2) Getting acquainted with such code is a form of reverse engineering.<br>
     A need to reverse-engineer a code to figure out what it does signifies dealing with malware.
 
-3) Owners of a proprietary code have full rights to their property.<br>
+3) Any time or cost savings achieved by writing “optimized” or “elegant” code without proper documentation<br>
+    will be completely wiped out later — when that code inevitably turns into an unmaintainable heap of cryptic nonsense.
+
+4) Owners of a proprietary code have full rights to their property.<br>
     If hired developers retain just a piece of it as "tribal knowledge", the owners can sue them.<br>
     Or enslave. And probably torture until the proper documentation is ready,<br>
     because some projects are meant to outlive their creators.
@@ -18,7 +21,7 @@
     The only persons, who gain by ~~plaing dirty~~ producing undocumented code are its authors.<br>
     And even they will suffer, if the stolen documentation is only stored on creasy meatball drives.
 
-4) An open-source project without proper documentation is not open-source (see item 1).<br>
+5) An open-source project without proper documentation is not open-source (see item 1).<br>
     Worse — the moment such a project is abandoned by its authors, it becomes worthless.
     It is yet another layer of digital graffiti on some piss-stained wall in the back alley of the internet.
 

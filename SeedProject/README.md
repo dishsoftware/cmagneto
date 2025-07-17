@@ -32,6 +32,10 @@ This project is licensed under the [MIT License](./LICENSE).
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
 
 
+## Git History Policy
+The same as [CMagneto framework Git history policy](./CMagneto/README.md#git-history-policy)
+
+
 ## Documentation Conventions
 The same as [CMagneto framework documentation conventions](./CMagneto/README.md#documentation-conventions)
 
