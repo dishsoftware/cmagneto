@@ -15,7 +15,7 @@ but consumers may relocate it as needed.
 🔗 GitLab repository: [https://gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)
 
 The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
-including VS Code, Graphviz, Qt, GoogleTest, CPack, Docker and GitLab CI.
+including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
 
 > **Note:** Paths in the doc are shown relative to the project root.
 
@@ -69,12 +69,16 @@ In short: **commit freely, but rewrite with caution**. Let the repo tell the who
 
 ## Project Build Tools
 The CMagneto framework needs on the following software to build your project:
-- CMake 3.28 or later. Version bound by the oldest tested version.
-- C++ 17 (or later) compiler (e.g. GCC, MinGW, MSVC). Version bound by the GoogleTest CMake module.
-- Python 3.10 or later. Version bound by the coupled Python code.
+- CMake 3.28 or later. Version is bound by the oldest tested version.
+- C++ 17 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the GoogleTest CMake module.
+- Python 3.10 or later. Version is bound by the coupled Python code.
 - Graphviz (optional, for target graph).
-- Qt lrelease 6.4.2 or later (if any target in the project has Qt `*.ts` files). Version bound by the oldest tested version.
-- Qt Installer Framework 4.10 or later (optional, for packaging). Version bound by the oldest tested version.
+- Qt lrelease 6.4.2 or later (if any target in the project has Qt `*.ts` files). Version is bound by the oldest tested version.
+- Qt Installer Framework 4.10 or later (optional, for packaging). Version is bound by the oldest tested version.
+- GoogleTest 1.17.0 (optional, if your project has tests). Downloaded automatically by CMake during project generation.<br>
+    Version is bound by the tested version.
+- LCOV 2.0-1 (optional, if test coverage estimation is run and compiler is GCC/CLang).<br>
+    Version is bound by the tested version.
 
 > **Note:** If CMake target dependency graph picture is desired, Graphviz must be installed.<br>
 > Output is located at `./build/{toolset}/[{build_type}]/graphviz/`.<br>
@@ -297,7 +301,8 @@ To install most of build tools and dependencies (all, but Qt Installer Framework
 sudo apt update && sudo apt-get install -y \
   dpkg-dev \
   qt6-base-dev \
-  qt6-tools-dev
+  qt6-tools-dev \
+  lcov
 ```
 ##### 1.2.1.2. VS Code
 Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>

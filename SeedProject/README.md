@@ -62,7 +62,6 @@ The same as in [`Project Build Tools` section the CMagneto framework doc](./CMag
 ### 1.2. Dependencies
 - Qt 6
 - Boost
-- GoogleTest (downloaded automatically by CMake during project generation)
 
 
 ### 1.3. One-Command Build Script
@@ -86,7 +85,8 @@ sudo apt update && sudo apt-get install -y \
   dpkg-dev \
   qt6-base-dev \
   qt6-tools-dev \
-  libboost-all-dev
+  libboost-all-dev \
+  lcov
 ```
 ##### 1.3.1.2. VS Code
 Use the `Linux` configuration in the `C/C++ Configuration` settings.
