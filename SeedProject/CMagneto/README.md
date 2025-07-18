@@ -14,6 +14,14 @@ but consumers may relocate it as needed.
 # CMagneto Framework
 🔗 GitLab repository: [https://gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)
 
+<!--
+Note for developers
+
+Keep this snippet in sync with the same snippets in
+- CMagneto project root README.md;
+- CMagneto framework root README.md;
+- project desciption on GitLab, GitHub, BitBucket etc.
+-->
 The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
 including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
 
