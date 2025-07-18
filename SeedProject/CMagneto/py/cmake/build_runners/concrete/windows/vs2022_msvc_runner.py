@@ -26,11 +26,11 @@ class VS2022MSVCRunner(MultiConfigBuildRunner):
         return { BuildPlatform.OS.Windows }
 
     @staticmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
-        return VS2022MSVCRunner(iBuildTypes)
+    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
+        return VS2022MSVCRunner(iBuildTypes, iEnableCodeCoverage)
 
-    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
-        super().__init__("Visual Studio 17 2022", None, iBuildTypes)
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False):
+        super().__init__("Visual Studio 17 2022", None, iBuildTypes, iEnableCodeCoverage)
 
     def _setDependencyPaths(self) -> None:
         BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH("QT6_MSVC2022_DIR", Path("lib/cmake"))

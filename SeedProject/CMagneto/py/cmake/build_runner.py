@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import cast
 import inspect
 import os
+import shutil
 import subprocess
 
 
@@ -62,16 +63,27 @@ class BuildRunner(ABC):
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
+    CMagneto__SUBDIR_SOURCE = Path("src/")
+    CMagneto__SUBDIR_TESTS  = Path("tests/")
     CMagneto__SUBDIR_STATIC = Path("lib/")
     CMagneto__SUBDIR_SHARED = Path("lib/")
     CMagneto__SUBDIR_EXECUTABLE = Path("bin/")
     CMagneto__SUBDIR_SUMMARY = Path("summary/")
     CMagneto__SUBDIR_PACKAGES = Path("packages/")
 
-    CMagneto__BUILD_SUMMARY__FILE_NAME = "build_summary.txt"
+    CMagneto__BUILD_SUMMARY__FILE_NAME      = "build_summary.txt"
     CMagneto__TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
     CMagneto__RUN_TESTS__SCRIPT_NAME_WE = "run_tests"
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
+
+    # Report of source code (under './src/' ) test coverage.
+    CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
+
+    # Report of test   code (under './test/') coverage.
+    # This coverage report helps identify non-executed parts of tests themselves.
+    CMagneto__TEST_CODE_COVERAGE_REPORT__FILE_NAME_WE = "test_code_coverage_report"
+
+    CMagneto__COVERAGE_REPORT_SUMMARY__FILE_NAME_SUFFIX = "_summary"
     ##################################################################################################
 
     @staticmethod
@@ -87,10 +99,16 @@ class BuildRunner(ABC):
 
     @staticmethod
     @abstractmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
+    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
         """Creates an instance of the BuildRunner subclass."""
 
-    def __init__(self, iGeneratorName: str, iMultiConfig: bool, iCPPCompilerName: str | None, iBuildTypes: set[BuildType]):
+    def __init__(self,
+            iGeneratorName: str,
+            iMultiConfig: bool,
+            iCPPCompilerName: str | None,
+            iBuildTypes: set[BuildType],
+            iEnableCodeCoverage: bool = False
+        ):
         assert GoodPath.isNameGood(type(self).toolsetName())
         assert not iGeneratorName.isspace()
 
@@ -98,6 +116,16 @@ class BuildRunner(ABC):
         self.__multiConfig = iMultiConfig
         self.__cppCompilerName = iCPPCompilerName
         self.__buildTypes = iBuildTypes
+
+        if iEnableCodeCoverage:
+            if BuildRunner.BuildType.Debug not in self.__buildTypes:
+                Log.warning(f"Code coverage is only enabled if the build type is {BuildRunner.BuildType.Debug.name}. Ignored.")
+                self.__enableCodeCoverage = False
+            else:
+                self.__enableCodeCoverage = True
+        else:
+            self.__enableCodeCoverage = False
+
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         os.chdir(GoodPath.projectRoot())
         self.__buildDir    = GoodPath.projectRoot() / "build" / type(self).toolsetName()
@@ -116,6 +144,9 @@ class BuildRunner(ABC):
 
         text += \
         f"Build types: {', '.join([buildType.name for buildType in self.__buildTypes])}\n"
+
+        if self.__enableCodeCoverage:
+            text += f"Code coverage enabled for the build type {BuildRunner.BuildType.Debug.name}\n"
 
         if self.__cmakeFlagsFor__generate__command:
             text += "CMake flags for `generate` command: \"" + " ".join(self.__cmakeFlagsFor__generate__command) + "\"\n"
@@ -137,6 +168,9 @@ class BuildRunner(ABC):
 
     def buildTypes(self) -> set[BuildType]:
         return self.__buildTypes
+
+    def enableCodeCoverage(self) -> bool:
+        return self.__enableCodeCoverage
 
     def setCMakeFlagsFor__generate__command(self, iFlags: list[str]) -> None:
         """These flags are passed to CMake on generation stage."""
@@ -200,6 +234,134 @@ class BuildRunner(ABC):
             BuildPlatform().runScript(run_tests__scriptPath)
 
         Log.status(text + " finished.\n")
+        # If `run_tests` script exists and hasn't failed ...
+        if run_tests__scriptName is not None and iBuildType == BuildRunner.BuildType.Debug and self.enableCodeCoverage():
+            self.__generateTestCoverageReport()
+
+    def __generateTestCoverageReport(self) -> None:
+        text = "Generation of test coverage report"
+        Log.status(text + "...")
+
+        hostOS: BuildPlatform.OS = BuildPlatform().hostOS()
+        if hostOS == BuildPlatform.OS.Linux:
+            BuildRunner._LCOVRunner.generateTestCoverageReport(
+                self.buildDirForBuildType(BuildRunner.BuildType.Debug),
+                self.summaryDirForBuildType(BuildRunner.BuildType.Debug)
+            )
+        else:
+            Log.warning(f"Generation of test coverage report is not supported on {hostOS.name}.")
+
+        Log.status(text + " finished.\n")
+
+
+    # This class should be private, but making it private triggers name mangling, which prevents its own static methods from being called internally.
+    class _LCOVRunner:
+        """
+        Generates `.info` trace files and human-readable HTML-reports usings `.gcno` and `.gcda` files.
+
+        `.gcno` — Notes (Static Metadata)
+        Generated at compile time, alongside your object (.o) files.
+        Contains:
+            - Control flow graph (CFG) of the program.
+            - Source line mappings for tracking coverage.
+            - Required to understand what could be covered (all possible lines/branches).
+            - One .gcno file per compiled translation unit (usually per .cpp file).
+        Think of it as the map of what can be executed.
+
+        `.gcda` — Data (Dynamic Execution)
+        Generated at runtime, when the instrumented binary is executed.
+        Contains:
+            - Actual execution counts (how many times each line or branch was hit).
+            - Updated or created when the program exits normally.
+        Think of it as the record of what was actually executed.
+
+        `lcov --capture` reads `.gcno` and `.gcda` files to compute coverage and create a consolidated raw summary `.info`.
+        `genhtml` makes pretty HTML reports from `.info`.
+        """
+
+        @staticmethod
+        def generateTestCoverageReport(iBuildDir: Path, iSummaryDir: Path) -> None:
+            if shutil.which("lcov") is None:
+                Log.warning("LCOV is not installed. Can't generate test coverage report.")
+                return
+
+            # 1. Generate code coverage report for source code files (under './src/').
+            BuildRunner._LCOVRunner.__generateCoverageReport(
+                iBuildDir,
+                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCE,
+                iSummaryDir,
+                BuildRunner.CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE
+            )
+
+            # 2. Generate code coverage report for test code files (under './tests/').
+            # This coverage report helps identify non-executed parts of tests themselves.
+            BuildRunner._LCOVRunner.__generateCoverageReport(
+                iBuildDir,
+                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_TESTS,
+                iSummaryDir,
+                BuildRunner.CMagneto__TEST_CODE_COVERAGE_REPORT__FILE_NAME_WE
+            )
+
+        @staticmethod
+        def __generateCoverageReport(
+            iBuildDir: Path,
+            iBaseDir: Path,
+            iSummaryDir: Path,
+            iTracefileNameWE: str
+        ) -> None:
+            tracefilePath = iSummaryDir / (iTracefileNameWE + ".info")
+
+            # 1. Generate coverage tracefile.
+            Process.runCommand(["lcov", "--capture",
+                "--directory", str(iBuildDir),
+                "--output-file", str(tracefilePath),
+                "--base-directory", str(iBaseDir),
+
+                # "mismatch" -  Get rid of: `geninfo: ERROR: mismatched end line for <some cpp file of a test target> ...`,
+                #               which is, probably, due to a bug in GCC/GCOV (GCOV is called by LCOV under the hood).
+                # "unused"   -  Don't fail, if a pattern to include/exclude does not match to anything.
+                # "empty"    -  Don't fail, if no `.gcda` files found (no tests added).
+                "--ignore-errors", "mismatch,unused,empty",
+
+                # Don't capture code coverage of source files, outside the base dir.
+                # It also excludes 3rd-party libs code, e.g. system or added using `target_link_libraries`,
+                "--no-external",
+
+                # Don't capture code coverage of third-party dependencies like GoogleTest, fmt, etc.,
+                # that are typically pulled in `{buildDir}/_deps/` via FetchContent or ExternalProject.
+                "--exclude", str(iBuildDir) + "/_deps/*",
+
+                # Don't capture code coverage of compiled Qt Resource Collection binaries.
+                "--exclude", "*.rcc"
+            ])
+            Log.message(
+"Most probably such LCOV-generated warnings should be ignored:\n\
+\t'geninfo: WARNING: ('mismatch') mismatched end line for ...'\n\
+It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
+            )
+
+            # 2. Generate short summary using the tracefile.
+            # TODO Is it really required? Probably the next "genhtml" command generates the desired "lines......: X%" (overall, not per file).
+            lcovSummaryOutput = Process.runCommand(
+                ["lcov", "--summary", str(tracefilePath), "--ignore-errors", "empty"],
+                iCaptureOutput=True, iCheck=False
+            )
+            summaryFilePath = iSummaryDir / (iTracefileNameWE + BuildRunner.CMagneto__COVERAGE_REPORT_SUMMARY__FILE_NAME_SUFFIX)
+            with open(summaryFilePath, "w", encoding="utf-8") as summaryFile:
+                summaryFile.write(lcovSummaryOutput.stdout)
+
+            # 3. Create verbose human-readable HTML-reports using the tracefile.
+
+            ## Don't pollute build log with "errors", if tracefile is not meaningful (i.e. if tests have not been added to the project yet).
+            if lcovSummaryOutput.returncode != 0 or "lines......: no data found" in lcovSummaryOutput.stdout:
+                return
+
+            ## `genhtml` is part of the `lcov` package.
+            Process.runCommand(["genhtml", str(tracefilePath),
+                "--output-directory", str(iSummaryDir / (iTracefileNameWE + "_html/")),
+                "--ignore-errors", "empty"
+            ])
+
 
     def isCompiledTestsFileExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the compiled tests file exists for the specified build type."""

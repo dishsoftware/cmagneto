@@ -49,25 +49,25 @@ class Log(metaclass=ConstMetaClass):
                 indentedText += f"{iIndent}{line}\n"
             return indentedText
 
-    __LOG_MESSAGE_PREFIX = "[CMagneto] "
+    LOG_MESSAGE_PREFIX = "[CMagneto] "
 
     @staticmethod
     def error(iMessage: str) -> NoReturn:
         """ Prints an error message in red color and exits the program. Adds "[CMagneto] Error: " prefix."""
-        Log.printColored(f"{Log.__LOG_MESSAGE_PREFIX}Error: {iMessage}", Log.PrintColor.Red)
+        Log.printColored(f"{Log.LOG_MESSAGE_PREFIX}Error: {iMessage}", Log.PrintColor.Red)
         sys.exit(1)
 
     @staticmethod
     def warning(iMessage: str) -> None:
         """ Prints a warning message in yellow color. Adds "[CMagneto] Warning: " prefix."""
-        Log.printColored(f"{Log.__LOG_MESSAGE_PREFIX}Warning: {iMessage}", Log.PrintColor.Yellow)
+        Log.printColored(f"{Log.LOG_MESSAGE_PREFIX}Warning: {iMessage}", Log.PrintColor.Yellow)
 
     @staticmethod
     def message(iMessage: str, iIndent: str | None = None) -> None:
         """ Prints a message in default color. If iIndent is non-empty string, every new line is prepended with the indent and "[CMagneto] " prefix."""
-        print(Log.makeIndented(iMessage, Log.__LOG_MESSAGE_PREFIX + iIndent if iIndent else Log.__LOG_MESSAGE_PREFIX))
+        print(Log.makeIndented(iMessage, Log.LOG_MESSAGE_PREFIX + iIndent if iIndent else Log.LOG_MESSAGE_PREFIX))
 
     @staticmethod
     def status(iMessage: str) -> None:
         """ Prints an informational message in green color."""
-        Log.printColored(Log.__LOG_MESSAGE_PREFIX + iMessage, Log.PrintColor.Green)
+        Log.printColored(Log.LOG_MESSAGE_PREFIX + iMessage, Log.PrintColor.Green)

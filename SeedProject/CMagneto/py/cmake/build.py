@@ -110,6 +110,11 @@ If a build stage fails during current build, the next stages are not run."
 f"Build implicit type (DEFAULT) libraries as shared.\n\
 It is possible to override this option for each library, using --LIB_{{LibTargetName}}_SHARED=ON|OFF|DEFAULT. Library name must be typed in uppercase."
     )
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        help=f"Add compile and link options to enable code coverage. These options are only set if the build type is {BuildRunner.BuildType.Debug.name}."
+    )
 
     args, unknownArgs = parser.parse_known_args()
     # Parse unknown arguments that are in the form of LIB_{LibTargetName}_SHARED=ON|OFF|DEFAULT.
@@ -154,6 +159,7 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     buildTypes: set[BuildRunner.BuildType] = {BuildRunner.BuildType[argBuildType] for argBuildType in args.build_types}
     buildStage: BuildRunner.BuildStage = BuildRunner.BuildStage[args.build_stage]
     runPrecedingStages: BuildRunner.RunPrecedingStages = BuildRunner.RunPrecedingStages[args.run_preceding_stages]
+    enableCodeCoverage = args.coverage
 
     flag__BUILD_SHARED_LIBS = "-DBUILD_SHARED_LIBS=ON" if args.BUILD_SHARED_LIBS else "-DBUILD_SHARED_LIBS=OFF"
     cmakeFlags = [flag__BUILD_SHARED_LIBS]
@@ -172,7 +178,7 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     if (len(unknownArgs) > 0):
         Log.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = buildRunners[toolsetName].create(buildTypes)
+    buildRunner: BuildRunner = buildRunners[toolsetName].create(buildTypes, enableCodeCoverage)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     Log.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)
