@@ -26,11 +26,11 @@ class UnixMakefilesGCCRunner(SingleConfigBuildRunner):
         return { BuildPlatform.OS.Linux }
 
     @staticmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
-        return UnixMakefilesGCCRunner(iBuildTypes)
+    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
+        return UnixMakefilesGCCRunner(iBuildTypes, iEnableCodeCoverage)
 
-    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
-        super().__init__("Unix Makefiles", "g++", iBuildTypes)
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False):
+        super().__init__("Unix Makefiles", "g++", iBuildTypes, iEnableCodeCoverage)
 
 
 BuildRunnersHolder().registerBuildRunner(UnixMakefilesGCCRunner)

@@ -138,6 +138,8 @@ function(CMagneto__set_up__library iLibTargetName)
         PUBLIC_HEADER_SET public_headers
         PRIVATE_HEADER_SET private_headers
         INTERFACE_HEADER_SET interface_headers
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
     )
 
     ## Add sources.

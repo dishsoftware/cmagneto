@@ -23,6 +23,9 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 
 ## Define functions to load project metadata.
+include("${CMAKE_CURRENT_LIST_DIR}/CodeCoverage.cmake")
+
+## Set up instrumentation to generate metadata files for code coverage tools.
 include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader.cmake")
 
 ## CMakePackageConfigHelpers contains functions to create config files (*Config.cmake, *ConfigVersion.cmake, etc.),

@@ -9,8 +9,17 @@ LICENSE file in the root directory of this source tree.
 ![Framework Banner](./SeedProject/CMagneto/doc/assets/header/Header.jpg)
 # CMagneto Framework
 
+<!--
+Note for developers
+
+Keep this snippet in sync with the same snippets in
+- CMagneto project root README.md;
+- CMagneto framework root README.md;
+- project desciption on GitLab, GitHub, BitBucket etc.
+-->
 The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
-including VS Code, Graphviz, Qt, GoogleTest, CPack, Docker and GitLab CI.
+including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
+
 
 The framework repo is organized as follows:
 - The framework code is mixed with a code of a seed (template) project under [`./SeedProject/`](./SeedProject/).

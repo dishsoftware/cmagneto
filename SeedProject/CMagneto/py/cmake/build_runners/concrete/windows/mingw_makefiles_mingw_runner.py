@@ -25,11 +25,11 @@ class MinGWMakefilesMinGWRunner(SingleConfigBuildRunner):
         return { BuildPlatform.OS.Windows }
 
     @staticmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType]) -> BuildRunner:
-        return MinGWMakefilesMinGWRunner(iBuildTypes)
+    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
+        return MinGWMakefilesMinGWRunner(iBuildTypes, iEnableCodeCoverage)
 
-    def __init__(self, iBuildTypes: set[BuildRunner.BuildType]):
-        super().__init__("MinGW Makefiles", None, iBuildTypes)
+    def __init__(self, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False):
+        super().__init__("MinGW Makefiles", None, iBuildTypes, iEnableCodeCoverage)
 
 
 BuildRunnersHolder().registerBuildRunner(MinGWMakefilesMinGWRunner)

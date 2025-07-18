@@ -47,7 +47,7 @@ class Process:
 
             returnCode = process.wait()
             if iCheck and returnCode != 0:
-                Log.printColored(f"{Log.__LOG_MESSAGE_PREFIX}Command failed with error.", Log.PrintColor.Red)
+                Log.printColored(f"{Log.LOG_MESSAGE_PREFIX}Command failed with error.", Log.PrintColor.Red)
                 raise subprocess.CalledProcessError(returnCode, iCommand, output="".join(capturedLines))
 
             if iCaptureOutput:

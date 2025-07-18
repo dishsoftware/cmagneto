@@ -17,8 +17,19 @@ import os
 
 
 class SingleConfigBuildRunner(BuildRunner):
-    def __init__(self, iGeneratorName: str, iCPPCompilerName: str | None, iBuildTypes: set[BuildRunner.BuildType]):
-        super().__init__(iGeneratorName, False, iCPPCompilerName, iBuildTypes)
+    def __init__(self,
+            iGeneratorName: str,
+            iCPPCompilerName: str | None,
+            iBuildTypes: set[BuildRunner.BuildType],
+            iEnableCodeCoverage: bool = False
+        ):
+        super().__init__(
+                    iGeneratorName,
+                    False,
+                    iCPPCompilerName,
+                    iBuildTypes,
+                    iEnableCodeCoverage
+                )
 
     def __str__(self) -> str:
         text = super().__str__()
@@ -87,6 +98,9 @@ class SingleConfigBuildRunner(BuildRunner):
             command.append("-DCMAKE_CXX_COMPILER=" + str(self.cppCompilerName()))
 
         command.extend(self._extraArgsFor__generate__command(iBuildType))
+
+        if iBuildType == BuildRunner.BuildType.Debug and self.enableCodeCoverage():
+            command.append("-DENABLE_COVERAGE=ON")
 
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,
