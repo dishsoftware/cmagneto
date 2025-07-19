@@ -256,3 +256,38 @@ Use `struct` only for Plain Data Structures, i.e. if they:
 - Have only public data members (no private/protected fields).
 - Have no user-defined constructors, destructors, or virtual methods.
 - Contain only other POD types (like ints, doubles, or other POD structs).
+
+
+## 4. GitLab CI/CD Conventions
+- Always `workflow.yml` file and define general rules of creation a pipeline in it, e.g.:
+    ```yml
+    workflow:
+      rules:
+        # If trigger is an assigned tag.
+          - if: '$CI_COMMIT_TAG'
+          when: always
+
+          # In other cases do not create the pipeline.
+          - when: never
+
+
+    # Start pipeline.
+    include:
+      - local: 'CI/GitLab/pipeline.yml'
+    ```
+- The `workflow.yml` file must be always specified as CI/CD pipeline entrypoint at<br>
+    `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` → `CI/CD configuration file`
+- Always create `pipeline.yml` file and define stages of a pipeline in it, e.g.:
+    ```yml
+    stages:
+      - STAGE-build-test-package
+      - STAGE-upload_packages
+
+    include:
+      - local: 'jobs.yml'
+    ```
+- Job names are lowercase.
+- Job template names are lowercase and prepended with a dot.
+- Stage names are prepended with `STAGE-`, and everything next is lowercase.
+- Add 2 blank lines between first-level YML-properties in a file.
+

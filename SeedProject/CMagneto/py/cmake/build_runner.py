@@ -84,6 +84,9 @@ class BuildRunner(ABC):
     CMagneto__TEST_CODE_COVERAGE_REPORT__FILE_NAME_WE = "test_code_coverage_report"
 
     CMagneto__COVERAGE_REPORT_SUMMARY__FILE_NAME_SUFFIX = "_summary"
+
+    # The file contans just overall `XX.X%` or `N/A` to ease creation of CI/CD badges.
+    CMagneto__COVERAGE_REPORT_PERCENTAGE__FILE_NAME_SUFFIX = "_percentage.txt"
     ##################################################################################################
 
     @staticmethod
@@ -350,7 +353,18 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
             with open(summaryFilePath, "w", encoding="utf-8") as summaryFile:
                 summaryFile.write(lcovSummaryOutput.stdout)
 
-            # 3. Create verbose human-readable HTML-reports using the tracefile.
+            # 3. Create a file with just `XX%` or `N/A` to ease creation of CI/CD badges.
+            percentageFileContent = "N/A"
+            if lcovSummaryOutput.returncode == 0 or "lines......: no data found" not in lcovSummaryOutput.stdout:
+                for line in cast(str, lcovSummaryOutput.stdout).splitlines():
+                    if "lines......:" in line:
+                        percentageFileContent = line.split()[1]  # e.g., '87.5%'
+
+            percentageFilePath = iSummaryDir / (iTracefileNameWE + BuildRunner.CMagneto__COVERAGE_REPORT_PERCENTAGE__FILE_NAME_SUFFIX)
+            with open(percentageFilePath, "w", encoding="utf-8") as percentageFile:
+                percentageFile.write(percentageFileContent)
+
+            # 4. Create verbose human-readable HTML-reports using the tracefile.
 
             ## Don't pollute build log with "errors", if tracefile is not meaningful (i.e. if tests have not been added to the project yet).
             if lcovSummaryOutput.returncode != 0 or "lines......: no data found" in lcovSummaryOutput.stdout:

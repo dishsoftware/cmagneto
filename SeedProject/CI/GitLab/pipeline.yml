@@ -1,10 +1,11 @@
 stages:
-  - build-test-package
-  - upload_packages
+  - STAGE-build-test-package
+  - STAGE-upload_packages
+  - STAGE-test-coverage
 
 
 include:
   # GitLab resolves local paths relative to the repo root dir, not to a path of an entry .yml file ("CI/CD configuration file" option in GitLab UI).
   - local: 'CI/GitLab/job_templates.yml'
-  - local: 'CI/GitLab/job_DAGs/ubuntu24amd.yml'
-  - local: 'CI/GitLab/job_DAGs/debian12amd.yml'
+  - local: 'CI/GitLab/platform_dependent_job_DAGs/ubuntu24amd.yml'
+  - local: 'CI/GitLab/platform_dependent_job_DAGs/debian12amd.yml'

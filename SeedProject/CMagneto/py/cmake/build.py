@@ -113,7 +113,10 @@ It is possible to override this option for each library, using --LIB_{{LibTarget
     parser.add_argument(
         "--coverage",
         action="store_true",
-        help=f"Add compile and link options to enable code coverage. These options are only set if the build type is {BuildRunner.BuildType.Debug.name}."
+        help=\
+f"Add compile and link options to enable code coverage and generate test coverage report.\n\
+These options are only set, if the build type is {BuildRunner.BuildType.Debug.name}.\n\
+Note: test coverage report can only be generated, if code coverage flags were set on {BuildRunner.BuildStage.Generate.name} build stage."
     )
 
     args, unknownArgs = parser.parse_known_args()

@@ -2,7 +2,7 @@ variables:
   GIT_DEPTH: 1 # Get only the latest commit.
 
 
-.on_tag__template:
+.on_tag:
   rules:
     # If trigger is an assigned tag.
     - if: '$CI_COMMIT_TAG'
@@ -14,7 +14,7 @@ variables:
     expire_in: never
 
 
-.on_main__template:
+.on_main:
   rules:
     # If trigger is:
     # - commit into $CI_DEFAULT_BRANCH branch;
@@ -28,7 +28,7 @@ variables:
     expire_in: 30 days
 
 
-.on_branch__template:
+.on_branch:
   rules:
     # If trigger is NOT:
     # - assigned tag;
@@ -45,8 +45,8 @@ variables:
 
 # Generate .env file, which contains variables: REMOTE_IMAGE_NAME, IMAGE_VERSION, PLATFORM, ENV_TYPE, etc.
 # These variables describe a remote Docker image, which was built using ${Dockerfile}.
-.deduce_image__template:
-  stage: build-test-package
+.deduce_image:
+  stage: STAGE-build-test-package
   image: python:3
   variables:
     # The path must be and under `./CI/Docker/`. If relative, must be defined relative to the dir.
@@ -71,9 +71,9 @@ variables:
     - when: on_success
 
 
-.build-test-package__template:
-  stage: build-test-package
-  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+.build-test-package:
+  stage: STAGE-build-test-package
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
     TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
@@ -96,31 +96,31 @@ variables:
       dotenv: inherited.env
 
 
-.on_tag__build-test-package__template:
+.on_tag__build-test-package:
   extends:
-    - .on_tag__template
-    - .build-test-package__template
-  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_tag
+    - .build-test-package
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
-.on_main__build-test-package__template:
+.on_main__build-test-package:
   extends:
-    - .on_main__template
-    - .build-test-package__template
-  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_main
+    - .build-test-package
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
-.on_branch__build-test-package__template:
+.on_branch__build-test-package:
   extends:
-    - .on_branch__template
-    - .build-test-package__template
-  # needs: [.deduce_image__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_branch
+    - .build-test-package
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
 # Upload generated packages to "GitLab generic packages repository".
-.upload_packages__template:
-  stage: upload_packages
-  # needs: [.build-test-package__template]
+.upload_packages:
+  stage: STAGE-upload_packages
+  # needs: [.build-test-package]
   script:
     - |
       packagesDir="./build/${TOOLSET}/Release/packages"
@@ -139,22 +139,42 @@ variables:
       done
 
 
-.on_tag__upload_packages__template:
+.on_tag__upload_packages:
   extends:
-    - .on_tag__template
-    - .upload_packages__template
-  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_tag
+    - .upload_packages
+  # needs: [.build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
-.on_main__upload_packages__template:
+.on_main__upload_packages:
   extends:
-    - .on_main__template
-    - .upload_packages__template
-  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_main
+    - .upload_packages
+  # needs: [.build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
-.on_branch__upload_packages__template:
+.on_branch__upload_packages:
   extends:
-    - .on_branch__template
-    - .upload_packages__template
-  # needs: [.build-test-package__template] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+    - .on_branch
+    - .upload_packages
+  # needs: [.build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.estimate_test_coverage:
+  stage: STAGE-test-coverage
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+  script:
+    - python3 build.py --toolset ${TOOLSET} --build_types Debug --build_stage RunTests --coverage
+    - echo "Test coverage $(cat build/${TOOLSET}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
+  coverage: '/Test coverage (\d+\.\d+%|N/A)/'
+  rules:
+    # If trigger is:
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+
+    # In other cases don't run the job.
+    - when: never
