@@ -33,6 +33,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from CMagneto.py.docker.image_build_runner import ImageBuildRunner
+from CMagneto.py.utils.log import Log
 from pathlib import Path
 import argparse
 
@@ -79,7 +80,10 @@ Uses other variables from JSON files in './meta/' to define image labels.",
         "--file", "-f",
         type=Path,
         required=True,
-        help=f"Path to a Dockerfile. The path must be under '{ImageBuildRunner.projectDockerfilesRoot()}/'. If relative, must be defined relative to the dir."
+        help=\
+f"Path to a Dockerfile. The path must be under the project Dockerfiles root '{ImageBuildRunner.projectDockerfilesRoot()}/'.\n\
+If relative, must be defined relative to the project Dockerfiles root.\n\
+'ALL' is a special value: if passed, images are built using all Dockerfiles under the project Dockerfiles root."
     )
     defaultBuildStage = max(ImageBuildRunner.BuildStage, key=lambda e: e.value) # The last stage is the default.
     parser.add_argument(
@@ -104,8 +108,23 @@ Uses other variables from JSON files in './meta/' to define image labels.",
     buildStage = ImageBuildRunner.BuildStage[args.build_stage]
     runPrecedingStages = ImageBuildRunner.RunPrecedingStages[args.run_preceding_stages]
 
-    buildRunner = ImageBuildRunner(dockerFilePath)
-    buildRunner.run(buildStage, runPrecedingStages)
+    # Build an image using the Dockerfile.
+    if (str(dockerFilePath) != "ALL"):
+        buildRunner = ImageBuildRunner(dockerFilePath)
+        buildRunner.run(buildStage, runPrecedingStages)
+        return
+
+    # Special --file argument "ALL" has been received. Build images using all Dockerfiles under this dir recursively.
+    overallStatusText = f"Buiding images using all Dockerfiles under project Dockerfiles root '{ImageBuildRunner.projectDockerfilesRoot()}'"
+    Log.status(overallStatusText + "...")
+    for dockerFilePath in ImageBuildRunner.projectDockerfilesRoot().rglob("Dockerfile*"):
+        if dockerFilePath.is_file() and ".tmp" not in dockerFilePath.parts:
+            statusText = f"Buiding image using Dockerfile '{dockerFilePath}'"
+            Log.status(statusText + "...")
+            buildRunner = ImageBuildRunner(dockerFilePath)
+            buildRunner.run(buildStage, runPrecedingStages)
+            Log.status(statusText + " finished.\n")
+    Log.status(overallStatusText + " finished.\n")
 
 
 if __name__ == "__main__":

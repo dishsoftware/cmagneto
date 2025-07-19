@@ -21,8 +21,7 @@
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? CMagneto does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
 * Add function set_up_interface_library.
 * CMakePresets.json.
-* Add option "--file ALL" to ./CI/Docker/build_image.py.
-* Test coverage.
+* Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
 * Qt IFW tweaks.
 * Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
