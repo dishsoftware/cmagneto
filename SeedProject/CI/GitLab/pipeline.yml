@@ -1,7 +1,7 @@
 stages:
-  - STAGE-test-coverage
   - STAGE-build-test-package
   - STAGE-upload_packages
+  - STAGE-test-coverage
 
 
 include:
