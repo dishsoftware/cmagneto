@@ -306,7 +306,7 @@ Use the `UnixMakefiles_GCC` toolset.
 ##### 1.2.1.1. Installation Of Dependecies
 To install most of build tools and dependencies (all, but Qt Installer Framework), run:
 ```bash
-sudo apt update && sudo apt-get install -y \
+sudo apt update && sudo apt install -y \
   dpkg-dev \
   qt6-base-dev \
   qt6-tools-dev \
