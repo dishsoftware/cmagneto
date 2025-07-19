@@ -96,6 +96,26 @@ variables:
       dotenv: inherited.env
 
 
+.estimate_test_coverage:
+  stage: STAGE-build-test-package
+  # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+  script:
+    - python3 build.py --toolset ${TOOLSET} --build_types Debug --build_stage RunTests --coverage
+    - echo "Test coverage: $(cat build/${TOOLSET}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
+  coverage: /Test coverage: (\d+\.\d+%|N\/A)/
+  rules:
+    # If trigger is:
+    # - commit into $CI_DEFAULT_BRANCH branch;
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+
+    # In other cases don't run the job.
+    - when: never
+
+
 .on_tag__build-test-package:
   extends:
     - .on_tag
