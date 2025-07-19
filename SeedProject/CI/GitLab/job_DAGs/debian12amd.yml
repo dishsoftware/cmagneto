@@ -1,31 +1,31 @@
 deduce_build_image__debian12amd:
-  extends: .deduce_image__template
+  extends: .deduce_image
   variables:
     Dockerfile: "Dockerfile.Debian12AMD__build"
 
 
 on_tag__build-test-package__debian12amd:
-  extends: .on_tag__build-test-package__template
+  extends: .on_tag__build-test-package
   needs: [deduce_build_image__debian12amd]
 
 on_tag__upload_packages__debian12amd:
-  extends: .on_tag__upload_packages__template
+  extends: .on_tag__upload_packages
   needs: [on_tag__build-test-package__debian12amd]
 
 
 on_main__build-test-package__debian12amd:
-  extends: .on_main__build-test-package__template
+  extends: .on_main__build-test-package
   needs: [deduce_build_image__debian12amd]
 
 on_main__upload_packages__debian12amd:
-  extends: .on_main__upload_packages__template
+  extends: .on_main__upload_packages
   needs: [on_main__build-test-package__debian12amd]
 
 
 on_branch__build-test-package__debian12amd:
-  extends: .on_branch__build-test-package__template
+  extends: .on_branch__build-test-package
   needs: [deduce_build_image__debian12amd]
 
 on_branch__upload_packages__debian12amd:
-  extends: .on_branch__upload_packages__template
+  extends: .on_branch__upload_packages
   needs: [on_branch__build-test-package__debian12amd]

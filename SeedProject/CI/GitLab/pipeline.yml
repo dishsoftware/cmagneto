@@ -1,6 +1,6 @@
 stages:
-  - build-test-package
-  - upload_packages
+  - STAGE-build-test-package
+  - STAGE-upload_packages
 
 
 include:
