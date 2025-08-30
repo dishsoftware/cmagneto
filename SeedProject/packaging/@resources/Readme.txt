@@ -7,10 +7,10 @@ By default, the library is installed to:
   C:\Program Files\Dish\ContactHolder
 
 📚 Documentation & Usage:
-Refer to the GitHub repository for full documentation, examples, and API references:
+Refer to the GitLab repository for full documentation, examples, and API references:
   https://gitlab.com/dishsoftware/contactholder
 
 🐛 Reporting Issues:
-Feel free to report bugs or contribute via GitHub.
+Feel free to report bugs or contribute via GitLab.
 
 Thank you for supporting open-source software!
