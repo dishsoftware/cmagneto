@@ -1,11 +1,11 @@
 from pathlib import Path
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
 from CMagneto.py.cmake.toolset import DependencyPathSpec, Toolset
+from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
 
 
-BuildRunnersHolder().registerToolset(
+ToolsetRegistry().registerToolset(
     Toolset(
         name="VS2022_MSVC",
         supportedOSes=frozenset({BuildPlatform.OS.Windows}),

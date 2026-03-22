@@ -34,7 +34,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
+from CMagneto.py.cmake.build_runner_factory import BuildRunnerFactory
+from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
 from CMagneto.py.utils.log import Log
 import argparse
 import re
@@ -42,14 +43,15 @@ import re
 
 def buildProject():
     Log.status(f"Host OS: {BuildPlatform().hostOS().value}")
-    toolsets = BuildRunnersHolder().availableToolsets()
+    toolsetRegistry = ToolsetRegistry()
+    toolsets = toolsetRegistry.availableToolsets()
     toolsetNames = toolsets.keys()
 
     parser = argparse.ArgumentParser(
         description=\
 f"Builds the CMake project.\n\
 The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildRunner.BuildStage])}.\n\
-Supported OSes: {', '.join(os.name for os in BuildRunnersHolder().supportedOSes())}.\n\
+Supported OSes: {', '.join(os.name for os in toolsetRegistry.supportedOSes())}.\n\
 \n\
 NOTE! All relative paths in the doc are given relative to the project root.\n\
 \n",
@@ -183,7 +185,7 @@ Note: test coverage report can only be generated, if code coverage flags were se
     if (len(unknownArgs) > 0):
         Log.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = BuildRunnersHolder().createBuildRunner(toolsetName, buildTypes, enableCodeCoverage)
+    buildRunner: BuildRunner = BuildRunnerFactory.createBuildRunner(toolsetName, buildTypes, enableCodeCoverage)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     Log.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)

@@ -9,14 +9,11 @@
 # but consumers may relocate it as needed.
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.build_runners.multi_config_build_runner import MultiConfigBuildRunner
-from CMagneto.py.cmake.build_runners.single_config_build_runner import SingleConfigBuildRunner
 from CMagneto.py.cmake.toolset import Toolset
 from typing import Callable
 
 
-class BuildRunnersHolder():
+class ToolsetRegistry():
     __sInstance = None
 
     def __new__(cls):
@@ -57,12 +54,6 @@ class BuildRunnersHolder():
         predicate: Callable[[Toolset], bool] = lambda iToolset: BuildPlatform().hostOS() in iToolset.supportedOSes
         availableToolsets: dict[str, Toolset] = {k: v for k, v in self.__registeredToolsets.items() if predicate(v)}
         return availableToolsets
-
-    def createBuildRunner(self, iToolsetName: str, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
-        toolset = self.availableToolsets()[iToolsetName]
-        if toolset.multiConfig:
-            return MultiConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
-        return SingleConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
 
 
 # Import project toolsets. The import is required.
