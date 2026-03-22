@@ -65,5 +65,5 @@ class BuildRunnersHolder():
         return SingleConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
 
 
-# Import all concrete BuildRunners. The import is requried.
-from CMagneto.py.cmake.build_runners import concrete
+# Import project toolsets. The import is required.
+import toolsets
