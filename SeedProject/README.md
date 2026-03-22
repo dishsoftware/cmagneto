@@ -103,4 +103,4 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-1.0.0.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .
