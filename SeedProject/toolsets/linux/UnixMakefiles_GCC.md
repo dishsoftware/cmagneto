@@ -15,4 +15,3 @@ sudo apt update && sudo apt install -y \
 
 ## VS Code
 Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.

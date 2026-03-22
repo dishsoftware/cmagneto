@@ -14,4 +14,3 @@ Define the environment variable `BOOST_MSVC2022_DIR`, which refers to a director
 Define the environment variable `VC2022ToolsInstallDir`.<br>
 E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.<br>
 Use the `Windows_MSVC2022` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.

@@ -12,4 +12,3 @@ pacman -S mingw-w64-ucrt-x86_64-qt6 mingw-w64-ucrt-x86_64-boost-libs
 ## VS Code
 Define the environment variable `MSYS2_HOME=C:\msys64`.<br>
 Use the `Windows_MinGW_UCRT` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
