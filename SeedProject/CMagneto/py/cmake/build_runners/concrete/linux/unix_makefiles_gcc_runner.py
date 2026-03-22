@@ -8,29 +8,17 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
-from __future__ import annotations
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.build_runners.single_config_build_runner import SingleConfigBuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
+from CMagneto.py.cmake.toolset import Toolset
 
 
-class UnixMakefilesGCCRunner(SingleConfigBuildRunner):
-    @staticmethod
-    def toolsetName() -> str:
-        return "UnixMakefiles_GCC"
-
-    @staticmethod
-    def supportedOSes() -> set[BuildPlatform.OS]:
-        """Returns OS set, the BuildRunner subclass supports."""
-        return { BuildPlatform.OS.Linux }
-
-    @staticmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
-        return UnixMakefilesGCCRunner(iBuildTypes, iEnableCodeCoverage)
-
-    def __init__(self, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False):
-        super().__init__("Unix Makefiles", "g++", iBuildTypes, iEnableCodeCoverage)
-
-
-BuildRunnersHolder().registerBuildRunner(UnixMakefilesGCCRunner)
+BuildRunnersHolder().registerToolset(
+    Toolset(
+        name="UnixMakefiles_GCC",
+        supportedOSes=frozenset({BuildPlatform.OS.Linux}),
+        generatorName="Unix Makefiles",
+        multiConfig=False,
+        cppCompilerName="g++"
+    )
+)

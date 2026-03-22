@@ -8,28 +8,16 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
-from __future__ import annotations
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.build_runners.single_config_build_runner import SingleConfigBuildRunner
 from CMagneto.py.cmake.build_runners_holder import BuildRunnersHolder
+from CMagneto.py.cmake.toolset import Toolset
 
 
-class MinGWMakefilesMinGWRunner(SingleConfigBuildRunner):
-    @staticmethod
-    def toolsetName() -> str:
-        return "MinGW"
-
-    @staticmethod
-    def supportedOSes() -> set[BuildPlatform.OS]:
-        return { BuildPlatform.OS.Windows }
-
-    @staticmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
-        return MinGWMakefilesMinGWRunner(iBuildTypes, iEnableCodeCoverage)
-
-    def __init__(self, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False):
-        super().__init__("MinGW Makefiles", None, iBuildTypes, iEnableCodeCoverage)
-
-
-BuildRunnersHolder().registerBuildRunner(MinGWMakefilesMinGWRunner)
+BuildRunnersHolder().registerToolset(
+    Toolset(
+        name="MinGW",
+        supportedOSes=frozenset({BuildPlatform.OS.Windows}),
+        generatorName="MinGW Makefiles",
+        multiConfig=False
+    )
+)

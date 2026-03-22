@@ -42,8 +42,8 @@ import re
 
 def buildProject():
     Log.status(f"Host OS: {BuildPlatform().hostOS().value}")
-    buildRunners = BuildRunnersHolder().availableBuildRunners()
-    toolsetNames = buildRunners.keys()
+    toolsets = BuildRunnersHolder().availableToolsets()
+    toolsetNames = toolsets.keys()
 
     parser = argparse.ArgumentParser(
         description=\
@@ -183,7 +183,7 @@ Note: test coverage report can only be generated, if code coverage flags were se
     if (len(unknownArgs) > 0):
         Log.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = buildRunners[toolsetName].create(buildTypes, enableCodeCoverage)
+    buildRunner: BuildRunner = BuildRunnersHolder().createBuildRunner(toolsetName, buildTypes, enableCodeCoverage)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     Log.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)

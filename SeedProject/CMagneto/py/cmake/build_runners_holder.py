@@ -10,6 +10,9 @@
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_runner import BuildRunner
+from CMagneto.py.cmake.build_runners.multi_config_build_runner import MultiConfigBuildRunner
+from CMagneto.py.cmake.build_runners.single_config_build_runner import SingleConfigBuildRunner
+from CMagneto.py.cmake.toolset import Toolset
 from typing import Callable
 
 
@@ -25,35 +28,41 @@ class BuildRunnersHolder():
     def __init__(self):
         if self.__initialized:
             return
-        # { buildRunnerToolsetName, buildRunnerClass }[]
-        self.__registeredBuildRunners: dict[str, type[BuildRunner]] = dict()
+        # { toolsetName, toolset }[]
+        self.__registeredToolsets: dict[str, Toolset] = dict()
         self.__initialized = True
 
-    def registerBuildRunner(self, iBuildRunnerClass: type[BuildRunner]) -> None:
-        """Call the function after definition of every concrete BuildRunner subclass."""
-        registeredBuildRunner = self.__registeredBuildRunners.get(iBuildRunnerClass.toolsetName())
-        if registeredBuildRunner is not None:
-            if registeredBuildRunner == iBuildRunnerClass:
+    def registerToolset(self, iToolset: Toolset) -> None:
+        """Call the function after definition of every concrete Toolset."""
+        registeredToolset = self.__registeredToolsets.get(iToolset.name)
+        if registeredToolset is not None:
+            if registeredToolset == iToolset:
                 return
             else:
-                raise KeyError(f"Another BuildRunner subclass with the toolset name \"{iBuildRunnerClass.toolsetName()}\" is already registered.")
-        self.__registeredBuildRunners[iBuildRunnerClass.toolsetName()] = iBuildRunnerClass
+                raise KeyError(f"Another Toolset with the name \"{iToolset.name}\" is already registered.")
+        self.__registeredToolsets[iToolset.name] = iToolset
 
-    def registeredBuildRunners(self) -> dict[str, type[BuildRunner]]:
-        return self.__registeredBuildRunners
+    def registeredToolsets(self) -> dict[str, Toolset]:
+        return self.__registeredToolsets
 
     def supportedOSes(self) -> set[BuildPlatform.OS]:
-        """Returns supported OSes of all registered concrete BuildRunner subclasses."""
+        """Returns supported OSes of all registered toolsets."""
         oses: set[BuildPlatform.OS] = set()
-        for runner in self.__registeredBuildRunners.values():
-            oses.update(runner.supportedOSes())
+        for toolset in self.__registeredToolsets.values():
+            oses.update(toolset.supportedOSes)
         return oses
 
-    def availableBuildRunners(self) -> dict[str, type[BuildRunner]]:
-        """Returns { buildRunnerToolsetName, buildRunnerClass }[], with BuildRunner subclasses, which support the OS the script is run on."""
-        predicate: Callable[[type[BuildRunner]], bool] = lambda iBuildRunnerClass: BuildPlatform().hostOS() in iBuildRunnerClass.supportedOSes()
-        availableRunners: dict[str, type[BuildRunner]] = {k: v for k, v in self.__registeredBuildRunners.items() if predicate(v)}
-        return availableRunners
+    def availableToolsets(self) -> dict[str, Toolset]:
+        """Returns { toolsetName, toolset }[], with toolsets, which support the OS the script is run on."""
+        predicate: Callable[[Toolset], bool] = lambda iToolset: BuildPlatform().hostOS() in iToolset.supportedOSes
+        availableToolsets: dict[str, Toolset] = {k: v for k, v in self.__registeredToolsets.items() if predicate(v)}
+        return availableToolsets
+
+    def createBuildRunner(self, iToolsetName: str, iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
+        toolset = self.availableToolsets()[iToolsetName]
+        if toolset.multiConfig:
+            return MultiConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
+        return SingleConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
 
 
 # Import all concrete BuildRunners. The import is requried.
