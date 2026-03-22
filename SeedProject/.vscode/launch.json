@@ -2,14 +2,20 @@
     "version": "0.2.0",
     "inputs": [
         {
-            "id": "buildType",
+            "id": "iBuildType",
             "type": "pickString",
             "description": "Select build type for launch.json",
             "options": [
                 "Debug",
                 "RelWithDebInfo"
             ],
-            "default": "Debug",
+            "default": "Debug"
+        },
+        {
+            "id": "iTarget",
+            "type": "promptString",
+            "description": "Type target for `launch.json`",
+            "default": "Dish_ContactHolder0_GUI"
         }
     ],
     "configurations": [
@@ -17,9 +23,9 @@
             "name": "Linux GCC. GDB Launch",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}",
-            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}/bin/Dish_ContactHolder1_GUI",
-            "envFile": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:buildType}/bin/.env.vscode",
+            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}",
+            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}/bin/${input:iTarget}",
+            "envFile": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}/bin/.env.vscode",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
@@ -42,9 +48,9 @@
             "name": "Windows MinGW. GDB Launch",
             "type": "cppdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/build/MinGW/${input:buildType}",
-            "program": "${workspaceFolder}/build/MinGW/${input:buildType}/bin/Dish_ContactHolder1_GUI.exe",
-            "envFile": "${workspaceFolder}/build/MinGW/${input:buildType}/bin/.env.vscode",
+            "cwd": "${workspaceFolder}/build/MinGW/${input:iBuildType}",
+            "program": "${workspaceFolder}/build/MinGW/${input:iBuildType}/bin/${input:iTarget}",
+            "envFile": "${workspaceFolder}/build/MinGW/${input:iBuildType}/bin/.env.vscode",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
@@ -67,9 +73,9 @@
             "name": "Windows MSVC. VSDBG Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/build/VS2022_MSVC/bin/${input:buildType}",
-            "program": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:buildType}/Dish_ContactHolder1_GUI.exe",
-            "envFile": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:buildType}/.env.vscode",
+            "cwd":     "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}",
+            "program": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}/${input:iTarget}",
+            "envFile": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}/.env.vscode",
             "stopAtEntry": false,
             "console": "internalConsole"
         }

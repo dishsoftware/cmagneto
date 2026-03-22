@@ -261,7 +261,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
-    to configure `run` scripts (see section [`1.3. Run Project`](#13-run-project)).
+    to configure `run` scripts (see section [`1.4. Run Project`](#14-run-project)).
 
 7) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
@@ -292,7 +292,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 10) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
-    - `set_env` and `run` scripts (see section [`1.3. Run Project`](#13-run-project));
+    - `set_env` and `run` scripts (see section [`1.4. Run Project`](#14-run-project));
     - Auxilliary files, required by the coupled Python code and VS Code.
     - Unit and integration test compilation and `run_tests` scripts;
     - CPack package configuration files, auxilliary targets, reports, helper scripts, etc.;
