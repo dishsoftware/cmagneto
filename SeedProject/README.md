@@ -70,7 +70,7 @@ To see available options, run:
 ```bash
 python ./build.py --help
 ```
-For details look into [`1.3. Build Project` section the CMagneto framework doc](./CMagneto/README.md#1-3--build-project).
+For details look into [`1.3. Build Project` section the CMagneto framework doc](./CMagneto/README.md#13-build-project).
 
 
 ## 2. Run
