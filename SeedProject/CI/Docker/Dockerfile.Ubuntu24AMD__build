@@ -8,7 +8,7 @@ LABEL version="1.0.0"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies and dev tools.
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     git \
     python3 \
     python-is-python3 \
@@ -21,6 +21,6 @@ RUN apt update && apt install -y \
     libboost-all-dev \
     dpkg-dev \
     tree \
-    && apt clean
+    && apt-get clean
 
 WORKDIR /project

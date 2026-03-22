@@ -22,9 +22,6 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 ## Set up CMagneto CMake module logging.
 include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 
-## Define functions to load project metadata.
-include("${CMAKE_CURRENT_LIST_DIR}/CodeCoverage.cmake")
-
 ## Set up instrumentation to generate metadata files for code coverage tools.
 include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader.cmake")
 
@@ -43,6 +40,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
 
 ## Define constants and functions for handling scripts.
 include("${CMAKE_CURRENT_LIST_DIR}/Platform.cmake")
+
+## Define functions to load project metadata.
+include("${CMAKE_CURRENT_LIST_DIR}/CodeCoverage.cmake")
 
 ## Define general-purpose functions generation and installation of arbitrary files.
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpFile.cmake")

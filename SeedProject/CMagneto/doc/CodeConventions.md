@@ -51,6 +51,7 @@ but consumers may relocate it as needed.
     # {metadataFileName, fileContent}[] or `Pairs of metadata filenames and contents of the files`.
     self.__metadataBuffer: dict[Path, Any] = dict()
     ```
+- If an executable (binary, script, etc.) accepts command-line arguments, it must support the `--help` option to display usage information.
 - Consider writing documentation as an integral part of software design, code review, and refactoring.
 
 

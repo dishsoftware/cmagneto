@@ -12,7 +12,7 @@ ARG CMAKE_VERSION=3.30.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies and dev tools.
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     git \
     python3 \
     python-is-python3 \
@@ -25,13 +25,13 @@ RUN apt update && apt install -y \
     dpkg-dev \
     wget \
     tree \
-    && apt clean
+    && apt-get clean
 
 # Download and install newer CMake.
 ## Download tools, required for installation of newer CMake.
-RUN apt install -y \
+RUN apt-get install -y \
     wget \
-    && apt clean
+    && apt-get clean
 
 ## Download CMake from e.g. https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.tar.gz,
 ## and unpack into a proper location.

@@ -4,7 +4,7 @@ FROM python:3-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies and dev tools.
-RUN apt update && apt install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         python-is-python3 \
         git \
         git-lfs \
@@ -12,6 +12,6 @@ RUN apt update && apt install -y --no-install-recommends \
         ca-certificates \
         tree \
     && git lfs install --system \
-    && apt clean
+    && apt-get clean
 
 WORKDIR /project

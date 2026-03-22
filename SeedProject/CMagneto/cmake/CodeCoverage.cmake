@@ -32,8 +32,27 @@ if(ENABLE_COVERAGE)
         # -O0: Prevents optimizations, ensures accurate mapping between code and coverage;
         # -g: Includes debug info (for line numbers in reports);
         # Adding these to both compile and link stages is necessary for complete functionality.
-        add_compile_options(-fprofile-arcs -ftest-coverage -O0 -g)
-        add_link_options(-fprofile-arcs -ftest-coverage)
+        CMagneto__is_multiconfig(_isGeneratorMulticonfig)
+        if(_isGeneratorMulticonfig)
+            add_compile_options(
+                $<$<CONFIG:Debug>:-fprofile-arcs>
+                $<$<CONFIG:Debug>:-ftest-coverage>
+                $<$<CONFIG:Debug>:-O0>
+                $<$<CONFIG:Debug>:-g>
+            )
+
+            add_link_options(
+                $<$<CONFIG:Debug>:-fprofile-arcs>
+                $<$<CONFIG:Debug>:-ftest-coverage>
+            )
+        else()
+            if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+                add_compile_options(-fprofile-arcs -ftest-coverage -O0 -g)
+                add_link_options(-fprofile-arcs -ftest-coverage)
+            else()
+                CMagnetoInternal__message(WARNING "Code coverage makes sense only with Debug buid type. Ignored.")
+            endif()
+        endif()
     else()
         CMagnetoInternal__message(WARNING "Code coverage is only supported with GCC/Clang. Ignored.")
     endif()
