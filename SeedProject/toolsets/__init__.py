@@ -2,7 +2,7 @@ import importlib
 import pathlib
 
 
-# Import all .py files in this dir (concrete) recursively.
+# Import all .py files in this dir (toolsets) recursively.
 packagePath = pathlib.Path(__file__).parent # This package path.
 for path in packagePath.rglob("*.py"): # Recursive search.
     if path.name == "__init__.py": # Don't import itself.

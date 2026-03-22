@@ -17,6 +17,7 @@ The location relative to the project root must be preserved.
 from __future__ import annotations
 from .build_platform import BuildPlatform
 from abc import ABC, abstractmethod
+from CMagneto.py.cmake.toolset import Toolset
 from CMagneto.py.utils.const_meta_class import ConstMetaClass
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
@@ -89,35 +90,15 @@ class BuildRunner(ABC):
     CMagneto__COVERAGE_REPORT_PERCENTAGE__FILE_NAME_SUFFIX = "_percentage.txt"
     ##################################################################################################
 
-    @staticmethod
-    @abstractmethod
-    def toolsetName() -> str:
-        """Toolset name should be composed as {BuildSystemName}_{CompilerName}.\n
-           Toolset names are used to register concrete BuildRunner subclasses in BuildRunnerHolder and must be unique."""
-
-    @staticmethod
-    @abstractmethod
-    def supportedOSes() -> set[BuildPlatform.OS]:
-        """Returns OS set, the BuildRunner subclass supports."""
-
-    @staticmethod
-    @abstractmethod
-    def create(iBuildTypes: set[BuildRunner.BuildType], iEnableCodeCoverage: bool = False) -> BuildRunner:
-        """Creates an instance of the BuildRunner subclass."""
-
     def __init__(self,
-            iGeneratorName: str,
-            iMultiConfig: bool,
-            iCPPCompilerName: str | None,
+            iToolset: Toolset,
             iBuildTypes: set[BuildType],
             iEnableCodeCoverage: bool = False
         ):
-        assert GoodPath.isNameGood(type(self).toolsetName())
-        assert not iGeneratorName.isspace()
+        assert GoodPath.isNameGood(iToolset.name)
+        assert not iToolset.generatorName.isspace()
 
-        self.__generatorName = iGeneratorName
-        self.__multiConfig = iMultiConfig
-        self.__cppCompilerName = iCPPCompilerName
+        self.__toolset = iToolset
         self.__buildTypes = iBuildTypes
 
         if iEnableCodeCoverage:
@@ -131,17 +112,17 @@ class BuildRunner(ABC):
 
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         os.chdir(GoodPath.projectRoot())
-        self.__buildDir    = GoodPath.projectRoot() / "build" / type(self).toolsetName()
-        self.__installDir  = GoodPath.projectRoot() / "install" / type(self).toolsetName()
+        self.__buildDir    = GoodPath.projectRoot() / "build" / self.toolsetName()
+        self.__installDir  = GoodPath.projectRoot() / "install" / self.toolsetName()
 
     def __str__(self) -> str:
         text = \
-        f"Toolset name: \"{type(self).toolsetName()}\"\n" + \
-        f"Generator: \"{self.__generatorName}\"\n" + \
-        f"Generator is multi-config: {self.__multiConfig}\n"
+        f"Toolset name: \"{self.toolsetName()}\"\n" + \
+        f"Generator: \"{self.generatorName()}\"\n" + \
+        f"Generator is multi-config: {self.multiConfig()}\n"
 
-        if self.__cppCompilerName is not None:
-            text += f"C++ compiler: \"{self.__cppCompilerName}\"\n"
+        if self.cppCompilerName() is not None:
+            text += f"C++ compiler: \"{self.cppCompilerName()}\"\n"
         else:
             text += f"C++ compiler: default\n"
 
@@ -160,14 +141,20 @@ class BuildRunner(ABC):
         f"Install directory: \"{self.__installDir}\"\n"
         return text
 
+    def toolset(self) -> Toolset:
+        return self.__toolset
+
+    def toolsetName(self) -> str:
+        return self.toolset().name
+
     def generatorName(self) -> str:
-        return self.__generatorName
+        return self.toolset().generatorName
 
     def cppCompilerName(self) -> str | None:
-        return self.__cppCompilerName
+        return self.toolset().cppCompilerName
 
     def multiConfig(self) -> bool:
-        return self.__multiConfig
+        return self.toolset().multiConfig
 
     def buildTypes(self) -> set[BuildType]:
         return self.__buildTypes
@@ -349,6 +336,9 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 ["lcov", "--summary", str(tracefilePath), "--ignore-errors", "empty"],
                 iCaptureOutput=True, iCheck=False
             )
+
+            assert lcovSummaryOutput is not None
+
             summaryFilePath = iSummaryDir / (iTracefileNameWE + BuildRunner.CMagneto__COVERAGE_REPORT_SUMMARY__FILE_NAME_SUFFIX)
             with open(summaryFilePath, "w", encoding="utf-8") as summaryFile:
                 summaryFile.write(lcovSummaryOutput.stdout)
@@ -444,7 +434,8 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
-        pass
+        for dependencyPath in self.toolset().dependencyPaths:
+            BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH(dependencyPath.envVarName, dependencyPath.cmakePathPostfix)
 
     @staticmethod
     def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
