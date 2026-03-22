@@ -349,6 +349,9 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 ["lcov", "--summary", str(tracefilePath), "--ignore-errors", "empty"],
                 iCaptureOutput=True, iCheck=False
             )
+
+            assert lcovSummaryOutput is not None
+
             summaryFilePath = iSummaryDir / (iTracefileNameWE + BuildRunner.CMagneto__COVERAGE_REPORT_SUMMARY__FILE_NAME_SUFFIX)
             with open(summaryFilePath, "w", encoding="utf-8") as summaryFile:
                 summaryFile.write(lcovSummaryOutput.stdout)
