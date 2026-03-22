@@ -32,6 +32,7 @@ The framework is shipped with the following major components:
     * The [`CMagneto CMake modules`](./cmake/) contain functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
     * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
 - Template configuration files in [`./meta/`](./../meta/);
+- Build toolset definitions and accompanying instructions in [`./toolsets/`](./../toolsets/);
 - One-command build script [`./build.py`](./../build.py);
 - Pre-configured CTest files in [`./tests/`](./../tests/);
 - Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../packaging/@resources/);
@@ -118,6 +119,12 @@ SeedProject/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
+├── toolsets/                        # Build toolset descriptors and accompanying instructions.
+│   ├── linux/
+|   |   ├── UnixMakefiles_GCC.py
+|   |   ├── UnixMakefiles_GCC.md
+|   |   └── ...
+│   └── ...
 ├── src/                             # Project source root.
 │   └── {CompanyName_SHORT}/         # The nesting is mandated.
 │       └── {ProjectNameBase}/       # The nesting is mandated.
@@ -189,9 +196,11 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
     and installation package resources in [`./packaging/@resources/`](./../packaging/@resources/).
 
-3) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
+4) Define build toolsets in [`./toolsets/`](./../toolsets/).
 
-4) Proceed to writing code of the project. Adhere to the [project structure](#project-structure).<br>
+5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
+
+6) Proceed to writing code of the project. Adhere to the [project structure](#project-structure).<br>
 
 
 ### 1.2. Use The CMagneto CMake Module.
@@ -289,93 +298,45 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     - CPack package configuration files, auxilliary targets, reports, helper scripts, etc.;
 
 
-### 1.2. Build Project
+### 1.3. Build Project
 Use [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) or its proxy [`./build.py`](./../build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the project and generate installation packages.<br>
 To see available options, run:
 ```bash
 python ./build.py --help
 ```
-The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple toolsets (pairs of a build system and a compiler). The toolsets were tested on the following platforms:
-- [Ubuntu 24 with Make and GCC](#121-ubuntu-24-with-make-and-gcc);
-- [Windows 11 with Make and MinGW UCRT](#122-windows-11-with-make-and-mingw-ucrt);
-- [Windows 11 with MSVS2022 and MSVC](#123-windows-11-with-msvs-2022-and-msvc).
+The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple toolsets.<br>
+A toolset is a bundle of a build system, a compiler, paths of dependencies, etc.<br>
+Toolsets are defined under [`./toolsets/`](./toolsets/) and loaded by the framework at build time.<br>
+All bundled toolsets are accompanied with identically named Markdown instructions describing how to install dependencies, set up VS Code, and more.
 
 
-#### 1.2.1. Ubuntu 24 With Make And GCC
-Use the `UnixMakefiles_GCC` toolset.
-##### 1.2.1.1. Installation Of Dependecies
-To install most of build tools and dependencies (all, but Qt Installer Framework), run:
-```bash
-sudo apt update && sudo apt install -y \
-  dpkg-dev \
-  qt6-base-dev \
-  qt6-tools-dev \
-  lcov
-```
-##### 1.2.1.2. VS Code
-Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
-
-
-#### 1.2.2. Windows 11 With Make And MinGW UCRT
-Use the `MinGW` toolset.
-##### 1.2.2.1. Installation Of Dependecies
-MSYS2 is expected to be installed in `C:/msys64`.<br>
-To install the required dependencies, run:
-```bash
-pacman -S mingw-w64-ucrt-x86_64-qt6
-```
-##### 1.2.2.2. VS Code
-Define the environment variable `MSYS2_HOME=C:\msys64`.<br>
-Use the `Windows_MinGW_UCRT` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
-
-
-#### 1.2.3. Windows 11 With MSVS 2022 and MSVC
-Use the `VS2022_MSVC` toolset.
-##### 1.2.3.1. Installation Of Dependecies
-Tested with:
-- Qt 6.8.2. The easiest way to get it - run QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source and install "Qt/Qt 6.8.2/MSVC 2022 64-bit" component.
-
-Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
-##### 1.2.3.2. VS Code
-Define the environment variable `VC2022ToolsInstallDir`.<br>
-E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.<br>
-Use the `Windows_MSVC2022` configuration in the `C/C++ Configuration` settings.<br>
-[`./.vscode/launch.json`](./../.vscode/launch.json) contains a hardcoded path to a project entrypoint-executable. Adjust it.
-
-
-### 1.3. Run Project
-For builds made on:
-- [Ubuntu 24 with Make and GCC](#121-ubuntu-24-with-make-and-gcc);
-- [Windows 11 with Make and MinGW UCRT](#122-windows-11-with-make-and-mingw-ucrt);
-
-compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
-For other configurations (e.g., [Windows 11 with MSVS2022 and MSVC](#123-windows-11-with-msvs-2022-and-msvc)), it may be required to set paths to shared libraries of the dependecies before running.<br>
+### 1.4. Run Project
+For some builds, compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
+In general case, it may be required to set paths to shared libraries of the dependecies before running.<br>
 
 CMagneto CMake function `CMagneto__set_up__project()` creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
 - `set_env` script sets environment variables for runtime, including paths to directories with 3rd-party shared libs;
 - `run` script executes a `set_env` script and the runs the project entrypoint-executable.
 
 
-### 1.4. Engage Continuous Integration (CI)
+### 1.5. Engage Continuous Integration (CI)
 Adjust values in [`./meta/CI.json`](./../meta/CI.json) before any actions with [Docker images](./../CI/Docker/) and [CI workflow (pipeline triggering rules)](./../CI/GitLab/workflow.yml) and [pipeline](./../CI/GitLab/pipeline.yml).
 
-#### 1.4.1. Build Docker Images
+#### 1.5.1. Build Docker Images
 Use [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) or its proxy [`./CI/Docker/build_image.py`](./../CI/Docker/build_image.py) to build [Docker images](./../CI/Docker/):
 ```bash
 python ./build_image.py --help
 ```
 [`./CI/Docker/`](./../CI/Docker/) contains Dockerfiles. They must be fed to [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) every time they are changed before triggering CI pipeline.
 
-#### 1.4.2. GitLab
+#### 1.5.2. GitLab
 Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml)\".
 
-##### 1.4.2.1. CI Triggers
+##### 1.5.2.1. CI Triggers
 The [`./CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml) instructs GitLab to trigger (create) a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
 To trigger a pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
 
-##### 1.4.2.2. CI Artifact Output
+##### 1.5.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
 `https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
 

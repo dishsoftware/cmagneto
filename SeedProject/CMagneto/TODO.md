@@ -61,7 +61,6 @@
 * Add a description how to work with and `TODO.md` and sync it with tasl managers.
 * Sync test project, while preserving CMagneto repo graph topology.
 * Add memory leaks checks.
-* Refactor BuildRunner to receive a Toolset class instance.
 * In CI: change artifacts ouput path from `*/Branch_or_Tag/*` to `*/CommitSHA_or_TAG/*`.
 * Why in `GUI` target is missing in the test coverage report?
 * Make options to compile as shared, measure code coverage and check memory leaks per target, e.g. `--coverage TargetA TargetB`, `--coverage ALL` or `--coverage ALL_EXCEPT TargetA`...

@@ -70,54 +70,7 @@ To see available options, run:
 ```bash
 python ./build.py --help
 ```
-The [`./build.py`](./build.py) supports multiple toolsets (pairs of a build system and a compiler). The toolsets were tested on the following platforms:
-- [Ubuntu 24 with Make and GCC](#131-ubuntu-24-with-make-and-gcc) (Make and GCC);
-- [Windows 11 with Make and MinGW UCRT](#132-windows-11-with-make-and-mingw-ucrt) (Make and MinGW UCRT);
-- [Windows 11 with MSVS2022 and MSVC](#133-windows-11-with-msvs2022-and-msvc) (MSVS2022 and MSVC).
-
-
-#### 1.3.1. Ubuntu 24 With Make And GCC
-Use the `UnixMakefiles_GCC` toolset.
-##### 1.3.1.1. Installation Of Dependecies
-To install most of build tools and dependencies (all, but Qt Installer Framework), run:
-```bash
-sudo apt update && sudo apt install -y \
-  dpkg-dev \
-  qt6-base-dev \
-  qt6-tools-dev \
-  libboost-all-dev \
-  lcov
-```
-##### 1.3.1.2. VS Code
-Use the `Linux` configuration in the `C/C++ Configuration` settings.
-
-
-#### 1.3.2. Windows 11 With Make And MinGW UCRT
-Use the `MinGW` toolset.
-##### 1.3.2.1. Installation Of Dependecies
-MSYS2 is expected to be installed in `C:/msys64`.<br>
-To install the required dependencies, run:
-```bash
-pacman -S mingw-w64-ucrt-x86_64-qt6 mingw-w64-ucrt-x86_64-boost-libs
-```
-##### 1.3.2.2. VS Code
-Define the environment variable `MSYS2_HOME=C:\msys64`.<br>
-Use the `Windows_MinGW_UCRT` configuration in the `C/C++ Configuration` settings.
-
-
-#### 1.3.3. Windows 11 With MSVS2022 And MSVC
-Use the `VS2022_MSVC` toolset.
-##### 1.3.3.1. Installation Of Dependecies
-Tested with:
-- Qt 6.8.2. The easiest way to get it - run QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source and install "Qt/Qt 6.8.2/MSVC 2022 64-bit" component.
-- Boost 1.87.0. The easiest way to get it - install from [Prebuilt windows binaries](https://sourceforge.net/projects/boost/files/boost-binaries/) at https://www.boost.org/users/download/.
-
-Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
-Define the environment variable `BOOST_MSVC2022_DIR`, which refers to a directory with compatible Boost files. E.g. `BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3`.
-##### 1.3.3.2. VS Code
-Define the environment variable `VC2022ToolsInstallDir`.<br>
-E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433`.<br>
-Use the `Windows_MSVC2022` configuration in the `C/C++ Configuration` settings.
+For details look into [`1.3. Build Project` section the CMagneto framework doc](./CMagneto/README.md#1-3--build-project).
 
 
 ## 2. Run
