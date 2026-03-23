@@ -66,3 +66,4 @@
 * Make options to compile as shared, measure code coverage and check memory leaks per target, e.g. `--coverage TargetA TargetB`, `--coverage ALL` or `--coverage ALL_EXCEPT TargetA`...
 * Change `str += ...` to `"".join(strs)` in python code.
 * Add support of Android and WebAssembly.
+* Add build stage with all the stages, but in Docker containers locally.

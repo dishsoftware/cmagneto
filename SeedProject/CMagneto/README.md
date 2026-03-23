@@ -22,7 +22,8 @@ Keep this snippet in sync with the same snippets in
 - CMagneto framework root README.md;
 - project desciption on GitLab, GitHub, BitBucket etc.
 -->
-The CMagneto framework is designed to set up CMake C++ projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
+CMagneto is a framework for rapid initialization of C++ projects.
+It is designed to set up CMake-backed projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
 including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
 
 > **Note:** Paths in the doc are shown relative to the project root.
