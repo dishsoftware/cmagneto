@@ -42,7 +42,7 @@ Tests of the seed project and test projects are considered as stages system test
         default=False
     )
 
-    args, unknownArgs = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     pythonBinPathInsideVEnv = setUpPyVEnv(args.recreate_py_venv)
     runPyUnitAndIntegrationTestsInsideVEnv(pythonBinPathInsideVEnv)
