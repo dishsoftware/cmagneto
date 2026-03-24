@@ -103,34 +103,36 @@ The CMagneto framework needs on the following software to build your project:
 The framework mandates or endorses restrictions on locations of project files.
 ```text
 SeedProject/
-├── build.py                         # One-command project build script.
-├── CMakeLists.txt                   # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
-├── CMagneto/                        # CMagneto framework core files.
+├── build.py                               # One-command project build script.
+├── CMakeLists.txt                         # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
+├── CMagneto/                              # CMagneto framework core files.
 |   ├── LICENSE
-|   ├── README.md                    # This file.
-|   ├── TODO.md                      # Limitations and known issues.
-|   ├── cmake/                       # CMagneto CMake modules root.
-|   |   ├── Main.cmake               # CMagneto CMake entrypoint-module.
-|   |   ├── MetaLoader.cmake         # The module must be loaded prior to Main.cmake.
-|   |   ├── Packager.cmake           # Loaded separately.
+|   ├── README.md                          # This file.
+|   ├── TODO.md                            # Limitations and known issues.
+|   ├── cmake/                             # CMagneto CMake modules root.
+|   |   ├── Main.cmake                     # CMagneto CMake entrypoint-module.
+|   |   ├── MetaLoader.cmake               # The module must be loaded prior to Main.cmake.
+|   |   ├── Packager.cmake                 # Loaded separately.
 |   |   └── ...
-|   ├── doc/                         # Other documentation.
-|   └── py/                          # Coupled Python code.
+|   ├── doc/                               # Other documentation.
+|   └── py/                                # Coupled Python code.
 ├── meta/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
-├── toolsets/                        # Build toolset descriptors and accompanying instructions.
+├── toolsets/                              # Build toolset descriptors and accompanying instructions.
 │   ├── linux/
 |   |   ├── UnixMakefiles_GCC.py
 |   |   ├── UnixMakefiles_GCC.md
 |   |   └── ...
 │   └── ...
-├── src/                             # Project source root.
-│   └── {CompanyName_SHORT}/         # The nesting is mandated.
-│       └── {ProjectNameBase}/       # The nesting is mandated.
-│           └── TargetName/          # Target source root. Code of the target can be nested arbitrary under this dir.
-|               ├── CMakeLists.txt   # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
+├── src/                                   # Project source root.
+│   └── {CompanyName_SHORT}/               # The nesting is mandated.
+│       └── {ProjectNameBase}/             # The nesting is mandated.
+│           └── TargetName/                # Target source root. Code of the target can be nested arbitrary under this dir.
+|               ├── CMakeLists.txt         # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
+│               ├── TargetName_EXPORT.hpp  # Generated automatically if absent for library targets. Defines export/import macro for shared libraries. Added to the target implicitly.
+│               ├── TargetName_DEFS.hpp    # Generated automatically if absent. Defines target-specific helper macros such as ASSERT/VERIFY. Added to the target implicitly.
 |               ├── Header.hpp
 |               ├── Source.cpp
 |               ├── Code/
@@ -140,30 +142,30 @@ SeedProject/
 |               |   |   └── ...
 │               |   └── ...
 |               ├── ...
-|               └── @resources/      # Target resources root.
-|                   ├── QtRC/        # Resources to embed into target's binary using Qt RCC. Under this dir, the resources can be nested arbitrary.
-|                   ├── QtTS/        # Qt `*.ts` files to compile `*.qm` external resource files. Under this dir, `*.ts` files can be nested arbitrary.
-|                   └── other/       # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
-├── tests/                           # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
-|   ├── CMakeLists.txt               # GoogleTest is set up here. No need to change the file.
-│   ├── {CompanyName_SHORT}/         # The nesting is mandated.
-│   |   └── {ProjectNameBase}/       # The nesting is mandated.
-│   |       ├── TargetName/          # Test target source root.
-|   |       |   ├── CMakeLists.txt   # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
-|   |       |   |                    # ^ The naming of test targets is not mandated, but endorsed.
-|   |       |   ├── TEST_Header.hpp  # The naming is not mandated, but endorsed.
-|   |       |   ├── TEST_Source.cpp  # The naming is not mandated, but endorsed.
+|               └── @resources/            # Target resources root.
+|                   ├── QtRC/              # Resources to embed into target's binary using Qt RCC. Under this dir, the resources can be nested arbitrary.
+|                   ├── QtTS/              # Qt `*.ts` files to compile `*.qm` external resource files. Under this dir, `*.ts` files can be nested arbitrary.
+|                   └── other/             # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
+├── tests/                                 # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
+|   ├── CMakeLists.txt                     # GoogleTest is set up here. No need to change the file.
+│   ├── {CompanyName_SHORT}/               # The nesting is mandated.
+│   |   └── {ProjectNameBase}/             # The nesting is mandated.
+│   |       ├── TargetName/                # Test target source root.
+|   |       |   ├── CMakeLists.txt         # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+|   |       |   |                          # ^ The naming of test targets is not mandated, but endorsed.
+|   |       |   ├── TEST_Header.hpp        # The naming is not mandated, but endorsed.
+|   |       |   ├── TEST_Source.cpp        # The naming is not mandated, but endorsed.
 │   |       |   └── ...
 │   |       └── ...
-│   └── ...                          # Tests for external projects can be placed here.
+│   └── ...                                # Tests for external projects can be placed here.
 ├── packaging/
 │   ├── CPackConfig.cmake
-│   └── @resources/                  # Package resources root. Under this dir, the resources can be nested arbitrary.
+│   └── @resources/                        # Package resources root. Under this dir, the resources can be nested arbitrary.
 ├── CI/
-│   ├── Docker/                      # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
-|   |   ├── build_image.py           # One-command Docker image build script.
+│   ├── Docker/                            # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
+|   |   ├── build_image.py                 # One-command Docker image build script.
 │   |   └── ...
-│   └── GitLab/                      # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
+│   └── GitLab/                            # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
 └── ...
 ```
 > **Note:** Targets can be nested arbitrary, i.e. a target's subdir can contain a target root of another target.
