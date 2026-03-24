@@ -54,9 +54,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget_Internals.cmake")
 ]]
 function(CMagneto__set_up__executable iExeTargetName)
     CMagnetoInternal__check_target_name_validity(${iExeTargetName})
-    add_executable(${PROJECT_NAME}::${iExeTargetName} ALIAS ${iExeTargetName})
+    CMagnetoInternal__compose_namespaced_target_name("${iExeTargetName}" _namespacedTargetName)
+    add_executable(${_namespacedTargetName} ALIAS ${iExeTargetName})
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
+
+    CMagnetoInternal__set_up_defs_header("${iExeTargetName}" FALSE _defsHeaderRelPath)
+    list(FIND ARG_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+    if(_defsHeaderIndex EQUAL -1)
+        list(APPEND ARG_HEADERS "${_defsHeaderRelPath}")
+    endif()
 
     set(_baseDirDescription "executable target \"${iExeTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
@@ -75,7 +82,7 @@ function(CMagneto__set_up__executable iExeTargetName)
     CMagneto__compose_binary_OUTPUT_NAME(${iExeTargetName} _binaryOutputName)
     set_target_properties(${iExeTargetName}
         PROPERTIES
-            EXPORT_NAME ${iExeTargetName}
+            EXPORT_NAME ${_namespacedTargetName}
             OUTPUT_NAME ${_binaryOutputName}
     )
 

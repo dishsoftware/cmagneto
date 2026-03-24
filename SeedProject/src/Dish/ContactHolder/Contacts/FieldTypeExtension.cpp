@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-void initMyResource() { Q_INIT_RESOURCE(Contacts__QtRC); }
+void initMyResource() { Q_INIT_RESOURCE(Dish_ContactHolder_Contacts__QtRC); }
 
 
 namespace Dish::ContactHolder::Contacts::FieldType {

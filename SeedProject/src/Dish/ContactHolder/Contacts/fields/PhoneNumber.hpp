@@ -8,7 +8,7 @@
 
 
 namespace Dish::ContactHolder::Contacts::fields {
-    class CONTACTS_EXPORT PhoneNumber : public Dish::ContactHolder::Contacts::Field {
+    class DISH_CONTACTHOLDER_CONTACTS_EXPORT PhoneNumber : public Dish::ContactHolder::Contacts::Field {
     // Fields.
     private:
         QString mLabel;

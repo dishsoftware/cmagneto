@@ -94,7 +94,8 @@ endfunction()
 ]]
 function(CMagneto__set_up__library iLibTargetName)
     CMagnetoInternal__check_target_name_validity(${iLibTargetName})
-    add_library(${PROJECT_NAME}::${iLibTargetName} ALIAS ${iLibTargetName})
+    CMagnetoInternal__compose_namespaced_target_name("${iLibTargetName}" _namespacedTargetName)
+    add_library(${_namespacedTargetName} ALIAS ${iLibTargetName})
 
     cmake_parse_arguments(ARG
         "" # Options (boolean flags).
@@ -102,6 +103,18 @@ function(CMagneto__set_up__library iLibTargetName)
         "PUBLIC_HEADERS;INTERFACE_HEADERS;PRIVATE_HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" # Multi-value keywords (lists).
         ${ARGN}
     )
+
+    CMagnetoInternal__set_up_export_header("${iLibTargetName}" _exportHeaderRelPath)
+    list(FIND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}" _exportHeaderIndex)
+    if(_exportHeaderIndex EQUAL -1)
+        list(APPEND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}")
+    endif()
+
+    CMagnetoInternal__set_up_defs_header("${iLibTargetName}" TRUE _defsHeaderRelPath)
+    list(FIND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+    if(_defsHeaderIndex EQUAL -1)
+        list(APPEND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}")
+    endif()
 
     set(_baseDirDescription "library target \"${iLibTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
@@ -157,7 +170,7 @@ function(CMagneto__set_up__library iLibTargetName)
     CMagneto__compose_binary_OUTPUT_NAME(${iLibTargetName} _binaryOutputName)
     set_target_properties(${iLibTargetName}
         PROPERTIES
-            EXPORT_NAME ${iLibTargetName}
+            EXPORT_NAME ${_namespacedTargetName}
             OUTPUT_NAME ${_binaryOutputName}
             # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
             # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.

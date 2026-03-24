@@ -10,7 +10,7 @@
 
 
 namespace Dish::ContactHolder::Contacts {
-    class CONTACTS_EXPORT Field {
+    class DISH_CONTACTHOLDER_CONTACTS_EXPORT Field {
     // Methods.
     protected:
         Field() noexcept = default;

@@ -6,7 +6,7 @@
 
 
 namespace Dish::ContactHolder::Contacts::FieldType {
-    enum class CONTACTS_EXPORT Enum : std::uint8_t {
+    enum class DISH_CONTACTHOLDER_CONTACTS_EXPORT Enum : std::uint8_t {
         kString, // Generic string without restrictions.
         kPhoneNumber,
         kEMailAddress,

@@ -48,8 +48,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/TestTools.cmake")
 ]]
 function(CMagnetoInternal__set_up__CMake_package_export)
     # Export all targets to a single export set.
+    # The exported target names are fully qualified already via each target's EXPORT_NAME.
     install(EXPORT ${PROJECT_NAME}Targets
-        NAMESPACE ${PROJECT_NAME}::
         DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
         COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
     )
