@@ -10,11 +10,11 @@
 
 
 namespace Dish::ContactHolder::Contacts::FieldType {
-    CONTACTS_EXPORT const std::set<Enum>& allEnums();
-    CONTACTS_EXPORT const std::set<QString>& allStrings();
+    DISH_CONTACTHOLDER_CONTACTS_EXPORT const std::set<Enum>& allEnums();
+    DISH_CONTACTHOLDER_CONTACTS_EXPORT const std::set<QString>& allStrings();
 
-    CONTACTS_EXPORT const QString& toString(const Enum iEnum);
+    DISH_CONTACTHOLDER_CONTACTS_EXPORT const QString& toString(const Enum iEnum);
 
     /** \throws std::invalid_argument, if iStr is not in allStrings(). */
-    CONTACTS_EXPORT Enum toEnum(const QString& iStr);
+    DISH_CONTACTHOLDER_CONTACTS_EXPORT Enum toEnum(const QString& iStr);
 } // namespace Dish::ContactHolder::Contacts::FieldType

@@ -8,7 +8,7 @@
 
 
 namespace Dish::ContactHolder::Contacts {
-    class CONTACTS_EXPORT Contact {
+    class DISH_CONTACTHOLDER_CONTACTS_EXPORT Contact {
     private:
         // std::list<std::shared_ptr<fields::PhoneNumber>> mPhoneNumbers;
 

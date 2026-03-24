@@ -6,7 +6,7 @@
 
 
 namespace Dish::ContactHolder::Contacts::fields::PhoneNumberFormatter {
-    class PHONENUMBERFORMATTER_EXPORT Formatter {
+    class DISH_CONTACTHOLDER_CONTACTS_FIELDS_PHONENUMBERFORMATTER_EXPORT Formatter {
     private:
         Formatter() = delete;
 
