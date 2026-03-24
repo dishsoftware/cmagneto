@@ -23,6 +23,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/Logger.cmake")
 # Define constants.
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
+# Define general-purpose functions for path handling.
+include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
+
 
 # Appended every time CMagneto__set_up__library(iLibTargetName) or CMagneto__set_up__executable(iExeTargetName) is called.
 set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "")
@@ -31,11 +34,13 @@ set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "")
 #[[
     CMagnetoInternal__check_target_name_validity
 
-    Checks if a target name is valid and not already registered. Registered target names are compared case-insensitively.
+    Checks if a target name is valid, matches the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`,
+    and is not already registered. Registered target names are compared case-insensitively.
     Valid target names:
         * must start with a letter or underscore;
         * must contain only letters, digits, and underscores;
         * must not be made only of underscores.
+        * must equal the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`, with "/" replaced by "_".
 ]]
 function(CMagnetoInternal__check_target_name_validity iTargetName)
     # Reject names made only of underscores
@@ -47,6 +52,11 @@ function(CMagnetoInternal__check_target_name_validity iTargetName)
     string(REGEX MATCH "^[a-zA-Z_][a-zA-Z0-9_]*$" _isValid "${iTargetName}")
     if(NOT _isValid)
         CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid. It must start with a letter or underscore and contain only letters, digits, and underscores.")
+    endif()
+
+    CMagnetoInternal__compose_target_name("${CMAKE_CURRENT_SOURCE_DIR}" _expectedTargetName)
+    if(NOT iTargetName STREQUAL _expectedTargetName)
+        CMagnetoInternal__message(FATAL_ERROR "Target name \"${iTargetName}\" is invalid for target root \"${CMAKE_CURRENT_SOURCE_DIR}\". Expected target name: \"${_expectedTargetName}\".")
     endif()
 
     # Check if the target name is already registered.
@@ -62,6 +72,49 @@ function(CMagnetoInternal__check_target_name_validity iTargetName)
             endif()
         endif()
     endforeach()
+endfunction()
+
+
+#[[
+    CMagnetoInternal__compose_target_name
+
+    Composes a target name from the path of the target root under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`.
+    Every "/" in the relative path is replaced with "_".
+
+    Example:
+        `${CMAKE_SOURCE_DIR}/src/Dish/ContactHolder/Contacts/` -> `Dish_ContactHolder_Contacts`
+]]
+function(CMagnetoInternal__compose_target_name iAbsoluteTargetSourceRoot oTargetName)
+    cmake_path(SET _absoluteTargetSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/")
+    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/")
+
+    CMagneto__is_path_under_dir("${_absoluteTargetSourceRoot}" "${_projectSourceRoot}" _isTargetSourceRootUnderProjectSourceRoot)
+    if(NOT _isTargetSourceRootUnderProjectSourceRoot)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_name: target source root \"${_absoluteTargetSourceRoot}\" is not under the project source root \"${_projectSourceRoot}\".")
+    endif()
+
+    CMagneto__get_dir_relative_to_project_source_root("${_absoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
+    if("${_targetSourceRootRelativeToProjectSourceRoot}" STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_name: target source root \"${_absoluteTargetSourceRoot}\" must not equal the project source root.")
+    endif()
+
+    string(REGEX REPLACE "/$" "" _targetSourceRootRelativeToProjectSourceRoot "${_targetSourceRootRelativeToProjectSourceRoot}")
+    string(REPLACE "/" "_" _targetName "${_targetSourceRootRelativeToProjectSourceRoot}")
+    set(${oTargetName} "${_targetName}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__compose_namespaced_target_name
+
+    Composes a target alias from the target name by replacing every "_" with "::".
+
+    Example:
+        `Dish_ContactHolder_Contacts` -> `Dish::ContactHolder::Contacts`
+]]
+function(CMagnetoInternal__compose_namespaced_target_name iTargetName oNamespacedTargetName)
+    string(REPLACE "_" "::" _namespacedTargetName "${iTargetName}")
+    set(${oNamespacedTargetName} "${_namespacedTargetName}" PARENT_SCOPE)
 endfunction()
 
 

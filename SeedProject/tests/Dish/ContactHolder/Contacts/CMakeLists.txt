@@ -7,7 +7,7 @@ add_executable(${_TESTS_TargetName}
 target_link_libraries(${_TESTS_TargetName}
     PRIVATE
         GTest::gtest_main
-        Contacts
+        Dish::ContactHolder::Contacts
 )
 
 CMagneto__register_test_target(${_TESTS_TargetName})

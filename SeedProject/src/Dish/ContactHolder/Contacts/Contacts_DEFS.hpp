@@ -9,8 +9,8 @@
 #endif
 
 
-#if defined(LIB_CONTACTS_SHARED)
-    #if defined(CONTACTS_EXPORTS) || defined(Contacts_EXPORTS)
+#if defined(LIB_DISH_CONTACTHOLDER_CONTACTS_SHARED) || defined(LIB_CONTACTS_SHARED)
+    #if defined(DISH_CONTACTHOLDER_CONTACTS_EXPORTS) || defined(Dish_ContactHolder_Contacts_EXPORTS) || defined(CONTACTS_EXPORTS) || defined(Contacts_EXPORTS)
         #if defined(_WIN32)
             #if defined(__GNUC__)
                 #define CONTACTS_EXPORT __attribute__((visibility("default")))

@@ -15,7 +15,6 @@
 * Gather paths to include directories of 3rd-party shared libraries and generate "./vscode/c_cpp_properties.json" using a template file by substituting "includePath" properties with the gathered paths.
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
-* Endorse specifying ProjectName as a namespace while linking targets of the project to other targets of the project. Support it in "./CMagneto/" and "./build.py".
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
 * Use InstallRequiredSystemLibraries CMake module.
 * What if an external shared lib A depends on another shared lib B, A and B are in different dirs? CMagneto does not discover library B. It means, not all dependecies will end up ion distributed package. To gather all shared libs recursively, consider usage of "ldd or "lddtree" on binaries in "installed" dir. Or consider BundleUtilities and GetPrerequisites CMake modules.
@@ -26,7 +25,6 @@
 * Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
-* CMagneto__get_library_type must receive and define `--LIB_{CompanyName_SHORT}_{ProjectNameBase}_{LibTargetName}_SHARED`(`LibTargetName` must include the whole namespace) instead of `--LIB_{LibTargetName}_SHARED`. These variables must be cached to work with superbuilds.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
 * Target name validity check must be done by the same piece of code both in the one-command-build-script and in CMagneto CMake modules.
 * Packaging of Debug fails, if generator is multi-config.

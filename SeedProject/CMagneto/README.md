@@ -241,22 +241,29 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
 4) Add library targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
     ```cmake
-    CMagneto__get_library_type(TargetName _LIB_TYPE)
-    add_library(TargetName ${_LIB_TYPE}) # Don't add any files to the target in the command.
-    target_link_libraries(TargetName ...)
-    CMagneto__set_up__library(TargetName
+    # The real target name must equal the path under `./src/` with "/" replaced by "_".
+    # Example: `./src/Dish/ContactHolder/Contacts` -> Dish_ContactHolder_Contacts
+    CMagneto__get_library_type(Dish_ContactHolder_Contacts _LIB_TYPE)
+    add_library(Dish_ContactHolder_Contacts ${_LIB_TYPE}) # Don't add any files to the target in the command.
+    target_link_libraries(Dish_ContactHolder_Contacts
+        ...
+        # Aliases are derived from the real target name by replacing "_" with "::":
+        # Dish_ContactHolder_Contacts -> Dish::ContactHolder::Contacts
+    )
+    CMagneto__set_up__library(Dish_ContactHolder_Contacts
         ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
     )
     ```
 
 5) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
     ```cmake
-    add_executable(TargetName) # Don't add any files to the target in the command.
-    target_link_libraries(TargetName ...)
-    CMagneto__set_up__executable(TargetName
+    add_executable(Dish_ContactHolder_GUI) # Don't add any files to the target in the command.
+    target_link_libraries(Dish_ContactHolder_GUI ...)
+    CMagneto__set_up__executable(Dish_ContactHolder_GUI
         ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
     )
     ```
+    The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
 6) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
@@ -284,7 +291,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     target_link_libraries(${_TESTS_TargetName}
         PRIVATE
             GTest::gtest_main
-            TargetName
+            {CompanyName_SHORT}::{ProjectNameBase}::TargetName
     )
 
     CMagneto__register_test_target(${_TESTS_TargetName})

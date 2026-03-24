@@ -54,7 +54,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget_Internals.cmake")
 ]]
 function(CMagneto__set_up__executable iExeTargetName)
     CMagnetoInternal__check_target_name_validity(${iExeTargetName})
-    add_executable(${PROJECT_NAME}::${iExeTargetName} ALIAS ${iExeTargetName})
+    CMagnetoInternal__compose_namespaced_target_name("${iExeTargetName}" _namespacedTargetName)
+    add_executable(${_namespacedTargetName} ALIAS ${iExeTargetName})
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
@@ -75,7 +76,7 @@ function(CMagneto__set_up__executable iExeTargetName)
     CMagneto__compose_binary_OUTPUT_NAME(${iExeTargetName} _binaryOutputName)
     set_target_properties(${iExeTargetName}
         PROPERTIES
-            EXPORT_NAME ${iExeTargetName}
+            EXPORT_NAME ${_namespacedTargetName}
             OUTPUT_NAME ${_binaryOutputName}
     )
 

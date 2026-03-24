@@ -94,7 +94,8 @@ endfunction()
 ]]
 function(CMagneto__set_up__library iLibTargetName)
     CMagnetoInternal__check_target_name_validity(${iLibTargetName})
-    add_library(${PROJECT_NAME}::${iLibTargetName} ALIAS ${iLibTargetName})
+    CMagnetoInternal__compose_namespaced_target_name("${iLibTargetName}" _namespacedTargetName)
+    add_library(${_namespacedTargetName} ALIAS ${iLibTargetName})
 
     cmake_parse_arguments(ARG
         "" # Options (boolean flags).
@@ -157,7 +158,7 @@ function(CMagneto__set_up__library iLibTargetName)
     CMagneto__compose_binary_OUTPUT_NAME(${iLibTargetName} _binaryOutputName)
     set_target_properties(${iLibTargetName}
         PROPERTIES
-            EXPORT_NAME ${iLibTargetName}
+            EXPORT_NAME ${_namespacedTargetName}
             OUTPUT_NAME ${_binaryOutputName}
             # CMAKE_VISIBILITY_INLINES_HIDDEN ON  # TODO Parameterize it.
             # POSITION_INDEPENDENT_CODE ON  # TODO Parameterize it.

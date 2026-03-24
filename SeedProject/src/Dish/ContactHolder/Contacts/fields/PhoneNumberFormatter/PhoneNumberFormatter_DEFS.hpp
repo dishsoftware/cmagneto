@@ -9,8 +9,8 @@
 #endif
 
 
-#if defined(LIB_PHONENUMBERFORMATTER_SHARED)
-    #if defined(PHONENUMBERFORMATTER_EXPORTS) || defined(PhoneNumberFormatter_EXPORTS)
+#if defined(LIB_DISH_CONTACTHOLDER_CONTACTS_FIELDS_PHONENUMBERFORMATTER_SHARED) || defined(LIB_PHONENUMBERFORMATTER_SHARED)
+    #if defined(DISH_CONTACTHOLDER_CONTACTS_FIELDS_PHONENUMBERFORMATTER_EXPORTS) || defined(Dish_ContactHolder_Contacts_fields_PhoneNumberFormatter_EXPORTS) || defined(PHONENUMBERFORMATTER_EXPORTS) || defined(PhoneNumberFormatter_EXPORTS)
         #if defined(_WIN32)
             #if defined(__GNUC__)
                 #define PHONENUMBERFORMATTER_EXPORT __attribute__((visibility("default")))

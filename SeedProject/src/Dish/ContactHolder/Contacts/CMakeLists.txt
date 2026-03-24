@@ -92,22 +92,23 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 
 
 # Target
-CMagneto__get_library_type(Contacts _LIB_TYPE)
-add_library(Contacts ${_LIB_TYPE})
-## If _LIB_TYPE is SHARED, a preproceccor macro Contacts_EXPORTS or CONTACTS_EXPORTS is defined implicitly when the target is compiled.
-## No need to target_compile_definitions(Contacts PRIVATE Contacts_EXPORTS) explicitly.
+set(_TARGET_NAME Dish_ContactHolder_Contacts)
+CMagneto__get_library_type(${_TARGET_NAME} _LIB_TYPE)
+add_library(${_TARGET_NAME} ${_LIB_TYPE})
+## If _LIB_TYPE is SHARED, a preproceccor macro Dish_ContactHolder_Contacts_EXPORTS or DISH_CONTACTHOLDER_CONTACTS_EXPORTS is defined implicitly when the target is compiled.
+## No need to target_compile_definitions(${_TARGET_NAME} PRIVATE Dish_ContactHolder_Contacts_EXPORTS) explicitly.
 
-target_link_libraries(Contacts
+target_link_libraries(${_TARGET_NAME}
     PUBLIC
         Qt6::Core Qt6::Gui Boost::boost
     PRIVATE
-        PhoneNumberFormatter
+        Dish::ContactHolder::Contacts::fields::PhoneNumberFormatter
 )
 ####################################################################
 
 
 # Building and installation
-CMagneto__set_up__library(Contacts
+CMagneto__set_up__library(${_TARGET_NAME}
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS
@@ -122,7 +123,7 @@ CMagneto__set_up__library(Contacts
         ${_other_RESOURCES}
 )
 
-CMagneto__embed_QtRC_resources(Contacts QtRC
+CMagneto__embed_QtRC_resources(${_TARGET_NAME} QtRC
     PREFIX "/Dish/ContactHolder/Contacts/"
     BASE "@resources/QtRC"
     FILES
