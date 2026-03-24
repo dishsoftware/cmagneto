@@ -1,6 +1,10 @@
 Tested on Windows 11 with MSVS2022.
 
 
+## Installation of additional Build Tools
+- Install `Ninja`. E.g. `winget install Ninja-build.Ninja`.
+
+
 ## Installation Of Dependecies
 Tested with:
 - Qt 6.8.2. The easiest way to get it - run QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source and install "Qt/Qt 6.8.2/MSVC 2022 64-bit" component.
