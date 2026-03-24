@@ -10,7 +10,6 @@
     ```
 * ? Make some variables from CMagneto cmake modules accessible only within the file.
 
-* Generate "LibTargetName.h" with exports from a CMake or Python script.
 * Add a script, which copies 3rd-party shared libraries to "install/.../3rd_party" directory. The script must also copy ".pdb" or analogues, if they exist.
 * Gather paths to include directories of 3rd-party shared libraries and generate "./vscode/c_cpp_properties.json" using a template file by substituting "includePath" properties with the gathered paths.
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
@@ -33,7 +32,6 @@
 * Support newer C++ standards' features, including C++ modules.
 * Add copying (installing) of runtime-loaded resources into build and install dirs.
 * Add a script, which generates `*.ts` files, using Qt lupdate.
-* Generate `_DEFS.hpp` in CMagneto CMake modules.
 * Add resource manager C++ code.
 * In the `_DEFS.hpp` files add relative paths to resources.
 * Add `Project_DEFS.hpp` file, common for all targets in the project, witgh project version and compatibility definitions.
