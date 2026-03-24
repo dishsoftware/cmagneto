@@ -316,7 +316,7 @@ python ./build.py --help
 ```
 The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple toolsets.<br>
 A toolset is a bundle of a build system, a compiler, paths of dependencies, etc.<br>
-Toolsets are defined under [`./toolsets/`](./toolsets/) and loaded by the framework at build time.<br>
+Toolsets are defined under [`./toolsets/`](./../toolsets/) and loaded by the framework at build time.<br>
 All bundled toolsets are accompanied with identically named Markdown instructions describing how to install dependencies, set up VS Code, and more.
 
 

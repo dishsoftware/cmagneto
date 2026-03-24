@@ -1,5 +1,6 @@
 {
     "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "cmake.configureOnOpen": false,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

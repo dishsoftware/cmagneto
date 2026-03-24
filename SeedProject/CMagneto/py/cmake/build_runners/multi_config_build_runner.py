@@ -75,6 +75,7 @@ class MultiConfigBuildRunner(BuildRunner):
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command()
         Process.runCommand(command, self.buildDir())
+        self._syncCompileCommandsFile(self.buildDir())
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(self.buildDir())
         # Graphviz creates a target dependecy graph during generation time.
@@ -134,6 +135,7 @@ class MultiConfigBuildRunner(BuildRunner):
             "--config", iBuildType.name
         ]
         Process.runCommand(command)
+        self._syncCompileCommandsFile(self.buildDir())
 
         Log.status(text + " finished.\n")
 

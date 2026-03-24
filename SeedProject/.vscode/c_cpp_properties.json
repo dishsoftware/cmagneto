@@ -2,31 +2,25 @@
     "version": 4,
     "configurations": [
         {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/include/x86_64-linux-gnu/**"
-            ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "name": "Linux_GCC",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compilerPath": "/usr/bin/g++",
+            "intelliSenseMode": "linux-gcc-x64",
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "cppStandard": "gnu++17"
         },
+
         {
-            "name": "Windows_MinGW_UCRT",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${MSYS2_HOME}/ucrt64/include/**"
-            ],
-            "defines": [],
+            "name": "Windows_MinGW",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
+            "intelliSenseMode": "windows-gcc-x64",
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "windows-gcc-x64"
+            "cppStandard": "gnu++17"
         },
+
         {
-            "name": "Windows_MSVC2022",
+            "name": "Windows_VS2022_MSVC",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${QT6_MSVC2022_DIR}/include/**",
@@ -34,9 +28,9 @@
             ],
             "defines": [],
             "compilerPath": "${VC2022ToolsInstallDir}/bin/Hostx64/x64/cl.exe",
+            "intelliSenseMode": "windows-msvc-x64",
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64"
+            "cppStandard": "c++17"
         }
     ]
 }

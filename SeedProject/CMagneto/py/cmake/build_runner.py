@@ -64,10 +64,12 @@ class BuildRunner(ABC):
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
-    CMagneto__SUBDIR_SOURCE = Path("src/")
-    CMagneto__SUBDIR_TESTS  = Path("tests/")
-    CMagneto__SUBDIR_STATIC = Path("lib/")
-    CMagneto__SUBDIR_SHARED = Path("lib/")
+    CMagneto__SUBDIR_SOURCE  = Path("src/")
+    CMagneto__SUBDIR_TESTS   = Path("tests/")
+    CMagneto__SUBDIR_BUILD   = Path("build/")
+    CMagneto__SUBDIR_INSTALL = Path("install/")
+    CMagneto__SUBDIR_STATIC     = Path("lib/")
+    CMagneto__SUBDIR_SHARED     = Path("lib/")
     CMagneto__SUBDIR_EXECUTABLE = Path("bin/")
     CMagneto__SUBDIR_SUMMARY = Path("summary/")
     CMagneto__SUBDIR_PACKAGES = Path("packages/")
@@ -76,6 +78,7 @@ class BuildRunner(ABC):
     CMagneto__TEST_BUILD_SUMMARY__FILE_NAME = "test_build_summary.txt"
     CMagneto__RUN_TESTS__SCRIPT_NAME_WE = "run_tests"
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
+    CMagneto__COMPILE_COMMANDS__FILE_NAME = "compile_commands.json"
 
     # Report of source code (under './src/' ) test coverage.
     CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
@@ -112,8 +115,8 @@ class BuildRunner(ABC):
 
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         os.chdir(GoodPath.projectRoot())
-        self.__buildDir    = GoodPath.projectRoot() / "build" / self.toolsetName()
-        self.__installDir  = GoodPath.projectRoot() / "install" / self.toolsetName()
+        self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.toolsetName()
+        self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.toolsetName()
 
     def __str__(self) -> str:
         text = \
@@ -581,3 +584,17 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         """
         BuildRunner._GraphvizTargetDependencyGraph.generateDotfiles(iBuildDir)
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(iBuildDir)
+
+    def _syncCompileCommandsFile(self, iBuildDir: Path) -> None:
+        """
+        Copies `compile_commands.json` from `iBuildDir` into `./build/`.
+        """
+        compileCommandsSrc = iBuildDir / BuildRunner.CMagneto__COMPILE_COMMANDS__FILE_NAME
+        compileCommandsDst = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / BuildRunner.CMagneto__COMPILE_COMMANDS__FILE_NAME
+
+        if compileCommandsSrc.exists():
+            shutil.copy2(compileCommandsSrc, compileCommandsDst)
+            Log.status(f"Synchronized \"{BuildRunner.CMagneto__COMPILE_COMMANDS__FILE_NAME}\" to project root.")
+        elif compileCommandsDst.exists():
+            compileCommandsDst.unlink()
+            Log.warning(f"\"{compileCommandsSrc}\" was not generated. Removed stale project-root \"{compileCommandsDst.name}\".")
