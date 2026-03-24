@@ -118,6 +118,158 @@ function(CMagnetoInternal__compose_namespaced_target_name iTargetName oNamespace
 endfunction()
 
 
+#[[
+    CMagnetoInternal__set_up_export_header
+
+    Ensures that `<TargetLeafName>_EXPORT.hpp` exists in the target source root.
+    If the file does not exist, generates it and prints a message about the generation.
+
+    Parameters:
+        iTargetName          - Real CMake target name, e.g. `Dish_ContactHolder_Contacts`.
+        oExportHeaderRelPath - Relative path to the ensured header, e.g. `Contacts_EXPORT.hpp`.
+]]
+function(CMagnetoInternal__set_up_export_header iTargetName oExportHeaderRelPath)
+    cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _targetLeafName)
+    set(_exportHeaderFileName "${_targetLeafName}_EXPORT.hpp")
+    set(_exportHeaderAbsPath "${CMAKE_CURRENT_SOURCE_DIR}/${_exportHeaderFileName}")
+
+    if(NOT EXISTS "${_exportHeaderAbsPath}")
+        string(TOUPPER "${iTargetName}" _targetNameUC)
+        set(_exportMacroName "${_targetNameUC}_EXPORT")
+
+        set(_exportHeaderTemplate [=[
+#pragma once
+
+#ifndef COMPILE_TIME_MESSAGE
+    #if defined(_MSC_VER)
+        #define COMPILE_TIME_MESSAGE(msg) __pragma(message("[COMPILE MESSAGE] " msg))
+    #else
+        #define COMPILE_TIME_MESSAGE(msg) /* Unsupported compiler */
+    #endif
+#endif
+
+
+#if defined(LIB_@TARGET_NAME_UC@_SHARED)
+    #if defined(@TARGET_NAME_UC@_EXPORTS) || defined(@TARGET_NAME@_EXPORTS)
+        #if defined(_WIN32)
+            #if defined(__GNUC__)
+                #define @EXPORT_MACRO_NAME@ __attribute__((visibility("default")))
+                #pragma message ("MinGW Export")
+            #elif defined(_MSC_VER)
+                #define @EXPORT_MACRO_NAME@ __declspec(dllexport)
+                COMPILE_TIME_MESSAGE("MSVC Export")
+            #else
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("Windows Compiler (unknown) Export")
+            #endif
+        #else
+            #if defined(__GNUC__)
+                #define @EXPORT_MACRO_NAME@ __attribute__((visibility("default")))
+                #pragma message ("GCC Export")
+            #else
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("Other OS Non-GCC Export")
+            #endif
+        #endif
+    #else
+        #if defined(_WIN32)
+            #if defined(__GNUC__)
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("MinGW Import")
+            #elif defined(_MSC_VER)
+                #define @EXPORT_MACRO_NAME@ __declspec(dllimport)
+                COMPILE_TIME_MESSAGE("MSVC Import")
+            #else
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("Windows Compiler (unknown) Import")
+            #endif
+        #else
+            COMPILE_TIME_MESSAGE("NOT WIN")
+            #if defined(__GNUC__)
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("GCC Import")
+            #else
+                #define @EXPORT_MACRO_NAME@
+                #pragma message ("Other OS Non-GCC Import")
+            #endif
+        #endif
+    #endif
+#else
+    #define @EXPORT_MACRO_NAME@
+#endif
+
+
+#if defined(_MSC_VER)
+    #pragma warning (disable: 4251)
+#endif
+]=])
+
+        set(TARGET_NAME "${iTargetName}")
+        set(TARGET_NAME_UC "${_targetNameUC}")
+        set(EXPORT_MACRO_NAME "${_exportMacroName}")
+        string(CONFIGURE "${_exportHeaderTemplate}" _exportHeaderContent @ONLY)
+
+        file(WRITE "${_exportHeaderAbsPath}" "${_exportHeaderContent}")
+        CMagnetoInternal__message(STATUS "Generated missing export header \"${_exportHeaderAbsPath}\".")
+    endif()
+
+    set(${oExportHeaderRelPath} "${_exportHeaderFileName}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__set_up_defs_header
+
+    Ensures that `<TargetLeafName>_DEFS.hpp` exists in the target source root.
+    If the file does not exist, generates it and prints a message about the generation.
+
+    Parameters:
+        iTargetName         - Real CMake target name, e.g. `Dish_ContactHolder_Contacts`.
+        iIncludeExportHeader - If TRUE, generated defs header includes `<TargetLeafName>_EXPORT.hpp`.
+        oDefsHeaderRelPath  - Relative path to the ensured header, e.g. `Contacts_DEFS.hpp`.
+]]
+function(CMagnetoInternal__set_up_defs_header iTargetName iIncludeExportHeader oDefsHeaderRelPath)
+    cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _targetLeafName)
+    set(_defsHeaderFileName "${_targetLeafName}_DEFS.hpp")
+    set(_defsHeaderAbsPath "${CMAKE_CURRENT_SOURCE_DIR}/${_defsHeaderFileName}")
+
+    if(NOT EXISTS "${_defsHeaderAbsPath}")
+        string(TOUPPER "${iTargetName}" _targetNameUC)
+        set(_verifyMacroName "${_targetNameUC}_VERIFY")
+        set(_assertMacroName "${_targetNameUC}_ASSERT")
+
+        if(iIncludeExportHeader)
+            set(_includeExportHeaderBlock "#include \"${_targetLeafName}_EXPORT.hpp\"\n\n")
+        else()
+            set(_includeExportHeaderBlock "")
+        endif()
+
+        set(_defsHeaderTemplate [=[
+#pragma once
+
+@INCLUDE_EXPORT_HEADER_BLOCK@#if defined(_DEBUG) || defined(DEBUG)
+    #include <assert.h>
+    #define @VERIFY_MACRO_NAME@(x) assert(x);
+    #define @ASSERT_MACRO_NAME@(x) assert(x);
+#else
+    #define @VERIFY_MACRO_NAME@(x) x
+    #define @ASSERT_MACRO_NAME@(x)
+#endif
+]=])
+
+        set(INCLUDE_EXPORT_HEADER_BLOCK "${_includeExportHeaderBlock}")
+        set(VERIFY_MACRO_NAME "${_verifyMacroName}")
+        set(ASSERT_MACRO_NAME "${_assertMacroName}")
+        string(CONFIGURE "${_defsHeaderTemplate}" _defsHeaderContent @ONLY)
+
+        file(WRITE "${_defsHeaderAbsPath}" "${_defsHeaderContent}")
+        CMagnetoInternal__message(STATUS "Generated missing defs header \"${_defsHeaderAbsPath}\".")
+    endif()
+
+    set(${oDefsHeaderRelPath} "${_defsHeaderFileName}" PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__is_path_valid_for_CMakeLists iPath oErrorMessage)
     set(_errorMessage "")
 

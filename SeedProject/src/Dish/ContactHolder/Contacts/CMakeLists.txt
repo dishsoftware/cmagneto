@@ -30,7 +30,6 @@ set(_QtMOC_HEADERS
 
 ## Regular headers.
 set(_regular_PUBLIC_HEADERS
-    Contacts_DEFS.hpp
     Contact.hpp
     Field.hpp
     FieldType.hpp

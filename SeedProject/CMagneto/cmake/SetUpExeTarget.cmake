@@ -59,6 +59,12 @@ function(CMagneto__set_up__executable iExeTargetName)
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
+    CMagnetoInternal__set_up_defs_header("${iExeTargetName}" FALSE _defsHeaderRelPath)
+    list(FIND ARG_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+    if(_defsHeaderIndex EQUAL -1)
+        list(APPEND ARG_HEADERS "${_defsHeaderRelPath}")
+    endif()
+
     set(_baseDirDescription "executable target \"${iExeTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)

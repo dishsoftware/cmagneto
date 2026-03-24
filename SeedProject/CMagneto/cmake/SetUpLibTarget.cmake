@@ -104,6 +104,18 @@ function(CMagneto__set_up__library iLibTargetName)
         ${ARGN}
     )
 
+    CMagnetoInternal__set_up_export_header("${iLibTargetName}" _exportHeaderRelPath)
+    list(FIND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}" _exportHeaderIndex)
+    if(_exportHeaderIndex EQUAL -1)
+        list(APPEND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}")
+    endif()
+
+    CMagnetoInternal__set_up_defs_header("${iLibTargetName}" TRUE _defsHeaderRelPath)
+    list(FIND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+    if(_defsHeaderIndex EQUAL -1)
+        list(APPEND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}")
+    endif()
+
     set(_baseDirDescription "library target \"${iLibTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PRIVATE_HEADERS}" OUTPUT_REL_PATHS _relPrivateHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)

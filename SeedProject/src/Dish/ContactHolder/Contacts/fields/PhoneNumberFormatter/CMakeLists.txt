@@ -26,7 +26,6 @@ set(_QtMOC_HEADERS
 
 ## Regular headers.
 set(_regular_PUBLIC_HEADERS
-    PhoneNumberFormatter_DEFS.hpp
     Formatter.hpp
 )
 
