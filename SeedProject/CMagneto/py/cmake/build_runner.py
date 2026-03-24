@@ -117,6 +117,7 @@ class BuildRunner(ABC):
         os.chdir(GoodPath.projectRoot())
         self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.toolsetName()
         self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.toolsetName()
+        self.__setUpToolsetEnvironment()
 
     def __str__(self) -> str:
         text = \
@@ -439,6 +440,13 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
     def _setDependencyPaths(self) -> None:
         for dependencyPath in self.toolset().dependencyPaths:
             BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH(dependencyPath.envVarName, dependencyPath.cmakePathPostfix)
+
+    def __setUpToolsetEnvironment(self) -> None:
+        envSetupScript = self.toolset().envSetupScript
+        if envSetupScript is None:
+            return
+
+        Process.applyEnvFromScript(envSetupScript, self.toolset().envSetupArgs)
 
     @staticmethod
     def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:

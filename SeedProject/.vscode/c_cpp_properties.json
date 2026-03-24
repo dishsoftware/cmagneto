@@ -20,6 +20,15 @@
         },
 
         {
+            "name": "Windows_NinjaMC_MSVC",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compilerPath": "${VC2022ToolsInstallDir}/bin/Hostx64/x64/cl.exe",
+            "intelliSenseMode": "windows-msvc-x64",
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        },
+
+        {
             "name": "Windows_VS2022_MSVC",
             "includePath": [
                 "${workspaceFolder}/**",
