@@ -11,6 +11,7 @@ import subprocess
 
 
 PYTEST_REPORT = CMAGNETO_PROJECT_ROOT / "tests" / "summary" / "pytest-report.xml"
+PYTEST_ROOT = CMAGNETO_PROJECT_ROOT / "tests" / "py"
 
 def setUpPyVEnv(iRecreate: bool) -> Path:
     if iRecreate or not VENV_PATH.exists():
@@ -21,7 +22,7 @@ def runPyUnitAndIntegrationTestsInsideVEnv(iPythonBinPathInsideVEnv: Path):
     result = subprocess.run([
         iPythonBinPathInsideVEnv.as_posix(),
         "-m", "pytest", # `-m` tells Python to run a module as a script.
-        "tests/py/",
+        PYTEST_ROOT.as_posix(),
         f"--junitxml={PYTEST_REPORT}"
     ], check=True)
     return result

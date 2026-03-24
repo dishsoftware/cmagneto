@@ -77,6 +77,7 @@ class SingleConfigBuildRunner(BuildRunner):
         self._setDependencyPaths()
         command: list[str] = self.__compose__generate__command(iBuildType)
         Process.runCommand(command, buildDir)
+        self._syncCompileCommandsFile(buildDir)
 
         BuildRunner._GraphvizTargetDependencyGraph.generatePicture(buildDir)
 
@@ -117,6 +118,7 @@ class SingleConfigBuildRunner(BuildRunner):
 
         command: list[str] = ["cmake", "--build", str(self.buildDirForBuildType(iBuildType))]
         Process.runCommand(command)
+        self._syncCompileCommandsFile(self.buildDirForBuildType(iBuildType))
 
         Log.status(text + " finished.\n")
 

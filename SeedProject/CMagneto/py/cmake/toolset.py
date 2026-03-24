@@ -30,3 +30,5 @@ class Toolset:
     cppCompilerName: str | None = None
     dependencyPaths: tuple[DependencyPathSpec, ...] = field(default_factory=tuple)
     extraGenerateArgs: tuple[str, ...] = field(default_factory=tuple)
+    envSetupScript: str | None = None
+    envSetupArgs: tuple[str, ...] = field(default_factory=tuple)

@@ -14,4 +14,4 @@ sudo apt update && sudo apt install -y \
 
 
 ## VS Code
-Use the `Linux` configuration in the `C/C++ Configuration` settings.<br>
+Use the `Linux_GCC` configuration in the `C/C++ Configuration` settings.<br>

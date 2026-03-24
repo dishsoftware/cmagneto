@@ -32,6 +32,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject_Internals.cmake")
     - From a CMakeLists.txt, where the `project(...) command is called.
 ]]
 function(CMagneto__set_up__project)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     CMagneto__print_platform_and_compiler()
 
     # Add source directory.
