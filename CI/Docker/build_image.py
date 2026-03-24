@@ -162,7 +162,7 @@ def mainFor__build_concrete_image(iImageProps: DockerImageBuildRunner.ImageProps
         help=f"After building, push the image as '{iImageProps.remoteTag}'."
     )
 
-    args, unknownArgs = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     DockerImageBuildRunner.createAndRun(iImageProps, args.push)
 
 
@@ -234,7 +234,7 @@ if __name__ == "__main__":
         help=f"After building, push the image to the Docker image registry."
     )
 
-    args, unknownArgs = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     imageProps = DockerImageBuildRunner.ImageProps(
         dockerfilePathRel=cast(Path, args.file).as_posix(),
