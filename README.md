@@ -17,12 +17,15 @@ Keep this snippet in sync with the same snippets in
 - CMagneto framework root README.md;
 - project desciption on GitLab, GitHub, BitBucket etc.
 -->
-CMagneto is a framework for rapid initialization of C++ projects.
+CMagneto is a framework for rapid initialization of C++ projects.<br>
 It is designed to set up CMake-backed projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
 including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
 
+🔗 GitLab repository: [gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)<br>
+🔗 GitHub mirror: [github.com/dishsoftware/cmagneto](https://github.com/dishsoftware/cmagneto)
 
-The framework repo is organized as follows:
+
+## Structure of the repository
 - The framework code is mixed with a code of a seed (template) project under [`./SeedProject/`](./SeedProject/).
 - Core files of the CMagneto framework is in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
 
