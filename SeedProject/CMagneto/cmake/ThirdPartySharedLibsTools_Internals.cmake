@@ -523,6 +523,28 @@ function(CMagnetoInternal__get_imported_shared_library_dirs_for_target iTargetNa
 endfunction()
 
 
+#[[
+    CMagnetoInternal__get_imported_shared_library_dirs_for_targets
+
+    Returns unique directories of imported shared libraries linked by iTargets and configured with iMode.
+]]
+function(CMagnetoInternal__get_imported_shared_library_dirs_for_targets iTargets iMode oLibraryDirs)
+    set(_libraryDirs "")
+
+    foreach(_target IN LISTS iTargets)
+        if(NOT TARGET ${_target})
+            continue()
+        endif()
+
+        CMagnetoInternal__get_imported_shared_library_dirs_for_target(${_target} "${iMode}" _targetLibraryDirs)
+        list(APPEND _libraryDirs ${_targetLibraryDirs})
+    endforeach()
+
+    list(REMOVE_DUPLICATES _libraryDirs)
+    set(${oLibraryDirs} "${_libraryDirs}" PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__get_external_shared_library_paths_to_bundle oPaths)
     set(_pathsToBundle "")
 
@@ -835,14 +857,14 @@ endfunction()
 #[[
     CMagnetoInternal__set_up__3rd_party_shared_libs__list
 
-    Generates, places to build directory and installs "3rd_party_shared_libs.json" file.
+    Generates and places to build directory "3rd_party_shared_libs.json" file.
     The file contains paths to binaries of 3rd-party shared libraries, which registered (created) targets are linked to.
-    The file may be used to make distributable packages.
+    The file is intended only for build-machine-side diagnostics and must not be distributed.
 
     The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__3rd_party_shared_libs__list)
-    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE FALSE "")
 endfunction()
 
 
@@ -971,7 +993,8 @@ endfunction()
 #[[
     CMagnetoInternal__generate__set_env__script_content
 
-    The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
+    The script sets paths only to directories of imported shared libraries expected to be present on the target machine.
+    Build-machine-specific directories of bundled shared libraries must not be exported by this helper.
 
     The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
@@ -983,7 +1006,11 @@ function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptC
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
 
     set(_libraryDirs "")
-    CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
+    CMagnetoInternal__get_imported_shared_library_dirs_for_targets(
+        "${_registeredTargets}"
+        "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}"
+        _libraryDirs
+    )
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
 
     CMagneto__platform__add_script_suffix_and_extension("${CMagnetoInternal__SET_ENV__TEMPLATE_SCRIPT_PATH_PREFIX}" _templateScriptPath)
@@ -998,13 +1025,14 @@ endfunction()
 #[[
     CMagnetoInternal__set_up__set_env__script
 
-    Generates, places to build directory and installs "set_env" script.
-    The script sets paths to directories with 3rd-party shared libraries, which registered (created) targets are linked to.
+    Generates and places to build directory "set_env" script.
+    The script sets paths to directories with imported shared libraries expected to be present on the target machine.
+    The script is a build-tree-only legacy development helper and must not be installed or distributed.
 
     The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
 function(CMagnetoInternal__set_up__set_env__script)
-    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__set_env__script_file_name" "CMagnetoInternal__generate__set_env__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()
 
 
@@ -1019,7 +1047,8 @@ endfunction()
 #[[
     CMagnetoInternal__generate__env_vscode__file_content
 
-    The file sets Path/LD_LIBRARY_PATH equal to list of dirs to 3rd-party shared libraries, which registered (created) targets are linked to.
+    The file sets Path/LD_LIBRARY_PATH equal only to dirs of imported shared libraries expected to be present on the target machine.
+    Build-machine-specific directories of bundled shared libraries must not be exported by this helper.
 
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
@@ -1028,9 +1057,13 @@ endfunction()
 ]]
 function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileContent)# Strings to replace in the template script.
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
-    # Add paths to dirs with 3rd-party shared libs.
+    # Add paths only to dirs with imported shared libs expected on the target machine.
     set(_libraryDirs "")
-    CMagnetoInternal__get_shared_library_dirs(_libraryDirs "${_registeredTargets}" "${iBuildType}")
+    CMagnetoInternal__get_imported_shared_library_dirs_for_targets(
+        "${_registeredTargets}"
+        "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}"
+        _libraryDirs
+    )
     cmake_path(CONVERT "${_libraryDirs}" TO_NATIVE_PATH_LIST _libraryDirsNative)
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(_fileContent "Path=\"${_libraryDirsNative}\"")
@@ -1109,9 +1142,10 @@ endfunction()
 #[[
     CMagnetoInternal__set_up__run__script
 
-    Generates, places to build directory and installs "run" script.
+    Generates and places to build directory "run" script.
     If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeTargetName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
+    The script is a build-tree-only legacy development helper and must not be installed or distributed.
 
     The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]
@@ -1122,5 +1156,5 @@ function(CMagnetoInternal__set_up__run__script)
         return()
     endif()
 
-    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__run__script_file_name" "CMagnetoInternal__generate__run__script_content" TRUE FALSE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
 endfunction()

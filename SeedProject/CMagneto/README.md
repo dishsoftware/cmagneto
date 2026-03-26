@@ -341,7 +341,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;
     - installation of build-variant-selected bundled external shared libraries into the package;
-    - optional legacy `set_env` and `run` helper scripts (see section [`1.4. Run Project`](#14-run-project));
+    - optional legacy `set_env` and `run` helper scripts in the build tree (see section [`1.4. Run Project`](#14-run-project));
     - Auxilliary files, required by the coupled Python code and VS Code.
     - Unit and integration test compilation and `run_tests` scripts;
     - CPack package configuration files, auxilliary targets, reports, helper scripts, etc.;
@@ -368,11 +368,15 @@ CMagneto separates deployment policy from platform-specific runtime mechanics:
 - On Windows, runtime DLLs of a target are still copied next to the target binary in the build tree as a local-development convenience.
 - For Debian packages, [`CPACK_DEBIAN_PACKAGE_SHLIBDEPS`](./cmake/Packager/DEB/DEBConfig_before_include_CPack.cmake) is enabled, so package dependencies on system-installed shared libraries are computed automatically.
 
-CMagneto CMake function `CMagneto__set_up__project()` also creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
-- `set_env` is a legacy development helper and fallback for imported shared libraries that were not classified in the build-variant policy;
+CMagneto CMake function `CMagneto__set_up__project()` also creates helper scripts inside `bin/` subdirectories of `./build/`:
+- `set_env` is a legacy development helper for running build-tree binaries with imported shared libraries expected to be present on the target machine;
 - `run` executes `set_env` and then runs the project entrypoint executable.
 
-These helper scripts are not meant to be a distribution mechanism. Packaged applications should rely on the build-variant-selected dependency policy and the corresponding platform-specific runtime setup.
+These helper scripts are not meant to be an installation or distribution mechanism. Installed and packaged applications should rely on the build-variant-selected dependency policy and the corresponding platform-specific runtime setup.
+
+On Linux, these scripts are usually redundant because build-tree and install-tree runtime lookup is expected to be configured by target properties such as runtime paths and bundled library locations. They are kept mainly for workflow consistency across platforms and for occasional local debugging or experiments.
+
+On Windows, these scripts may still be more useful during local development and debugging because runtime DLL lookup often depends more directly on process environment such as `PATH`.
 
 
 ### 1.5. Engage Continuous Integration (CI)

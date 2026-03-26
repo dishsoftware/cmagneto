@@ -156,6 +156,25 @@ This file is intended for package verification and is consumed by the Python bui
 Only imported targets that are recognized as runtime shared-library dependencies are written into this file.
 Recognition is performed not only by CMake target type, but also by inspecting the resolved runtime artifact paths.
 
+### 6.1. Legacy diagnostic file: `3rd_party_shared_libs.json`
+A JSON file named `3rd_party_shared_libs.json` is also generated into the build tree.
+
+This file contains, for each registered project target, a list of resolved paths to 3rd-party shared libraries linked to that target for the active build type.
+
+The recorded paths are absolute paths as they were discovered on the build machine. Because of that:
+
+- the file content is build-machine-specific;
+- the file is suitable only for local diagnostics and development helpers;
+- the file is not suitable as distributable package metadata.
+
+Unlike `external_shared_library_deployment.json`, this file does not describe deployment intent.
+No `EXPECT_ON_TARGET_MACHINE` or `BUNDLE_WITH_PACKAGE` classification is stored in it.
+
+This file is not consumed by Linux package verification.
+Linux package verification relies on `external_shared_library_deployment.json`.
+
+Because the file contains build-machine-specific paths, it is generated into the build tree only and is not intended to be installed or distributed with generated packages.
+
 
 ## 7. Why SONAME-aware handling was added
 If raw build-machine library paths were copied into package metadata without adjustment, incorrect files could be bundled or checked.
