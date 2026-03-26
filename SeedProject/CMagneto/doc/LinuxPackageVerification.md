@@ -260,7 +260,18 @@ After targets are set up, `external_shared_library_deployment.json` is generated
 
 Its purpose is to transfer deployment expectations from CMake configuration into later package verification logic.
 
-### 8.4. Package generation is performed
+### 8.4. Bundled imported shared libraries are installed together with their transitive runtime dependencies
+At install and package time, imported shared libraries configured as `BUNDLE_WITH_PACKAGE` are installed first as direct bundled artifacts.
+
+After that, runtime dependencies of those bundled imported shared libraries are discovered recursively during installation.
+This step is performed from the already installed bundled library files, not only from the original direct imported target list.
+
+Dependencies explicitly configured as `EXPECT_ON_TARGET_MACHINE` are excluded from this recursive bundling step.
+Platform system runtime libraries are excluded as well.
+
+As a result, if bundled imported shared library A depends on another shared library B and B is not represented as a separately tracked imported target, B may still be discovered and copied into the install tree as a transitive bundled runtime dependency.
+
+### 8.5. Package generation is performed
 At package stage, `cpack` generates Linux installation packages in the build tree.
 
 Supported package formats currently checked by the verification code are:
@@ -271,7 +282,7 @@ Supported package formats currently checked by the verification code are:
 
 Artifacts created by CPack for its own internal work, such as files under `_CPack_Packages/`, are not treated as generated packages for verification purposes.
 
-### 8.5. Generated packages are extracted
+### 8.6. Generated packages are extracted
 Each supported package is extracted into a temporary verification directory.
 
 Extraction is performed as follows:
@@ -281,21 +292,21 @@ Extraction is performed as follows:
 
 Packages that do not contain the expected runtime payload root are skipped.
 
-### 8.6. The installed runtime root inside the package is located
+### 8.7. The installed runtime root inside the package is located
 The expected payload root is derived from project metadata and is expected to have the form:
 
 `opt/<CompanyName_SHORT>/<ProjectNameBase>`
 
 This root is treated as the runtime installation tree inside the extracted package.
 
-### 8.7. Packaged ELF runtime files are discovered
+### 8.8. Packaged ELF runtime files are discovered
 The packaged `bin/` and `lib/` directories are scanned recursively.
 
 Files are treated as ELF files if their leading bytes match the ELF magic number.
 
 These ELF files are the binaries whose runtime dependencies are verified.
 
-### 8.8. Actual runtime dependency resolution is collected
+### 8.9. Actual runtime dependency resolution is collected
 `ldd` is run for each packaged ELF file.
 
 Its output is parsed to determine:
@@ -305,7 +316,7 @@ Its output is parsed to determine:
 
 If `ldd` reports `not found` for a required library, verification fails.
 
-### 8.9. Candidate runtime names are derived for each declared dependency
+### 8.10. Candidate runtime names are derived for each declared dependency
 For each imported shared-library entry from the deployment metadata, a set of possible runtime names is computed.
 
 This set may include:
@@ -316,7 +327,7 @@ This set may include:
 
 This is done because runtime resolution may use a name different from the original path recorded during configuration.
 
-### 8.10. Bundled dependencies are verified
+### 8.11. Bundled dependencies are verified
 For each imported shared library configured as `BUNDLE_WITH_PACKAGE`, two checks are performed.
 
 First, package contents are checked:
@@ -342,7 +353,7 @@ That is expected and required for correct runtime resolution.
 If the bundled library is present in the package but still resolves from the system, verification must fail.
 Such a result usually indicates that install-tree runtime search order is wrong.
 
-### 8.11. Externally provided dependencies are verified
+### 8.12. Externally provided dependencies are verified
 For each imported shared library configured as `EXPECT_ON_TARGET_MACHINE`, two checks are performed as well.
 
 First, package contents are checked:

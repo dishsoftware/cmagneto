@@ -568,6 +568,48 @@ function(CMagnetoInternal__get_external_shared_library_paths_to_bundle oPaths)
 endfunction()
 
 
+function(CMagnetoInternal__get_external_shared_library_paths_expected_on_target_machine oPaths)
+    set(_pathsExpectedOnTargetMachine "")
+
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
+    foreach(_target IN LISTS _registeredTargets)
+        CMagnetoInternal__get_linked_imported_shared_library_targets(${_target} _importedTargets)
+        foreach(_importedTarget IN LISTS _importedTargets)
+            CMagnetoInternal__get_external_shared_libraries_install_mode(${_importedTarget} _mode)
+            if(_mode STREQUAL CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE)
+                CMagnetoInternal__get_registered_imported_shared_library_paths(${_importedTarget} _importedTargetPaths)
+                list(APPEND _pathsExpectedOnTargetMachine ${_importedTargetPaths})
+            endif()
+        endforeach()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _pathsExpectedOnTargetMachine)
+    set(${oPaths} "${_pathsExpectedOnTargetMachine}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_registered_imported_shared_library_dirs oLibraryDirs)
+    set(_libraryDirs "")
+
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
+    foreach(_target IN LISTS _registeredTargets)
+        CMagnetoInternal__get_linked_imported_shared_library_targets(${_target} _importedTargets)
+        foreach(_importedTarget IN LISTS _importedTargets)
+            CMagnetoInternal__get_registered_imported_shared_library_paths(${_importedTarget} _importedTargetPaths)
+            foreach(_libPath IN LISTS _importedTargetPaths)
+                cmake_path(GET _libPath PARENT_PATH _libDir)
+                if(NOT _libDir STREQUAL "")
+                    list(APPEND _libraryDirs ${_libDir})
+                endif()
+            endforeach()
+        endforeach()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _libraryDirs)
+    set(${oLibraryDirs} "${_libraryDirs}" PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__warn_about_unclassified_external_shared_libraries iTargetName)
     set(_unclassifiedImportedTargets "")
 
@@ -977,6 +1019,200 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         DESTINATION ${_destinationDir}
         COMPONENT ${CMagneto__COMPONENT__RUNTIME}
     )
+
+    CMagnetoInternal__get_external_shared_library_paths_expected_on_target_machine(_expectedOnTargetPaths)
+    CMagnetoInternal__get_registered_imported_shared_library_dirs(_knownLibraryDirs)
+
+    cmake_path(CONVERT "${_libPaths}" TO_CMAKE_PATH_LIST _libPathsCMake)
+    cmake_path(CONVERT "${_expectedOnTargetPaths}" TO_CMAKE_PATH_LIST _expectedOnTargetPathsCMake)
+    cmake_path(CONVERT "${_knownLibraryDirs}" TO_CMAKE_PATH_LIST _knownLibraryDirsCMake)
+
+    set(_installScriptTemplate [=[
+set(_cmagneto_bundled_source_paths "@_libPathsCMake@")
+set(_cmagneto_expected_external_source_paths "@_expectedOnTargetPathsCMake@")
+set(_cmagneto_known_library_dirs "@_knownLibraryDirsCMake@")
+set(_cmagneto_destination_dir "@_destinationDir@")
+
+function(_cmagneto_append_existing_path_variants iPaths oOutputPaths)
+    set(_outputPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        list(APPEND _outputPaths "${_path}")
+        get_filename_component(_realPath "${_path}" REALPATH)
+        if(EXISTS "${_realPath}" AND NOT _realPath STREQUAL "${_path}")
+            list(APPEND _outputPaths "${_realPath}")
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _outputPaths)
+    set(${oOutputPaths} "${_outputPaths}" PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_get_elf_soname iLibraryPath oSoname)
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(${oSoname} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    execute_process(
+        COMMAND readelf -d "${iLibraryPath}"
+        OUTPUT_VARIABLE _readelfOutput
+        ERROR_QUIET
+        RESULT_VARIABLE _readelfResult
+    )
+    if(NOT _readelfResult EQUAL 0)
+        set(${oSoname} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    string(REGEX MATCH "Library soname: \\[([^]]+)\\]" _match "${_readelfOutput}")
+    if(CMAKE_MATCH_1)
+        set(${oSoname} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+    else()
+        set(${oSoname} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(_cmagneto_get_installable_shared_library_path iLibraryPath oInstallablePath)
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(${oInstallablePath} "${iLibraryPath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    _cmagneto_get_elf_soname("${iLibraryPath}" _soname)
+    if(_soname STREQUAL "")
+        set(${oInstallablePath} "${iLibraryPath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    get_filename_component(_libraryDir "${iLibraryPath}" DIRECTORY)
+    set(_sonamePath "${_libraryDir}/${_soname}")
+    if(EXISTS "${_sonamePath}")
+        set(${oInstallablePath} "${_sonamePath}" PARENT_SCOPE)
+    else()
+        set(${oInstallablePath} "${iLibraryPath}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+set(_cmagneto_install_root "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}")
+file(TO_CMAKE_PATH "${_cmagneto_install_root}" _cmagneto_install_root_normalized)
+string(REGEX REPLACE "([][+.*^$()|?\\\\])" "\\\\\\1" _cmagneto_install_root_regex "${_cmagneto_install_root_normalized}")
+set(_cmagneto_installed_bundled_paths "")
+foreach(_sourcePath IN LISTS _cmagneto_bundled_source_paths)
+    get_filename_component(_fileName "${_sourcePath}" NAME)
+    list(APPEND _cmagneto_installed_bundled_paths "${_cmagneto_install_root}/${_cmagneto_destination_dir}/${_fileName}")
+endforeach()
+
+_cmagneto_append_existing_path_variants("${_cmagneto_expected_external_source_paths}" _cmagneto_excluded_paths)
+foreach(_installedPath IN LISTS _cmagneto_installed_bundled_paths)
+    if(_installedPath STREQUAL "")
+        continue()
+    endif()
+
+    list(APPEND _cmagneto_excluded_paths "${_installedPath}")
+    get_filename_component(_realInstalledPath "${_installedPath}" REALPATH)
+    if(EXISTS "${_realInstalledPath}" AND NOT _realInstalledPath STREQUAL "${_installedPath}")
+        list(APPEND _cmagneto_excluded_paths "${_realInstalledPath}")
+    endif()
+endforeach()
+list(REMOVE_DUPLICATES _cmagneto_excluded_paths)
+
+set(_cmagneto_pre_exclude_regexes "")
+set(_cmagneto_post_exclude_regexes "")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND _cmagneto_pre_exclude_regexes "^api-ms-win-" "^ext-ms-")
+    if(DEFINED ENV{SystemRoot} AND NOT "$ENV{SystemRoot}" STREQUAL "")
+        file(TO_CMAKE_PATH "$ENV{SystemRoot}" _cmagneto_system_root)
+        list(APPEND _cmagneto_post_exclude_regexes
+            "^${_cmagneto_system_root}/System32/.*"
+            "^${_cmagneto_system_root}/SysWOW64/.*"
+        )
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND _cmagneto_post_exclude_regexes
+        ".*/ld-linux[^/]*\\.so[^/]*$"
+        ".*/libc\\.so[^/]*$"
+        ".*/libm\\.so[^/]*$"
+        ".*/libgcc_s\\.so[^/]*$"
+        ".*/libstdc\\+\\+\\.so[^/]*$"
+        ".*/libpthread\\.so[^/]*$"
+        ".*/librt\\.so[^/]*$"
+        ".*/libdl\\.so[^/]*$"
+    )
+endif()
+
+set(_cmagneto_runtime_dependency_args
+    LIBRARIES ${_cmagneto_installed_bundled_paths}
+)
+if(NOT _cmagneto_known_library_dirs STREQUAL "")
+    list(APPEND _cmagneto_runtime_dependency_args
+        DIRECTORIES ${_cmagneto_known_library_dirs}
+    )
+endif()
+if(NOT _cmagneto_pre_exclude_regexes STREQUAL "")
+    list(APPEND _cmagneto_runtime_dependency_args
+        PRE_EXCLUDE_REGEXES ${_cmagneto_pre_exclude_regexes}
+    )
+endif()
+if(NOT _cmagneto_post_exclude_regexes STREQUAL "")
+    list(APPEND _cmagneto_runtime_dependency_args
+        POST_EXCLUDE_REGEXES ${_cmagneto_post_exclude_regexes}
+    )
+endif()
+if(NOT _cmagneto_excluded_paths STREQUAL "")
+    list(APPEND _cmagneto_runtime_dependency_args
+        POST_EXCLUDE_FILES ${_cmagneto_excluded_paths}
+    )
+endif()
+
+file(GET_RUNTIME_DEPENDENCIES
+    RESOLVED_DEPENDENCIES_VAR _cmagneto_resolved_dependencies
+    UNRESOLVED_DEPENDENCIES_VAR _cmagneto_unresolved_dependencies
+    CONFLICTING_DEPENDENCIES_PREFIX _cmagneto_conflicting_dependencies
+    ${_cmagneto_runtime_dependency_args}
+)
+
+if(NOT _cmagneto_unresolved_dependencies STREQUAL "")
+    message(FATAL_ERROR
+        "CMagneto failed to resolve transitive runtime dependencies of bundled external shared libraries: "
+        "${_cmagneto_unresolved_dependencies}"
+    )
+endif()
+
+if(DEFINED _cmagneto_conflicting_dependencies_FILENAMES AND NOT _cmagneto_conflicting_dependencies_FILENAMES STREQUAL "")
+    message(FATAL_ERROR
+        "CMagneto found conflicting transitive runtime dependencies of bundled external shared libraries: "
+        "${_cmagneto_conflicting_dependencies_FILENAMES}"
+    )
+endif()
+
+set(_cmagneto_additional_install_paths "")
+foreach(_resolvedPath IN LISTS _cmagneto_resolved_dependencies)
+    file(TO_CMAKE_PATH "${_resolvedPath}" _resolvedPathNormalized)
+    if(_resolvedPathNormalized MATCHES "^${_cmagneto_install_root_regex}(/|$)")
+        continue()
+    endif()
+
+    _cmagneto_get_installable_shared_library_path("${_resolvedPath}" _installablePath)
+    list(APPEND _cmagneto_additional_install_paths "${_installablePath}")
+endforeach()
+list(REMOVE_DUPLICATES _cmagneto_additional_install_paths)
+
+if(NOT _cmagneto_additional_install_paths STREQUAL "")
+    file(COPY ${_cmagneto_additional_install_paths}
+        DESTINATION "${_cmagneto_install_root}/${_cmagneto_destination_dir}"
+        FOLLOW_SYMLINK_CHAIN
+    )
+endif()
+]=])
+    string(CONFIGURE "${_installScriptTemplate}" _installScriptContent @ONLY)
+
+    set(_installScriptPath "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}/install_bundled_external_shared_libraries_runtime_dependencies.cmake")
+    file(WRITE "${_installScriptPath}" "${_installScriptContent}")
+    install(SCRIPT "${_installScriptPath}")
 endfunction()
 
 

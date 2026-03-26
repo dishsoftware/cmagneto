@@ -1,8 +1,8 @@
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
-* Use InstallRequiredSystemLibraries CMake module.
-* Transitive shared-library bundling is still not solved fully. Direct imported shared libraries configured as `BUNDLE_WITH_PACKAGE` are now discovered, bundled and verified, but if bundled external shared library A depends on another shared library B in a different directory and B is not represented as a tracked imported target, CMagneto still does not discover and bundle B recursively. Current Linux package verification may detect some such problems after packaging, but recursive dependency discovery itself is still missing. To gather shared libraries recursively, consider usage of `ldd` or `lddtree` on binaries in the installed tree, or consider CMake `BundleUtilities` and `GetPrerequisites` modules.
+* Use `InstallRequiredSystemLibraries` CMake module.
+* Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
 * Add function set_up_interface_library.
 * CMakePresets.json.
 * Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
