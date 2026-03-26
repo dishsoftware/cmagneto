@@ -76,6 +76,10 @@ Examples:
 
 These targets are not built by the project itself. They represent binaries provided from outside the project.
 
+It should be noted that such a target is not always reported by CMake with target type `SHARED_LIBRARY`.
+Some packages expose runtime shared libraries as imported targets of type `UNKNOWN_LIBRARY`.
+Because of that, target type alone is insufficient when bundled and externally provided runtime dependencies are collected.
+
 
 ## 3. Deployment policy
 The deployment policy is configured by the active build variant.
@@ -149,6 +153,9 @@ For each imported target, the following is recorded:
 
 This file is intended for package verification and is consumed by the Python build runner after package generation.
 
+Only imported targets that are recognized as runtime shared-library dependencies are written into this file.
+Recognition is performed not only by CMake target type, but also by inspecting the resolved runtime artifact paths.
+
 
 ## 7. Why SONAME-aware handling was added
 If raw build-machine library paths were copied into package metadata without adjustment, incorrect files could be bundled or checked.
@@ -165,11 +172,36 @@ Because of that, the following behavior was added on the CMake side:
 
 - SONAME is read from ELF shared libraries with `readelf`;
 - when a bundled library has a SONAME file in the same directory, that SONAME file is preferred as the installable path.
+- when that SONAME path is a symlink, the real library file behind it is packaged as well.
 
 This was done so that:
 
 - packaged files better match Linux runtime expectations;
 - verification can match packaged runtime libraries by the names actually used by the loader.
+- packaged SONAME links are not left dangling inside the generated package.
+
+
+## 7.1. Why install-tree runtime search order matters
+On Linux, bundling a shared library into a package is not sufficient by itself.
+
+If the installed executable keeps an `RPATH` or `RUNPATH` that prefers externally provided library directories over the packaged `lib/` directory, the bundled library may still be ignored at runtime.
+
+In that case:
+
+- the package physically contains the bundled library;
+- the executable still resolves the dependency from the system instead of from the package.
+
+Because of that, Linux install-tree runtime search paths must be ordered so that the packaged runtime directory is searched before directories of dependencies expected to exist on the target machine.
+
+For packaged executables, the bundled runtime directory is typically:
+
+- `$ORIGIN/../lib`
+
+For packaged shared libraries, the bundled runtime directory is typically:
+
+- `$ORIGIN`
+
+Only after those packaged locations should directories of externally provided dependencies be appended.
 
 
 ## 8. Step-by-step verification flow
@@ -193,6 +225,10 @@ For each such imported target:
 - configured deployment mode is registered;
 - the target is associated with the project targets that link to it.
 
+This detection is not based only on the CMake target type.
+If an imported target is reported as `UNKNOWN_LIBRARY`, its resolved artifact paths are still inspected.
+If the artifact is recognized as a runtime shared library, the target is treated as an imported shared-library dependency.
+
 ### 8.3. Deployment metadata is generated
 After targets are set up, `external_shared_library_deployment.json` is generated.
 
@@ -206,6 +242,8 @@ Supported package formats currently checked by the verification code are:
 - `.deb`
 - `.tgz`
 - `.tar.gz`
+
+Artifacts created by CPack for its own internal work, such as files under `_CPack_Packages/`, are not treated as generated packages for verification purposes.
 
 ### 8.5. Generated packages are extracted
 Each supported package is extracted into a temporary verification directory.
@@ -267,6 +305,16 @@ This verifies both:
 
 - the library was physically packaged;
 - the packaged binaries actually resolve that library from the packaged copy.
+
+On Linux, a bundled dependency may appear in the package both as:
+
+- a SONAME symlink, such as `libz.so.1`;
+- the real file behind it, such as `libz.so.1.3`.
+
+That is expected and required for correct runtime resolution.
+
+If the bundled library is present in the package but still resolves from the system, verification must fail.
+Such a result usually indicates that install-tree runtime search order is wrong.
 
 ### 8.11. Externally provided dependencies are verified
 For each imported shared library configured as `EXPECT_ON_TARGET_MACHINE`, two checks are performed as well.

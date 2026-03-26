@@ -606,6 +606,8 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         for packagePath in sorted(iPackagesDir.rglob("*")):
             if not packagePath.is_file():
                 continue
+            if "_CPack_Packages" in packagePath.parts:
+                continue
             if not (
                 packagePath.name.endswith(".deb") or
                 packagePath.name.endswith(".tgz") or

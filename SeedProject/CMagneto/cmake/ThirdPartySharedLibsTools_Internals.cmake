@@ -113,6 +113,120 @@ function(CMagnetoInternal__get_paths_to_shared_libs iTargetName iBuildType oPath
 endfunction()
 
 
+#[[
+    CMagnetoInternal__is_path_to_shared_library
+
+    Returns whether iPath points to a runtime shared-library binary on the current platform.
+    This helper is needed because some imported runtime-library targets are exposed by CMake
+    as UNKNOWN_LIBRARY even though their resolved artifact is a shared library.
+]]
+function(CMagnetoInternal__is_path_to_shared_library iPath oIsSharedLibrary)
+    if(NOT EXISTS "${iPath}")
+        set(${oIsSharedLibrary} FALSE PARENT_SCOPE)
+        return()
+    endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        execute_process(
+            COMMAND readelf -h "${iPath}"
+            RESULT_VARIABLE _readelfResult
+            OUTPUT_VARIABLE _readelfOutput
+            ERROR_QUIET
+        )
+        if(_readelfResult EQUAL 0 AND _readelfOutput MATCHES "Type:[ \t]+DYN")
+            set(${oIsSharedLibrary} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        get_filename_component(_extension "${iPath}" EXT)
+        if(_extension STREQUAL ".dll")
+            set(${oIsSharedLibrary} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        if("${iPath}" MATCHES "\\.dylib$")
+            set(${oIsSharedLibrary} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
+    set(${oIsSharedLibrary} FALSE PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__is_imported_shared_library_target
+
+    Returns whether iTargetName is an imported target representing a runtime shared library.
+    Targets with CMake type UNKNOWN_LIBRARY are accepted as well if their resolved runtime
+    artifacts are detected as shared-library binaries.
+]]
+function(CMagnetoInternal__is_imported_shared_library_target iTargetName oIsImportedSharedLibrary)
+    if(NOT TARGET ${iTargetName})
+        set(${oIsImportedSharedLibrary} FALSE PARENT_SCOPE)
+        return()
+    endif()
+
+    get_target_property(_isImported ${iTargetName} IMPORTED)
+    if(NOT _isImported)
+        set(${oIsImportedSharedLibrary} FALSE PARENT_SCOPE)
+        return()
+    endif()
+
+    get_target_property(_targetType ${iTargetName} TYPE)
+    if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY")
+        set(${oIsImportedSharedLibrary} TRUE PARENT_SCOPE)
+        return()
+    endif()
+
+    if(NOT _targetType STREQUAL "UNKNOWN_LIBRARY")
+        set(${oIsImportedSharedLibrary} FALSE PARENT_SCOPE)
+        return()
+    endif()
+
+    set(_candidatePaths "")
+
+    get_target_property(_nonBuildSpecificLibPath ${iTargetName} IMPORTED_LOCATION)
+    if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
+        list(APPEND _candidatePaths "${_nonBuildSpecificLibPath}")
+    endif()
+
+    CMagneto__is_multiconfig(IS_MULTICONFIG)
+    if(IS_MULTICONFIG)
+        set(_buildConfigs ${CMAKE_CONFIGURATION_TYPES})
+    elseif(NOT CMAKE_BUILD_TYPE STREQUAL "")
+        set(_buildConfigs "${CMAKE_BUILD_TYPE}")
+    else()
+        set(_buildConfigs "")
+    endif()
+
+    foreach(_config IN LISTS _buildConfigs)
+        string(TOUPPER "${_config}" _configUpper)
+        get_target_property(_libPath ${iTargetName} IMPORTED_LOCATION_${_configUpper})
+        if(_libPath AND EXISTS "${_libPath}")
+            list(APPEND _candidatePaths "${_libPath}")
+            continue()
+        endif()
+
+        get_target_property(_releaseLibPath ${iTargetName} IMPORTED_LOCATION_RELEASE)
+        if(_releaseLibPath AND EXISTS "${_releaseLibPath}")
+            list(APPEND _candidatePaths "${_releaseLibPath}")
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _candidatePaths)
+    foreach(_candidatePath IN LISTS _candidatePaths)
+        CMagnetoInternal__is_path_to_shared_library("${_candidatePath}" _isSharedLibraryPath)
+        if(_isSharedLibraryPath)
+            set(${oIsImportedSharedLibrary} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+
+    set(${oIsImportedSharedLibrary} FALSE PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__get_imported_shared_library_paths iTargetName oPaths)
     if(NOT TARGET ${iTargetName})
         CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths: target \"${iTargetName}\" does not exist.")
@@ -123,16 +237,21 @@ function(CMagnetoInternal__get_imported_shared_library_paths iTargetName oPaths)
         CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths: target \"${iTargetName}\" is not imported.")
     endif()
 
-    get_target_property(_targetType ${iTargetName} TYPE)
-    if(NOT (_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY"))
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths: target \"${iTargetName}\" must be an imported shared or module library, got type \"${_targetType}\".")
+    CMagnetoInternal__is_imported_shared_library_target(${iTargetName} _isImportedSharedLibrary)
+    if(NOT _isImportedSharedLibrary)
+        get_target_property(_targetType ${iTargetName} TYPE)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths: target \"${iTargetName}\" must resolve to an imported shared or module library, got type \"${_targetType}\".")
     endif()
 
     set(_paths "")
+    get_target_property(_targetType ${iTargetName} TYPE)
 
     get_target_property(_nonBuildSpecificLibPath ${iTargetName} IMPORTED_LOCATION)
     if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
-        list(APPEND _paths "${_nonBuildSpecificLibPath}")
+        CMagnetoInternal__is_path_to_shared_library("${_nonBuildSpecificLibPath}" _isSharedLibraryPath)
+        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
+            list(APPEND _paths "${_nonBuildSpecificLibPath}")
+        endif()
     endif()
 
     CMagneto__is_multiconfig(IS_MULTICONFIG)
@@ -155,7 +274,10 @@ function(CMagnetoInternal__get_imported_shared_library_paths iTargetName oPaths)
         endif()
 
         if(_libPath AND EXISTS "${_libPath}")
-            list(APPEND _paths "${_libPath}")
+            CMagnetoInternal__is_path_to_shared_library("${_libPath}" _isSharedLibraryPath)
+            if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
+                list(APPEND _paths "${_libPath}")
+            endif()
         endif()
     endforeach()
 
@@ -516,8 +638,8 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
             continue()
         endif()
 
-        get_target_property(_libType ${_lib} TYPE)
-        if(NOT (_libType STREQUAL "SHARED_LIBRARY"))
+        CMagnetoInternal__is_imported_shared_library_target(${_lib} _isImportedSharedLibrary)
+        if(NOT _isImportedSharedLibrary)
             continue()
         endif()
 
@@ -526,7 +648,10 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
 
         get_target_property(_nonBuildSpecificLibPath ${_lib} IMPORTED_LOCATION)
         if(_nonBuildSpecificLibPath AND EXISTS ${_nonBuildSpecificLibPath})
-            CMagnetoInternal__add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
+            CMagnetoInternal__is_path_to_shared_library("${_nonBuildSpecificLibPath}" _isSharedLibraryPath)
+            if(_isSharedLibraryPath)
+                CMagnetoInternal__add_path_to_shared_libs(${iTargetName} "NonSpecific" ${_nonBuildSpecificLibPath})
+            endif()
         endif()
 
         CMagneto__is_multiconfig(IS_MULTICONFIG)
@@ -553,7 +678,10 @@ function(CMagnetoInternal__collect_paths_to_shared_libs iTargetName)
                 endif()
             endif()
 
-            CMagnetoInternal__add_path_to_shared_libs(${iTargetName} ${_config} ${_libPath})
+            CMagnetoInternal__is_path_to_shared_library("${_libPath}" _isSharedLibraryPath)
+            if(_isSharedLibraryPath)
+                CMagnetoInternal__add_path_to_shared_libs(${iTargetName} ${_config} ${_libPath})
+            endif()
         endforeach()
     endforeach()
 endfunction()
@@ -756,7 +884,6 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
             ${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}
             _sameLocationLibraryDirs
         )
-        list(APPEND _installRPath ${_sameLocationLibraryDirs})
 
         if(_targetType STREQUAL "EXECUTABLE")
             list(APPEND _buildRPath "\$ORIGIN/../lib")
@@ -767,6 +894,7 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
         else()
             return()
         endif()
+        list(APPEND _installRPath ${_sameLocationLibraryDirs})
 
         list(REMOVE_DUPLICATES _buildRPath)
         list(REMOVE_DUPLICATES _installRPath)
@@ -812,7 +940,18 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         return()
     endif()
 
-    install(FILES ${_libPaths}
+    set(_installPaths "")
+    foreach(_libPath IN LISTS _libPaths)
+        list(APPEND _installPaths "${_libPath}")
+
+        get_filename_component(_realPath "${_libPath}" REALPATH)
+        if(EXISTS "${_realPath}" AND NOT _realPath STREQUAL "${_libPath}")
+            list(APPEND _installPaths "${_realPath}")
+        endif()
+    endforeach()
+    list(REMOVE_DUPLICATES _installPaths)
+
+    install(FILES ${_installPaths}
         DESTINATION ${_destinationDir}
         COMPONENT ${CMagneto__COMPONENT__RUNTIME}
     )
