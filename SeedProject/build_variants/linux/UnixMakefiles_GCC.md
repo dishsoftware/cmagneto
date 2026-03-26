@@ -9,6 +9,7 @@ sudo apt update && sudo apt install -y \
   qt6-base-dev \
   qt6-tools-dev \
   libboost-all-dev \
+  zlib1g-dev \
   lcov
 ```
 

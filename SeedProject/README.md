@@ -38,6 +38,7 @@ This project is licensed under the [MIT License](./LICENSE).
     See [the file](./CMagneto/cmake/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
+- **zlib** is used under the terms of the zlib License. See [zlib License](https://zlib.net/zlib_license.html).
 
 
 ## Git History Policy
@@ -62,6 +63,7 @@ The same as in [`Project Build Tools` section the CMagneto framework doc](./CMag
 ### 1.2. Dependencies
 - Qt 6
 - Boost
+- zlib
 
 
 ### 1.3. One-Command Build Script

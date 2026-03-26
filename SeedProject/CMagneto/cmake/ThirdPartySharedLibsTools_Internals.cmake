@@ -230,6 +230,63 @@ function(CMagnetoInternal__get_registered_imported_shared_library_paths iImporte
 endfunction()
 
 
+function(CMagnetoInternal__json_escape_string iInput oEscapedString)
+    set(_escapedString "${iInput}")
+    string(REPLACE "\\" "\\\\" _escapedString "${_escapedString}")
+    string(REPLACE "\"" "\\\"" _escapedString "${_escapedString}")
+    string(REPLACE "\n" "\\n" _escapedString "${_escapedString}")
+    string(REPLACE "\r" "\\r" _escapedString "${_escapedString}")
+    string(REPLACE "\t" "\\t" _escapedString "${_escapedString}")
+    set(${oEscapedString} "${_escapedString}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__get_elf_soname
+
+    Returns SONAME of an ELF shared library if it is present and can be read with `readelf`.
+    On failure or if SONAME is absent, returns an empty string.
+]]
+function(CMagnetoInternal__get_elf_soname iLibraryPath oSoname)
+    execute_process(
+        COMMAND readelf -d "${iLibraryPath}"
+        RESULT_VARIABLE _readelfResult
+        OUTPUT_VARIABLE _readelfOutput
+        ERROR_QUIET
+    )
+    if(NOT _readelfResult EQUAL 0)
+        set(${oSoname} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    string(REGEX MATCH "Library soname: \\[([^]]+)\\]" _sonameMatch "${_readelfOutput}")
+    set(${oSoname} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__get_installable_shared_library_path
+
+    Returns the path that should be copied into a package for an imported shared library.
+    On Linux, prefers the SONAME file when it exists so packaged binaries resolve the deployed runtime name.
+]]
+function(CMagnetoInternal__get_installable_shared_library_path iLibraryPath oInstallablePath)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        CMagnetoInternal__get_elf_soname("${iLibraryPath}" _soname)
+        if(NOT _soname STREQUAL "")
+            cmake_path(GET iLibraryPath PARENT_PATH _libraryParentDir)
+            set(_sonamePath "${_libraryParentDir}/${_soname}")
+            if(EXISTS "${_sonamePath}")
+                set(${oInstallablePath} "${_sonamePath}" PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endif()
+
+    set(${oInstallablePath} "${iLibraryPath}" PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__ensure_external_shared_library_policy_registered iImportedTarget)
     CMagnetoInternal__get_external_shared_libraries_install_mode(${iImportedTarget} _registeredMode)
     if(NOT _registeredMode STREQUAL "")
@@ -354,7 +411,10 @@ function(CMagnetoInternal__get_external_shared_library_paths_to_bundle oPaths)
             CMagnetoInternal__get_external_shared_libraries_install_mode(${_importedTarget} _mode)
             if(_mode STREQUAL CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__BUNDLE_WITH_PACKAGE)
                 CMagnetoInternal__get_registered_imported_shared_library_paths(${_importedTarget} _importedTargetPaths)
-                list(APPEND _pathsToBundle ${_importedTargetPaths})
+                foreach(_importedTargetPath IN LISTS _importedTargetPaths)
+                    CMagnetoInternal__get_installable_shared_library_path("${_importedTargetPath}" _installablePath)
+                    list(APPEND _pathsToBundle ${_installablePath})
+                endforeach()
             endif()
         endforeach()
     endforeach()
@@ -500,10 +560,21 @@ endfunction()
 
 
 set(CMagnetoInternal__3RD_PARTY_SHARED_LIBS__LIST_NAME "3rd_party_shared_libs.json")
+set(CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_DEPLOYMENT__FILE_NAME "external_shared_library_deployment.json")
 
 
 function(CMagnetoInternal__get__3rd_party_shared_libs__file_name oFileName)
     set(${oFileName} "${CMagnetoInternal__3RD_PARTY_SHARED_LIBS__LIST_NAME}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
+    CMagnetoInternal__get__external_shared_library_deployment__file_name
+
+    Returns file name of the JSON metadata describing how imported shared libraries must be deployed.
+]]
+function(CMagnetoInternal__get__external_shared_library_deployment__file_name oFileName)
+    set(${oFileName} "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_DEPLOYMENT__FILE_NAME}" PARENT_SCOPE)
 endfunction()
 
 
@@ -544,6 +615,96 @@ endfunction()
 
 
 #[[
+    CMagnetoInternal__generate__external_shared_library_deployment__content
+
+    Returns content of the "external_shared_library_deployment.json" file.
+    The file records imported shared-library targets grouped by install mode together with
+    runtime file paths used later for package verification.
+]]
+function(CMagnetoInternal__generate__external_shared_library_deployment__content iBuildType oContent)
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
+
+    set(_allImportedTargets "")
+    foreach(_target IN LISTS _registeredTargets)
+        CMagnetoInternal__get_linked_imported_shared_library_targets(${_target} _importedTargets)
+        list(APPEND _allImportedTargets ${_importedTargets})
+    endforeach()
+    list(REMOVE_DUPLICATES _allImportedTargets)
+
+    set(_expectEntries "")
+    set(_bundleEntries "")
+
+    foreach(_importedTarget IN LISTS _allImportedTargets)
+        CMagnetoInternal__get_external_shared_libraries_install_mode(${_importedTarget} _installMode)
+        if(_installMode STREQUAL "")
+            continue()
+        endif()
+
+        CMagnetoInternal__get_registered_imported_shared_library_paths(${_importedTarget} _importedTargetPaths)
+        CMagnetoInternal__json_escape_string("${_importedTarget}" _importedTargetEscaped)
+
+        set(_entryPathItems "")
+        foreach(_path IN LISTS _importedTargetPaths)
+            if(_installMode STREQUAL CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__BUNDLE_WITH_PACKAGE)
+                CMagnetoInternal__get_installable_shared_library_path("${_path}" _pathForDeploymentInfo)
+            else()
+                set(_pathForDeploymentInfo "${_path}")
+            endif()
+
+            CMagnetoInternal__json_escape_string("${_pathForDeploymentInfo}" _pathEscaped)
+            if(_entryPathItems STREQUAL "")
+                set(_entryPathItems "\n\t\t\t\"${_pathEscaped}\"")
+            else()
+                set(_entryPathItems "${_entryPathItems},\n\t\t\t\"${_pathEscaped}\"")
+            endif()
+        endforeach()
+        if(NOT _entryPathItems STREQUAL "")
+            set(_entryPathItems "${_entryPathItems}\n\t\t")
+        endif()
+
+        set(_entry
+            "\n\t\t{\n"
+            "\t\t\t\"ImportedTarget\": \"${_importedTargetEscaped}\",\n"
+            "\t\t\t\"Paths\": [${_entryPathItems}]\n"
+            "\t\t}"
+        )
+        string(CONCAT _entry ${_entry})
+
+        if(_installMode STREQUAL CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE)
+            if(_expectEntries STREQUAL "")
+                set(_expectEntries "${_entry}")
+            else()
+                set(_expectEntries "${_expectEntries},${_entry}")
+            endif()
+        elseif(_installMode STREQUAL CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__BUNDLE_WITH_PACKAGE)
+            if(_bundleEntries STREQUAL "")
+                set(_bundleEntries "${_entry}")
+            else()
+                set(_bundleEntries "${_bundleEntries},${_entry}")
+            endif()
+        endif()
+    endforeach()
+
+    set(_fileContent "{\n\t\"EXPECT_ON_TARGET_MACHINE\": [")
+    if(NOT _expectEntries STREQUAL "")
+        set(_fileContent "${_fileContent}${_expectEntries}\n\t")
+    else()
+        set(_fileContent "${_fileContent}\n\t")
+    endif()
+
+    set(_fileContent "${_fileContent}],\n\t\"BUNDLE_WITH_PACKAGE\": [")
+    if(NOT _bundleEntries STREQUAL "")
+        set(_fileContent "${_fileContent}${_bundleEntries}\n\t")
+    else()
+        set(_fileContent "${_fileContent}\n\t")
+    endif()
+    set(_fileContent "${_fileContent}]\n}")
+
+    set(${oContent} "${_fileContent}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
     CMagnetoInternal__set_up__3rd_party_shared_libs__list
 
     Generates, places to build directory and installs "3rd_party_shared_libs.json" file.
@@ -554,6 +715,17 @@ endfunction()
 ]]
 function(CMagnetoInternal__set_up__3rd_party_shared_libs__list)
     CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__3rd_party_shared_libs__file_name" "CMagnetoInternal__generate__3rd_party_shared_libs__content" FALSE TRUE ${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC})
+endfunction()
+
+
+#[[
+    CMagnetoInternal__set_up__external_shared_library_deployment__list
+
+    Generates and places the imported shared-library deployment metadata into the build tree.
+    The file is consumed by package verification code and is not installed as a build-machine-specific artifact.
+]]
+function(CMagnetoInternal__set_up__external_shared_library_deployment__list)
+    CMagnetoInternal__set_up_file_into_SUBDIR_EXECUTABLE("CMagnetoInternal__get__external_shared_library_deployment__file_name" "CMagnetoInternal__generate__external_shared_library_deployment__content" FALSE FALSE "")
 endfunction()
 
 

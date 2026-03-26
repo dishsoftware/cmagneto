@@ -413,3 +413,4 @@ The resulting URL may look like:<br>
 This Knowledge Base serves as a centralized collection of technical notes, clarifications, code excerpts, and curated content from books, documentation, and online resources. It is designed for quick reference during development to reduce repetitive searches.
 
 - [CMake](./doc/CMakeKnowledge.md)
+- [Linux package verification](./doc/LinuxPackageVerification.md)

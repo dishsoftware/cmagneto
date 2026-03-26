@@ -4,12 +4,16 @@
 
 #include <QCoreApplication>
 #include <QIcon>
+#include <QStyleFactory>
+#include <QApplication>
 
 #include <iostream>
 
+#include <zlib.h>
+
 
 int main() {
-    std::wcout << QCoreApplication::translate("Dish::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
+    std::wcout << QApplication::translate("Dish::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
 
     const auto fieldType = Dish::ContactHolder::Contacts::FieldType::Enum::kEMailAddress;
     std::wcout << "Dish::ContactHolder::Contacts::FieldType::Enum::kEMailAddress index: " << static_cast<int>(fieldType) << std::endl;
@@ -18,6 +22,8 @@ int main() {
     std::wcout << "Dish::ContactHolder::Contacts::FieldType::toString(kEMailAddress): " << fieldTypeString.toStdWString() << std::endl;
 
     auto emailAddress = Dish::ContactHolder::Contacts::fields::EmailAddress();
+    std::wcout << "zlib version: " << zlibVersion() << std::endl;
+    std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
 
     QIcon iconContacts(":/Dish/ContactHolder/Contacts/icons/logo.svg");
     QIcon iconGUI(":/Dish/ContactHolder/GUI/icons/logo.svg");
