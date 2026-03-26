@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
@@ -21,6 +22,30 @@ class DependencyPathSpec:
     cmakePathPostfix: Path | None = None
 
 
+class ExternalSharedLibraryInstallMode(Enum):
+    EXPECT_ON_TARGET_MACHINE = "EXPECT_ON_TARGET_MACHINE"
+    BUNDLE_WITH_PACKAGE = "BUNDLE_WITH_PACKAGE"
+
+
+@dataclass(frozen=True)
+class ExternalSharedLibraryPolicy:
+    importedTargetName: str
+    installMode: ExternalSharedLibraryInstallMode
+
+
+def expectExternalSharedLibrariesOnTargetMachine(*iImportedTargetNames: str) -> tuple[ExternalSharedLibraryPolicy, ...]:
+    return tuple(
+        ExternalSharedLibraryPolicy(importedTargetName, ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE)
+        for importedTargetName in iImportedTargetNames
+    )
+
+def bundleExternalSharedLibraries(*iImportedTargetNames: str) -> tuple[ExternalSharedLibraryPolicy, ...]:
+    return tuple(
+        ExternalSharedLibraryPolicy(importedTargetName, ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE)
+        for importedTargetName in iImportedTargetNames
+    )
+
+
 @dataclass(frozen=True)
 class Toolset:
     name: str
@@ -29,6 +54,7 @@ class Toolset:
     multiConfig: bool
     cppCompilerName: str | None = None
     dependencyPaths: tuple[DependencyPathSpec, ...] = field(default_factory=tuple)
+    externalSharedLibraryPolicies: tuple[ExternalSharedLibraryPolicy, ...] = field(default_factory=tuple)
     extraGenerateArgs: tuple[str, ...] = field(default_factory=tuple)
     envSetupScript: str | None = None
     envSetupArgs: tuple[str, ...] = field(default_factory=tuple)

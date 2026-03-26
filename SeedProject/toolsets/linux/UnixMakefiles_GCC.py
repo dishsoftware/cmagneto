@@ -1,5 +1,5 @@
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.toolset import Toolset
+from CMagneto.py.cmake.toolset import Toolset, expectExternalSharedLibrariesOnTargetMachine
 from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
 
 
@@ -9,6 +9,11 @@ ToolsetRegistry().registerToolset(
         supportedOSes=frozenset({BuildPlatform.OS.Linux}),
         generatorName="Unix Makefiles",
         multiConfig=False,
-        cppCompilerName="g++"
+        cppCompilerName="g++",
+        externalSharedLibraryPolicies=expectExternalSharedLibrariesOnTargetMachine(
+            "Qt6::Core",
+            "Qt6::Gui",
+            "Qt6::Widgets"
+        )
     )
 )

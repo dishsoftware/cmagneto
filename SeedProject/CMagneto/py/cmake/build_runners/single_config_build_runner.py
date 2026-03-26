@@ -101,6 +101,8 @@ class SingleConfigBuildRunner(BuildRunner):
         if iBuildType == BuildRunner.BuildType.Debug and self.enableCodeCoverage():
             command.append("-DENABLE_COVERAGE=ON")
 
+        command.extend(self._cmakeFlagsFor__externalSharedLibraryPolicies())
+
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,
             "-DCMAKE_INSTALL_PREFIX=" + str(self.installDirForBuildType(iBuildType)),

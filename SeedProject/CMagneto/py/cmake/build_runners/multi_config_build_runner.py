@@ -113,6 +113,8 @@ class MultiConfigBuildRunner(BuildRunner):
         if BuildRunner.BuildType.Debug in self.buildTypes() and self.enableCodeCoverage():
             command.append("-DENABLE_COVERAGE=ON")
 
+        command.extend(self._cmakeFlagsFor__externalSharedLibraryPolicies())
+
         command.extend([
             # Install directory is overriden in __install.
             # It is set here in case installing is started not using "cmake --install", but from IDE's UI.

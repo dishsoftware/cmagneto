@@ -271,22 +271,55 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) If the project defines an executable target, which is considered as the project entrypoint, call
+6) Define runtime-installation policy for imported shared-library dependencies in the active toolset under [`./toolsets/`](./../toolsets/):
+    ```python
+    from pathlib import Path
+    from CMagneto.py.cmake.toolset import (
+        DependencyPathSpec,
+        Toolset,
+        bundleExternalSharedLibraries,
+        expectExternalSharedLibrariesOnTargetMachine,
+    )
+
+    Toolset(
+        ...,
+        dependencyPaths=(
+            DependencyPathSpec("QT6_MSVC2022_DIR", Path("lib/cmake")),
+        ),
+        externalSharedLibraryPolicies=(
+            *expectExternalSharedLibrariesOnTargetMachine(
+                "Qt6::Core",
+                "Qt6::Gui",
+                "Qt6::Widgets",
+            ),
+            *bundleExternalSharedLibraries(
+                "MyPrivateDependency::MyPrivateDependency",
+            ),
+        ),
+    )
+    ```
+    Use `expectExternalSharedLibrariesOnTargetMachine(...)` if the dependency is expected to be installed on the target machine at the same absolute location as on the build machine.
+    Use `bundleExternalSharedLibraries(...)` if the shared-library binaries must be included into the installation package.
+
+    The toolset is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other toolset details.
+    Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)` or `CMagneto__bundle_external_shared_libraries(...)` directly in CMake as manual overrides, but this is not the primary workflow.
+
+7) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
-    to configure `run` scripts (see section [`1.4. Run Project`](#14-run-project)).
+    to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-7) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+8) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         ... # List the files to embed here.
     )
     ```
 
-8) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+9) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
 
-9) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+10) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 
@@ -303,10 +336,12 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-10) After all targets are set up, call: `CMagneto__set_up__project()`.
+11) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
-    - `set_env` and `run` scripts (see section [`1.4. Run Project`](#14-run-project));
+    - target runtime lookup configuration for build and install trees;
+    - installation of toolset-selected bundled external shared libraries into the package;
+    - optional legacy `set_env` and `run` helper scripts (see section [`1.4. Run Project`](#14-run-project));
     - Auxilliary files, required by the coupled Python code and VS Code.
     - Unit and integration test compilation and `run_tests` scripts;
     - CPack package configuration files, auxilliary targets, reports, helper scripts, etc.;
@@ -325,12 +360,19 @@ All bundled toolsets are accompanied with identically named Markdown instruction
 
 
 ### 1.4. Run Project
-For some builds, compiled (in `./build/`) and installed (in `./install/`) executables can be run directly, if dependencies are installed via the recommended package managers.<br>
-In general case, it may be required to set paths to shared libraries of the dependecies before running.<br>
+CMagneto separates deployment policy from platform-specific runtime mechanics:
+- The deployment policy is chosen in the active toolset with `expectExternalSharedLibrariesOnTargetMachine(...)` and `bundleExternalSharedLibraries(...)`.
+- On Linux, executables and shared libraries get `BUILD_RPATH` and `INSTALL_RPATH` values.
+- On Linux, imported shared libraries selected as `expectExternalSharedLibrariesOnTargetMachine(...)` contribute their build-machine directories to `INSTALL_RPATH`.
+- Bundled imported shared libraries are copied into the install tree on all supported platforms. On Linux they are placed into `lib/`; on Windows they are placed into `bin/`.
+- On Windows, runtime DLLs of a target are still copied next to the target binary in the build tree as a local-development convenience.
+- For Debian packages, [`CPACK_DEBIAN_PACKAGE_SHLIBDEPS`](./cmake/Packager/DEB/DEBConfig_before_include_CPack.cmake) is enabled, so package dependencies on system-installed shared libraries are computed automatically.
 
-CMagneto CMake function `CMagneto__set_up__project()` creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
-- `set_env` script sets environment variables for runtime, including paths to directories with 3rd-party shared libs;
-- `run` script executes a `set_env` script and the runs the project entrypoint-executable.
+CMagneto CMake function `CMagneto__set_up__project()` also creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
+- `set_env` is a legacy development helper and fallback for imported shared libraries that were not classified in the toolset policy;
+- `run` executes `set_env` and then runs the project entrypoint executable.
+
+These helper scripts are not meant to be a distribution mechanism. Packaged applications should rely on the toolset-selected dependency policy and the corresponding platform-specific runtime setup.
 
 
 ### 1.5. Engage Continuous Integration (CI)

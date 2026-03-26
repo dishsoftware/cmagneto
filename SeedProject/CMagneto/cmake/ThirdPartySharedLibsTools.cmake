@@ -19,3 +19,69 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 # Load internals of the submodule.
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools_Internals.cmake")
+
+
+#[[
+    CMagneto__expect_external_shared_libraries_on_target_machine
+
+    Marks imported shared-library targets as expected to be installed on the target
+    machine at the same absolute locations as on the build machine.
+
+    On Linux, CMagneto adds directories of these libraries to INSTALL_RPATH of project
+    binaries, so packaged binaries can load them without `set_env`.
+    Toolset-defined policies are preferred. This function is an optional manual override.
+
+    The function must be called after the imported targets exist. It may be called from
+    any project `CMakeLists.txt` that runs before `CMagneto__set_up__project()`
+    finishes configuring the project.
+
+    Named arguments:
+    IMPORTED_TARGETS - imported shared-library targets to treat as preinstalled on the target machine.
+]]
+function(CMagneto__expect_external_shared_libraries_on_target_machine)
+    cmake_parse_arguments(ARG
+        "" # Options (boolean flags).
+        "" # Single-value keywords (strings).
+        "IMPORTED_TARGETS" # Multi-value keywords (lists).
+        ${ARGN}
+    )
+
+    if(ARG_IMPORTED_TARGETS STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__expect_external_shared_libraries_on_target_machine: no IMPORTED_TARGETS were provided.")
+    endif()
+
+    CMagnetoInternal__register_external_shared_libraries_install_mode("EXPECT_ON_TARGET_MACHINE" "${ARG_IMPORTED_TARGETS}")
+endfunction()
+
+
+#[[
+    CMagneto__bundle_external_shared_libraries
+
+    Marks imported shared-library targets to be bundled into the install tree.
+    Use this for non-system dependencies that must travel with the package.
+
+    On Linux, bundled libraries are installed into `${CMagneto__SUBDIR_SHARED}` and
+    project binaries use relative INSTALL_RPATH entries such as `$ORIGIN/../lib`.
+    Toolset-defined policies are preferred. This function is an optional manual override.
+
+    The function must be called after the imported targets exist. It may be called from
+    any project `CMakeLists.txt` that runs before `CMagneto__set_up__project()`
+    finishes configuring the project.
+
+    Named arguments:
+    IMPORTED_TARGETS - imported shared-library targets to install into the package.
+]]
+function(CMagneto__bundle_external_shared_libraries)
+    cmake_parse_arguments(ARG
+        "" # Options (boolean flags).
+        "" # Single-value keywords (strings).
+        "IMPORTED_TARGETS" # Multi-value keywords (lists).
+        ${ARGN}
+    )
+
+    if(ARG_IMPORTED_TARGETS STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bundle_external_shared_libraries: no IMPORTED_TARGETS were provided.")
+    endif()
+
+    CMagnetoInternal__register_external_shared_libraries_install_mode("BUNDLE_WITH_PACKAGE" "${ARG_IMPORTED_TARGETS}")
+endfunction()

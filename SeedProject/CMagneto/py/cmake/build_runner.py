@@ -17,7 +17,7 @@ The location relative to the project root must be preserved.
 from __future__ import annotations
 from .build_platform import BuildPlatform
 from abc import ABC, abstractmethod
-from CMagneto.py.cmake.toolset import Toolset
+from CMagneto.py.cmake.toolset import ExternalSharedLibraryInstallMode, Toolset
 from CMagneto.py.utils.const_meta_class import ConstMetaClass
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
@@ -440,6 +440,42 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
     def _setDependencyPaths(self) -> None:
         for dependencyPath in self.toolset().dependencyPaths:
             BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH(dependencyPath.envVarName, dependencyPath.cmakePathPostfix)
+
+    def _cmakeFlagsFor__externalSharedLibraryPolicies(self) -> list[str]:
+        importedTargetsByMode: dict[ExternalSharedLibraryInstallMode, list[str]] = {
+            ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE: [],
+            ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE: []
+        }
+        installModesByImportedTarget: dict[str, ExternalSharedLibraryInstallMode] = {}
+
+        for policy in self.toolset().externalSharedLibraryPolicies:
+            existingMode = installModesByImportedTarget.get(policy.importedTargetName)
+            if existingMode is not None and existingMode != policy.installMode:
+                Log.error(
+                    f"Toolset \"{self.toolsetName()}\" configures imported shared library "
+                    f"\"{policy.importedTargetName}\" with conflicting install modes: "
+                    f"\"{existingMode.value}\" and \"{policy.installMode.value}\"."
+                )
+
+            installModesByImportedTarget[policy.importedTargetName] = policy.installMode
+            importedTargetsByMode[policy.installMode].append(policy.importedTargetName)
+
+        flags: list[str] = []
+        for installMode, importedTargets in importedTargetsByMode.items():
+            if not importedTargets:
+                continue
+
+            deduplicatedImportedTargets = list(dict.fromkeys(importedTargets))
+            if installMode == ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE:
+                varName = "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE"
+            elif installMode == ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE:
+                varName = "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE"
+            else:
+                Log.error(f"Invalid logics of {__file__}: unsupported install mode \"{installMode.value}\".")
+
+            flags.append(f"-D{varName}={';'.join(deduplicatedImportedTargets)}")
+
+        return flags
 
     def __setUpToolsetEnvironment(self) -> None:
         envSetupScript = self.toolset().envSetupScript

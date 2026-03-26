@@ -74,9 +74,16 @@ For details look into [`1.3. Build Project` section the CMagneto framework doc](
 
 
 ## 2. Run
-The following helper scripts are created inside `bin/` subdirectories of `./build/` and `./install/`:
-- `set_env` script sets environment variables for runtime, including paths to directories with 3rd-party shared libs;
-- `run` script executes a `set_env` script and the runs the project entrypoint-executable.
+Runtime dependency policy is defined by the active toolset under [`./toolsets/`](./toolsets/):
+- some imported shared libraries can be marked as expected on the target machine at the same absolute locations as on the build machine;
+- others can be marked as bundled into the installation package;
+- dependencies that are not marked explicitly may still need the legacy helper scripts or platform default loader paths.
+
+The following legacy helper scripts are also created inside `bin/` subdirectories of `./build/` and `./install/`:
+- `set_env` prepends build-machine-specific dependency directories to the runtime environment;
+- `run` executes `set_env` and then runs the project entrypoint executable.
+
+CMagneto then realizes that policy using platform-specific mechanisms such as `RPATH`, install-tree copying, and package-manager dependency metadata.
 
 
 ## 3. Continuous Integration (CI)
