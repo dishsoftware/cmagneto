@@ -39,6 +39,7 @@ def expectExternalSharedLibrariesOnTargetMachine(*iImportedTargetNames: str) -> 
         for importedTargetName in iImportedTargetNames
     )
 
+
 def bundleExternalSharedLibraries(*iImportedTargetNames: str) -> tuple[ExternalSharedLibraryPolicy, ...]:
     return tuple(
         ExternalSharedLibraryPolicy(importedTargetName, ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE)
@@ -47,7 +48,7 @@ def bundleExternalSharedLibraries(*iImportedTargetNames: str) -> tuple[ExternalS
 
 
 @dataclass(frozen=True)
-class Toolset:
+class BuildVariant:
     name: str
     supportedOSes: frozenset[BuildPlatform.OS]
     generatorName: str

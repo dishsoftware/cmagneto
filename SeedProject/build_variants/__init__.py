@@ -13,15 +13,15 @@ def _importModuleByPath(iPackagePath: pathlib.Path, iPath: pathlib.Path) -> None
 
 packagePath = pathlib.Path(__file__).parent
 
-# Import root-level shared toolsets, if any.
+# Import root-level shared build variants, if any.
 for path in packagePath.glob("*.py"):
     _importModuleByPath(packagePath, path)
 
-# Import only toolsets for the current host OS.
-hostToolsetDirNameByOS = {
+# Import only build variants for the current host OS.
+hostBuildVariantDirNameByOS = {
     BuildPlatform.OS.Linux: "linux",
     BuildPlatform.OS.Windows: "windows",
 }
-hostToolsetPath = packagePath / hostToolsetDirNameByOS[BuildPlatform().hostOS()]
-for path in hostToolsetPath.rglob("*.py"):
+hostBuildVariantPath = packagePath / hostBuildVariantDirNameByOS[BuildPlatform().hostOS()]
+for path in hostBuildVariantPath.rglob("*.py"):
     _importModuleByPath(packagePath, path)

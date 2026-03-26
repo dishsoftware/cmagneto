@@ -37,7 +37,7 @@ The framework is shipped with the following major components:
     * The [`CMagneto CMake modules`](./cmake/) contain functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
     * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
 - Template configuration files in [`./meta/`](./../meta/);
-- Build toolset definitions and accompanying instructions in [`./toolsets/`](./../toolsets/);
+- Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/);
 - One-command build script [`./build.py`](./../build.py);
 - Pre-configured CTest files in [`./tests/`](./../tests/);
 - Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../packaging/@resources/);
@@ -95,7 +95,7 @@ The CMagneto framework needs on the following software to build your project:
     Version is bound by the tested version.
 
 > **Note:** If CMake target dependency graph picture is desired, Graphviz must be installed.<br>
-> Output is located at `./build/{toolset}/[{build_type}]/graphviz/`.<br>
+> Output is located at `./build/{build_variant}/[{build_type}]/graphviz/`.<br>
 > If Graphviz is installed, but no image is generated, define the `GRAPHVIZ_DIR` environment variable, e.g. `GRAPHVIZ_DIR=C:\Program Files\Graphviz`.
 
 > **Note:** The easiest way to get Qt Installer Framework - install it using QtOnlineInstaller (or Qt Maintenance Tool) from https://www.qt.io/download-open-source.<br>
@@ -124,7 +124,7 @@ SeedProject/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
-├── toolsets/                              # Build toolset descriptors and accompanying instructions.
+├── build_variants/                        # Build-variant descriptors and accompanying instructions.
 │   ├── linux/
 |   |   ├── UnixMakefiles_GCC.py
 |   |   ├── UnixMakefiles_GCC.md
@@ -203,7 +203,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
     and installation package resources in [`./packaging/@resources/`](./../packaging/@resources/).
 
-4) Define build toolsets in [`./toolsets/`](./../toolsets/).
+4) Define build variants in [`./build_variants/`](./../build_variants/).
 
 5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
 
@@ -271,17 +271,17 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) Define runtime-installation policy for imported shared-library dependencies in the active toolset under [`./toolsets/`](./../toolsets/):
+6) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/):
     ```python
     from pathlib import Path
-    from CMagneto.py.cmake.toolset import (
+    from CMagneto.py.cmake.build_variant import (
         DependencyPathSpec,
-        Toolset,
+        BuildVariant,
         bundleExternalSharedLibraries,
         expectExternalSharedLibrariesOnTargetMachine,
     )
 
-    Toolset(
+    BuildVariant(
         ...,
         dependencyPaths=(
             DependencyPathSpec("QT6_MSVC2022_DIR", Path("lib/cmake")),
@@ -301,7 +301,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     Use `expectExternalSharedLibrariesOnTargetMachine(...)` if the dependency is expected to be installed on the target machine at the same absolute location as on the build machine.
     Use `bundleExternalSharedLibraries(...)` if the shared-library binaries must be included into the installation package.
 
-    The toolset is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other toolset details.
+    The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
     Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)` or `CMagneto__bundle_external_shared_libraries(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
 7) If the project defines an executable target, which is considered as the project entrypoint, call
@@ -340,7 +340,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;
-    - installation of toolset-selected bundled external shared libraries into the package;
+    - installation of build-variant-selected bundled external shared libraries into the package;
     - optional legacy `set_env` and `run` helper scripts (see section [`1.4. Run Project`](#14-run-project));
     - Auxilliary files, required by the coupled Python code and VS Code.
     - Unit and integration test compilation and `run_tests` scripts;
@@ -353,15 +353,15 @@ To see available options, run:
 ```bash
 python ./build.py --help
 ```
-The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple toolsets.<br>
-A toolset is a bundle of a build system, a compiler, paths of dependencies, etc.<br>
-Toolsets are defined under [`./toolsets/`](./../toolsets/) and loaded by the framework at build time.<br>
-All bundled toolsets are accompanied with identically named Markdown instructions describing how to install dependencies, set up VS Code, and more.
+The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple build variants.<br>
+A build variant is a bundle of a build system, a compiler, dependency lookup paths, runtime-deployment policy, and other build-time choices.<br>
+Build variants are defined under [`./build_variants/`](./../build_variants/) and loaded by the framework at build time.<br>
+All bundled build variants are accompanied with identically named Markdown instructions describing how to install dependencies, set up VS Code, and more.
 
 
 ### 1.4. Run Project
 CMagneto separates deployment policy from platform-specific runtime mechanics:
-- The deployment policy is chosen in the active toolset with `expectExternalSharedLibrariesOnTargetMachine(...)` and `bundleExternalSharedLibraries(...)`.
+- The deployment policy is chosen in the active build variant with `expectExternalSharedLibrariesOnTargetMachine(...)` and `bundleExternalSharedLibraries(...)`.
 - On Linux, executables and shared libraries get `BUILD_RPATH` and `INSTALL_RPATH` values.
 - On Linux, imported shared libraries selected as `expectExternalSharedLibrariesOnTargetMachine(...)` contribute their build-machine directories to `INSTALL_RPATH`.
 - Bundled imported shared libraries are copied into the install tree on all supported platforms. On Linux they are placed into `lib/`; on Windows they are placed into `bin/`.
@@ -369,10 +369,10 @@ CMagneto separates deployment policy from platform-specific runtime mechanics:
 - For Debian packages, [`CPACK_DEBIAN_PACKAGE_SHLIBDEPS`](./cmake/Packager/DEB/DEBConfig_before_include_CPack.cmake) is enabled, so package dependencies on system-installed shared libraries are computed automatically.
 
 CMagneto CMake function `CMagneto__set_up__project()` also creates helper scripts inside `bin/` subdirectories of `./build/` and `./install/`:
-- `set_env` is a legacy development helper and fallback for imported shared libraries that were not classified in the toolset policy;
+- `set_env` is a legacy development helper and fallback for imported shared libraries that were not classified in the build-variant policy;
 - `run` executes `set_env` and then runs the project entrypoint executable.
 
-These helper scripts are not meant to be a distribution mechanism. Packaged applications should rely on the toolset-selected dependency policy and the corresponding platform-specific runtime setup.
+These helper scripts are not meant to be a distribution mechanism. Packaged applications should rely on the build-variant-selected dependency policy and the corresponding platform-specific runtime setup.
 
 
 ### 1.5. Engage Continuous Integration (CI)
@@ -394,16 +394,16 @@ To trigger a pipeline for an untagged commit to another branch, push the commit 
 
 ##### 1.5.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{toolset}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
+`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{build_variant}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
 
 where:
 - `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. `71534203`;
 - `DockerRegistrySuffix` is defined in [`./meta/CI.json`](./../meta/CI.json);
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
 - `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./../CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform=`Ubuntu24AMD`;
-- `toolset` is the argument, passed to [`./build.py --toolset`](./py/cmake/build.py);
+- `build_variant` is the argument, passed to [`./build.py --build_variant`](./py/cmake/build.py);
 - `PackageNamePrefix` and `ProjectVersion` are defined in [`./meta/Packaging.json`](./../meta/Packaging.json) and [`./meta/Project.json`](./../meta/Project.json);
-- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and toolset.
+- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
 [https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .

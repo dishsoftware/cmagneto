@@ -1,10 +1,10 @@
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.toolset import Toolset, expectExternalSharedLibrariesOnTargetMachine
-from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
+from CMagneto.py.cmake.build_variant import BuildVariant, expectExternalSharedLibrariesOnTargetMachine
+from CMagneto.py.cmake.build_variant_registry import BuildVariantRegistry
 
 
-ToolsetRegistry().registerToolset(
-    Toolset(
+BuildVariantRegistry().registerBuildVariant(
+    BuildVariant(
         name="UnixMakefiles_GCC",
         supportedOSes=frozenset({BuildPlatform.OS.Linux}),
         generatorName="Unix Makefiles",

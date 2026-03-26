@@ -76,23 +76,23 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --toolset ${TOOLSET} --build_types Release
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Release
 
     # Append variables to inherited.env report artifact, in order to pass the variables to a following job(s). Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
-    - echo "TOOLSET=${TOOLSET}" >> inherited.env
+    - echo "BUILD_VARIANT=${BUILD_VARIANT}" >> inherited.env
   artifacts:
     when: always
     paths:
-      - build/${TOOLSET}/Release/summary/test_report.xml
-      - build/${TOOLSET}/Release/packages/** # Everything within ".../packages/" recursively.
+      - build/${BUILD_VARIANT}/Release/summary/test_report.xml
+      - build/${BUILD_VARIANT}/Release/packages/** # Everything within ".../packages/" recursively.
     exclude:
       # Recursively exclude _CPack_Packages (the dir itself is also excluded). _CPack_Packages contains CPack temp files.
-      - build/${TOOLSET}/Release/packages/_CPack_Packages/**
+      - build/${BUILD_VARIANT}/Release/packages/_CPack_Packages/**
     reports:
-      junit: build/${TOOLSET}/Release/summary/test_report.xml
+      junit: build/${BUILD_VARIANT}/Release/summary/test_report.xml
       dotenv: inherited.env
 
 
@@ -123,7 +123,7 @@ variables:
   # needs: [.build-test-package]
   script:
     - |
-      packagesDir="./build/${TOOLSET}/Release/packages"
+      packagesDir="./build/${BUILD_VARIANT}/Release/packages"
 
       # Iterate over all files recursively under packagesDir.
       ## `find ... |`         — lists all files under packagesDir, one per line.
@@ -133,7 +133,7 @@ variables:
         # Compute file path relative to packagesDir.
         relative_path="${file#${packagesDir}/}"
 
-        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/${relative_path}"
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${BUILD_VARIANT}/${relative_path}"
         echo "Uploading ${file} to ${url}"
         curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
       done
@@ -165,10 +165,10 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --toolset ${TOOLSET} --build_types Debug --build_stage RunTests --coverage
-    - echo "Test coverage $(cat build/${TOOLSET}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Debug --build_stage RunTests --coverage
+    - echo "Test coverage $(cat build/${BUILD_VARIANT}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
   coverage: '/Test coverage (\d+\.\d+%|N/A)/'
   rules:
     # If trigger is:

@@ -195,7 +195,7 @@ function(CMagnetoInternal__get_configured_external_shared_libraries_install_mode
     list(FIND CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE "${iImportedTarget}" _bundleIdx)
 
     if(_expectIdx GREATER -1 AND _bundleIdx GREATER -1)
-        CMagnetoInternal__message(FATAL_ERROR "Imported shared library target \"${iImportedTarget}\" is configured both as EXPECT_ON_TARGET_MACHINE and BUNDLE_WITH_PACKAGE. Check the current toolset definition.")
+        CMagnetoInternal__message(FATAL_ERROR "Imported shared library target \"${iImportedTarget}\" is configured both as EXPECT_ON_TARGET_MACHINE and BUNDLE_WITH_PACKAGE. Check the current build-variant definition.")
     elseif(_expectIdx GREATER -1)
         set(${oMode} "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}" PARENT_SCOPE)
     elseif(_bundleIdx GREATER -1)
@@ -384,7 +384,7 @@ function(CMagnetoInternal__warn_about_unclassified_external_shared_libraries iTa
     set(_message
         "CMagneto target \"${iTargetName}\" links imported shared libraries without an install mode decision: "
         "\"${_targetsJoined}\". Installed binaries may still require the legacy `set_env` helper or rely on platform "
-        "default search paths. Configure such dependencies in the active toolset with "
+        "default search paths. Configure such dependencies in the active build variant with "
         "expectExternalSharedLibrariesOnTargetMachine(...) or bundleExternalSharedLibraries(...), "
         "or mark them explicitly in CMake as a manual override."
     )

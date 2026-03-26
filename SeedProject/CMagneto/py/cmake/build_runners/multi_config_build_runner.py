@@ -9,7 +9,7 @@
 # but consumers may relocate it as needed.
 
 from CMagneto.py.cmake.build_runner import BuildRunner
-from CMagneto.py.cmake.toolset import Toolset
+from CMagneto.py.cmake.build_variant import BuildVariant
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
@@ -19,12 +19,12 @@ import os
 
 class MultiConfigBuildRunner(BuildRunner):
     def __init__(self,
-            iToolset: Toolset,
+            iBuildVariant: BuildVariant,
             iBuildTypes: set[BuildRunner.BuildType],
             iEnableCodeCoverage: bool = False
         ):
         super().__init__(
-                    iToolset,
+                    iBuildVariant,
                     iBuildTypes,
                     iEnableCodeCoverage
                 )
@@ -125,7 +125,7 @@ class MultiConfigBuildRunner(BuildRunner):
         return command
 
     def _extraArgsFor__generate__command(self) -> list[str]:
-        return list(self.toolset().extraGenerateArgs)
+        return list(self.buildVariant().extraGenerateArgs)
 
     def __compile(self, iBuildType: BuildRunner.BuildType) -> None:
         text = f"Compiling ({iBuildType.name})"

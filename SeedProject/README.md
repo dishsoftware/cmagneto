@@ -74,7 +74,7 @@ For details look into [`1.3. Build Project` section the CMagneto framework doc](
 
 
 ## 2. Run
-Runtime dependency policy is defined by the active toolset under [`./toolsets/`](./toolsets/):
+Runtime dependency policy is defined by the active build variant under [`./build_variants/`](./build_variants/):
 - some imported shared libraries can be marked as expected on the target machine at the same absolute locations as on the build machine;
 - others can be marked as bundled into the installation package;
 - dependencies that are not marked explicitly may still need the legacy helper scripts or platform default loader paths.
@@ -101,13 +101,13 @@ To trigger a pipeline for an untagged commit to another branch, push the commit 
 
 #### 3.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/{BranchName_or_Tag}/{Platform}/{toolset}/Dish_ContactHolder-{ProjectVersion}.{PackageExtension}`,
+`https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/{BranchName_or_Tag}/{Platform}/{build_variant}/Dish_ContactHolder-{ProjectVersion}.{PackageExtension}`,
 
 where:
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
 - `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform=`Ubuntu24AMD`;
-- `toolset` is the argument, passed to [`./build.py --toolset`](./build.py);
-- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
+- `build_variant` is the argument, passed to [`./build.py --build_variant`](./build.py);
+- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
 [https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .

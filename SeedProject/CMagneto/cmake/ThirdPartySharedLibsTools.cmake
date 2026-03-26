@@ -29,7 +29,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools_Internals.cmake")
 
     On Linux, CMagneto adds directories of these libraries to INSTALL_RPATH of project
     binaries, so packaged binaries can load them without `set_env`.
-    Toolset-defined policies are preferred. This function is an optional manual override.
+    Build-variant-defined policies are preferred. This function is an optional manual override.
 
     The function must be called after the imported targets exist. It may be called from
     any project `CMakeLists.txt` that runs before `CMagneto__set_up__project()`
@@ -62,7 +62,7 @@ endfunction()
 
     On Linux, bundled libraries are installed into `${CMagneto__SUBDIR_SHARED}` and
     project binaries use relative INSTALL_RPATH entries such as `$ORIGIN/../lib`.
-    Toolset-defined policies are preferred. This function is an optional manual override.
+    Build-variant-defined policies are preferred. This function is an optional manual override.
 
     The function must be called after the imported targets exist. It may be called from
     any project `CMakeLists.txt` that runs before `CMagneto__set_up__project()`

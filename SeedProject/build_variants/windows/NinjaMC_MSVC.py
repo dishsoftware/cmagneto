@@ -1,6 +1,6 @@
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.toolset import DependencyPathSpec, Toolset, expectExternalSharedLibrariesOnTargetMachine
-from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
+from CMagneto.py.cmake.build_variant import BuildVariant, DependencyPathSpec, expectExternalSharedLibrariesOnTargetMachine
+from CMagneto.py.cmake.build_variant_registry import BuildVariantRegistry
 from pathlib import Path
 import os
 
@@ -10,8 +10,8 @@ if VCToolsPath is not None:
     CLPath = Path(VCToolsPath) / "bin" / "Hostx64" / "x64" / "cl.exe"
     VCVarsPath = Path(VCToolsPath).parent.parent.parent / "Auxiliary" / "Build" / "vcvars64.bat"
 
-    ToolsetRegistry().registerToolset(
-        Toolset(
+    BuildVariantRegistry().registerBuildVariant(
+        BuildVariant(
             name="NinjaMC_MSVC2022",
             supportedOSes=frozenset({BuildPlatform.OS.Windows}),
             generatorName="Ninja Multi-Config",

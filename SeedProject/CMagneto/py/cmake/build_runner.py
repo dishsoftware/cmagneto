@@ -16,15 +16,15 @@ The location relative to the project root must be preserved.
 
 from __future__ import annotations
 from .build_platform import BuildPlatform
-from abc import ABC, abstractmethod
-from CMagneto.py.cmake.toolset import ExternalSharedLibraryInstallMode, Toolset
+from abc import ABC
+from CMagneto.py.cmake.build_variant import BuildVariant, ExternalSharedLibraryInstallMode
 from CMagneto.py.utils.const_meta_class import ConstMetaClass
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
 from enum import Enum
 from pathlib import Path
-from typing import cast
+from typing import Callable
 import inspect
 import os
 import shutil
@@ -94,14 +94,14 @@ class BuildRunner(ABC):
     ##################################################################################################
 
     def __init__(self,
-            iToolset: Toolset,
+            iBuildVariant: BuildVariant,
             iBuildTypes: set[BuildType],
             iEnableCodeCoverage: bool = False
         ):
-        assert GoodPath.isNameGood(iToolset.name)
-        assert not iToolset.generatorName.isspace()
+        assert GoodPath.isNameGood(iBuildVariant.name)
+        assert not iBuildVariant.generatorName.isspace()
 
-        self.__toolset = iToolset
+        self.__buildVariant = iBuildVariant
         self.__buildTypes = iBuildTypes
 
         if iEnableCodeCoverage:
@@ -115,13 +115,13 @@ class BuildRunner(ABC):
 
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         os.chdir(GoodPath.projectRoot())
-        self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.toolsetName()
-        self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.toolsetName()
-        self.__setUpToolsetEnvironment()
+        self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.buildVariantName()
+        self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.buildVariantName()
+        self.__setUpBuildVariantEnvironment()
 
     def __str__(self) -> str:
         text = \
-        f"Toolset name: \"{self.toolsetName()}\"\n" + \
+        f"Build variant name: \"{self.buildVariantName()}\"\n" + \
         f"Generator: \"{self.generatorName()}\"\n" + \
         f"Generator is multi-config: {self.multiConfig()}\n"
 
@@ -145,20 +145,20 @@ class BuildRunner(ABC):
         f"Install directory: \"{self.__installDir}\"\n"
         return text
 
-    def toolset(self) -> Toolset:
-        return self.__toolset
+    def buildVariant(self) -> BuildVariant:
+        return self.__buildVariant
 
-    def toolsetName(self) -> str:
-        return self.toolset().name
+    def buildVariantName(self) -> str:
+        return self.buildVariant().name
 
     def generatorName(self) -> str:
-        return self.toolset().generatorName
+        return self.buildVariant().generatorName
 
     def cppCompilerName(self) -> str | None:
-        return self.toolset().cppCompilerName
+        return self.buildVariant().cppCompilerName
 
     def multiConfig(self) -> bool:
-        return self.toolset().multiConfig
+        return self.buildVariant().multiConfig
 
     def buildTypes(self) -> set[BuildType]:
         return self.__buildTypes
@@ -350,7 +350,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
             # 3. Create a file with just `XX%` or `N/A` to ease creation of CI/CD badges.
             percentageFileContent = "N/A"
             if lcovSummaryOutput.returncode == 0 or "lines......: no data found" not in lcovSummaryOutput.stdout:
-                for line in cast(str, lcovSummaryOutput.stdout).splitlines():
+                for line in lcovSummaryOutput.stdout.splitlines():
                     if "lines......:" in line:
                         percentageFileContent = line.split()[1]  # e.g., '87.5%'
 
@@ -396,7 +396,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
     def isPackageExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the 'packages' directory contains at least one file (recursively)."""
         packagesDir = self.buildDirForBuildType(iBuildType) / BuildRunner.CMagneto__SUBDIR_PACKAGES
-        for root, _, files in os.walk(packagesDir):
+        for _, _, files in os.walk(packagesDir):
             if files:
                 return True
         return False
@@ -405,24 +405,37 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         """Checks if the build stage (iBuildStageOfStage) is required to run based on existence of its artifacts for the iBuildType,
            requested iBuildStage and iRunPrecedingStages option."""
 
-        isStageRequiredLambda = lambda iBuildStageOfStage, iArtifactExistenceChecker, iBuildType, iBuildStage: \
-            iBuildStage == iBuildStageOfStage or \
-            iBuildStage.value > iBuildStageOfStage.value and \
-            (iRunPrecedingStages == BuildRunner.RunPrecedingStages.Rerun or (iRunPrecedingStages == BuildRunner.RunPrecedingStages.Run and not iArtifactExistenceChecker(iBuildType)))
+        def isStageRequiredFor(
+                iStageToCheck: BuildRunner.BuildStage,
+                iArtifactExistenceChecker: Callable[[BuildRunner.BuildType], bool],
+                iRequestedBuildType: BuildRunner.BuildType,
+                iRequestedBuildStage: BuildRunner.BuildStage
+            ) -> bool:
+            return (
+                iRequestedBuildStage == iStageToCheck or
+                iRequestedBuildStage.value > iStageToCheck.value and
+                (
+                    iRunPrecedingStages == BuildRunner.RunPrecedingStages.Rerun or
+                    (
+                        iRunPrecedingStages == BuildRunner.RunPrecedingStages.Run and
+                        not iArtifactExistenceChecker(iRequestedBuildType)
+                    )
+                )
+            )
 
         match iBuildStageOfStage:
             case BuildRunner.BuildStage.Generate:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Compile:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.CompileTests:
-                return isStageRequiredLambda(BuildRunner.BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.RunTests:
-                return isStageRequiredLambda(BuildRunner.BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Install:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Package:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
             case _:
                 Log.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 
@@ -438,7 +451,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
-        for dependencyPath in self.toolset().dependencyPaths:
+        for dependencyPath in self.buildVariant().dependencyPaths:
             BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH(dependencyPath.envVarName, dependencyPath.cmakePathPostfix)
 
     def _cmakeFlagsFor__externalSharedLibraryPolicies(self) -> list[str]:
@@ -448,11 +461,11 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         }
         installModesByImportedTarget: dict[str, ExternalSharedLibraryInstallMode] = {}
 
-        for policy in self.toolset().externalSharedLibraryPolicies:
+        for policy in self.buildVariant().externalSharedLibraryPolicies:
             existingMode = installModesByImportedTarget.get(policy.importedTargetName)
             if existingMode is not None and existingMode != policy.installMode:
                 Log.error(
-                    f"Toolset \"{self.toolsetName()}\" configures imported shared library "
+                    f"Build variant \"{self.buildVariantName()}\" configures imported shared library "
                     f"\"{policy.importedTargetName}\" with conflicting install modes: "
                     f"\"{existingMode.value}\" and \"{policy.installMode.value}\"."
                 )
@@ -477,12 +490,12 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
 
         return flags
 
-    def __setUpToolsetEnvironment(self) -> None:
-        envSetupScript = self.toolset().envSetupScript
+    def __setUpBuildVariantEnvironment(self) -> None:
+        envSetupScript = self.buildVariant().envSetupScript
         if envSetupScript is None:
             return
 
-        Process.applyEnvFromScript(envSetupScript, self.toolset().envSetupArgs)
+        Process.applyEnvFromScript(envSetupScript, self.buildVariant().envSetupArgs)
 
     @staticmethod
     def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
@@ -498,7 +511,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 Log.error(f"\"{iVarName}\" environment variable is not set.")
             else:
                 Log.error(f"\"{iVarName}\" environment variable is empty string.")
-        varPath = Path(cast(str, varPathStr))
+        varPath = Path(varPathStr)
 
         if iCMakePathPostfix:
             pathToAdd = varPath / iCMakePathPostfix
