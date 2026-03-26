@@ -14,7 +14,6 @@ from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
 from pathlib import Path
-import os
 
 
 class SingleConfigBuildRunner(BuildRunner):
@@ -40,7 +39,7 @@ class SingleConfigBuildRunner(BuildRunner):
 
         return text
 
-    def buildDirForBuildType(self, iBuildType) -> Path:
+    def buildDirForBuildType(self, iBuildType: BuildRunner.BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type.."""
         return self.buildDir() / iBuildType.name
 

@@ -8,6 +8,7 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
+import importlib
 from CMagneto.py.cmake.build_platform import BuildPlatform
 from CMagneto.py.cmake.build_variant import BuildVariant
 from typing import Callable
@@ -27,6 +28,7 @@ class BuildVariantRegistry():
             return
         # { buildVariantName, buildVariant }[]
         self.__registeredBuildVariants: dict[str, BuildVariant] = dict()
+        importlib.import_module("build_variants")
         self.__initialized = True
 
     def registerBuildVariant(self, iBuildVariant: BuildVariant) -> None:
@@ -54,7 +56,3 @@ class BuildVariantRegistry():
         predicate: Callable[[BuildVariant], bool] = lambda iBuildVariant: BuildPlatform().hostOS() in iBuildVariant.supportedOSes
         availableBuildVariants: dict[str, BuildVariant] = {k: v for k, v in self.__registeredBuildVariants.items() if predicate(v)}
         return availableBuildVariants
-
-
-# Import project build variants. The import is required.
-import build_variants

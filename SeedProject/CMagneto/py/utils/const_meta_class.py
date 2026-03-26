@@ -12,7 +12,7 @@ class ConstMetaClass(type):
     """
     Prohibits modification of class attributes after they are set.
     """
-    def __setattr__(cls, key, value):
+    def __setattr__(cls, key: str, value: object) -> None:
         if key in cls.__dict__:
             raise AttributeError(f"Cannot modify const member '{key}'")
         super().__setattr__(key, value)

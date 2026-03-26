@@ -38,7 +38,7 @@ class MultiConfigBuildRunner(BuildRunner):
 
         return text
 
-    def buildDirForBuildType(self, iBuildType) -> Path:
+    def buildDirForBuildType(self, iBuildType: BuildRunner.BuildType) -> Path:
         """Returns the absolute path to the build directory for the specified build type.."""
         return self.buildDir()
 

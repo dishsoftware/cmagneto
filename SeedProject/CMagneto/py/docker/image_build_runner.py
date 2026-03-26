@@ -14,7 +14,6 @@ from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
 from enum import Enum
 from pathlib import Path
-from typing import cast
 import subprocess
 import re
 
@@ -73,7 +72,7 @@ class ImageBuildRunner:
                             labelValue = labelMatch.group(1)
                             labels[labelName] = labelValue
 
-        missingLabelNames = set()
+        missingLabelNames: set[str] = set()
         for labelName in ImageBuildRunner.REQUIRED_LABEL_NAMES:
             if not labelName in labels:
                 missingLabelNames.add(labelName)
@@ -103,9 +102,12 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         dockerFileName = str(self.__dockerFilePath.name)
         dockerFileNameSuffix = dockerFileName.removeprefix("Dockerfile.") # E.g. Ubuntu24AMD__build.
         dockerFileNameSuffixSubstrings = dockerFileNameSuffix.split("__")
-        getDockerFileNameSuffixSubstring = lambda iIdx: dockerFileNameSuffixSubstrings[iIdx] \
-            if len(dockerFileNameSuffixSubstrings) > iIdx and dockerFileNameSuffixSubstrings[iIdx] \
-            else Log.error(f"Dockerfile name must be composed as 'Dockerfile.{{Platform}}__{{EnvType}}', e.g. 'Dockerfile.Ubuntu24AMD__build'. But filename is '{dockerFileName}'.")
+
+        def getDockerFileNameSuffixSubstring(iIdx: int) -> str:
+            if len(dockerFileNameSuffixSubstrings) > iIdx and dockerFileNameSuffixSubstrings[iIdx]:
+                return dockerFileNameSuffixSubstrings[iIdx]
+
+            Log.error(f"Dockerfile name must be composed as 'Dockerfile.{{Platform}}__{{EnvType}}', e.g. 'Dockerfile.Ubuntu24AMD__build'. But filename is '{dockerFileName}'.")
 
         self.__platform: str = getDockerFileNameSuffixSubstring(0)
         self.__envType: str = getDockerFileNameSuffixSubstring(1)
@@ -119,21 +121,24 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         self.__localImageName = f"{companyNameShort}_{projectNameBase}_{projectVersion}__{"" if dockerFileSubdirStr == "." else (dockerFileSubdirStr + "/")}{dockerFileNameSuffix}".lower()
         self.__imageDescription = f"{self.__platform} image with {self.__envType} environment for {companyNameShort} {projectNameBase} {projectVersion}. Image version is not related to version of {companyNameShort} {projectNameBase}."
 
-        self.__dockerRegistry = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerRegistry"])
+        dockerRegistry = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerRegistry"])
         dockerRegistrySuffix = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerRegistrySuffix"])
-        if not (isinstance(self.__dockerRegistry, str) and isinstance(dockerRegistrySuffix, str)):
+        if not (isinstance(dockerRegistry, str) and isinstance(dockerRegistrySuffix, str)):
             Log.error(f"{__class__.__name__}: can't get required metadata.")
+        self.__dockerRegistry: str = dockerRegistry
 
         self.__remoteImageName = f"{self.__dockerRegistry}/{dockerRegistrySuffix}/{self.__localImageName}"
 
-        self.__imageMaintainer = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerMaintainer"])
-        if not isinstance(self.__imageMaintainer, str):
+        imageMaintainer = MetadataHolder().getMetadataValue(Path("./CI.json"), ["DockerMaintainer"])
+        if not isinstance(imageMaintainer, str):
             Log.error(f"{__class__.__name__}: can't get required metadata.")
+        self.__imageMaintainer: str = imageMaintainer
 
         requiredLabels = ImageBuildRunner.extractRequiredLabels(self.__dockerFilePath)
-        self.__imageVersion = requiredLabels.get("version")
-        if (self.__imageVersion is None):
+        imageVersion = requiredLabels.get("version")
+        if imageVersion is None:
             Log.error(f"'{self.__dockerFilePath}' must contain 'version' label.")
+        self.__imageVersion: str = imageVersion
 
     def dockerfilePath(self) -> Path:
         """
@@ -167,7 +172,7 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
 
     def imageVersion(self) -> str:
         """Returns version (tag) of the image to be built."""
-        return cast(str, self.__imageVersion)
+        return self.__imageVersion
 
     def generateEnvFile(self):
         text = f"Generation of .env file"
@@ -230,17 +235,20 @@ Input Dockerfile path: \"{iDockerfilePath}\".\
         Log.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages):
-        isStageRequiredLamda = lambda iBuildStageOfStage, iBuildStage:  \
-            iBuildStage == iBuildStageOfStage or \
-            iRunPrecedingStages == ImageBuildRunner.RunPrecedingStages.Run and iBuildStage.value > iBuildStageOfStage.value
+        def isStageRequired(iBuildStageOfStage: ImageBuildRunner.BuildStage, iRequestedBuildStage: ImageBuildRunner.BuildStage) -> bool:
+            return (
+                iRequestedBuildStage == iBuildStageOfStage or
+                iRunPrecedingStages == ImageBuildRunner.RunPrecedingStages.Run and
+                iRequestedBuildStage.value > iBuildStageOfStage.value
+            )
 
-        if isStageRequiredLamda(ImageBuildRunner.BuildStage.GenerateEnvFile, iBuildStage):
+        if isStageRequired(ImageBuildRunner.BuildStage.GenerateEnvFile, iBuildStage):
             self.generateEnvFile()
 
-        if isStageRequiredLamda(ImageBuildRunner.BuildStage.Build, iBuildStage):
+        if isStageRequired(ImageBuildRunner.BuildStage.Build, iBuildStage):
             ImageBuildRunner.checkDocker()
             self.build()
 
-        if isStageRequiredLamda(ImageBuildRunner.BuildStage.Push, iBuildStage):
+        if isStageRequired(ImageBuildRunner.BuildStage.Push, iBuildStage):
             ImageBuildRunner.checkDocker()
             self.push()
