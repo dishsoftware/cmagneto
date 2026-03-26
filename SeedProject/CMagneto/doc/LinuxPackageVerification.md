@@ -153,6 +153,13 @@ For each imported target, the following is recorded:
 
 This file is intended for package verification and is consumed by the Python build runner after package generation.
 
+It should be noted that recorded library paths are concrete paths discovered on the build machine.
+Because of that, file names in this metadata may contain build-machine-specific minor or patch versions, for example `libQt6Core.so.6.4.2`.
+
+This must not be interpreted as an exact target-machine version requirement.
+During Linux package verification, possible runtime names are derived from these paths, including ELF `SONAME` values such as `libQt6Core.so.6`.
+As a result, the verification logic is based mainly on runtime names and resolution behavior rather than on an exact build-machine patch version embedded in the JSON file.
+
 Only imported targets that are recognized as runtime shared-library dependencies are written into this file.
 Recognition is performed not only by CMake target type, but also by inspecting the resolved runtime artifact paths.
 
