@@ -278,6 +278,8 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
         DependencyPathSpec,
         BuildVariant,
         bundleExternalSharedLibraries,
+        bundleRuntimeDependencyFilePatterns,
+        excludeBundledRuntimeDependencyFilePatterns,
         expectExternalSharedLibrariesOnTargetMachine,
     )
 
@@ -296,13 +298,26 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
                 "MyPrivateDependency::MyPrivateDependency",
             ),
         ),
+        bundledRuntimeDependencyFilePatterns=(
+            *bundleRuntimeDependencyFilePatterns(
+                "plugins/imageformats/*",
+            ),
+        ),
+        excludedBundledRuntimeDependencyFilePatterns=(
+            *excludeBundledRuntimeDependencyFilePatterns(
+                "libc.so*",
+                "ld-linux*.so*",
+            ),
+        ),
     )
     ```
     Use `expectExternalSharedLibrariesOnTargetMachine(...)` if the dependency is expected to be installed on the target machine at the same absolute location as on the build machine.
     Use `bundleExternalSharedLibraries(...)` if the shared-library binaries must be included into the installation package.
+    Use the `bundledRuntimeDependency...` and `excludedBundledRuntimeDependency...` overrides only for low-level exceptions such as plugins, helper libraries, or bundling misdetections that are not represented cleanly by imported shared-library targets.
+    When both target-based policy and low-level overrides are used, explicit exclude overrides win over explicit include overrides. Full precedence details are documented in [`./doc/SharedLibraryDeployment.md`](./doc/SharedLibraryDeployment.md).
 
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
-    Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)` or `CMagneto__bundle_external_shared_libraries(...)` directly in CMake as manual overrides, but this is not the primary workflow.
+    Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)`, `CMagneto__bundle_external_shared_libraries(...)`, `CMagneto__bundle_runtime_dependency_files(...)`, or `CMagneto__exclude_bundled_runtime_dependency_file_patterns(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
 7) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake

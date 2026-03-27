@@ -114,6 +114,7 @@ class MultiConfigBuildRunner(BuildRunner):
             command.append("-DENABLE_COVERAGE=ON")
 
         command.extend(self._cmakeFlagsFor__externalSharedLibraryPolicies())
+        command.extend(self._cmakeFlagsFor__runtimeDependencyBundlingOverrides())
 
         command.extend([
             # Install directory is overriden in __install.

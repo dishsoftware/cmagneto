@@ -101,6 +101,7 @@ class SingleConfigBuildRunner(BuildRunner):
             command.append("-DENABLE_COVERAGE=ON")
 
         command.extend(self._cmakeFlagsFor__externalSharedLibraryPolicies())
+        command.extend(self._cmakeFlagsFor__runtimeDependencyBundlingOverrides())
 
         command.extend([
             "-DCMAKE_BUILD_TYPE=" + iBuildType.name,

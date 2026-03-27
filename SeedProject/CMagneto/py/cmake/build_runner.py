@@ -510,6 +510,25 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
 
         return flags
 
+    def _cmakeFlagsFor__runtimeDependencyBundlingOverrides(self) -> list[str]:
+        flags: list[str] = []
+
+        overrideVarNamesAndValues: tuple[tuple[str, tuple[str, ...]], ...] = (
+            ("CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES", self.buildVariant().bundledRuntimeDependencyFiles),
+            ("CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS", self.buildVariant().bundledRuntimeDependencyFilePatterns),
+            ("CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES", self.buildVariant().excludedBundledRuntimeDependencyFiles),
+            ("CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS", self.buildVariant().excludedBundledRuntimeDependencyFilePatterns),
+        )
+
+        for varName, rawValues in overrideVarNamesAndValues:
+            if not rawValues:
+                continue
+
+            deduplicatedValues = tuple(dict.fromkeys(rawValues))
+            flags.append(f"-D{varName}={';'.join(deduplicatedValues)}")
+
+        return flags
+
     def __verifyGeneratedLinuxPackages(self, iBuildType: BuildType) -> None:
         """Extracts generated Linux packages and verifies external shared-library deployment policy."""
         if BuildPlatform().hostOS() != BuildPlatform.OS.Linux:

@@ -50,6 +50,22 @@ set(CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE ""
     CACHE STRING
     "Semicolon-separated imported shared-library targets that must be bundled into the installation package."
 )
+set(CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES ""
+    CACHE STRING
+    "Semicolon-separated runtime dependency files that must be bundled into the installation package as low-level overrides."
+)
+set(CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS ""
+    CACHE STRING
+    "Semicolon-separated file masks that must be searched and bundled into the installation package as low-level overrides."
+)
+set(CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES ""
+    CACHE STRING
+    "Semicolon-separated runtime dependency files that must not be bundled into the installation package."
+)
+set(CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS ""
+    CACHE STRING
+    "Semicolon-separated file masks that must not be bundled into the installation package."
+)
 
 
 #[[
@@ -363,6 +379,156 @@ function(CMagnetoInternal__json_escape_string iInput oEscapedString)
 endfunction()
 
 
+function(CMagnetoInternal__append_unique_global_list_property iPropertyName iValues)
+    get_property(_currentValues GLOBAL PROPERTY "${iPropertyName}")
+    if(NOT DEFINED _currentValues)
+        set(_currentValues "")
+    endif()
+
+    list(APPEND _currentValues ${iValues})
+    list(REMOVE_DUPLICATES _currentValues)
+    set_property(GLOBAL PROPERTY "${iPropertyName}" "${_currentValues}")
+endfunction()
+
+
+function(CMagnetoInternal__append_existing_path_variants iPaths oOutputPaths)
+    set(_outputPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_path}" _pathNormalized)
+        list(APPEND _outputPaths "${_pathNormalized}")
+
+        get_filename_component(_realPath "${_pathNormalized}" REALPATH)
+        if(EXISTS "${_realPath}" AND NOT _realPath STREQUAL "${_pathNormalized}")
+            file(TO_CMAKE_PATH "${_realPath}" _realPathNormalized)
+            list(APPEND _outputPaths "${_realPathNormalized}")
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _outputPaths)
+    set(${oOutputPaths} "${_outputPaths}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__normalize_runtime_dependency_path iRawPath iBaseDir oPath)
+    file(TO_CMAKE_PATH "${iRawPath}" _pathNormalized)
+    cmake_path(IS_ABSOLUTE _pathNormalized _isAbsolute)
+    if(_isAbsolute)
+        cmake_path(NORMAL_PATH _pathNormalized OUTPUT_VARIABLE _normalizedAbsolutePath)
+        set(${oPath} "${_normalizedAbsolutePath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    cmake_path(ABSOLUTE_PATH _pathNormalized BASE_DIRECTORY "${iBaseDir}" NORMALIZE OUTPUT_VARIABLE _normalizedAbsolutePath)
+    set(${oPath} "${_normalizedAbsolutePath}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__normalize_runtime_dependency_pattern iRawPattern iBaseDir oPattern)
+    file(TO_CMAKE_PATH "${iRawPattern}" _patternNormalized)
+    cmake_path(IS_ABSOLUTE _patternNormalized _isAbsolute)
+    if(_isAbsolute)
+        cmake_path(NORMAL_PATH _patternNormalized OUTPUT_VARIABLE _normalizedPattern)
+        set(${oPattern} "${_normalizedPattern}" PARENT_SCOPE)
+        return()
+    endif()
+
+    if("${_patternNormalized}" MATCHES "/")
+        cmake_path(ABSOLUTE_PATH _patternNormalized BASE_DIRECTORY "${iBaseDir}" NORMALIZE OUTPUT_VARIABLE _normalizedPattern)
+        set(${oPattern} "${_normalizedPattern}" PARENT_SCOPE)
+    else()
+        set(${oPattern} "${_patternNormalized}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+
+function(CMagnetoInternal__glob_pattern_to_regex iPattern oRegex)
+    set(_regex "${iPattern}")
+    string(REGEX REPLACE "([][+.^$(){}|\\\\])" "\\\\\\1" _regex "${_regex}")
+    string(REPLACE "?" "." _regex "${_regex}")
+    string(REPLACE "*" ".*" _regex "${_regex}")
+    set(${oRegex} "${_regex}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__path_matches_runtime_dependency_patterns iPath iPatterns oMatches)
+    file(TO_CMAKE_PATH "${iPath}" _pathNormalized)
+    get_filename_component(_pathBasename "${_pathNormalized}" NAME)
+
+    foreach(_pattern IN LISTS iPatterns)
+        if(_pattern STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_pattern}" _patternNormalized)
+        cmake_path(IS_ABSOLUTE _patternNormalized _patternIsAbsolute)
+        CMagnetoInternal__glob_pattern_to_regex("${_patternNormalized}" _patternRegex)
+
+        if(_patternIsAbsolute)
+            if(_pathNormalized MATCHES "^${_patternRegex}$")
+                set(${oMatches} TRUE PARENT_SCOPE)
+                return()
+            endif()
+        else()
+            if(_pathBasename MATCHES "^${_patternRegex}$" OR _pathNormalized MATCHES "(^|.*/)${_patternRegex}$")
+                set(${oMatches} TRUE PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endforeach()
+
+    set(${oMatches} FALSE PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__filter_runtime_dependency_paths_by_excludes iPaths iExcludedFiles iExcludedPatterns oFilteredPaths)
+    CMagnetoInternal__append_existing_path_variants("${iExcludedFiles}" _excludedFileVariants)
+
+    set(_filteredPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_path}" _pathNormalized)
+
+        set(_isExcluded FALSE)
+        list(FIND _excludedFileVariants "${_pathNormalized}" _excludedFileIndex)
+        if(_excludedFileIndex GREATER -1)
+            set(_isExcluded TRUE)
+        endif()
+
+        if(NOT _isExcluded)
+            get_filename_component(_realPath "${_pathNormalized}" REALPATH)
+            if(EXISTS "${_realPath}")
+                file(TO_CMAKE_PATH "${_realPath}" _realPathNormalized)
+                list(FIND _excludedFileVariants "${_realPathNormalized}" _excludedRealPathIndex)
+                if(_excludedRealPathIndex GREATER -1)
+                    set(_isExcluded TRUE)
+                endif()
+            endif()
+        endif()
+
+        if(NOT _isExcluded)
+            CMagnetoInternal__path_matches_runtime_dependency_patterns("${_pathNormalized}" "${iExcludedPatterns}" _matchesExcludedPattern)
+            if(_matchesExcludedPattern)
+                set(_isExcluded TRUE)
+            endif()
+        endif()
+
+        if(NOT _isExcluded)
+            list(APPEND _filteredPaths "${_pathNormalized}")
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _filteredPaths)
+    set(${oFilteredPaths} "${_filteredPaths}" PARENT_SCOPE)
+endfunction()
+
+
 #[[
     CMagnetoInternal__get_elf_soname
 
@@ -607,6 +773,171 @@ function(CMagnetoInternal__get_registered_imported_shared_library_dirs oLibraryD
 
     list(REMOVE_DUPLICATES _libraryDirs)
     set(${oLibraryDirs} "${_libraryDirs}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__register_bundled_runtime_dependency_files iPaths iBaseDir)
+    set(_normalizedPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        CMagnetoInternal__normalize_runtime_dependency_path("${_path}" "${iBaseDir}" _normalizedPath)
+        list(APPEND _normalizedPaths "${_normalizedPath}")
+    endforeach()
+
+    CMagnetoInternal__append_unique_global_list_property("CMagnetoInternal__BundledRuntimeDependencyFiles" "${_normalizedPaths}")
+endfunction()
+
+
+function(CMagnetoInternal__register_bundled_runtime_dependency_file_patterns iPatterns iBaseDir)
+    set(_normalizedPatterns "")
+    foreach(_pattern IN LISTS iPatterns)
+        if(_pattern STREQUAL "")
+            continue()
+        endif()
+
+        CMagnetoInternal__normalize_runtime_dependency_pattern("${_pattern}" "${iBaseDir}" _normalizedPattern)
+        list(APPEND _normalizedPatterns "${_normalizedPattern}")
+    endforeach()
+
+    CMagnetoInternal__append_unique_global_list_property("CMagnetoInternal__BundledRuntimeDependencyFilePatterns" "${_normalizedPatterns}")
+endfunction()
+
+
+function(CMagnetoInternal__register_excluded_bundled_runtime_dependency_files iPaths iBaseDir)
+    set(_normalizedPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        CMagnetoInternal__normalize_runtime_dependency_path("${_path}" "${iBaseDir}" _normalizedPath)
+        list(APPEND _normalizedPaths "${_normalizedPath}")
+    endforeach()
+
+    CMagnetoInternal__append_unique_global_list_property("CMagnetoInternal__ExcludedBundledRuntimeDependencyFiles" "${_normalizedPaths}")
+endfunction()
+
+
+function(CMagnetoInternal__register_excluded_bundled_runtime_dependency_file_patterns iPatterns iBaseDir)
+    set(_normalizedPatterns "")
+    foreach(_pattern IN LISTS iPatterns)
+        if(_pattern STREQUAL "")
+            continue()
+        endif()
+
+        CMagnetoInternal__normalize_runtime_dependency_pattern("${_pattern}" "${iBaseDir}" _normalizedPattern)
+        list(APPEND _normalizedPatterns "${_normalizedPattern}")
+    endforeach()
+
+    CMagnetoInternal__append_unique_global_list_property("CMagnetoInternal__ExcludedBundledRuntimeDependencyFilePatterns" "${_normalizedPatterns}")
+endfunction()
+
+
+function(CMagnetoInternal__get_runtime_dependency_override_list iCacheVarName iPropertyName iNormalizeKind oValues)
+    set(_values ${${iCacheVarName}})
+
+    get_property(_isSet GLOBAL PROPERTY "${iPropertyName}" SET)
+    if(_isSet)
+        get_property(_propertyValues GLOBAL PROPERTY "${iPropertyName}")
+        list(APPEND _values ${_propertyValues})
+    endif()
+
+    set(_normalizedValues "")
+    foreach(_value IN LISTS _values)
+        if(_value STREQUAL "")
+            continue()
+        endif()
+
+        if(iNormalizeKind STREQUAL "PATH")
+            CMagnetoInternal__normalize_runtime_dependency_path("${_value}" "${CMAKE_SOURCE_DIR}" _normalizedValue)
+        elseif(iNormalizeKind STREQUAL "PATTERN")
+            CMagnetoInternal__normalize_runtime_dependency_pattern("${_value}" "${CMAKE_SOURCE_DIR}" _normalizedValue)
+        else()
+            CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_runtime_dependency_override_list: unsupported normalization kind \"${iNormalizeKind}\".")
+        endif()
+
+        list(APPEND _normalizedValues "${_normalizedValue}")
+    endforeach()
+
+    list(REMOVE_DUPLICATES _normalizedValues)
+    set(${oValues} "${_normalizedValues}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_bundled_runtime_dependency_files oPaths)
+    CMagnetoInternal__get_runtime_dependency_override_list(
+        "CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES"
+        "CMagnetoInternal__BundledRuntimeDependencyFiles"
+        "PATH"
+        _paths
+    )
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_bundled_runtime_dependency_file_patterns oPatterns)
+    CMagnetoInternal__get_runtime_dependency_override_list(
+        "CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS"
+        "CMagnetoInternal__BundledRuntimeDependencyFilePatterns"
+        "PATTERN"
+        _patterns
+    )
+    set(${oPatterns} "${_patterns}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_excluded_bundled_runtime_dependency_files oPaths)
+    CMagnetoInternal__get_runtime_dependency_override_list(
+        "CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES"
+        "CMagnetoInternal__ExcludedBundledRuntimeDependencyFiles"
+        "PATH"
+        _paths
+    )
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_excluded_bundled_runtime_dependency_file_patterns oPatterns)
+    CMagnetoInternal__get_runtime_dependency_override_list(
+        "CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS"
+        "CMagnetoInternal__ExcludedBundledRuntimeDependencyFilePatterns"
+        "PATTERN"
+        _patterns
+    )
+    set(${oPatterns} "${_patterns}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__expand_runtime_dependency_file_patterns iPatterns iSearchDirs oPaths)
+    set(_paths "")
+
+    foreach(_pattern IN LISTS iPatterns)
+        if(_pattern STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_pattern}" _patternNormalized)
+        cmake_path(IS_ABSOLUTE _patternNormalized _patternIsAbsolute)
+        if(_patternIsAbsolute)
+            file(GLOB _matches LIST_DIRECTORIES FALSE "${_patternNormalized}")
+            list(APPEND _paths ${_matches})
+            continue()
+        endif()
+
+        foreach(_searchDir IN LISTS iSearchDirs)
+            if(_searchDir STREQUAL "")
+                continue()
+            endif()
+            file(GLOB _matches LIST_DIRECTORIES FALSE "${_searchDir}/${_patternNormalized}")
+            list(APPEND _paths ${_matches})
+        endforeach()
+    endforeach()
+
+    list(REMOVE_DUPLICATES _paths)
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
 endfunction()
 
 
@@ -999,13 +1330,39 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         return()
     endif()
 
-    CMagnetoInternal__get_external_shared_library_paths_to_bundle(_libPaths)
-    if(_libPaths STREQUAL "")
+    CMagnetoInternal__get_external_shared_library_paths_to_bundle(_policyBundlePaths)
+    CMagnetoInternal__get_external_shared_library_paths_expected_on_target_machine(_expectedOnTargetPaths)
+    CMagnetoInternal__get_registered_imported_shared_library_dirs(_knownLibraryDirs)
+
+    CMagnetoInternal__get_bundled_runtime_dependency_files(_explicitBundleFiles)
+    CMagnetoInternal__get_bundled_runtime_dependency_file_patterns(_explicitBundlePatterns)
+    CMagnetoInternal__get_excluded_bundled_runtime_dependency_files(_excludedBundleFiles)
+    CMagnetoInternal__get_excluded_bundled_runtime_dependency_file_patterns(_excludedBundlePatterns)
+
+    CMagnetoInternal__expand_runtime_dependency_file_patterns("${_explicitBundlePatterns}" "${_knownLibraryDirs}" _patternBundlePaths)
+
+    set(_bundleSourcePaths ${_policyBundlePaths} ${_patternBundlePaths})
+    foreach(_explicitBundleFile IN LISTS _explicitBundleFiles)
+        if(EXISTS "${_explicitBundleFile}")
+            list(APPEND _bundleSourcePaths "${_explicitBundleFile}")
+        else()
+            CMagnetoInternal__message(WARNING "Bundled runtime dependency override file does not exist and will be skipped: \"${_explicitBundleFile}\".")
+        endif()
+    endforeach()
+    list(REMOVE_DUPLICATES _bundleSourcePaths)
+    CMagnetoInternal__filter_runtime_dependency_paths_by_excludes(
+        "${_bundleSourcePaths}"
+        "${_excludedBundleFiles}"
+        "${_excludedBundlePatterns}"
+        _bundleSourcePaths
+    )
+
+    if(_bundleSourcePaths STREQUAL "")
         return()
     endif()
 
     set(_installPaths "")
-    foreach(_libPath IN LISTS _libPaths)
+    foreach(_libPath IN LISTS _bundleSourcePaths)
         list(APPEND _installPaths "${_libPath}")
 
         get_filename_component(_realPath "${_libPath}" REALPATH)
@@ -1014,18 +1371,29 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         endif()
     endforeach()
     list(REMOVE_DUPLICATES _installPaths)
+    CMagnetoInternal__filter_runtime_dependency_paths_by_excludes(
+        "${_installPaths}"
+        "${_excludedBundleFiles}"
+        "${_excludedBundlePatterns}"
+        _installPaths
+    )
+
+    if(_installPaths STREQUAL "")
+        return()
+    endif()
 
     install(FILES ${_installPaths}
         DESTINATION ${_destinationDir}
         COMPONENT ${CMagneto__COMPONENT__RUNTIME}
     )
 
-    CMagnetoInternal__get_external_shared_library_paths_expected_on_target_machine(_expectedOnTargetPaths)
-    CMagnetoInternal__get_registered_imported_shared_library_dirs(_knownLibraryDirs)
-
-    cmake_path(CONVERT "${_libPaths}" TO_CMAKE_PATH_LIST _libPathsCMake)
+    cmake_path(CONVERT "${_bundleSourcePaths}" TO_CMAKE_PATH_LIST _libPathsCMake)
     cmake_path(CONVERT "${_expectedOnTargetPaths}" TO_CMAKE_PATH_LIST _expectedOnTargetPathsCMake)
     cmake_path(CONVERT "${_knownLibraryDirs}" TO_CMAKE_PATH_LIST _knownLibraryDirsCMake)
+    cmake_path(CONVERT "${_explicitBundleFiles}" TO_CMAKE_PATH_LIST _explicitBundleFilesCMake)
+    string(JOIN ";" _explicitBundlePatternsCMake ${_explicitBundlePatterns})
+    cmake_path(CONVERT "${_excludedBundleFiles}" TO_CMAKE_PATH_LIST _excludedBundleFilesCMake)
+    string(JOIN ";" _excludedBundlePatternsCMake ${_excludedBundlePatterns})
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(_cmagneto_install_script_platform "Linux")
     elseif(WIN32)
@@ -1039,6 +1407,10 @@ set(_cmagneto_bundled_source_paths "@_libPathsCMake@")
 set(_cmagneto_expected_external_source_paths "@_expectedOnTargetPathsCMake@")
 set(_cmagneto_known_library_dirs "@_knownLibraryDirsCMake@")
 set(_cmagneto_destination_dir "@_destinationDir@")
+set(_cmagneto_user_included_source_paths "@_explicitBundleFilesCMake@")
+set(_cmagneto_user_included_patterns "@_explicitBundlePatternsCMake@")
+set(_cmagneto_user_excluded_source_paths "@_excludedBundleFilesCMake@")
+set(_cmagneto_user_excluded_patterns "@_excludedBundlePatternsCMake@")
 set(_cmagneto_platform "@_cmagneto_install_script_platform@")
 
 function(_cmagneto_append_existing_path_variants iPaths oOutputPaths)
@@ -1057,6 +1429,158 @@ function(_cmagneto_append_existing_path_variants iPaths oOutputPaths)
 
     list(REMOVE_DUPLICATES _outputPaths)
     set(${oOutputPaths} "${_outputPaths}" PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_glob_pattern_to_regex iPattern oRegex)
+    set(_regex "${iPattern}")
+    string(REGEX REPLACE "([][+.^$(){}|\\\\])" "\\\\\\1" _regex "${_regex}")
+    string(REPLACE "?" "." _regex "${_regex}")
+    string(REPLACE "*" ".*" _regex "${_regex}")
+    set(${oRegex} "${_regex}" PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_path_matches_patterns iPath iPatterns oMatches)
+    file(TO_CMAKE_PATH "${iPath}" _pathNormalized)
+    get_filename_component(_pathBasename "${_pathNormalized}" NAME)
+    foreach(_pattern IN LISTS iPatterns)
+        if(_pattern STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_pattern}" _patternNormalized)
+        cmake_path(IS_ABSOLUTE _patternNormalized _patternIsAbsolute)
+        _cmagneto_glob_pattern_to_regex("${_patternNormalized}" _patternRegex)
+        if(_patternIsAbsolute)
+            if(_pathNormalized MATCHES "^${_patternRegex}$")
+                set(${oMatches} TRUE PARENT_SCOPE)
+                return()
+            endif()
+        else()
+            if(_pathBasename MATCHES "^${_patternRegex}$" OR _pathNormalized MATCHES "(^|.*/)${_patternRegex}$")
+                set(${oMatches} TRUE PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endforeach()
+
+    set(${oMatches} FALSE PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_filter_paths_by_user_excludes iPaths oFilteredPaths)
+    _cmagneto_append_existing_path_variants("${_cmagneto_user_excluded_source_paths}" _cmagneto_user_excluded_path_variants)
+    set(_filteredPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_path}" _pathNormalized)
+        list(FIND _cmagneto_user_excluded_path_variants "${_pathNormalized}" _excludedIndex)
+        if(_excludedIndex GREATER -1)
+            continue()
+        endif()
+
+        get_filename_component(_realPath "${_pathNormalized}" REALPATH)
+        if(EXISTS "${_realPath}")
+            file(TO_CMAKE_PATH "${_realPath}" _realPathNormalized)
+            list(FIND _cmagneto_user_excluded_path_variants "${_realPathNormalized}" _excludedRealPathIndex)
+            if(_excludedRealPathIndex GREATER -1)
+                continue()
+            endif()
+        endif()
+
+        _cmagneto_path_matches_patterns("${_pathNormalized}" "${_cmagneto_user_excluded_patterns}" _matchesUserExcludedPattern)
+        if(_matchesUserExcludedPattern)
+            continue()
+        endif()
+
+        list(APPEND _filteredPaths "${_pathNormalized}")
+    endforeach()
+
+    list(REMOVE_DUPLICATES _filteredPaths)
+    set(${oFilteredPaths} "${_filteredPaths}" PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_path_is_included_by_user_overrides iPath oIsIncluded)
+    _cmagneto_append_existing_path_variants("${_cmagneto_user_included_source_paths}" _cmagneto_user_included_path_variants)
+
+    file(TO_CMAKE_PATH "${iPath}" _pathNormalized)
+    list(FIND _cmagneto_user_included_path_variants "${_pathNormalized}" _includedIndex)
+    if(_includedIndex GREATER -1)
+        set(${oIsIncluded} TRUE PARENT_SCOPE)
+        return()
+    endif()
+
+    get_filename_component(_realPath "${_pathNormalized}" REALPATH)
+    if(EXISTS "${_realPath}")
+        file(TO_CMAKE_PATH "${_realPath}" _realPathNormalized)
+        list(FIND _cmagneto_user_included_path_variants "${_realPathNormalized}" _includedRealPathIndex)
+        if(_includedRealPathIndex GREATER -1)
+            set(${oIsIncluded} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
+    _cmagneto_path_matches_patterns("${_pathNormalized}" "${_cmagneto_user_included_patterns}" _matchesUserIncludedPattern)
+    if(_matchesUserIncludedPattern)
+        set(${oIsIncluded} TRUE PARENT_SCOPE)
+        return()
+    endif()
+
+    set(${oIsIncluded} FALSE PARENT_SCOPE)
+endfunction()
+
+function(_cmagneto_filter_transitive_paths_by_precedence iPaths iDefaultExcludeRegexes oFilteredPaths)
+    _cmagneto_append_existing_path_variants("${_cmagneto_user_excluded_source_paths}" _cmagneto_user_excluded_path_variants)
+    set(_filteredPaths "")
+    foreach(_path IN LISTS iPaths)
+        if(_path STREQUAL "")
+            continue()
+        endif()
+
+        file(TO_CMAKE_PATH "${_path}" _pathNormalized)
+
+        list(FIND _cmagneto_user_excluded_path_variants "${_pathNormalized}" _excludedIndex)
+        if(_excludedIndex GREATER -1)
+            continue()
+        endif()
+
+        get_filename_component(_realPath "${_pathNormalized}" REALPATH)
+        if(EXISTS "${_realPath}")
+            file(TO_CMAKE_PATH "${_realPath}" _realPathNormalized)
+            list(FIND _cmagneto_user_excluded_path_variants "${_realPathNormalized}" _excludedRealPathIndex)
+            if(_excludedRealPathIndex GREATER -1)
+                continue()
+            endif()
+        endif()
+
+        _cmagneto_path_matches_patterns("${_pathNormalized}" "${_cmagneto_user_excluded_patterns}" _matchesUserExcludedPattern)
+        if(_matchesUserExcludedPattern)
+            continue()
+        endif()
+
+        _cmagneto_path_is_included_by_user_overrides("${_pathNormalized}" _isIncludedByUser)
+        if(_isIncludedByUser)
+            list(APPEND _filteredPaths "${_pathNormalized}")
+            continue()
+        endif()
+
+        set(_isDefaultExcluded FALSE)
+        foreach(_excludeRegex IN LISTS iDefaultExcludeRegexes)
+            if(_pathNormalized MATCHES "${_excludeRegex}")
+                set(_isDefaultExcluded TRUE)
+                break()
+            endif()
+        endforeach()
+        if(_isDefaultExcluded)
+            continue()
+        endif()
+
+        list(APPEND _filteredPaths "${_pathNormalized}")
+    endforeach()
+
+    list(REMOVE_DUPLICATES _filteredPaths)
+    set(${oFilteredPaths} "${_filteredPaths}" PARENT_SCOPE)
 endfunction()
 
 function(_cmagneto_get_elf_soname iLibraryPath oSoname)
@@ -1130,6 +1654,7 @@ list(REMOVE_DUPLICATES _cmagneto_excluded_paths)
 
 set(_cmagneto_pre_exclude_regexes "")
 set(_cmagneto_post_exclude_regexes "")
+set(_cmagneto_default_post_exclude_regexes "")
 if(_cmagneto_platform STREQUAL "Windows")
     list(APPEND _cmagneto_pre_exclude_regexes "^api-ms-win-" "^ext-ms-")
     if(DEFINED ENV{SystemRoot} AND NOT "$ENV{SystemRoot}" STREQUAL "")
@@ -1140,7 +1665,7 @@ if(_cmagneto_platform STREQUAL "Windows")
         )
     endif()
 elseif(_cmagneto_platform STREQUAL "Linux")
-    list(APPEND _cmagneto_post_exclude_regexes
+    list(APPEND _cmagneto_default_post_exclude_regexes
         ".*/ld-linux[^/]*\\.so[^/]*$"
         ".*/libc\\.so[^/]*$"
         ".*/libm\\.so[^/]*$"
@@ -1208,6 +1733,11 @@ foreach(_resolvedPath IN LISTS _cmagneto_resolved_dependencies)
     list(APPEND _cmagneto_additional_install_paths "${_installablePath}")
 endforeach()
 list(REMOVE_DUPLICATES _cmagneto_additional_install_paths)
+_cmagneto_filter_transitive_paths_by_precedence(
+    "${_cmagneto_additional_install_paths}"
+    "${_cmagneto_default_post_exclude_regexes}"
+    _cmagneto_additional_install_paths
+)
 
 if(NOT _cmagneto_additional_install_paths STREQUAL "")
     file(COPY ${_cmagneto_additional_install_paths}

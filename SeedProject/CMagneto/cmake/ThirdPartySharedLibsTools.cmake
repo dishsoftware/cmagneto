@@ -85,3 +85,101 @@ function(CMagneto__bundle_external_shared_libraries)
 
     CMagnetoInternal__register_external_shared_libraries_install_mode("BUNDLE_WITH_PACKAGE" "${ARG_IMPORTED_TARGETS}")
 endfunction()
+
+
+#[[
+    CMagneto__bundle_runtime_dependency_files
+
+    Registers explicit runtime dependency files that must be bundled into the install tree.
+    Use this as a low-level override for files that are not represented cleanly by imported
+    shared-library targets.
+
+    Named arguments:
+    FILES - runtime dependency files to bundle.
+]]
+function(CMagneto__bundle_runtime_dependency_files)
+    cmake_parse_arguments(ARG
+        ""
+        ""
+        "FILES"
+        ${ARGN}
+    )
+
+    if(ARG_FILES STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bundle_runtime_dependency_files: no FILES were provided.")
+    endif()
+
+    CMagnetoInternal__register_bundled_runtime_dependency_files("${ARG_FILES}" "${CMAKE_CURRENT_SOURCE_DIR}")
+endfunction()
+
+
+#[[
+    CMagneto__bundle_runtime_dependency_file_patterns
+
+    Registers low-level file masks that must be searched and bundled into the install tree.
+
+    Named arguments:
+    PATTERNS - file masks to search for runtime dependency files to bundle.
+]]
+function(CMagneto__bundle_runtime_dependency_file_patterns)
+    cmake_parse_arguments(ARG
+        ""
+        ""
+        "PATTERNS"
+        ${ARGN}
+    )
+
+    if(ARG_PATTERNS STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bundle_runtime_dependency_file_patterns: no PATTERNS were provided.")
+    endif()
+
+    CMagnetoInternal__register_bundled_runtime_dependency_file_patterns("${ARG_PATTERNS}" "${CMAKE_CURRENT_SOURCE_DIR}")
+endfunction()
+
+
+#[[
+    CMagneto__exclude_bundled_runtime_dependency_files
+
+    Registers explicit runtime dependency files that must not be bundled into the install tree.
+
+    Named arguments:
+    FILES - runtime dependency files to exclude from bundling.
+]]
+function(CMagneto__exclude_bundled_runtime_dependency_files)
+    cmake_parse_arguments(ARG
+        ""
+        ""
+        "FILES"
+        ${ARGN}
+    )
+
+    if(ARG_FILES STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__exclude_bundled_runtime_dependency_files: no FILES were provided.")
+    endif()
+
+    CMagnetoInternal__register_excluded_bundled_runtime_dependency_files("${ARG_FILES}" "${CMAKE_CURRENT_SOURCE_DIR}")
+endfunction()
+
+
+#[[
+    CMagneto__exclude_bundled_runtime_dependency_file_patterns
+
+    Registers low-level file masks that must not be bundled into the install tree.
+
+    Named arguments:
+    PATTERNS - file masks to exclude from bundling.
+]]
+function(CMagneto__exclude_bundled_runtime_dependency_file_patterns)
+    cmake_parse_arguments(ARG
+        ""
+        ""
+        "PATTERNS"
+        ${ARGN}
+    )
+
+    if(ARG_PATTERNS STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__exclude_bundled_runtime_dependency_file_patterns: no PATTERNS were provided.")
+    endif()
+
+    CMagnetoInternal__register_excluded_bundled_runtime_dependency_file_patterns("${ARG_PATTERNS}" "${CMAKE_CURRENT_SOURCE_DIR}")
+endfunction()

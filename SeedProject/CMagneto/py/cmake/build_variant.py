@@ -47,6 +47,22 @@ def bundleExternalSharedLibraries(*iImportedTargetNames: str) -> tuple[ExternalS
     )
 
 
+def bundleRuntimeDependencyFiles(*iPaths: str) -> tuple[str, ...]:
+    return tuple(iPaths)
+
+
+def bundleRuntimeDependencyFilePatterns(*iPatterns: str) -> tuple[str, ...]:
+    return tuple(iPatterns)
+
+
+def excludeBundledRuntimeDependencyFiles(*iPaths: str) -> tuple[str, ...]:
+    return tuple(iPaths)
+
+
+def excludeBundledRuntimeDependencyFilePatterns(*iPatterns: str) -> tuple[str, ...]:
+    return tuple(iPatterns)
+
+
 @dataclass(frozen=True)
 class BuildVariant:
     name: str
@@ -56,6 +72,10 @@ class BuildVariant:
     cppCompilerName: str | None = None
     dependencyPaths: tuple[DependencyPathSpec, ...] = field(default_factory=tuple)
     externalSharedLibraryPolicies: tuple[ExternalSharedLibraryPolicy, ...] = field(default_factory=tuple)
+    bundledRuntimeDependencyFiles: tuple[str, ...] = field(default_factory=tuple)
+    bundledRuntimeDependencyFilePatterns: tuple[str, ...] = field(default_factory=tuple)
+    excludedBundledRuntimeDependencyFiles: tuple[str, ...] = field(default_factory=tuple)
+    excludedBundledRuntimeDependencyFilePatterns: tuple[str, ...] = field(default_factory=tuple)
     extraGenerateArgs: tuple[str, ...] = field(default_factory=tuple)
     envSetupScript: str | None = None
     envSetupArgs: tuple[str, ...] = field(default_factory=tuple)

@@ -30,6 +30,13 @@ The policy is normally declared in Python build variants with:
 - `expectExternalSharedLibrariesOnTargetMachine(...)`;
 - `bundleExternalSharedLibraries(...)`.
 
+Low-level bundling overrides can also be declared with:
+
+- `bundleRuntimeDependencyFiles(...)`;
+- `bundleRuntimeDependencyFilePatterns(...)`;
+- `excludeBundledRuntimeDependencyFiles(...)`;
+- `excludeBundledRuntimeDependencyFilePatterns(...)`.
+
 The build runner converts that policy into `-D` CMake variables before project configuration. See:
 
 - [`./../py/cmake/build_variant.py`](./../py/cmake/build_variant.py)
@@ -106,6 +113,51 @@ This is why CMagneto warns about linked imported shared libraries that have no i
 ## 5. Linux
 Linux is the most complete implementation in the framework.
 
+### 5.0. Low-level bundling overrides
+The target-based policy remains the primary mechanism.
+
+CMagneto also supports a companion low-level override layer for cases where runtime artifacts are not represented cleanly by imported shared-library targets.
+
+The public entry points are:
+
+- `CMagneto__bundle_runtime_dependency_files`
+- `CMagneto__bundle_runtime_dependency_file_patterns`
+- `CMagneto__exclude_bundled_runtime_dependency_files`
+- `CMagneto__exclude_bundled_runtime_dependency_file_patterns`
+
+The corresponding Python build-variant helpers are:
+
+- `bundleRuntimeDependencyFiles(...)`
+- `bundleRuntimeDependencyFilePatterns(...)`
+- `excludeBundledRuntimeDependencyFiles(...)`
+- `excludeBundledRuntimeDependencyFilePatterns(...)`
+
+These overrides are intended for:
+
+- plugin files;
+- helper shared libraries not exposed as imported targets;
+- package-manager quirks;
+- explicit exclusion of wrongly discovered runtime dependencies.
+
+### 5.0.1. Precedence rules
+When low-level bundling overrides are used together with the normal target-based policy, CMagneto applies them in the following practical order:
+
+1. target-based bundled imported shared libraries are collected;
+2. explicit include files are added;
+3. explicit include file patterns are expanded and added;
+4. explicit exclude files and explicit exclude file patterns are applied to the resulting bundled file set;
+5. recursive transitive runtime dependency discovery is performed for the installed bundled files;
+6. dependencies expected on the target machine remain excluded from recursive bundling;
+7. built-in platform safety exclusions remain applied, such as Linux system-runtime exclusions or Windows system-DLL exclusions, unless an explicit user include override says otherwise;
+8. explicit exclude files and explicit exclude file patterns are applied again to the transitive dependency results before they are copied.
+
+As a result:
+
+- explicit exclude rules win over explicit include rules;
+- low-level include rules can add extra runtime artifacts that target-based deduction did not discover directly;
+- low-level include rules can also override framework-default Linux system-runtime exclusions during transitive runtime dependency bundling;
+- low-level exclude rules can suppress both directly bundled files and transitively discovered runtime dependencies.
+
 ### 5.1. Runtime shared-library recognition
 Linux shared libraries are recognized in `CMagnetoInternal__is_path_to_shared_library` by calling `readelf -h` and checking that the ELF file type is dynamic.
 
@@ -160,6 +212,12 @@ Bundled imported shared libraries are handled by:
 
 Direct bundled imported shared libraries are installed into `lib/`.
 
+Low-level overrides are applied in the same install step:
+
+- explicit include files are added to the bundled source set;
+- include file patterns are expanded against known imported-library directories and added to the bundled source set;
+- explicit exclude files and exclude file masks are applied to the final bundled file set before installation.
+
 If a discovered path refers to a versioned file but a SONAME link exists, CMagneto prefers the SONAME path for packaging and also installs the real file behind the symlink chain so the package does not contain a dangling SONAME link.
 
 ### 5.5. Recursive transitive bundling
@@ -171,6 +229,8 @@ This step excludes:
 
 - imported shared libraries explicitly marked `EXPECT_ON_TARGET_MACHINE`;
 - Linux system runtime libraries such as `libc.so`, `libstdc++.so`, `libpthread.so`, and similar.
+
+After transitive dependency discovery, user-provided exclude-file and exclude-pattern overrides are also applied before additional runtime files are copied into the package.
 
 ### 5.6. Consequences of excluding `EXPECT_ON_TARGET_MACHINE` libraries from recursive bundling
 This exclusion means that if bundled library `A` depends on library `B`, and `B` was explicitly declared `EXPECT_ON_TARGET_MACHINE`, then `B` will not be pulled into the package transitively.
