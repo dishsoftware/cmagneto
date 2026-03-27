@@ -374,6 +374,8 @@ CMagneto CMake function `CMagneto__set_up__project()` also creates helper script
 
 These helper scripts are not meant to be an installation or distribution mechanism. Installed and packaged applications should rely on the build-variant-selected dependency policy and the corresponding platform-specific runtime setup.
 
+For a detailed explanation of how imported 3rd-party shared libraries are deduced, classified, packaged, and resolved on Linux and Windows, see [`./doc/SharedLibraryDeployment.md`](./doc/SharedLibraryDeployment.md).
+
 On Linux, these scripts are usually redundant because build-tree and install-tree runtime lookup is expected to be configured by target properties such as runtime paths and bundled library locations. They are kept mainly for workflow consistency across platforms and for occasional local debugging or experiments.
 
 On Windows, these scripts may still be more useful during local development and debugging because runtime DLL lookup often depends more directly on process environment such as `PATH`.
@@ -417,4 +419,5 @@ The resulting URL may look like:<br>
 This Knowledge Base serves as a centralized collection of technical notes, clarifications, code excerpts, and curated content from books, documentation, and online resources. It is designed for quick reference during development to reduce repetitive searches.
 
 - [CMake](./doc/CMakeKnowledge.md)
+- [Third-party shared library deployment](./doc/SharedLibraryDeployment.md)
 - [Linux package verification](./doc/LinuxPackageVerification.md)
