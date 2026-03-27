@@ -37,7 +37,7 @@ The framework is shipped with the following major components:
     * The [`CMagneto CMake modules`](./cmake/) contain functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
     * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
 - Template configuration files in [`./meta/`](./../meta/);
-- Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/);
+- Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `build_variant.py` and `Description.md`;
 - One-command build script [`./build.py`](./../build.py);
 - Pre-configured CTest files in [`./tests/`](./../tests/);
 - Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../packaging/@resources/);
@@ -126,8 +126,10 @@ SeedProject/
 │   └── CI.json
 ├── build_variants/                        # Build-variant descriptors and accompanying instructions.
 │   ├── linux/
-|   |   ├── UnixMakefiles_GCC.py
-|   |   ├── UnixMakefiles_GCC.md
+|   |   ├── UnixMakefiles_GCC/
+|   |   |   ├── build_variant.py
+|   |   |   ├── Description.md
+|   |   |   └── ...
 |   |   └── ...
 │   └── ...
 ├── src/                                   # Project source root.
@@ -203,7 +205,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
     and installation package resources in [`./packaging/@resources/`](./../packaging/@resources/).
 
-4) Define build variants in [`./build_variants/`](./../build_variants/).
+4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `build_variant.py` and `Description.md`.
 
 5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
 
@@ -371,7 +373,7 @@ python ./build.py --help
 The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple build variants.<br>
 A build variant is a bundle of a build system, a compiler, dependency lookup paths, runtime-deployment policy, and other build-time choices.<br>
 Build variants are defined under [`./build_variants/`](./../build_variants/) and loaded by the framework at build time.<br>
-All bundled build variants are accompanied with identically named Markdown instructions describing how to install dependencies, set up VS Code, and more.
+Each build variant lives in its own directory named after the build variant and contains `build_variant.py` plus `Description.md` with setup notes such as dependency installation and VS Code hints.
 
 
 ### 1.4. Run Project
