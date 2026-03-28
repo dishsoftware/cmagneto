@@ -84,15 +84,7 @@ endfunction()
     runtime file paths used later for package verification.
 ]]
 function(CMagnetoInternal__generate__external_shared_library_deployment__content iBuildType oContent)
-    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
-
-    set(_allImportedTargets "")
-    foreach(_target IN LISTS _registeredTargets)
-        CMagnetoInternal__get_linked_imported_shared_library_targets(${_target} _importedTargets)
-        list(APPEND _allImportedTargets ${_importedTargets})
-    endforeach()
-    list(REMOVE_DUPLICATES _allImportedTargets)
-
+    CMagnetoInternal__runtime_dependency_manifest__collect_all_imported_targets(_allImportedTargets)
     set(_expectEntries "")
     set(_bundleEntries "")
 

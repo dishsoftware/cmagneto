@@ -27,13 +27,13 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
     get_target_property(_targetType ${iTargetName} TYPE)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        CMagnetoInternal__warn_about_unclassified_external_shared_libraries(${iTargetName})
+        CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclassified_imported_targets(${iTargetName})
 
-        CMagnetoInternal__get_shared_library_dirs_for_target(${iTargetName} _libraryDirs)
+        CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_library_dirs(${iTargetName} _libraryDirs)
         set(_buildRPath "${_libraryDirs}")
         set(_installRPath "")
 
-        CMagnetoInternal__get_imported_shared_library_dirs_for_target(
+        CMagnetoInternal__runtime_dependency_manifest__get_target_imported_shared_library_dirs_by_mode(
             ${iTargetName}
             ${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}
             _sameLocationLibraryDirs
@@ -89,9 +89,9 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         return()
     endif()
 
-    CMagnetoInternal__get_external_shared_library_paths_to_bundle(_policyBundlePaths)
-    CMagnetoInternal__get_external_shared_library_paths_expected_on_target_machine(_expectedOnTargetPaths)
-    CMagnetoInternal__get_registered_imported_shared_library_dirs(_knownLibraryDirs)
+    CMagnetoInternal__runtime_dependency_manifest__get_bundled_imported_shared_library_paths(_policyBundlePaths)
+    CMagnetoInternal__runtime_dependency_manifest__get_expected_external_shared_library_paths(_expectedOnTargetPaths)
+    CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_dirs(_knownLibraryDirs)
 
     CMagnetoInternal__get_bundled_runtime_dependency_files(_explicitBundleFiles)
     CMagnetoInternal__get_bundled_runtime_dependency_file_patterns(_explicitBundlePatterns)
