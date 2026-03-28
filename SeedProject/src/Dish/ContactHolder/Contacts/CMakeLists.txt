@@ -2,7 +2,7 @@ add_subdirectory(fields/PhoneNumberFormatter)
 
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui)
-find_package(Boost REQUIRED)
+find_package(Boost CONFIG REQUIRED)
 
 
 # Headers

@@ -192,6 +192,10 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
     endif()
 
     set(_installScriptTemplate [=[
+if(POLICY CMP0207)
+    cmake_policy(SET CMP0207 NEW)
+endif()
+
 set(_cmagneto_bundled_source_paths "@_libPathsCMake@")
 set(_cmagneto_expected_external_source_paths "@_expectedOnTargetPathsCMake@")
 set(_cmagneto_known_library_dirs "@_knownLibraryDirsCMake@")

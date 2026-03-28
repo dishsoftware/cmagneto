@@ -11,6 +11,15 @@
 cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
 # set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
+# Newer CMake versions warn unless the intended modern behavior of these
+# policies is selected explicitly.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+if(POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+endif()
+
 
 # Configure project attributes.
 ## Define functions to load project data.
