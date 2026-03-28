@@ -36,7 +36,7 @@ function(CMagnetoInternal__generate__set_env__script_content iBuildType oScriptC
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
 
     set(_libraryDirs "")
-    CMagnetoInternal__get_imported_shared_library_dirs_for_targets(
+    CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_dirs_for_targets_by_mode(
         "${_registeredTargets}"
         "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}"
         _libraryDirs
@@ -89,7 +89,7 @@ function(CMagnetoInternal__generate__env_vscode__file_content iBuildType oFileCo
     get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
     # Add paths only to dirs with imported shared libs expected on the target machine.
     set(_libraryDirs "")
-    CMagnetoInternal__get_imported_shared_library_dirs_for_targets(
+    CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_dirs_for_targets_by_mode(
         "${_registeredTargets}"
         "${CMagnetoInternal__EXTERNAL_SHARED_LIBRARY_INSTALL_MODE__EXPECT_ON_TARGET_MACHINE}"
         _libraryDirs

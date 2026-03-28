@@ -177,6 +177,23 @@ function(CMagnetoInternal__runtime_dependency_manifest__get_target_imported_shar
 endfunction()
 
 
+function(CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_dirs_for_targets_by_mode iTargets iMode oLibraryDirs)
+    set(_libraryDirs "")
+
+    foreach(_target IN LISTS iTargets)
+        if(NOT TARGET ${_target})
+            continue()
+        endif()
+
+        CMagnetoInternal__runtime_dependency_manifest__get_target_imported_shared_library_dirs_by_mode(${_target} "${iMode}" _targetLibraryDirs)
+        list(APPEND _libraryDirs ${_targetLibraryDirs})
+    endforeach()
+
+    list(REMOVE_DUPLICATES _libraryDirs)
+    set(${oLibraryDirs} "${_libraryDirs}" PARENT_SCOPE)
+endfunction()
+
+
 function(CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_paths_by_mode iMode oPaths)
     CMagnetoInternal__runtime_dependency_manifest__collect_all_imported_targets(_allImportedTargets)
 
