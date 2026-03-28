@@ -76,6 +76,17 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
                     $<TARGET_FILE_DIR:${iTargetName}>
                 COMMAND_EXPAND_LISTS
             )
+
+            CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_paths(${iTargetName} _resolvedRuntimePaths)
+            list(REMOVE_DUPLICATES _resolvedRuntimePaths)
+            if(NOT _resolvedRuntimePaths STREQUAL "")
+                add_custom_command(TARGET ${iTargetName} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${_resolvedRuntimePaths}
+                        $<TARGET_FILE_DIR:${iTargetName}>
+                    COMMAND_EXPAND_LISTS
+                )
+            endif()
         endif()
     elseif(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__NONE}")
         return()
@@ -487,10 +498,18 @@ file(GET_RUNTIME_DEPENDENCIES
 )
 
 if(NOT _cmagneto_unresolved_dependencies STREQUAL "")
-    message(FATAL_ERROR
-        "CMagneto failed to resolve transitive runtime dependencies of bundled external shared libraries: "
-        "${_cmagneto_unresolved_dependencies}"
-    )
+    if(_cmagneto_platform STREQUAL "Windows")
+        message(WARNING
+            "CMagneto could not resolve some transitive runtime dependencies of bundled external shared libraries "
+            "on Windows and will ignore them: ${_cmagneto_unresolved_dependencies}"
+        )
+        set(_cmagneto_unresolved_dependencies "")
+    else()
+        message(FATAL_ERROR
+            "CMagneto failed to resolve transitive runtime dependencies of bundled external shared libraries: "
+            "${_cmagneto_unresolved_dependencies}"
+        )
+    endif()
 endif()
 
 if(DEFINED _cmagneto_conflicting_dependencies_FILENAMES AND NOT _cmagneto_conflicting_dependencies_FILENAMES STREQUAL "")

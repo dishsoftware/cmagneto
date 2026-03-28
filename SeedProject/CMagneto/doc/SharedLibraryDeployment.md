@@ -117,7 +117,7 @@ registered runtime artifact paths.
 Platform-specific recognition is done in `CMagnetoInternal__is_path_to_shared_library`:
 
 - Linux: `readelf` is used to recognize ELF shared objects;
-- Windows: `.dll` extension is used;
+- Windows: `.dll` extension is used for direct runtime artifacts, and GNU import libraries such as `*.dll.a` may also be translated to their sibling runtime DLLs;
 - Darwin: `.dylib` extension is used.
 
 
@@ -362,7 +362,9 @@ So the short version is:
 Windows uses the same policy categories, but different runtime mechanics.
 
 ### 7.1. Runtime shared-library recognition
-Windows runtime shared libraries are recognized in `CMagnetoInternal__is_path_to_shared_library` simply by `.dll` extension.
+Windows runtime shared libraries are recognized in `CMagnetoInternal__is_path_to_shared_library` by `.dll` extension.
+
+In addition, `CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact` resolves GNU import libraries such as `libz.dll.a` to their actual runtime DLLs. This is needed because some Windows package-manager integrations expose imported targets through import libraries rather than directly through DLL paths.
 
 ### 7.2. Build-tree runtime resolution
 On Windows, the selected runtime-resolution strategy is `TARGET_LOCAL_RUNTIME_FILES`.
@@ -370,6 +372,8 @@ On Windows, the selected runtime-resolution strategy is `TARGET_LOCAL_RUNTIME_FI
 For local development, `CMagnetoInternal__set_up_target_runtime_resolution` adds a `POST_BUILD` step using `$<TARGET_RUNTIME_DLLS:...>`.
 
 This copies runtime DLLs next to the built executable or DLL and is the main build-tree convenience mechanism on Windows.
+
+When imported shared-library runtime paths are already known through the manifest-oriented query layer, those resolved runtime DLL paths are copied as an additional build-tree convenience step as well. This covers imported targets whose runtime DLLs are not surfaced through `$<TARGET_RUNTIME_DLLS:...>` alone.
 
 This strategy is not expressed through `RPATH`-style target properties. It is expressed by attaching a target-local build rule.
 
@@ -384,6 +388,8 @@ Because of that, Windows runtime-resolution setup is attached during target setu
 Bundled imported shared libraries are installed into `bin/`, not `lib/`.
 
 Then the same install-time `file(GET_RUNTIME_DEPENDENCIES)` process is used to discover additional transitive DLL dependencies and copy them into `bin/` as well.
+
+On Windows, unresolved transitive DLL names reported by `file(GET_RUNTIME_DEPENDENCIES)` are currently downgraded to warnings during this install-time transitive step. This is done because optional or OS-provided dependency names may be reported as unresolved even when the directly bundled runtime DLL itself has already been identified correctly.
 
 Windows-specific exclusions are applied for:
 

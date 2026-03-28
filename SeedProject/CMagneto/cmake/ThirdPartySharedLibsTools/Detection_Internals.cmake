@@ -53,6 +53,70 @@ endfunction()
 
 
 #[[
+    CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact
+
+    Returns a runtime shared-library path for one imported-target artifact path.
+
+    If the artifact path already points to a runtime shared library, it is returned unchanged.
+    On Windows, GNU import libraries such as `*.dll.a` are also handled by querying the
+    referenced DLL name through `dlltool -I` and then probing common sibling runtime
+    locations such as `../bin/<dll-name>`.
+]]
+function(CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact iArtifactPath oRuntimeLibraryPath)
+    set(_runtimeLibraryPath "")
+
+    if(NOT EXISTS "${iArtifactPath}")
+        set(${oRuntimeLibraryPath} "${_runtimeLibraryPath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    CMagnetoInternal__is_path_to_shared_library("${iArtifactPath}" _isSharedLibraryPath)
+    if(_isSharedLibraryPath)
+        set(${oRuntimeLibraryPath} "${iArtifactPath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND "${iArtifactPath}" MATCHES "\\.dll\\.a$")
+        set(_dlltoolExecutable "")
+        if(DEFINED CMAKE_DLLTOOL AND NOT CMAKE_DLLTOOL STREQUAL "" AND EXISTS "${CMAKE_DLLTOOL}")
+            set(_dlltoolExecutable "${CMAKE_DLLTOOL}")
+        else()
+            find_program(_dlltoolExecutable NAMES dlltool)
+        endif()
+
+        if(NOT _dlltoolExecutable STREQUAL "")
+            execute_process(
+                COMMAND "${_dlltoolExecutable}" -I "${iArtifactPath}"
+                RESULT_VARIABLE _dlltoolResult
+                OUTPUT_VARIABLE _dllName
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+
+            if(_dlltoolResult EQUAL 0 AND NOT _dllName STREQUAL "")
+                cmake_path(GET iArtifactPath PARENT_PATH _artifactDir)
+                cmake_path(GET _artifactDir PARENT_PATH _artifactDirParent)
+
+                set(_candidatePaths
+                    "${_artifactDir}/${_dllName}"
+                    "${_artifactDirParent}/bin/${_dllName}"
+                )
+
+                foreach(_candidatePath IN LISTS _candidatePaths)
+                    if(EXISTS "${_candidatePath}")
+                        set(_runtimeLibraryPath "${_candidatePath}")
+                        break()
+                    endif()
+                endforeach()
+            endif()
+        endif()
+    endif()
+
+    set(${oRuntimeLibraryPath} "${_runtimeLibraryPath}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
     CMagnetoInternal__is_imported_shared_library_target
 
     Returns whether iTargetName is an imported target representing a runtime shared library.
@@ -114,8 +178,8 @@ function(CMagnetoInternal__is_imported_shared_library_target iTargetName oIsImpo
 
     list(REMOVE_DUPLICATES _candidatePaths)
     foreach(_candidatePath IN LISTS _candidatePaths)
-        CMagnetoInternal__is_path_to_shared_library("${_candidatePath}" _isSharedLibraryPath)
-        if(_isSharedLibraryPath)
+        CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact("${_candidatePath}" _runtimeLibraryPath)
+        if(NOT _runtimeLibraryPath STREQUAL "")
             set(${oIsImportedSharedLibrary} TRUE PARENT_SCOPE)
             return()
         endif()
@@ -146,9 +210,9 @@ function(CMagnetoInternal__get_imported_shared_library_paths iTargetName oPaths)
 
     get_target_property(_nonBuildSpecificLibPath ${iTargetName} IMPORTED_LOCATION)
     if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
-        CMagnetoInternal__is_path_to_shared_library("${_nonBuildSpecificLibPath}" _isSharedLibraryPath)
-        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
-            list(APPEND _paths "${_nonBuildSpecificLibPath}")
+        CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact("${_nonBuildSpecificLibPath}" _runtimeLibraryPath)
+        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR NOT _runtimeLibraryPath STREQUAL "")
+            list(APPEND _paths "${_runtimeLibraryPath}")
         endif()
     endif()
 
@@ -172,9 +236,9 @@ function(CMagnetoInternal__get_imported_shared_library_paths iTargetName oPaths)
         endif()
 
         if(_libPath AND EXISTS "${_libPath}")
-            CMagnetoInternal__is_path_to_shared_library("${_libPath}" _isSharedLibraryPath)
-            if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
-                list(APPEND _paths "${_libPath}")
+            CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact("${_libPath}" _runtimeLibraryPath)
+            if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR NOT _runtimeLibraryPath STREQUAL "")
+                list(APPEND _paths "${_runtimeLibraryPath}")
             endif()
         endif()
     endforeach()
@@ -218,11 +282,11 @@ function(CMagnetoInternal__get_imported_shared_library_paths_for_build_type iTar
 
     get_target_property(_nonBuildSpecificLibPath ${iTargetName} IMPORTED_LOCATION)
     if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
-        CMagnetoInternal__is_path_to_shared_library("${_nonBuildSpecificLibPath}" _isSharedLibraryPath)
-        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
+        CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact("${_nonBuildSpecificLibPath}" _runtimeLibraryPath)
+        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR NOT _runtimeLibraryPath STREQUAL "")
             string(TOUPPER "${iBuildType}" _buildTypeUpper)
             if(_buildTypeUpper STREQUAL "" OR _buildTypeUpper STREQUAL "NONSPECIFIC")
-                list(APPEND _paths "${_nonBuildSpecificLibPath}")
+                list(APPEND _paths "${_runtimeLibraryPath}")
             endif()
         endif()
     endif()
@@ -249,9 +313,9 @@ function(CMagnetoInternal__get_imported_shared_library_paths_for_build_type iTar
         endif()
     endif()
 
-    CMagnetoInternal__is_path_to_shared_library("${_libPath}" _isSharedLibraryPath)
-    if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
-        list(APPEND _paths "${_libPath}")
+    CMagnetoInternal__get_runtime_shared_library_path_for_imported_artifact("${_libPath}" _runtimeLibraryPath)
+    if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR NOT _runtimeLibraryPath STREQUAL "")
+        list(APPEND _paths "${_runtimeLibraryPath}")
     endif()
 
     list(REMOVE_DUPLICATES _paths)
