@@ -27,7 +27,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools_Internals.cmake")
     Marks imported shared-library targets as expected to be installed on the target
     machine at the same absolute locations as on the build machine.
 
-    On Linux, CMagneto adds directories of these libraries to INSTALL_RPATH of project
+    On platforms whose runtime-resolution strategy is EMBEDDED_RUNTIME_PATHS,
+    CMagneto adds directories of these libraries to INSTALL_RPATH of project
     binaries, so packaged binaries can load them without `set_env`.
     Build-variant-defined policies are preferred. This function is an optional manual override.
 
@@ -60,7 +61,8 @@ endfunction()
     Marks imported shared-library targets to be bundled into the install tree.
     Use this for non-system dependencies that must travel with the package.
 
-    On Linux, bundled libraries are installed into `${CMagneto__SUBDIR_SHARED}` and
+    On platforms whose runtime-resolution strategy is EMBEDDED_RUNTIME_PATHS,
+    bundled libraries are installed into `${CMagneto__SUBDIR_SHARED}` and
     project binaries use relative INSTALL_RPATH entries such as `$ORIGIN/../lib`.
     Build-variant-defined policies are preferred. This function is an optional manual override.
 

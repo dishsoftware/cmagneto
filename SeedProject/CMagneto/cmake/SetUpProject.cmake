@@ -38,7 +38,12 @@ function(CMagneto__set_up__project)
     # Add source directory.
     cmake_path(SET _PROJECT_SOURCE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
     add_subdirectory("${_PROJECT_SOURCE_DIR}")
-    CMagnetoInternal__set_up_targets_runtime_resolution()
+    # Strategies based on embedded runtime paths may be applied later from the
+    # central project setup directory.
+    CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)
+    if(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__EMBEDDED_RUNTIME_PATHS}")
+        CMagnetoInternal__set_up_targets_runtime_resolution()
+    endif()
 
     # Generate build stage reports, helper scripts, etc.
     CMagnetoInternal__set_up__CMake_package_export()

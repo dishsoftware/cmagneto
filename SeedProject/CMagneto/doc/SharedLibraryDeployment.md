@@ -57,6 +57,33 @@ That manifest records:
 Runtime setup, helper scripts, and package verification are then
 driven from that manifest-oriented query layer.
 
+### 2.1. Runtime-resolution strategy
+Runtime dependency policy and runtime-resolution strategy are separate concerns.
+
+The deployment policy answers:
+
+- which imported shared libraries are expected on the target machine;
+- which imported shared libraries must be bundled.
+
+The runtime-resolution strategy answers:
+
+- how build-tree runtime lookup is expressed on the current platform;
+- whether runtime behavior is configured through target properties or through target-local build steps;
+- whether the configuration may be applied later from a central directory scope or must be attached in the target's own directory.
+
+The current internal strategy mapping is:
+
+- `EMBEDDED_RUNTIME_PATHS` on Linux;
+- `TARGET_LOCAL_RUNTIME_FILES` on Windows;
+- `NONE` on platforms for which no dedicated runtime-resolution implementation exists yet.
+
+This distinction is important because a platform may expose some analogue of runtime search metadata, but the framework still needs a concrete strategy that matches both:
+
+- the platform loader model;
+- the way CMake allows that model to be configured.
+
+In other words, a capability such as "the platform has something RPATH-like" is not sufficient by itself. A chosen strategy is still required.
+
 
 ## 3. How imported shared libraries are deduced
 During target setup, linked libraries are inspected and only imported runtime shared libraries are kept.
@@ -191,6 +218,8 @@ SONAME-aware packaging is implemented by:
 The reason is that the runtime loader often resolves a library by SONAME rather than by the exact path discovered during configuration.
 
 ### 5.2. Build-tree and install-tree runtime lookup
+On Linux, the selected runtime-resolution strategy is `EMBEDDED_RUNTIME_PATHS`.
+
 Linux runtime lookup is configured in `CMagnetoInternal__set_up_target_runtime_resolution`.
 The required imported-library directories are queried through the runtime dependency manifest layer.
 
@@ -207,6 +236,9 @@ For shared libraries:
 This search order matters.
 
 Bundled runtime directories must be searched before external directories. Otherwise a library that was copied into the package may still be resolved from the system instead of from the packaged copy.
+
+This strategy is expressed through target properties such as `BUILD_RPATH` and `INSTALL_RPATH`.
+Because those properties may be adjusted after targets have already been created, the Linux runtime-resolution pass may be applied later from the higher-level project setup.
 
 ### 5.3. Consequences of listing or not listing a dependency in `INSTALL_RPATH`
 If a dependency is explicitly classified as `EXPECT_ON_TARGET_MACHINE`, its directory contributes to `INSTALL_RPATH`.
@@ -314,7 +346,8 @@ What does not exist yet as a CMagneto-specific deployment solution:
 
 This limitation is visible in:
 
-- `CMagnetoInternal__set_up_target_runtime_resolution`, which has Linux and Windows branches only;
+- `CMagnetoInternal__get_runtime_resolution_strategy`, which currently returns `NONE` outside Linux and Windows;
+- `CMagnetoInternal__set_up_target_runtime_resolution`, which only has concrete behavior for the Linux and Windows strategies;
 - `CMagnetoInternal__install_bundled_external_shared_libraries`, which returns immediately for platforms other than Linux and Windows.
 
 The helper files still use `LD_LIBRARY_PATH` on non-Windows platforms, so they are generic Unix-style helpers, not a real macOS deployment implementation.
@@ -332,9 +365,20 @@ Windows uses the same policy categories, but different runtime mechanics.
 Windows runtime shared libraries are recognized in `CMagnetoInternal__is_path_to_shared_library` simply by `.dll` extension.
 
 ### 7.2. Build-tree runtime resolution
+On Windows, the selected runtime-resolution strategy is `TARGET_LOCAL_RUNTIME_FILES`.
+
 For local development, `CMagnetoInternal__set_up_target_runtime_resolution` adds a `POST_BUILD` step using `$<TARGET_RUNTIME_DLLS:...>`.
 
 This copies runtime DLLs next to the built executable or DLL and is the main build-tree convenience mechanism on Windows.
+
+This strategy is not expressed through `RPATH`-style target properties. It is expressed by attaching a target-local build rule.
+
+That distinction matters in CMake:
+
+- target properties such as `BUILD_RPATH` and `INSTALL_RPATH` may be adjusted later from a central directory scope;
+- `add_custom_command(TARGET ... POST_BUILD ...)` must be called from the same directory in which the target was created.
+
+Because of that, Windows runtime-resolution setup is attached during target setup in the target's own `CMakeLists.txt` directory, while Linux runtime-resolution setup may be applied later from `CMagneto__set_up__project()`.
 
 ### 7.3. Install-tree and packaged runtime layout
 Bundled imported shared libraries are installed into `bin/`, not `lib/`.
@@ -360,6 +404,8 @@ Runtime resolution depends mainly on:
 - default Windows DLL search rules.
 
 That is why the helper scripts `set_env.bat` and `.env.vscode` configure `Path` only for dependencies intentionally expected to be installed on the target machine.
+
+More generally, this is why Windows is mapped to `TARGET_LOCAL_RUNTIME_FILES` rather than to an embedded-runtime-path strategy. The main build-tree convenience mechanism is app-local DLL placement, not binary-embedded runtime search metadata.
 
 ### 7.5. Practical nuance in the SeedProject
 The current SeedProject Windows build variants classify Qt as `EXPECT_ON_TARGET_MACHINE`.
@@ -415,6 +461,7 @@ The most relevant implementation entry points are:
 
 - `CMagneto__expect_external_shared_libraries_on_target_machine`
 - `CMagneto__bundle_external_shared_libraries`
+- `CMagnetoInternal__get_runtime_resolution_strategy`
 - `CMagnetoInternal__register_linked_imported_shared_library_targets`
 - `CMagnetoInternal__is_imported_shared_library_target`
 - `CMagnetoInternal__get_imported_shared_library_paths`
@@ -428,5 +475,6 @@ The main files to read are:
 
 - [`./../cmake/ThirdPartySharedLibsTools.cmake`](./../cmake/ThirdPartySharedLibsTools.cmake)
 - [`./../cmake/ThirdPartySharedLibsTools_Internals.cmake`](./../cmake/ThirdPartySharedLibsTools_Internals.cmake)
+- [`./../cmake/ThirdPartySharedLibsTools/SharedState_Internals.cmake`](./../cmake/ThirdPartySharedLibsTools/SharedState_Internals.cmake)
 - [`./LinuxPackageVerification.md`](./LinuxPackageVerification.md)
 - [`./../README.md`](./../README.md)

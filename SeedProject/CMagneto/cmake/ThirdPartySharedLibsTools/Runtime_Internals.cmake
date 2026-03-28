@@ -15,11 +15,17 @@ include_guard(GLOBAL)
     CMagnetoInternal__set_up_target_runtime_resolution
 
     Configures runtime dependency lookup for a target in build and install trees.
-    On Linux, imported shared-library directories are added to BUILD_RPATH for local runs,
-    while relative INSTALL_RPATH values are used for relocatable project binaries.
-    Those directories are queried through the runtime dependency manifest layer so the same
-    imported-target classification is reused by runtime setup, helper scripts, and verification.
-    On Windows, runtime DLLs are copied next to the target binary in the build tree.
+    The exact behavior is selected through the platform-specific runtime-resolution
+    strategy returned by CMagnetoInternal__get_runtime_resolution_strategy().
+
+    For EMBEDDED_RUNTIME_PATHS, imported shared-library directories are added to
+    BUILD_RPATH for local runs, while relative INSTALL_RPATH values are used for
+    relocatable project binaries. Those directories are queried through the runtime
+    dependency manifest layer so the same imported-target classification is reused
+    by runtime setup, helper scripts, and verification.
+
+    For TARGET_LOCAL_RUNTIME_FILES, runtime DLLs are copied next to the target
+    binary in the build tree.
 ]]
 function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
     if(NOT TARGET ${iTargetName})
@@ -27,8 +33,9 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
     endif()
 
     get_target_property(_targetType ${iTargetName} TYPE)
+    CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)
 
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__EMBEDDED_RUNTIME_PATHS}")
         CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclassified_imported_targets(${iTargetName})
 
         CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_library_dirs(${iTargetName} _libraryDirs)
@@ -61,7 +68,7 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
                 BUILD_RPATH_USE_ORIGIN TRUE
                 INSTALL_RPATH "${_installRPath}"
         )
-    elseif(WIN32)
+    elseif(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__TARGET_LOCAL_RUNTIME_FILES}")
         if(_targetType STREQUAL "EXECUTABLE" OR _targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY")
             add_custom_command(TARGET ${iTargetName} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -70,6 +77,14 @@ function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
                 COMMAND_EXPAND_LISTS
             )
         endif()
+    elseif(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__NONE}")
+        return()
+    else()
+        CMagnetoInternal__message(
+            FATAL_ERROR
+            "CMagnetoInternal__set_up_target_runtime_resolution: unsupported runtime-resolution strategy "
+            "\"${_runtimeResolutionStrategy}\"."
+        )
     endif()
 endfunction()
 
