@@ -117,6 +117,100 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
+.install-run-package:
+  stage: STAGE-install-run-package
+  # needs: [.deduce_image, .build-test-package]
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
+  script:
+    - |
+      packagesDir="./build/${BUILD_VARIANT}/Release/packages"
+      packagePath="$(find "${packagesDir}" -type f -name '*.deb' | head -n 1)"
+      if [ -z "${packagePath}" ]; then
+        echo "No .deb package found under ${packagesDir}."
+        exit 1
+      fi
+      export PACKAGE_PATH="${packagePath}"
+      echo "Using package ${packagePath}"
+      echo "PACKAGE_PATH=${PACKAGE_PATH}" >> inherited.env
+
+    - |
+      # Fail fast if the test image already contains any supported Qt 6 Core runtime package,
+      # because this job is meant to prove the package manager pulls Qt in as a dependency.
+      qtCoreRuntimePackages="libqt6core6 libqt6core6t64"
+      for packageName in ${qtCoreRuntimePackages}; do
+        if dpkg-query -W -f='${Status}\n' "${packageName}" 2>/dev/null | grep -q '^install ok installed$'; then
+          echo "Qt runtime package ${packageName} is already installed before package installation."
+          exit 1
+        fi
+      done
+
+    - apt-get update
+    - apt-get install -y "./${PACKAGE_PATH}"
+
+    - |
+      # Qt is currently expected to be supplied by the target machine via Debian package dependencies.
+      # If the ContactHolder package is installed correctly with apt, a Qt 6 Core runtime package should be pulled in automatically.
+      qtCoreRuntimePackages="libqt6core6 libqt6core6t64"
+      qtCoreRuntimeDetected=""
+      for packageName in ${qtCoreRuntimePackages}; do
+        if dpkg-query -W -f='${Status}\n' "${packageName}" 2>/dev/null | grep -q '^install ok installed$'; then
+          qtCoreRuntimeDetected="${packageName}"
+          break
+        fi
+      done
+      if [ -z "${qtCoreRuntimeDetected}" ]; then
+        echo "No supported Qt 6 Core runtime package was installed with ${PACKAGE_PATH}."
+        exit 1
+      fi
+
+    - |
+      installedExecutablePath="$(dpkg-deb -c "${PACKAGE_PATH}" | awk '$6 ~ /^\.\/opt\/.*\/bin\/[^/]+$/ && firstMatch == "" { firstMatch = $6 } END { print firstMatch }')"
+      if [ -z "${installedExecutablePath}" ]; then
+        echo "Failed to detect installed executable path from ${PACKAGE_PATH}."
+        exit 1
+      fi
+      export INSTALLED_EXECUTABLE_PATH="/${installedExecutablePath#./}"
+      echo "INSTALLED_EXECUTABLE_PATH=${INSTALLED_EXECUTABLE_PATH}" >> inherited.env
+
+    # The executable is a Qt GUI app, so it is run with the offscreen platform plugin to avoid requiring a display server.
+    # A couple of stable startup lines are then checked:
+    # - "zlib version:" is used as evidence that the bundled zlib runtime was found and loaded.
+    # - "Qt widget styles count:" is used as evidence that Qt widgets were initialized successfully after apt-installed Qt runtime packages were pulled in.
+    - QT_QPA_PLATFORM=offscreen timeout 30s "${INSTALLED_EXECUTABLE_PATH}" > package_run_output.txt 2>&1
+    - cat package_run_output.txt
+    - grep -q "zlib version:" package_run_output.txt
+    - grep -q "Qt widget styles count:" package_run_output.txt
+  artifacts:
+    when: always
+    paths:
+      - package_run_output.txt
+    reports:
+      dotenv: inherited.env
+
+
+.on_tag__install-run-package:
+  extends:
+    - .on_tag
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_main__install-run-package:
+  extends:
+    - .on_main
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_branch__install-run-package:
+  extends:
+    - .on_branch
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
 # Upload generated packages to "GitLab generic packages repository".
 .upload_packages:
   stage: STAGE-upload_packages

@@ -3,23 +3,36 @@ deduce_build_image__ubuntu24amd:
   variables:
     Dockerfile: "Dockerfile.Ubuntu24AMD__build"
 
+deduce_package_test_image__ubuntu24amd:
+  extends: .deduce_image
+  variables:
+    Dockerfile: "Dockerfile.Ubuntu24AMD__package_test"
+
 
 on_tag__build-test-package__ubuntu24amd:
   extends: .on_tag__build-test-package
   needs: [deduce_build_image__ubuntu24amd]
 
+on_tag__install-run-package__ubuntu24amd:
+  extends: .on_tag__install-run-package
+  needs: [deduce_package_test_image__ubuntu24amd, on_tag__build-test-package__ubuntu24amd]
+
 on_tag__upload_packages__ubuntu24amd:
   extends: .on_tag__upload_packages
-  needs: [on_tag__build-test-package__ubuntu24amd]
+  needs: [on_tag__build-test-package__ubuntu24amd, on_tag__install-run-package__ubuntu24amd]
 
 
 on_main__build-test-package__ubuntu24amd:
   extends: .on_main__build-test-package
   needs: [deduce_build_image__ubuntu24amd]
 
+on_main__install-run-package__ubuntu24amd:
+  extends: .on_main__install-run-package
+  needs: [deduce_package_test_image__ubuntu24amd, on_main__build-test-package__ubuntu24amd]
+
 on_main__upload_packages__ubuntu24amd:
   extends: .on_main__upload_packages
-  needs: [on_main__build-test-package__ubuntu24amd]
+  needs: [on_main__build-test-package__ubuntu24amd, on_main__install-run-package__ubuntu24amd]
 
 on_main__estimate_test_coverage:
   extends: .estimate_test_coverage
@@ -30,6 +43,10 @@ on_branch__build-test-package__ubuntu24amd:
   extends: .on_branch__build-test-package
   needs: [deduce_build_image__ubuntu24amd]
 
+on_branch__install-run-package__ubuntu24amd:
+  extends: .on_branch__install-run-package
+  needs: [deduce_package_test_image__ubuntu24amd, on_branch__build-test-package__ubuntu24amd]
+
 on_branch__upload_packages__ubuntu24amd:
   extends: .on_branch__upload_packages
-  needs: [on_branch__build-test-package__ubuntu24amd]
+  needs: [on_branch__build-test-package__ubuntu24amd, on_branch__install-run-package__ubuntu24amd]
