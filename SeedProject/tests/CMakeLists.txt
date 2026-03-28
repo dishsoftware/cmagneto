@@ -13,7 +13,7 @@ enable_testing()
 find_package(GTest CONFIG QUIET)
 
 if(NOT GTest_FOUND)
-include(FetchContent)
+    include(FetchContent)
 
     # Prevent bundled GTest from being installed.
     set(INSTALL_GTEST OFF)

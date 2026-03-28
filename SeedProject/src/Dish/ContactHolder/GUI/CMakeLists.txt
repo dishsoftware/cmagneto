@@ -1,5 +1,8 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
-find_package(ZLIB REQUIRED)
+find_package(ZLIB CONFIG QUIET)
+if(NOT ZLIB_FOUND)
+    find_package(ZLIB MODULE REQUIRED)
+endif()
 
 
 # Headers (PRIVATE)
