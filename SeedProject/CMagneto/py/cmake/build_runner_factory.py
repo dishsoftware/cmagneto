@@ -11,18 +11,18 @@
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runners.multi_config_build_runner import MultiConfigBuildRunner
 from CMagneto.py.cmake.build_runners.single_config_build_runner import SingleConfigBuildRunner
-from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
+from CMagneto.py.cmake.build_variant_registry import BuildVariantRegistry
 
 
 class BuildRunnerFactory:
     @staticmethod
     def createBuildRunner(
-        iToolsetName: str,
+        iBuildVariantName: str,
         iBuildTypes: set[BuildRunner.BuildType],
         iEnableCodeCoverage: bool = False
     ) -> BuildRunner:
-        toolset = ToolsetRegistry().availableToolsets()[iToolsetName]
-        if toolset.multiConfig:
-            return MultiConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
+        buildVariant = BuildVariantRegistry().availableBuildVariants()[iBuildVariantName]
+        if buildVariant.multiConfig:
+            return MultiConfigBuildRunner(buildVariant, iBuildTypes, iEnableCodeCoverage)
         else:
-            return SingleConfigBuildRunner(toolset, iBuildTypes, iEnableCodeCoverage)
+            return SingleConfigBuildRunner(buildVariant, iBuildTypes, iEnableCodeCoverage)

@@ -1,5 +1,6 @@
 stages:
   - STAGE-build-test-package
+  - STAGE-install-run-package
   - STAGE-upload_packages
   - STAGE-test-coverage
 

@@ -38,14 +38,20 @@ function(CMagneto__set_up__project)
     # Add source directory.
     cmake_path(SET _PROJECT_SOURCE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
     add_subdirectory("${_PROJECT_SOURCE_DIR}")
+    # Strategies based on embedded runtime paths may be applied later from the
+    # central project setup directory.
+    CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)
+    if(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__EMBEDDED_RUNTIME_PATHS}")
+        CMagnetoInternal__set_up_targets_runtime_resolution()
+    endif()
 
     # Generate build stage reports, helper scripts, etc.
     CMagnetoInternal__set_up__CMake_package_export()
     CMagnetoInternal__set_up__build_summary__file() # Required by `build.py` in the project root.
-    CMagnetoInternal__set_up__3rd_party_shared_libs__list() # Optional.
-    CMagnetoInternal__set_up__set_env__script() # Required by `run` and `run_tests` scripts.
-    CMagnetoInternal__set_up__env_vscode__file() # Required by VS Code to launch the entrypoint executable for debugging.
-    CMagnetoInternal__set_up__run__script() # Optional.
+    CMagnetoInternal__set_up__runtime_dependency_manifest() # Canonical runtime-dependency metadata consumed by diagnostics and verification.
+    CMagnetoInternal__set_up__set_env__script() # Build-tree helper for cases where runtime dependencies are not resolved by target properties.
+    CMagnetoInternal__set_up__env_vscode__file() # Build-tree VS Code helper for debugger setups that do not honor target runtime resolution.
+    CMagnetoInternal__set_up__run__script() # Optional build-tree helper.
     ####################################################
 
     # Configure tests.
@@ -57,6 +63,8 @@ function(CMagneto__set_up__project)
     # Configure packaging.
     ## The project only sets up packaging, if it is the top level project.
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        CMagnetoInternal__install_bundled_external_shared_libraries()
+
         cmake_path(SET _CPACKCONFIG_PATH NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_CPACKCONFIG}/CPackConfig.cmake")
         include("${_CPACKCONFIG_PATH}")
     endif()

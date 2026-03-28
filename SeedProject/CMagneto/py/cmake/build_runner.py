@@ -16,19 +16,37 @@ The location relative to the project root must be preserved.
 
 from __future__ import annotations
 from .build_platform import BuildPlatform
-from abc import ABC, abstractmethod
-from CMagneto.py.cmake.toolset import Toolset
+from abc import ABC
+from CMagneto.py.cmake.build_variant import BuildVariant, ExternalSharedLibraryInstallMode
+from CMagneto.py.metadata_holder import MetadataHolder
 from CMagneto.py.utils.const_meta_class import ConstMetaClass
 from CMagneto.py.utils.good_path import GoodPath
 from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import cast
+from typing import Callable, cast
 import inspect
+import json
 import os
+import re
 import shutil
 import subprocess
+import tarfile
+
+
+@dataclass(frozen=True)
+class _ExternalSharedLibraryDeploymentEntry:
+    importedTargetName: str
+    paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True)
+class _ExtractedLinuxPackage:
+    packagePath: Path
+    extractDir: Path
+    installRoot: Path
 
 
 class BuildRunner(ABC):
@@ -79,6 +97,7 @@ class BuildRunner(ABC):
     CMagneto__RUN_TESTS__SCRIPT_NAME_WE = "run_tests"
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
     CMagneto__COMPILE_COMMANDS__FILE_NAME = "compile_commands.json"
+    CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME = "runtime_dependency_manifest.json"
 
     # Report of source code (under './src/' ) test coverage.
     CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
@@ -94,14 +113,14 @@ class BuildRunner(ABC):
     ##################################################################################################
 
     def __init__(self,
-            iToolset: Toolset,
+            iBuildVariant: BuildVariant,
             iBuildTypes: set[BuildType],
             iEnableCodeCoverage: bool = False
         ):
-        assert GoodPath.isNameGood(iToolset.name)
-        assert not iToolset.generatorName.isspace()
+        assert GoodPath.isNameGood(iBuildVariant.name)
+        assert not iBuildVariant.generatorName.isspace()
 
-        self.__toolset = iToolset
+        self.__buildVariant = iBuildVariant
         self.__buildTypes = iBuildTypes
 
         if iEnableCodeCoverage:
@@ -115,13 +134,13 @@ class BuildRunner(ABC):
 
         self.__cmakeFlagsFor__generate__command: list[str] = list()
         os.chdir(GoodPath.projectRoot())
-        self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.toolsetName()
-        self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.toolsetName()
-        self.__setUpToolsetEnvironment()
+        self.__buildDir    = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_BUILD / self.buildVariantName()
+        self.__installDir  = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_INSTALL / self.buildVariantName()
+        self.__setUpBuildVariantEnvironment()
 
     def __str__(self) -> str:
         text = \
-        f"Toolset name: \"{self.toolsetName()}\"\n" + \
+        f"Build variant name: \"{self.buildVariantName()}\"\n" + \
         f"Generator: \"{self.generatorName()}\"\n" + \
         f"Generator is multi-config: {self.multiConfig()}\n"
 
@@ -145,20 +164,20 @@ class BuildRunner(ABC):
         f"Install directory: \"{self.__installDir}\"\n"
         return text
 
-    def toolset(self) -> Toolset:
-        return self.__toolset
+    def buildVariant(self) -> BuildVariant:
+        return self.__buildVariant
 
-    def toolsetName(self) -> str:
-        return self.toolset().name
+    def buildVariantName(self) -> str:
+        return self.buildVariant().name
 
     def generatorName(self) -> str:
-        return self.toolset().generatorName
+        return self.buildVariant().generatorName
 
     def cppCompilerName(self) -> str | None:
-        return self.toolset().cppCompilerName
+        return self.buildVariant().cppCompilerName
 
     def multiConfig(self) -> bool:
-        return self.toolset().multiConfig
+        return self.buildVariant().multiConfig
 
     def buildTypes(self) -> set[BuildType]:
         return self.__buildTypes
@@ -350,7 +369,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
             # 3. Create a file with just `XX%` or `N/A` to ease creation of CI/CD badges.
             percentageFileContent = "N/A"
             if lcovSummaryOutput.returncode == 0 or "lines......: no data found" not in lcovSummaryOutput.stdout:
-                for line in cast(str, lcovSummaryOutput.stdout).splitlines():
+                for line in lcovSummaryOutput.stdout.splitlines():
                     if "lines......:" in line:
                         percentageFileContent = line.split()[1]  # e.g., '87.5%'
 
@@ -396,7 +415,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
     def isPackageExistForBuildType(self, iBuildType: BuildType) -> bool:
         """Returns True if the 'packages' directory contains at least one file (recursively)."""
         packagesDir = self.buildDirForBuildType(iBuildType) / BuildRunner.CMagneto__SUBDIR_PACKAGES
-        for root, _, files in os.walk(packagesDir):
+        for _, _, files in os.walk(packagesDir):
             if files:
                 return True
         return False
@@ -405,24 +424,37 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         """Checks if the build stage (iBuildStageOfStage) is required to run based on existence of its artifacts for the iBuildType,
            requested iBuildStage and iRunPrecedingStages option."""
 
-        isStageRequiredLambda = lambda iBuildStageOfStage, iArtifactExistenceChecker, iBuildType, iBuildStage: \
-            iBuildStage == iBuildStageOfStage or \
-            iBuildStage.value > iBuildStageOfStage.value and \
-            (iRunPrecedingStages == BuildRunner.RunPrecedingStages.Rerun or (iRunPrecedingStages == BuildRunner.RunPrecedingStages.Run and not iArtifactExistenceChecker(iBuildType)))
+        def isStageRequiredFor(
+                iStageToCheck: BuildRunner.BuildStage,
+                iArtifactExistenceChecker: Callable[[BuildRunner.BuildType], bool],
+                iRequestedBuildType: BuildRunner.BuildType,
+                iRequestedBuildStage: BuildRunner.BuildStage
+            ) -> bool:
+            return (
+                iRequestedBuildStage == iStageToCheck or
+                iRequestedBuildStage.value > iStageToCheck.value and
+                (
+                    iRunPrecedingStages == BuildRunner.RunPrecedingStages.Rerun or
+                    (
+                        iRunPrecedingStages == BuildRunner.RunPrecedingStages.Run and
+                        not iArtifactExistenceChecker(iRequestedBuildType)
+                    )
+                )
+            )
 
         match iBuildStageOfStage:
             case BuildRunner.BuildStage.Generate:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Generate, self.isBuildDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Compile:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.CompileTests:
-                return isStageRequiredLambda(BuildRunner.BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.RunTests:
-                return isStageRequiredLambda(BuildRunner.BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Install:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Package:
-                return isStageRequiredLambda(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
+                return isStageRequiredFor(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
             case _:
                 Log.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 
@@ -430,6 +462,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         text = f"Packaging ({iBuildType.name})"
         Log.status(text + "...")
         Process.runCommand(["cpack"], self.buildDirForBuildType(iBuildType))
+        self.__verifyGeneratedLinuxPackages(iBuildType)
         Log.status(text + " finished.\n")
 
     def run(self, iBuildStage: BuildStage, iRunPrecedingStages: RunPrecedingStages) -> None:
@@ -438,15 +471,336 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         Log.error(f"{self.__class__.__qualname__}.{methodName} is not implemented.")
 
     def _setDependencyPaths(self) -> None:
-        for dependencyPath in self.toolset().dependencyPaths:
+        for dependencyPath in self.buildVariant().dependencyPaths:
             BuildRunner._addVarPathTo_CMAKE_PREFIX_PATH(dependencyPath.envVarName, dependencyPath.cmakePathPostfix)
 
-    def __setUpToolsetEnvironment(self) -> None:
-        envSetupScript = self.toolset().envSetupScript
+    def _cmakeFlagsFor__externalSharedLibraryPolicies(self) -> list[str]:
+        importedTargetsByMode: dict[ExternalSharedLibraryInstallMode, list[str]] = {
+            ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE: [],
+            ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE: []
+        }
+        installModesByImportedTarget: dict[str, ExternalSharedLibraryInstallMode] = {}
+
+        for policy in self.buildVariant().externalSharedLibraryPolicies:
+            existingMode = installModesByImportedTarget.get(policy.importedTargetName)
+            if existingMode is not None and existingMode != policy.installMode:
+                Log.error(
+                    f"Build variant \"{self.buildVariantName()}\" configures imported shared library "
+                    f"\"{policy.importedTargetName}\" with conflicting install modes: "
+                    f"\"{existingMode.value}\" and \"{policy.installMode.value}\"."
+                )
+
+            installModesByImportedTarget[policy.importedTargetName] = policy.installMode
+            importedTargetsByMode[policy.installMode].append(policy.importedTargetName)
+
+        flags: list[str] = []
+        for installMode, importedTargets in importedTargetsByMode.items():
+            if not importedTargets:
+                continue
+
+            deduplicatedImportedTargets = list(dict.fromkeys(importedTargets))
+            if installMode == ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE:
+                varName = "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE"
+            elif installMode == ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE:
+                varName = "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE"
+            else:
+                Log.error(f"Invalid logics of {__file__}: unsupported install mode \"{installMode.value}\".")
+
+            flags.append(f"-D{varName}={';'.join(deduplicatedImportedTargets)}")
+
+        return flags
+
+    def _cmakeFlagsFor__runtimeDependencyBundlingOverrides(self) -> list[str]:
+        flags: list[str] = []
+
+        overrideVarNamesAndValues: tuple[tuple[str, tuple[str, ...]], ...] = (
+            ("CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES", self.buildVariant().bundledRuntimeDependencyFiles),
+            ("CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS", self.buildVariant().bundledRuntimeDependencyFilePatterns),
+            ("CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES", self.buildVariant().excludedBundledRuntimeDependencyFiles),
+            ("CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS", self.buildVariant().excludedBundledRuntimeDependencyFilePatterns),
+        )
+
+        for varName, rawValues in overrideVarNamesAndValues:
+            if not rawValues:
+                continue
+
+            deduplicatedValues = tuple(dict.fromkeys(rawValues))
+            flags.append(f"-D{varName}={';'.join(deduplicatedValues)}")
+
+        return flags
+
+    def __verifyGeneratedLinuxPackages(self, iBuildType: BuildType) -> None:
+        """Extracts generated Linux packages and verifies external shared-library deployment policy."""
+        if BuildPlatform().hostOS() != BuildPlatform.OS.Linux:
+            return
+
+        deploymentEntriesByMode = self.__loadRuntimeDependencyManifestDeploymentEntries(iBuildType)
+        if all(not deploymentEntries for deploymentEntries in deploymentEntriesByMode.values()):
+            return
+
+        text = f"Verifying generated packages ({iBuildType.name})"
+        Log.status(text + "...")
+
+        packagesDir = self.buildDirForBuildType(iBuildType) / BuildRunner.CMagneto__SUBDIR_PACKAGES
+        extractedPackages = self.__extractSupportedLinuxPackages(packagesDir)
+        if not extractedPackages:
+            Log.error(f"No supported Linux packages with runtime payload were found in \"{packagesDir}\".")
+
+        for extractedPackage in extractedPackages:
+            self.__verifyExternalSharedLibrariesInLinuxPackage(extractedPackage, deploymentEntriesByMode)
+
+        Log.status(text + " finished.\n")
+
+    def __loadRuntimeDependencyManifestDeploymentEntries(self, iBuildType: BuildType) -> dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]]:
+        """Loads imported shared-library deployment expectations from the canonical runtime dependency manifest."""
+        manifestPath = self.exeDirForBuildType(iBuildType) / BuildRunner.CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME
+        if not manifestPath.exists():
+            Log.warning(f"Runtime dependency manifest file was not found: \"{manifestPath}\".")
+            return {
+                ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE: tuple(),
+                ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE: tuple()
+            }
+
+        with manifestPath.open("r", encoding="utf-8") as manifestFile:
+            manifest = json.load(manifestFile)
+
+        if not isinstance(manifest, dict):
+            Log.error(f"Invalid runtime dependency manifest file: \"{manifestPath}\".")
+        manifestDict = cast(dict[str, object], manifest)
+
+        rawImportedSharedLibraries = manifestDict.get("ImportedSharedLibraries", [])
+        if not isinstance(rawImportedSharedLibraries, list):
+            Log.error(f"Invalid ImportedSharedLibraries section in \"{manifestPath}\".")
+        importedSharedLibraries = cast(list[object], rawImportedSharedLibraries)
+
+        entriesByMode: dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]] = {}
+        for installMode in ExternalSharedLibraryInstallMode:
+            parsedEntries: list[_ExternalSharedLibraryDeploymentEntry] = []
+            for rawEntry in importedSharedLibraries:
+                if not isinstance(rawEntry, dict):
+                    Log.error(f"Invalid imported shared-library entry in \"{manifestPath}\": {rawEntry!r}.")
+                rawEntryDict = cast(dict[str, object], rawEntry)
+
+                importedTargetName = rawEntryDict.get("ImportedTarget")
+                rawInstallMode = rawEntryDict.get("InstallMode")
+                rawPaths = rawEntryDict.get("Paths")
+                if not isinstance(importedTargetName, str):
+                    Log.error(f"Invalid imported target name in \"{manifestPath}\": {rawEntry!r}.")
+                if not isinstance(rawInstallMode, str):
+                    Log.error(f"Invalid install mode in \"{manifestPath}\": {rawEntry!r}.")
+                if not isinstance(rawPaths, list):
+                    Log.error(f"Invalid imported target paths in \"{manifestPath}\": {rawEntry!r}.")
+                if rawInstallMode != installMode.value:
+                    continue
+
+                rawPathList = cast(list[object], rawPaths)
+                pathListItems: list[str] = []
+                for rawPath in rawPathList:
+                    if not isinstance(rawPath, str):
+                        Log.error(f"Invalid imported target path item in \"{manifestPath}\": {rawEntry!r}.")
+                    pathListItems.append(rawPath)
+                pathList = tuple(pathListItems)
+
+                parsedEntries.append(
+                    _ExternalSharedLibraryDeploymentEntry(
+                        importedTargetName=importedTargetName,
+                        paths=tuple(Path(path) for path in pathList)
+                    )
+                )
+
+            entriesByMode[installMode] = tuple(parsedEntries)
+
+        return entriesByMode
+
+    def __linuxPackageInstallPrefixRelativePath(self) -> Path:
+        """Returns the runtime payload root inside Linux packages generated by the current project metadata."""
+        companyNameShort = MetadataHolder().getMetadataValue(Path("./Project.json"), ["CompanyName_SHORT"])
+        projectNameBase = MetadataHolder().getMetadataValue(Path("./Project.json"), ["ProjectNameBase"])
+        if not (isinstance(companyNameShort, str) and isinstance(projectNameBase, str)):
+            Log.error(f"{self.__class__.__name__}: can't get required project metadata for package verification.")
+
+        return Path("opt") / companyNameShort / projectNameBase
+
+    def __extractSupportedLinuxPackages(self, iPackagesDir: Path) -> tuple[_ExtractedLinuxPackage, ...]:
+        """Extracts supported Linux package formats and returns only packages that contain the runtime payload."""
+        installPrefixRelativePath = self.__linuxPackageInstallPrefixRelativePath()
+        extractionRoot = iPackagesDir / ".tmp" / "package_verification"
+
+        extractedPackages: list[_ExtractedLinuxPackage] = []
+        for packagePath in sorted(iPackagesDir.rglob("*")):
+            if not packagePath.is_file():
+                continue
+            if "_CPack_Packages" in packagePath.parts:
+                continue
+            if not (
+                packagePath.name.endswith(".deb") or
+                packagePath.name.endswith(".tgz") or
+                packagePath.name.endswith(".tar.gz")
+            ):
+                continue
+
+            extractDir = extractionRoot / packagePath.name
+            self.__extractLinuxPackage(packagePath, extractDir)
+
+            installRoot = extractDir / installPrefixRelativePath
+            if not installRoot.exists():
+                Log.warning(f"Skipping package without runtime payload at \"{installPrefixRelativePath}\": \"{packagePath}\".")
+                continue
+
+            extractedPackages.append(
+                _ExtractedLinuxPackage(
+                    packagePath=packagePath,
+                    extractDir=extractDir,
+                    installRoot=installRoot
+                )
+            )
+
+        return tuple(extractedPackages)
+
+    def __extractLinuxPackage(self, iPackagePath: Path, iExtractDir: Path) -> None:
+        """Extracts one supported Linux package into iExtractDir."""
+        if iExtractDir.exists():
+            shutil.rmtree(iExtractDir)
+        iExtractDir.mkdir(parents=True, exist_ok=True)
+
+        if iPackagePath.name.endswith(".deb"):
+            Process.runCommand(["dpkg-deb", "-x", str(iPackagePath), str(iExtractDir)])
+            return
+
+        if iPackagePath.name.endswith(".tgz") or iPackagePath.name.endswith(".tar.gz"):
+            with tarfile.open(iPackagePath, "r:*") as packageArchive:
+                packageArchive.extractall(iExtractDir)
+            return
+
+        Log.error(f"Unsupported Linux package format: \"{iPackagePath}\".")
+
+    def __verifyExternalSharedLibrariesInLinuxPackage(
+            self,
+            iExtractedPackage: _ExtractedLinuxPackage,
+            iDeploymentEntriesByMode: dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]]
+        ) -> None:
+        """Checks that bundled and externally provided shared libraries resolve as configured inside one extracted package."""
+        elfFiles = (
+            *self.__findElfFilesUnder(iExtractedPackage.installRoot / BuildRunner.CMagneto__SUBDIR_EXECUTABLE),
+            *self.__findElfFilesUnder(iExtractedPackage.installRoot / BuildRunner.CMagneto__SUBDIR_SHARED)
+        )
+        if not elfFiles:
+            Log.warning(f"Skipping package verification because no ELF runtime files were found in \"{iExtractedPackage.packagePath}\".")
+            return
+
+        packagedFilesByName: dict[str, set[Path]] = {}
+        for packagedFile in iExtractedPackage.installRoot.rglob("*"):
+            if not packagedFile.is_file():
+                continue
+            packagedFilesByName.setdefault(packagedFile.name, set()).add(packagedFile)
+
+        resolvedLibrariesByName = self.__collectResolvedLinuxSharedLibraries(tuple(elfFiles), iExtractedPackage.packagePath)
+
+        for deploymentEntry in iDeploymentEntriesByMode[ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE]:
+            candidateLibraryNames = self.__sharedLibraryNamesForPaths(deploymentEntry.paths)
+            packagedPaths = self.__pathsForLibraryNames(candidateLibraryNames, packagedFilesByName)
+            if not packagedPaths:
+                Log.error(
+                    f"Bundled imported shared library \"{deploymentEntry.importedTargetName}\" is missing from package "
+                    f"\"{iExtractedPackage.packagePath}\". Expected one of: {sorted(candidateLibraryNames)}."
+                )
+
+            resolvedPaths = self.__pathsForLibraryNames(candidateLibraryNames, resolvedLibrariesByName)
+            if not any(resolvedPath.is_relative_to(iExtractedPackage.installRoot) for resolvedPath in resolvedPaths):
+                Log.error(
+                    f"Bundled imported shared library \"{deploymentEntry.importedTargetName}\" was not resolved from within "
+                    f"the extracted package \"{iExtractedPackage.packagePath}\"."
+                )
+
+        for deploymentEntry in iDeploymentEntriesByMode[ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE]:
+            candidateLibraryNames = self.__sharedLibraryNamesForPaths(deploymentEntry.paths)
+            packagedPaths = self.__pathsForLibraryNames(candidateLibraryNames, packagedFilesByName)
+            if packagedPaths:
+                Log.error(
+                    f"Imported shared library \"{deploymentEntry.importedTargetName}\" is expected on the target machine, "
+                    f"but package \"{iExtractedPackage.packagePath}\" contains {sorted(str(path) for path in packagedPaths)}."
+                )
+
+            resolvedPaths = self.__pathsForLibraryNames(candidateLibraryNames, resolvedLibrariesByName)
+            if not any(not resolvedPath.is_relative_to(iExtractedPackage.installRoot) for resolvedPath in resolvedPaths):
+                Log.error(
+                    f"Imported shared library \"{deploymentEntry.importedTargetName}\" was expected to resolve outside the "
+                    f"package \"{iExtractedPackage.packagePath}\", but no such resolution was observed."
+                )
+
+    def __findElfFilesUnder(self, iRoot: Path) -> tuple[Path, ...]:
+        """Returns ELF files found recursively under iRoot."""
+        if not iRoot.exists():
+            return tuple()
+
+        elfFiles: list[Path] = []
+        for path in sorted(iRoot.rglob("*")):
+            if not path.is_file():
+                continue
+            try:
+                with path.open("rb") as binaryFile:
+                    if binaryFile.read(4) == b"\x7fELF":
+                        elfFiles.append(path)
+            except OSError:
+                continue
+
+        return tuple(elfFiles)
+
+    def __collectResolvedLinuxSharedLibraries(self, iElfFiles: tuple[Path, ...], iPackagePath: Path) -> dict[str, set[Path]]:
+        """Runs ldd for packaged ELF files and collects resolved shared libraries by library name."""
+        resolvedLibrariesByName: dict[str, set[Path]] = {}
+        for elfFile in iElfFiles:
+            lddOutput = Process.runCommand(["ldd", str(elfFile)], iCaptureOutput=True, iCheck=False)
+            assert lddOutput is not None
+
+            for line in lddOutput.stdout.splitlines():
+                if "=>" not in line:
+                    continue
+
+                libraryName, resolvedPart = line.split("=>", maxsplit=1)
+                libraryName = libraryName.strip()
+                resolvedPathStr = resolvedPart.split("(", maxsplit=1)[0].strip()
+                if resolvedPathStr == "not found":
+                    Log.error(f"Shared library \"{libraryName}\" required by \"{elfFile}\" was not resolved in package \"{iPackagePath}\".")
+                if resolvedPathStr == "":
+                    continue
+
+                resolvedLibrariesByName.setdefault(libraryName, set()).add(Path(resolvedPathStr))
+
+        return resolvedLibrariesByName
+
+    def __sharedLibraryNamesForPaths(self, iPaths: tuple[Path, ...]) -> set[str]:
+        """Returns possible runtime names for shared-library files, including SONAME values when available."""
+        sharedLibraryNames: set[str] = set()
+        for path in iPaths:
+            sharedLibraryNames.add(path.name)
+            if path.exists():
+                sharedLibraryNames.add(path.resolve().name)
+
+                sonameOutput = Process.runCommand(["readelf", "-d", str(path)], iCaptureOutput=True, iCheck=False)
+                assert sonameOutput is not None
+                for line in sonameOutput.stdout.splitlines():
+                    match = re.search(r"Library soname: \[(.+)\]", line)
+                    if match is not None:
+                        sharedLibraryNames.add(match.group(1))
+                        break
+
+        return sharedLibraryNames
+
+    @staticmethod
+    def __pathsForLibraryNames(iLibraryNames: set[str], iPathsByName: dict[str, set[Path]]) -> set[Path]:
+        """Returns all paths whose file names match any name from iLibraryNames."""
+        matchedPaths: set[Path] = set()
+        for libraryName in iLibraryNames:
+            matchedPaths.update(iPathsByName.get(libraryName, set()))
+        return matchedPaths
+
+    def __setUpBuildVariantEnvironment(self) -> None:
+        envSetupScript = self.buildVariant().envSetupScript
         if envSetupScript is None:
             return
 
-        Process.applyEnvFromScript(envSetupScript, self.toolset().envSetupArgs)
+        Process.applyEnvFromScript(envSetupScript, self.buildVariant().envSetupArgs)
 
     @staticmethod
     def _addVarPathTo_CMAKE_PREFIX_PATH(iVarName: str, iCMakePathPostfix: Path | None) -> None:
@@ -462,7 +816,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 Log.error(f"\"{iVarName}\" environment variable is not set.")
             else:
                 Log.error(f"\"{iVarName}\" environment variable is empty string.")
-        varPath = Path(cast(str, varPathStr))
+        varPath = Path(varPathStr)
 
         if iCMakePathPostfix:
             pathToAdd = varPath / iCMakePathPostfix

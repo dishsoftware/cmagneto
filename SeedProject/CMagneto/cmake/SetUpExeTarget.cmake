@@ -110,7 +110,16 @@ function(CMagneto__set_up__executable iExeTargetName)
     list(APPEND _registeredTargets ${iExeTargetName})
     set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "${_registeredTargets}")
 
-    CMagnetoInternal__collect_paths_to_shared_libs(${iExeTargetName})
+    # Linked imported shared-library targets are registered here so runtime artifact paths
+    # can later be queried centrally by imported target through the manifest layer.
+    CMagnetoInternal__register_linked_imported_shared_library_targets(${iExeTargetName})
+
+    # Strategies based on target-local runtime files must be attached from the
+    # same directory in which the target was created.
+    CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)
+    if(_runtimeResolutionStrategy STREQUAL "${CMagnetoInternal__RUNTIME_RESOLUTION_STRATEGY__TARGET_LOCAL_RUNTIME_FILES}")
+        CMagnetoInternal__set_up_target_runtime_resolution(${iExeTargetName})
+    endif()
 endfunction()
 
 

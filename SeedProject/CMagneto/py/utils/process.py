@@ -10,17 +10,21 @@
 
 from .log import Log
 from pathlib import Path
+from typing import Literal, TypeAlias, overload
 import os
 import shlex
 import shutil
 import subprocess
 
 
+PathLikeStr: TypeAlias = os.PathLike[str] | str
+
+
 class Process:
     __cachedEnvironments: dict[tuple[str, tuple[str, ...]], dict[str, str]] = {}
 
     @staticmethod
-    def applyEnvFromScript(iScriptPath: os.PathLike | str, iArgs: list[str] | tuple[str, ...] | None = None) -> None:
+    def applyEnvFromScript(iScriptPath: PathLikeStr, iArgs: list[str] | tuple[str, ...] | None = None) -> None:
         """
         Runs an environment setup script and imports the environment variables it sets into the current Python process.
 
@@ -176,8 +180,36 @@ class Process:
 
         return executableToken
 
+    @overload
     @staticmethod
-    def runCommand(iCommand: list[str], iCWD: os.PathLike | str | None = None, *, iCheck: bool = True, iCaptureOutput: bool = False) -> subprocess.CompletedProcess | None:
+    def runCommand(
+            iCommand: list[str],
+            iCWD: PathLikeStr | None = None,
+            *,
+            iCheck: bool = True,
+            iCaptureOutput: Literal[False] = False
+        ) -> None:
+        ...
+
+    @overload
+    @staticmethod
+    def runCommand(
+            iCommand: list[str],
+            iCWD: PathLikeStr | None = None,
+            *,
+            iCheck: bool = True,
+            iCaptureOutput: Literal[True]
+        ) -> subprocess.CompletedProcess[str]:
+        ...
+
+    @staticmethod
+    def runCommand(
+            iCommand: list[str],
+            iCWD: PathLikeStr | None = None,
+            *,
+            iCheck: bool = True,
+            iCaptureOutput: bool = False
+        ) -> subprocess.CompletedProcess[str] | None:
         currentCWD = os.getcwd()
         if iCWD is not None:
             os.chdir(iCWD)
@@ -201,7 +233,7 @@ class Process:
             )
             assert process.stdout is not None # For type checker.
 
-            capturedLines = []
+            capturedLines: list[str] = []
             for line in process.stdout:
                 print(line, end='') # Print from the sub process `stdout` stream in real time. Each line already has a endline.
                 if iCaptureOutput:

@@ -76,23 +76,23 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --toolset ${TOOLSET} --build_types Release
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Release
 
     # Append variables to inherited.env report artifact, in order to pass the variables to a following job(s). Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
-    - echo "TOOLSET=${TOOLSET}" >> inherited.env
+    - echo "BUILD_VARIANT=${BUILD_VARIANT}" >> inherited.env
   artifacts:
     when: always
     paths:
-      - build/${TOOLSET}/Release/summary/test_report.xml
-      - build/${TOOLSET}/Release/packages/** # Everything within ".../packages/" recursively.
+      - build/${BUILD_VARIANT}/Release/summary/test_report.xml
+      - build/${BUILD_VARIANT}/Release/packages/** # Everything within ".../packages/" recursively.
     exclude:
       # Recursively exclude _CPack_Packages (the dir itself is also excluded). _CPack_Packages contains CPack temp files.
-      - build/${TOOLSET}/Release/packages/_CPack_Packages/**
+      - build/${BUILD_VARIANT}/Release/packages/_CPack_Packages/**
     reports:
-      junit: build/${TOOLSET}/Release/summary/test_report.xml
+      junit: build/${BUILD_VARIANT}/Release/summary/test_report.xml
       dotenv: inherited.env
 
 
@@ -117,13 +117,107 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
 
 
+.install-run-package:
+  stage: STAGE-install-run-package
+  # needs: [.deduce_image, .build-test-package]
+  image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
+  variables:
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
+  script:
+    - |
+      packagesDir="./build/${BUILD_VARIANT}/Release/packages"
+      packagePath="$(find "${packagesDir}" -type f -name '*.deb' | head -n 1)"
+      if [ -z "${packagePath}" ]; then
+        echo "No .deb package found under ${packagesDir}."
+        exit 1
+      fi
+      export PACKAGE_PATH="${packagePath}"
+      echo "Using package ${packagePath}"
+      echo "PACKAGE_PATH=${PACKAGE_PATH}" >> inherited.env
+
+    - |
+      # Fail fast if the test image already contains any supported Qt 6 Core runtime package,
+      # because this job is meant to prove the package manager pulls Qt in as a dependency.
+      qtCoreRuntimePackages="libqt6core6 libqt6core6t64"
+      for packageName in ${qtCoreRuntimePackages}; do
+        if dpkg-query -W -f='${Status}\n' "${packageName}" 2>/dev/null | grep -q '^install ok installed$'; then
+          echo "Qt runtime package ${packageName} is already installed before package installation."
+          exit 1
+        fi
+      done
+
+    - apt-get update
+    - apt-get install -y "./${PACKAGE_PATH}"
+
+    - |
+      # Qt is currently expected to be supplied by the target machine via Debian package dependencies.
+      # If the ContactHolder package is installed correctly with apt, a Qt 6 Core runtime package should be pulled in automatically.
+      qtCoreRuntimePackages="libqt6core6 libqt6core6t64"
+      qtCoreRuntimeDetected=""
+      for packageName in ${qtCoreRuntimePackages}; do
+        if dpkg-query -W -f='${Status}\n' "${packageName}" 2>/dev/null | grep -q '^install ok installed$'; then
+          qtCoreRuntimeDetected="${packageName}"
+          break
+        fi
+      done
+      if [ -z "${qtCoreRuntimeDetected}" ]; then
+        echo "No supported Qt 6 Core runtime package was installed with ${PACKAGE_PATH}."
+        exit 1
+      fi
+
+    - |
+      installedExecutablePath="$(dpkg-deb -c "${PACKAGE_PATH}" | awk '$6 ~ /^\.\/opt\/.*\/bin\/[^/]+$/ && firstMatch == "" { firstMatch = $6 } END { print firstMatch }')"
+      if [ -z "${installedExecutablePath}" ]; then
+        echo "Failed to detect installed executable path from ${PACKAGE_PATH}."
+        exit 1
+      fi
+      export INSTALLED_EXECUTABLE_PATH="/${installedExecutablePath#./}"
+      echo "INSTALLED_EXECUTABLE_PATH=${INSTALLED_EXECUTABLE_PATH}" >> inherited.env
+
+    # The executable is a Qt GUI app, so it is run with the offscreen platform plugin to avoid requiring a display server.
+    # A couple of stable startup lines are then checked:
+    # - "zlib version:" is used as evidence that the bundled zlib runtime was found and loaded.
+    # - "Qt widget styles count:" is used as evidence that Qt widgets were initialized successfully after apt-installed Qt runtime packages were pulled in.
+    - QT_QPA_PLATFORM=offscreen timeout 30s "${INSTALLED_EXECUTABLE_PATH}" > package_run_output.txt 2>&1
+    - cat package_run_output.txt
+    - grep -q "zlib version:" package_run_output.txt
+    - grep -q "Qt widget styles count:" package_run_output.txt
+  artifacts:
+    when: always
+    paths:
+      - package_run_output.txt
+    reports:
+      dotenv: inherited.env
+
+
+.on_tag__install-run-package:
+  extends:
+    - .on_tag
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_main__install-run-package:
+  extends:
+    - .on_main
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
+.on_branch__install-run-package:
+  extends:
+    - .on_branch
+    - .install-run-package
+  # needs: [.deduce_image, .build-test-package] Template does not support "needs" attribute. Add the attribute in concrete jobs.
+
+
 # Upload generated packages to "GitLab generic packages repository".
 .upload_packages:
   stage: STAGE-upload_packages
   # needs: [.build-test-package]
   script:
     - |
-      packagesDir="./build/${TOOLSET}/Release/packages"
+      packagesDir="./build/${BUILD_VARIANT}/Release/packages"
 
       # Iterate over all files recursively under packagesDir.
       ## `find ... |`         — lists all files under packagesDir, one per line.
@@ -133,7 +227,7 @@ variables:
         # Compute file path relative to packagesDir.
         relative_path="${file#${packagesDir}/}"
 
-        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${TOOLSET}/${relative_path}"
+        url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_PATH}/${CI_COMMIT_REF_NAME}/${PLATFORM}/${BUILD_VARIANT}/${relative_path}"
         echo "Uploading ${file} to ${url}"
         curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "${file}" "${url}"
       done
@@ -165,10 +259,10 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    TOOLSET: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --toolset ${TOOLSET} --build_types Debug --build_stage RunTests --coverage
-    - echo "Test coverage $(cat build/${TOOLSET}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Debug --build_stage RunTests --coverage
+    - echo "Test coverage $(cat build/${BUILD_VARIANT}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
   coverage: '/Test coverage (\d+\.\d+%|N/A)/'
   rules:
     # If trigger is:

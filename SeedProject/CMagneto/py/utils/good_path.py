@@ -137,7 +137,7 @@ class GoodPath(metaclass=ConstMetaClass):
         rawPath = re.sub(r"/+", "/", rawPath)
 
         if rawPath.endswith(':'): # Allow such a mistake.
-            pawPath += '/'
+            rawPath += '/'
 
         itemNames = rawPath.split('/') # Is not empty, because empty strings are prohibited by GoodPath.getForbiddenSubstringsInPath().
         if len(itemNames[0]) == 2 and itemNames[0][1] == ':':
@@ -212,7 +212,7 @@ class GoodPath(metaclass=ConstMetaClass):
     def name(self) -> str:
         return self.__name
 
-    def __eq__(self, iOther) -> bool:
+    def __eq__(self, iOther: object) -> bool:
         if isinstance(iOther, GoodPath):
             return self.__posixNormalized == iOther.__posixNormalized
         if isinstance(iOther, str):
@@ -335,7 +335,7 @@ class GoodPath(metaclass=ConstMetaClass):
         """
         return self.getRelativeTo(iOther, iAllowAscend=False) != None
 
-    def checkIfRelativeAndDescendantAndGetAbsPath(self, iSelfDescription: str, iOther: GoodPath | str, iOtherDescription: str, iExitNotRaise = True) -> GoodPath:
+    def checkIfRelativeAndDescendantAndGetAbsPath(self, iSelfDescription: str, iOther: GoodPath | str, iOtherDescription: str, iExitNotRaise: bool = True) -> GoodPath:
         res = self.getRelativeTo(iOther, iAllowAscend=False)
         if res is not None:
             return res

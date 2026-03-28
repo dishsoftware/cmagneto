@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
     qt6-base-dev \
     qt6-tools-dev \
     libboost-all-dev \
+    zlib1g-dev \
     dpkg-dev \
     tree \
     && apt-get clean

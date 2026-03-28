@@ -8,11 +8,15 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
+from __future__ import annotations
 from .utils.good_path import GoodPath
 from .utils.log import Log
 from pathlib import Path
-from typing import Any
+from typing import TypeAlias, cast
 import json
+
+
+JSONValue: TypeAlias = None | bool | int | float | str | list["JSONValue"] | dict[str, "JSONValue"]
 
 
 class MetadataHolder:
@@ -38,7 +42,7 @@ class MetadataHolder:
         if self.__initialized:
             return
         # {fileName, fileContent}[]
-        self.__metadataBuffer: dict[Path, Any] = dict()
+        self.__metadataBuffer: dict[Path, JSONValue] = dict()
         self.__initialized = True
 
     @staticmethod
@@ -46,7 +50,7 @@ class MetadataHolder:
         """Returns a base dir, where all metadata files must be placed. Subdirs are allowed."""
         return MetadataHolder.__METADDATA_ROOT
 
-    def __readMetadataFile(self, iFilePathInMetadataDir: Path) -> Any:
+    def __readMetadataFile(self, iFilePathInMetadataDir: Path) -> JSONValue:
         """Returns data of iFilePathInMetadataDir"""
 
         # Check if the buffer contains iFilePathInMetadataDir and return key in single lookup.
@@ -66,23 +70,24 @@ class MetadataHolder:
                 Log.error(f"{__class__.__name__}: \"{iFilePathInMetadataDir}\" must be within \"{MetadataHolder.getMetadataRoot()}\".")
 
             with iFilePathInMetadataDir.open("r", encoding="utf-8") as textFile:
-                data = json.load(textFile)
+                data = cast(JSONValue, json.load(textFile))
 
             self.__metadataBuffer[iFilePathInMetadataDir] = data
         return data
 
     @staticmethod
-    def __getNestedValue(iData: dict[str, Any], iKeySequence: list[str]) -> Any:
+    def __getNestedValue(iData: JSONValue, iKeySequence: list[str]) -> JSONValue | None:
         for key in iKeySequence:
             if isinstance(iData, dict):
-                data = iData.get(key)
-                if data is not None:
-                    iData = data
+                nestedData = iData
+                if key not in nestedData:
+                    return None
+                iData = nestedData[key]
             else:
                 return None
         return iData
 
-    def getMetadataValue(self, iFilePathRelativeToMetadataDir: Path, iKeys: list[str]) -> Any:
+    def getMetadataValue(self, iFilePathRelativeToMetadataDir: Path, iKeys: list[str]) -> JSONValue | None:
         """
         Returns value of a nested structure in a JSON file.
 

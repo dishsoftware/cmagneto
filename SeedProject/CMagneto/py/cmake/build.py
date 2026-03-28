@@ -33,9 +33,9 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from CMagneto.py.cmake.build_platform import BuildPlatform
+from CMagneto.py.cmake.build_variant_registry import BuildVariantRegistry
 from CMagneto.py.cmake.build_runner import BuildRunner
 from CMagneto.py.cmake.build_runner_factory import BuildRunnerFactory
-from CMagneto.py.cmake.toolset_registry import ToolsetRegistry
 from CMagneto.py.utils.log import Log
 import argparse
 import re
@@ -43,28 +43,29 @@ import re
 
 def buildProject():
     Log.status(f"Host OS: {BuildPlatform().hostOS().value}")
-    toolsetRegistry = ToolsetRegistry()
-    toolsets = toolsetRegistry.availableToolsets()
-    toolsetNames = toolsets.keys()
+    buildVariantRegistry = BuildVariantRegistry()
+    buildVariants = buildVariantRegistry.availableBuildVariants()
+    buildVariantNames = buildVariants.keys()
 
     parser = argparse.ArgumentParser(
         description=\
 f"Builds the CMake project.\n\
 The build pipeline consists of the following stages: {', '.join([buildStage.name for buildStage in BuildRunner.BuildStage])}.\n\
-Supported OSes: {', '.join(os.name for os in toolsetRegistry.supportedOSes())}.\n\
+Supported OSes: {', '.join(os.name for os in buildVariantRegistry.supportedOSes())}.\n\
 \n\
 NOTE! All relative paths in the doc are given relative to the project root.\n\
 \n",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "--toolset",
-        choices=toolsetNames,
+        "--build_variant",
+        dest="buildVariant",
+        choices=buildVariantNames,
         required=True,
         help=\
-f"Select a toolset. The parameter is reqired.\n\
-Note: the set of available toolsets depends on the OS the script is run on." \
-        if len(toolsetNames) > 0 else Log.makeColored("No toolsets available for the OS!", Log.PrintColor.Yellow)
+f"Select a build variant. The parameter is reqired.\n\
+Note: the set of available build variants depends on the OS the script is run on." \
+        if len(buildVariantNames) > 0 else Log.makeColored("No build variants available for the OS!", Log.PrintColor.Yellow)
     )
     defaultBuildType = BuildRunner.BuildType.Release
     parser.add_argument(
@@ -162,7 +163,7 @@ Note: test coverage report can only be generated, if code coverage flags were se
         libSharedOptions[libTargetName] = optionVal
         unknownArgs.remove(arg)
 
-    toolsetName = args.toolset
+    buildVariantName = args.buildVariant
     buildTypes: set[BuildRunner.BuildType] = {BuildRunner.BuildType[argBuildType] for argBuildType in args.build_types}
     buildStage: BuildRunner.BuildStage = BuildRunner.BuildStage[args.build_stage]
     runPrecedingStages: BuildRunner.RunPrecedingStages = BuildRunner.RunPrecedingStages[args.run_preceding_stages]
@@ -185,7 +186,7 @@ Note: test coverage report can only be generated, if code coverage flags were se
     if (len(unknownArgs) > 0):
         Log.error(f"Unknown arguments: {', '.join(unknownArgs)}.")
 
-    buildRunner: BuildRunner = BuildRunnerFactory.createBuildRunner(toolsetName, buildTypes, enableCodeCoverage)
+    buildRunner: BuildRunner = BuildRunnerFactory.createBuildRunner(buildVariantName, buildTypes, enableCodeCoverage)
     buildRunner.setCMakeFlagsFor__generate__command(cmakeFlags)
     Log.message(str(buildRunner))
     buildRunner.run(buildStage, runPrecedingStages)

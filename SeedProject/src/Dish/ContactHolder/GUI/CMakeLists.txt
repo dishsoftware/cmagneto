@@ -1,4 +1,8 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
+find_package(ZLIB CONFIG QUIET)
+if(NOT ZLIB_FOUND)
+    find_package(ZLIB MODULE REQUIRED)
+endif()
 
 
 # Headers (PRIVATE)
@@ -50,7 +54,7 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 # Target
 set(_TARGET_NAME Dish_ContactHolder_GUI)
 add_executable(${_TARGET_NAME})
-target_link_libraries(${_TARGET_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Dish::ContactHolder::Contacts)
+target_link_libraries(${_TARGET_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets ZLIB::ZLIB Dish::ContactHolder::Contacts)
 ####################################################################
 
 

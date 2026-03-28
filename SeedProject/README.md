@@ -38,6 +38,7 @@ This project is licensed under the [MIT License](./LICENSE).
     See [the file](./CMagneto/cmake/QtWrappers.cmake) header and [`GNU Lesser General Public License, version 2.1`](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
 - **Qt** is used under the terms of the GNU LGPL 3.0. See [`Qt Licensing`](https://doc.qt.io/qt-6/licensing.html) for details.
 - **Boost** is used under the Boost Software License 1.0. See [`The Boost Software License`](https://www.boost.org/users/license.html).
+- **zlib** is used under the terms of the zlib License. See [zlib License](https://zlib.net/zlib_license.html).
 
 
 ## Git History Policy
@@ -62,6 +63,7 @@ The same as in [`Project Build Tools` section the CMagneto framework doc](./CMag
 ### 1.2. Dependencies
 - Qt 6
 - Boost
+- zlib
 
 
 ### 1.3. One-Command Build Script
@@ -74,9 +76,16 @@ For details look into [`1.3. Build Project` section the CMagneto framework doc](
 
 
 ## 2. Run
-The following helper scripts are created inside `bin/` subdirectories of `./build/` and `./install/`:
-- `set_env` script sets environment variables for runtime, including paths to directories with 3rd-party shared libs;
-- `run` script executes a `set_env` script and the runs the project entrypoint-executable.
+Runtime dependency policy is defined by the active build variant under [`./build_variants/`](./build_variants/):
+- some imported shared libraries can be marked as expected on the target machine at the same absolute locations as on the build machine;
+- others can be marked as bundled into the installation package;
+- dependencies that are not marked explicitly may still need the legacy helper scripts or platform default loader paths.
+
+The following legacy helper scripts are also created inside `bin/` subdirectories of `./build/` and `./install/`:
+- `set_env` prepends build-machine-specific dependency directories to the runtime environment;
+- `run` executes `set_env` and then runs the project entrypoint executable.
+
+CMagneto then realizes that policy using platform-specific mechanisms such as `RPATH`, install-tree copying, and package-manager dependency metadata.
 
 
 ## 3. Continuous Integration (CI)
@@ -94,13 +103,13 @@ To trigger a pipeline for an untagged commit to another branch, push the commit 
 
 #### 3.2.2. CI Artifact Output
 Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/{BranchName_or_Tag}/{Platform}/{toolset}/Dish_ContactHolder-{ProjectVersion}.{PackageExtension}`,
+`https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/{BranchName_or_Tag}/{Platform}/{build_variant}/Dish_ContactHolder-{ProjectVersion}.{PackageExtension}`,
 
 where:
 - `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
 - `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform=`Ubuntu24AMD`;
-- `toolset` is the argument, passed to [`./build.py --toolset`](./build.py);
-- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and toolset.
+- `build_variant` is the argument, passed to [`./build.py --build_variant`](./build.py);
+- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
 [https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .

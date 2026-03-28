@@ -4,5 +4,10 @@
     "cmake.configureOnOpen": false,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}",
+        "."
+    ]
 }
