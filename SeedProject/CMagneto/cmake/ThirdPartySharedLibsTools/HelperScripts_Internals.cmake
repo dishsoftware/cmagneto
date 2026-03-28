@@ -25,6 +25,8 @@ endfunction()
 
     The script sets paths only to directories of imported shared libraries expected to be present on the target machine.
     Build-machine-specific directories of bundled shared libraries must not be exported by this helper.
+    The directory list is derived from the runtime dependency manifest query layer so helper
+    scripts follow the same external-dependency classification as runtime setup.
 
     The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
@@ -57,7 +59,7 @@ endfunction()
 
     Generates and places to build directory "set_env" script.
     The script sets paths to directories with imported shared libraries expected to be present on the target machine.
-    The script is a build-tree-only legacy development helper and must not be installed or distributed.
+    The script is a build-tree-only development helper and must not be installed or distributed.
 
     The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
 ]]
@@ -79,6 +81,8 @@ endfunction()
 
     The file sets Path/LD_LIBRARY_PATH equal only to dirs of imported shared libraries expected to be present on the target machine.
     Build-machine-specific directories of bundled shared libraries must not be exported by this helper.
+    The directory list is derived from the runtime dependency manifest query layer so helper
+    scripts follow the same external-dependency classification as runtime setup.
 
     The only reason ".env.vscode" is requred - VS Code can't execute normal scripts in the same terminal, as it launches
     an executable for debugging.
@@ -175,7 +179,7 @@ endfunction()
     Generates and places to build directory "run" script.
     If a project entrypoint executable is set (look at CMagneto__set_project_entrypoint(iExeTargetName)), "run" script is generated.
     The script runs "set_env" script and the project entrypoint executable.
-    The script is a build-tree-only legacy development helper and must not be installed or distributed.
+    The script is a build-tree-only development helper and must not be installed or distributed.
 
     The function must be called after CMagnetoInternal__set_up__set_env__script() is called.
 ]]

@@ -12,6 +12,15 @@ include_guard(GLOBAL)
 
 set(CMagnetoInternal__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME "runtime_dependency_manifest.json")
 
+#[[
+    The runtime dependency manifest is intended to be the canonical build-tree description
+    of imported shared-library runtime state.
+
+    Runtime setup, helper scripts, diagnostic metadata, and package verification are all
+    expected to query this layer instead of reconstructing parallel views from scattered
+    global properties.
+]]
+
 
 function(CMagnetoInternal__runtime_dependency_manifest__json_escape_string iInput oEscapedString)
     set(_escapedString "${iInput}")
@@ -103,7 +112,7 @@ function(CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclas
     string(JOIN "\", \"" _targetsJoined ${_unclassifiedImportedTargets})
     set(_message
         "CMagneto target \"${iTargetName}\" links imported shared libraries without an install mode decision: "
-        "\"${_targetsJoined}\". Installed binaries may still require the legacy `set_env` helper or rely on platform "
+        "\"${_targetsJoined}\". Installed binaries may still require the `set_env` helper or rely on platform "
         "default search paths. Configure such dependencies in the active build variant with "
         "expectExternalSharedLibrariesOnTargetMachine(...) or bundleExternalSharedLibraries(...), "
         "or mark them explicitly in CMake as a manual override."
@@ -114,7 +123,33 @@ endfunction()
 
 
 function(CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_paths iTargetName oPaths)
-    CMagnetoInternal__get_all_paths_to_shared_libs(${iTargetName} _resolvedPaths)
+    set(_resolvedPaths "")
+
+    # Target-level runtime paths are derived from imported-target registrations.
+    # A separate per-project-target path cache is intentionally not used.
+    CMagnetoInternal__get_linked_imported_shared_library_targets(${iTargetName} _importedTargets)
+    foreach(_importedTarget IN LISTS _importedTargets)
+        CMagnetoInternal__get_registered_imported_shared_library_paths(${_importedTarget} _importedTargetPaths)
+        list(APPEND _resolvedPaths ${_importedTargetPaths})
+    endforeach()
+
+    list(REMOVE_DUPLICATES _resolvedPaths)
+    set(${oPaths} "${_resolvedPaths}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_paths_for_build_type iTargetName iBuildType oPaths)
+    set(_resolvedPaths "")
+
+    # Build-type-specific paths are read from imported-target registrations so that
+    # manifest consumers observe the same fallback rules as the detection layer.
+    CMagnetoInternal__get_linked_imported_shared_library_targets(${iTargetName} _importedTargets)
+    foreach(_importedTarget IN LISTS _importedTargets)
+        CMagnetoInternal__get_registered_imported_shared_library_paths_for_build_type(${_importedTarget} "${iBuildType}" _configPaths)
+        list(APPEND _resolvedPaths ${_configPaths})
+    endforeach()
+
+    list(REMOVE_DUPLICATES _resolvedPaths)
     set(${oPaths} "${_resolvedPaths}" PARENT_SCOPE)
 endfunction()
 
@@ -262,6 +297,8 @@ function(CMagnetoInternal__runtime_dependency_manifest__generate_imported_shared
 
     set(_entries "")
     foreach(_importedTarget IN LISTS _allImportedTargets)
+        # Imported targets are emitted once here together with their install-mode decision.
+        # Downstream consumers are expected to treat this section as the canonical policy view.
         CMagnetoInternal__get_external_shared_libraries_install_mode(${_importedTarget} _installMode)
         if(_installMode STREQUAL "")
             set(_installMode "UNCLASSIFIED")
@@ -307,7 +344,9 @@ function(CMagnetoInternal__runtime_dependency_manifest__generate_project_targets
 
     set(_entries "")
     foreach(_target IN LISTS _registeredTargets)
-        CMagnetoInternal__get_paths_to_shared_libs(${_target} "${iBuildType}" _resolvedPaths)
+        # Project-target entries are generated as a derived view over linked imported targets.
+        # They remain useful for diagnostics, but the imported-target section stays authoritative.
+        CMagnetoInternal__runtime_dependency_manifest__get_target_resolved_paths_for_build_type(${_target} "${iBuildType}" _resolvedPaths)
         CMagnetoInternal__get_linked_imported_shared_library_targets(${_target} _linkedImportedTargets)
 
         set(_unclassifiedImportedTargets "")
@@ -381,6 +420,8 @@ endfunction()
 
 
 function(CMagnetoInternal__generate__runtime_dependency_manifest__content iBuildType oContent)
+    # The manifest is generated once after target setup so later stages can consume
+    # one shared artifact instead of rebuilding deployment state independently.
     CMagnetoInternal__runtime_dependency_manifest__generate_imported_shared_libraries_section(_importedSharedLibrariesJson)
     CMagnetoInternal__runtime_dependency_manifest__generate_project_targets_section("${iBuildType}" _projectTargetsJson)
     CMagnetoInternal__runtime_dependency_manifest__generate_bundling_overrides_section(_bundlingOverridesJson)

@@ -20,6 +20,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/Detection_Internals
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/RuntimeDependencyOverrides_Internals.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/Policy_Internals.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/Manifest_Internals.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/Metadata_Internals.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/Runtime_Internals.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ThirdPartySharedLibsTools/HelperScripts_Internals.cmake")

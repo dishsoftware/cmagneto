@@ -110,7 +110,9 @@ function(CMagneto__set_up__executable iExeTargetName)
     list(APPEND _registeredTargets ${iExeTargetName})
     set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "${_registeredTargets}")
 
-    CMagnetoInternal__collect_paths_to_shared_libs(${iExeTargetName})
+    # Linked imported shared-library targets are registered here so runtime artifact paths
+    # can later be queried centrally by imported target through the manifest layer.
+    CMagnetoInternal__register_linked_imported_shared_library_targets(${iExeTargetName})
 endfunction()
 
 

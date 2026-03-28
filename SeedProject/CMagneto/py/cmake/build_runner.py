@@ -98,7 +98,6 @@ class BuildRunner(ABC):
     CMagneto__TEST_REPORT__FILE_NAME = "test_report.xml"
     CMagneto__COMPILE_COMMANDS__FILE_NAME = "compile_commands.json"
     CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME = "runtime_dependency_manifest.json"
-    CMagneto__EXTERNAL_SHARED_LIBRARY_DEPLOYMENT__FILE_NAME = "external_shared_library_deployment.json"
 
     # Report of source code (under './src/' ) test coverage.
     CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
@@ -553,11 +552,14 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
         Log.status(text + " finished.\n")
 
     def __loadRuntimeDependencyManifestDeploymentEntries(self, iBuildType: BuildType) -> dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]]:
-        """Loads imported shared-library deployment expectations from the runtime dependency manifest."""
+        """Loads imported shared-library deployment expectations from the canonical runtime dependency manifest."""
         manifestPath = self.exeDirForBuildType(iBuildType) / BuildRunner.CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME
         if not manifestPath.exists():
             Log.warning(f"Runtime dependency manifest file was not found: \"{manifestPath}\".")
-            return self.__loadExternalSharedLibraryDeploymentEntriesFallback(iBuildType)
+            return {
+                ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE: tuple(),
+                ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE: tuple()
+            }
 
         with manifestPath.open("r", encoding="utf-8") as manifestFile:
             manifest = json.load(manifestFile)
@@ -596,62 +598,6 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 for rawPath in rawPathList:
                     if not isinstance(rawPath, str):
                         Log.error(f"Invalid imported target path item in \"{manifestPath}\": {rawEntry!r}.")
-                    pathListItems.append(rawPath)
-                pathList = tuple(pathListItems)
-
-                parsedEntries.append(
-                    _ExternalSharedLibraryDeploymentEntry(
-                        importedTargetName=importedTargetName,
-                        paths=tuple(Path(path) for path in pathList)
-                    )
-                )
-
-            entriesByMode[installMode] = tuple(parsedEntries)
-
-        return entriesByMode
-
-    def __loadExternalSharedLibraryDeploymentEntriesFallback(self, iBuildType: BuildType) -> dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]]:
-        """Loads legacy deployment metadata for backwards compatibility when the manifest is absent."""
-        deploymentInfoPath = self.exeDirForBuildType(iBuildType) / BuildRunner.CMagneto__EXTERNAL_SHARED_LIBRARY_DEPLOYMENT__FILE_NAME
-        if not deploymentInfoPath.exists():
-            Log.warning(f"External shared-library deployment info file was not found: \"{deploymentInfoPath}\".")
-            return {
-                ExternalSharedLibraryInstallMode.EXPECT_ON_TARGET_MACHINE: tuple(),
-                ExternalSharedLibraryInstallMode.BUNDLE_WITH_PACKAGE: tuple()
-            }
-
-        with deploymentInfoPath.open("r", encoding="utf-8") as deploymentInfoFile:
-            deploymentInfo = json.load(deploymentInfoFile)
-
-        if not isinstance(deploymentInfo, dict):
-            Log.error(f"Invalid external shared-library deployment info file: \"{deploymentInfoPath}\".")
-        deploymentInfoDict = cast(dict[str, object], deploymentInfo)
-
-        entriesByMode: dict[ExternalSharedLibraryInstallMode, tuple[_ExternalSharedLibraryDeploymentEntry, ...]] = {}
-        for installMode in ExternalSharedLibraryInstallMode:
-            rawEntries = deploymentInfoDict.get(installMode.value, [])
-            if not isinstance(rawEntries, list):
-                Log.error(f"Invalid entry list for install mode \"{installMode.value}\" in \"{deploymentInfoPath}\".")
-            rawEntryList = cast(list[object], rawEntries)
-
-            parsedEntries: list[_ExternalSharedLibraryDeploymentEntry] = []
-            for rawEntry in rawEntryList:
-                if not isinstance(rawEntry, dict):
-                    Log.error(f"Invalid external shared-library deployment entry in \"{deploymentInfoPath}\": {rawEntry!r}.")
-                rawEntryDict = cast(dict[str, object], rawEntry)
-
-                importedTargetName = rawEntryDict.get("ImportedTarget")
-                rawPaths = rawEntryDict.get("Paths")
-                if not isinstance(importedTargetName, str):
-                    Log.error(f"Invalid imported target name in \"{deploymentInfoPath}\": {rawEntry!r}.")
-                if not isinstance(rawPaths, list):
-                    Log.error(f"Invalid imported target paths in \"{deploymentInfoPath}\": {rawEntry!r}.")
-
-                rawPathList = cast(list[object], rawPaths)
-                pathListItems: list[str] = []
-                for rawPath in rawPathList:
-                    if not isinstance(rawPath, str):
-                        Log.error(f"Invalid imported target path item in \"{deploymentInfoPath}\": {rawEntry!r}.")
                     pathListItems.append(rawPath)
                 pathList = tuple(pathListItems)
 

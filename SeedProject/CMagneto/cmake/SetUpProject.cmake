@@ -44,11 +44,9 @@ function(CMagneto__set_up__project)
     CMagnetoInternal__set_up__CMake_package_export()
     CMagnetoInternal__set_up__build_summary__file() # Required by `build.py` in the project root.
     CMagnetoInternal__set_up__runtime_dependency_manifest() # Canonical runtime-dependency metadata consumed by diagnostics and verification.
-    CMagnetoInternal__set_up__3rd_party_shared_libs__list() # Optional.
-    CMagnetoInternal__set_up__external_shared_library_deployment__list() # Optional build-machine-specific metadata for package verification.
-    CMagnetoInternal__set_up__set_env__script() # Legacy dev helper for cases where runtime dependencies are not resolved by target properties.
-    CMagnetoInternal__set_up__env_vscode__file() # Legacy VS Code helper for debugger setups that do not honor target runtime resolution.
-    CMagnetoInternal__set_up__run__script() # Optional legacy dev helper.
+    CMagnetoInternal__set_up__set_env__script() # Build-tree helper for cases where runtime dependencies are not resolved by target properties.
+    CMagnetoInternal__set_up__env_vscode__file() # Build-tree VS Code helper for debugger setups that do not honor target runtime resolution.
+    CMagnetoInternal__set_up__run__script() # Optional build-tree helper.
     ####################################################
 
     # Configure tests.

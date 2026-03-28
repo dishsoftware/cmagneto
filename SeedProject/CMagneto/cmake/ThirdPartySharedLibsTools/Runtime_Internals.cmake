@@ -17,6 +17,8 @@ include_guard(GLOBAL)
     Configures runtime dependency lookup for a target in build and install trees.
     On Linux, imported shared-library directories are added to BUILD_RPATH for local runs,
     while relative INSTALL_RPATH values are used for relocatable project binaries.
+    Those directories are queried through the runtime dependency manifest layer so the same
+    imported-target classification is reused by runtime setup, helper scripts, and verification.
     On Windows, runtime DLLs are copied next to the target binary in the build tree.
 ]]
 function(CMagnetoInternal__set_up_target_runtime_resolution iTargetName)
@@ -89,6 +91,8 @@ function(CMagnetoInternal__install_bundled_external_shared_libraries)
         return()
     endif()
 
+    # Direct bundle/external inputs are collected from the manifest query layer so install-time
+    # bundling follows the same imported-target decisions as diagnostics and verification.
     CMagnetoInternal__runtime_dependency_manifest__get_bundled_imported_shared_library_paths(_policyBundlePaths)
     CMagnetoInternal__runtime_dependency_manifest__get_expected_external_shared_library_paths(_expectedOnTargetPaths)
     CMagnetoInternal__runtime_dependency_manifest__get_imported_shared_library_dirs(_knownLibraryDirs)

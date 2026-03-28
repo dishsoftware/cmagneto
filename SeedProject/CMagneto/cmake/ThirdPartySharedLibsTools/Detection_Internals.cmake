@@ -189,6 +189,77 @@ endfunction()
 
 
 #[[
+    CMagnetoInternal__get_imported_shared_library_paths_for_build_type
+
+    Returns runtime artifact paths for one build type of an imported shared library target.
+    For a requested configuration, falls back to RELEASE and then to IMPORTED_LOCATION.
+    For "NonSpecific", returns only IMPORTED_LOCATION when it resolves to a shared library.
+    The helper exists so imported-target path registration can persist both build-type-specific
+    and non-build-type-specific runtime artifact views for later manifest queries.
+]]
+function(CMagnetoInternal__get_imported_shared_library_paths_for_build_type iTargetName iBuildType oPaths)
+    if(NOT TARGET ${iTargetName})
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths_for_build_type: target \"${iTargetName}\" does not exist.")
+    endif()
+
+    get_target_property(_isImported ${iTargetName} IMPORTED)
+    if(NOT _isImported)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths_for_build_type: target \"${iTargetName}\" is not imported.")
+    endif()
+
+    CMagnetoInternal__is_imported_shared_library_target(${iTargetName} _isImportedSharedLibrary)
+    if(NOT _isImportedSharedLibrary)
+        get_target_property(_targetType ${iTargetName} TYPE)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__get_imported_shared_library_paths_for_build_type: target \"${iTargetName}\" must resolve to an imported shared or module library, got type \"${_targetType}\".")
+    endif()
+
+    set(_paths "")
+    get_target_property(_targetType ${iTargetName} TYPE)
+
+    get_target_property(_nonBuildSpecificLibPath ${iTargetName} IMPORTED_LOCATION)
+    if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
+        CMagnetoInternal__is_path_to_shared_library("${_nonBuildSpecificLibPath}" _isSharedLibraryPath)
+        if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
+            string(TOUPPER "${iBuildType}" _buildTypeUpper)
+            if(_buildTypeUpper STREQUAL "" OR _buildTypeUpper STREQUAL "NONSPECIFIC")
+                list(APPEND _paths "${_nonBuildSpecificLibPath}")
+            endif()
+        endif()
+    endif()
+
+    string(TOUPPER "${iBuildType}" _buildTypeUpper)
+    if(_buildTypeUpper STREQUAL "" OR _buildTypeUpper STREQUAL "NONSPECIFIC")
+        list(REMOVE_DUPLICATES _paths)
+        set(${oPaths} "${_paths}" PARENT_SCOPE)
+        return()
+    endif()
+
+    get_target_property(_libPath ${iTargetName} IMPORTED_LOCATION_${_buildTypeUpper})
+    if(NOT (_libPath AND EXISTS "${_libPath}"))
+        CMagnetoInternal__message(STATUS "CMagnetoInternal__get_imported_shared_library_paths_for_build_type(\"${iTargetName}\" \"${iBuildType}\"): path to ${_buildTypeUpper} binary is not found or invalid: \"${_libPath}\". Trying RELEASE or non-build-type-specific binary instead.")
+        get_target_property(_libPath ${iTargetName} IMPORTED_LOCATION_RELEASE)
+        if(NOT (_libPath AND EXISTS "${_libPath}"))
+            if(_nonBuildSpecificLibPath AND EXISTS "${_nonBuildSpecificLibPath}")
+                set(_libPath "${_nonBuildSpecificLibPath}")
+            else()
+                CMagnetoInternal__message(WARNING "CMagnetoInternal__get_imported_shared_library_paths_for_build_type(\"${iTargetName}\" \"${iBuildType}\"): no valid runtime artifact path was found.")
+                set(${oPaths} "" PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endif()
+
+    CMagnetoInternal__is_path_to_shared_library("${_libPath}" _isSharedLibraryPath)
+    if(_targetType STREQUAL "SHARED_LIBRARY" OR _targetType STREQUAL "MODULE_LIBRARY" OR _isSharedLibraryPath)
+        list(APPEND _paths "${_libPath}")
+    endif()
+
+    list(REMOVE_DUPLICATES _paths)
+    set(${oPaths} "${_paths}" PARENT_SCOPE)
+endfunction()
+
+
+#[[
     CMagnetoInternal__get_elf_soname
 
     Returns SONAME of an ELF shared library if it is present and can be read with `readelf`.

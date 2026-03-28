@@ -43,9 +43,23 @@ The build runner converts that policy into `-D` CMake variables before project c
 - [`./../py/cmake/build_runner.py`](./../py/cmake/build_runner.py)
 - [`./../README.md`](./../README.md)
 
+After all project targets are set up, a canonical build-tree artifact named
+`runtime_dependency_manifest.json` is generated.
+
+That manifest records:
+
+- imported shared-library targets;
+- their install-mode decisions;
+- resolved runtime artifact paths;
+- project targets that link them;
+- low-level bundling overrides.
+
+Runtime setup, helper scripts, and package verification are then
+driven from that manifest-oriented query layer.
+
 
 ## 3. How imported shared libraries are deduced
-During target setup, CMagneto inspects linked targets and keeps only imported runtime shared libraries.
+During target setup, linked libraries are inspected and only imported runtime shared libraries are kept.
 
 The core implementation lives in:
 
@@ -54,9 +68,10 @@ The core implementation lives in:
 
 The key functions are:
 
-- `CMagnetoInternal__collect_paths_to_shared_libs`
+- `CMagnetoInternal__register_linked_imported_shared_library_targets`
 - `CMagnetoInternal__is_imported_shared_library_target`
 - `CMagnetoInternal__get_imported_shared_library_paths`
+- `CMagnetoInternal__get_imported_shared_library_paths_for_build_type`
 - `CMagnetoInternal__is_path_to_shared_library`
 
 Important details:
@@ -64,7 +79,13 @@ Important details:
 - project-owned targets are skipped;
 - imported runtime libraries are kept;
 - imported targets of type `UNKNOWN_LIBRARY` are still accepted if their resolved runtime artifact is recognized as a real shared library;
-- runtime paths are collected from `IMPORTED_LOCATION` and `IMPORTED_LOCATION_<CONFIG>` properties.
+- runtime paths are collected from `IMPORTED_LOCATION` and `IMPORTED_LOCATION_<CONFIG>` properties;
+- runtime paths are registered once per imported target, including build-type-specific variants;
+- only the relationship `project target -> linked imported targets` is stored per project target.
+
+A per-project-target cache of shared-library paths is not used.
+Target-level path lists are reconstructed from linked imported targets and their centrally
+registered runtime artifact paths.
 
 Platform-specific recognition is done in `CMagnetoInternal__is_path_to_shared_library`:
 
@@ -87,9 +108,9 @@ That distinction matters because `EXPECT_ON_TARGET_MACHINE` is not just descript
 
 If an imported shared library is explicitly classified as `EXPECT_ON_TARGET_MACHINE`, CMagneto treats it as an intentional external dependency and:
 
-- includes it in `external_shared_library_deployment.json`;
+- records that decision in `runtime_dependency_manifest.json`;
 - on Linux, appends its directory to `INSTALL_RPATH`;
-- includes its directory in legacy development helpers such as `set_env` and `.env.vscode`;
+- includes its directory in helper scripts such as `set_env` and `.env.vscode`;
 - excludes it from recursive transitive bundling;
 - on Linux, verifies that it remains outside the package and resolves from outside it.
 
@@ -107,7 +128,8 @@ In other words:
 - `EXPECT_ON_TARGET_MACHINE` means "external by design";
 - not listed means "external only by omission".
 
-This is why CMagneto warns about linked imported shared libraries that have no install-mode decision. That warning is emitted by `CMagnetoInternal__warn_about_unclassified_external_shared_libraries`.
+This is why CMagneto warns about linked imported shared libraries that have no install-mode decision.
+That warning is emitted through the runtime dependency manifest query layer by `CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclassified_imported_targets`.
 
 
 ## 5. Linux
@@ -170,6 +192,7 @@ The reason is that the runtime loader often resolves a library by SONAME rather 
 
 ### 5.2. Build-tree and install-tree runtime lookup
 Linux runtime lookup is configured in `CMagnetoInternal__set_up_target_runtime_resolution`.
+The required imported-library directories are queried through the runtime dependency manifest layer.
 
 For executables:
 
@@ -247,14 +270,26 @@ So `EXPECT_ON_TARGET_MACHINE` is effectively a promise:
 "Do not bundle this dependency, even indirectly. The runtime environment must supply it."
 
 ### 5.7. Generated metadata
-CMagneto generates two build-tree JSON files:
+CMagneto generates one build-tree JSON file:
 
-- `3rd_party_shared_libs.json`
-- `external_shared_library_deployment.json`
+- `runtime_dependency_manifest.json`
 
-The first file is diagnostic only.
+`runtime_dependency_manifest.json` is the canonical runtime-dependency artifact.
 
-The second file contains deployment-policy metadata and is consumed later by Linux package verification logic.
+It records:
+
+- imported shared libraries and their install modes;
+- project targets and the imported targets linked by them;
+- resolved runtime paths for the active build type;
+- low-level bundling overrides.
+
+The file is used directly or indirectly by:
+
+- Linux runtime setup;
+- helper-script generation such as `set_env` and `.env.vscode`;
+- Linux package verification.
+
+Only `runtime_dependency_manifest.json` is intended to be treated as the source of truth.
 
 See also [`./LinuxPackageVerification.md`](./LinuxPackageVerification.md).
 
@@ -282,7 +317,7 @@ This limitation is visible in:
 - `CMagnetoInternal__set_up_target_runtime_resolution`, which has Linux and Windows branches only;
 - `CMagnetoInternal__install_bundled_external_shared_libraries`, which returns immediately for platforms other than Linux and Windows.
 
-The legacy helper files still use `LD_LIBRARY_PATH` on non-Windows platforms, so they are generic Unix-style helpers, not a real macOS deployment implementation.
+The helper files still use `LD_LIBRARY_PATH` on non-Windows platforms, so they are generic Unix-style helpers, not a real macOS deployment implementation.
 
 So the short version is:
 
@@ -324,7 +359,7 @@ Runtime resolution depends mainly on:
 - process environment such as `PATH`;
 - default Windows DLL search rules.
 
-That is why the legacy helpers `set_env.bat` and `.env.vscode` configure `Path` only for dependencies intentionally expected to be installed on the target machine.
+That is why the helper scripts `set_env.bat` and `.env.vscode` configure `Path` only for dependencies intentionally expected to be installed on the target machine.
 
 ### 7.5. Practical nuance in the SeedProject
 The current SeedProject Windows build variants classify Qt as `EXPECT_ON_TARGET_MACHINE`.
@@ -380,12 +415,14 @@ The most relevant implementation entry points are:
 
 - `CMagneto__expect_external_shared_libraries_on_target_machine`
 - `CMagneto__bundle_external_shared_libraries`
-- `CMagnetoInternal__collect_paths_to_shared_libs`
+- `CMagnetoInternal__register_linked_imported_shared_library_targets`
 - `CMagnetoInternal__is_imported_shared_library_target`
 - `CMagnetoInternal__get_imported_shared_library_paths`
+- `CMagnetoInternal__get_imported_shared_library_paths_for_build_type`
+- `CMagnetoInternal__generate__runtime_dependency_manifest__content`
 - `CMagnetoInternal__set_up_target_runtime_resolution`
 - `CMagnetoInternal__install_bundled_external_shared_libraries`
-- `CMagnetoInternal__warn_about_unclassified_external_shared_libraries`
+- `CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclassified_imported_targets`
 
 The main files to read are:
 
