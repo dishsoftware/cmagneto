@@ -1,5 +1,5 @@
 from CMagneto.py.cmake.build_platform import BuildPlatform
-from CMagneto.py.cmake.build_variant import BuildVariant, DependencyPathSpec, bundleExternalSharedLibraries, expectExternalSharedLibrariesOnTargetMachine
+from CMagneto.py.cmake.build_variant import BuildVariant, DependencyPathSpec, bundleExternalSharedLibraries
 from CMagneto.py.cmake.build_variant_registry import BuildVariantRegistry
 from pathlib import Path
 
@@ -15,15 +15,11 @@ BuildVariantRegistry().registerBuildVariant(
             DependencyPathSpec("BOOST_MSVC2022_DIR", Path("cmake")),
             DependencyPathSpec("ZLIB_MSVC2022_DIR", Path("lib/cmake/zlib"))
         ),
-        externalSharedLibraryPolicies=(
-            *expectExternalSharedLibrariesOnTargetMachine(
-                "Qt6::Core",
-                "Qt6::Gui",
-                "Qt6::Widgets"
-            ),
-            *bundleExternalSharedLibraries(
-                "ZLIB::ZLIB"
-            )
+        externalSharedLibraryPolicies=bundleExternalSharedLibraries(
+            "Qt6::Core",
+            "Qt6::Gui",
+            "Qt6::Widgets",
+            "ZLIB::ZLIB"
         ),
         extraGenerateArgs=(
             "-A", "x64",
