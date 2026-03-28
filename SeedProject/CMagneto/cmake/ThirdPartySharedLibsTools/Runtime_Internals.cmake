@@ -547,5 +547,7 @@ endif()
 
     set(_installScriptPath "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TMP}/install_bundled_external_shared_libraries_runtime_dependencies.cmake")
     file(WRITE "${_installScriptPath}" "${_installScriptContent}")
-    install(SCRIPT "${_installScriptPath}")
+    install(SCRIPT "${_installScriptPath}"
+        COMPONENT ${CMagneto__COMPONENT__RUNTIME}
+    )
 endfunction()
