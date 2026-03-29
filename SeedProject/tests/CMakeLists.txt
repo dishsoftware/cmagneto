@@ -22,10 +22,6 @@ if(NOT GTest_FOUND)
         googletest
         URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip # v1.17.0
     )
-    # For Windows: prevent bundled GTest from overriding the project's runtime settings.
-    if(MSVC)
-        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    endif()
 
     FetchContent_MakeAvailable(googletest)
 endif()
