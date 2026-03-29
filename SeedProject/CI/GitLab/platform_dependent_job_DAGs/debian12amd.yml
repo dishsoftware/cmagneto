@@ -6,7 +6,7 @@ deduce_build_image__debian12amd:
 deduce_package_test_image__debian12amd:
   extends: .deduce_image
   variables:
-    Dockerfile: "Dockerfile.Debian12AMD__package_test"
+    Dockerfile: "Dockerfile.Debian12AMD__test_of_package"
 
 
 on_tag__build-test-package__debian12amd:
