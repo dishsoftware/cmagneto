@@ -12,10 +12,10 @@ Tested with:
 - zlib 1.3.2. The easiest way to get it - install a CMake package export that provides `ZLIBConfig.cmake`.
 - GoogleTest 1.17.0 or compatible may be installed optionally for test builds. If it is not installed, `FetchContent` is used.
 
-Define the environment variable `VC2022ToolsInstallDir`, which refers to e.g. `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207`.<br>
-Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
-Define the environment variable `BOOST_MSVC2022_DIR`, which refers to a directory with compatible Boost files. E.g. `BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3`.
-Define the environment variable `ZLIB_MSVC2022_DIR`, which refers to a directory with compatible zlib files. E.g. `ZLIB_MSVC2022_DIR=C:\Data\Installs\zlib\zlib-1.3.2-install`.<br>
+1. Define the environment variable `VC2022ToolsInstallDir`, which refers to e.g. `C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207`.<br>
+2. Define the environment variable `QT6_MSVC2022_DIR`, which refers to a directory with compatible Qt files. E.g. `QT6_MSVC2022_DIR=C:\Qt\6.8.2\msvc2022_64`.
+3. Define the environment variable `BOOST_MSVC2022_DIR`, which refers to a directory with compatible Boost files. E.g. `BOOST_MSVC2022_DIR=C:\boost_1_87_0\lib64-msvc-14.3`.
+4. Define the environment variable `ZLIB_MSVC2022_DIR`, which refers to a directory with compatible zlib files. E.g. `ZLIB_MSVC2022_DIR=C:\Data\Installs\zlib\zlib-1.3.2-install`.<br>
 
 
 ## VS Code

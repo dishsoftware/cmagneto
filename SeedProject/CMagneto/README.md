@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 SPDX-License-Identifier: MIT
 
 This file is part of the CMagneto framework.
@@ -89,7 +89,7 @@ The CMagneto framework needs on the following software to build your project:
 - Graphviz (optional, for target graph).
 - Qt lrelease 6.4.2 or later (if any target in the project has Qt `*.ts` files). Version is bound by the oldest tested version.
 - Qt Installer Framework 4.10 or later (optional, for packaging). Version is bound by the oldest tested version.
-- GoogleTest 1.17.0 (optional, if your project has tests). Downloaded automatically by CMake during project generation.<br>
+- GoogleTest (1.17.0 or whatever a package manager provides) (optional, if your project has tests). Downloaded automatically by CMake during project generation.<br>
     Version is bound by the tested version.
 - LCOV 2.0-1 (optional, if test coverage estimation is run and compiler is GCC/CLang).<br>
     Version is bound by the tested version.

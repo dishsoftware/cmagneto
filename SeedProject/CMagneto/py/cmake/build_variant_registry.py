@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+# Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 # SPDX-License-Identifier: MIT
 #
 # This file is part of the CMagneto framework.

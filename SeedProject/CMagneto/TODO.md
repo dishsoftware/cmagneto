@@ -1,12 +1,12 @@
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
-* Use `InstallRequiredSystemLibraries` CMake module.
+* ? Use `InstallRequiredSystemLibraries`, `BundleUtilities`, `qt_generate_deploy_app_script()`, `qt_deploy_runtime_dependencies()`, `windeployqt`, `macdeployqt`.
 * Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
-* Add function set_up_interface_library.
+* Add function `set_up_interface_library`.
 * CMakePresets.json.
 * Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
-* Qt IFW tweaks.
+* Make Qt IFW interface.
 * Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.

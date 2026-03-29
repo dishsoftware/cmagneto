@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     qt6-tools-dev \
     libboost-all-dev \
     zlib1g-dev \
+    libgtest-dev \
     dpkg-dev \
     wget \
     tree \

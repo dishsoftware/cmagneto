@@ -10,8 +10,11 @@ sudo apt update && sudo apt install -y \
   qt6-tools-dev \
   libboost-all-dev \
   zlib1g-dev \
+  libgtest-dev \
   lcov
 ```
+
+`libgtest-dev` is optional. If installed, the test build uses the package directly. If not installed, CMake falls back to downloading GoogleTest during configure.<br>
 
 
 ## VS Code
