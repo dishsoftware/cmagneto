@@ -12,22 +12,6 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
 
-set(CPACK_IFW_PACKAGE_NAME "${CMagneto__PACKAGING_JSON__PACKAGE_ID}")
-set(CPACK_IFW_PACKAGE_TITLE "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI} Installer")
-set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
-set(CPACK_IFW_PRODUCT_URL "${CMAKE_PROJECT_HOMEPAGE_URL}")
-
-if(WIN32)
-    set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_LIST_DIR}/PackageLogo.ico)
-# elseif(APPLE)
-    # set(CPACK_IFW_PACKAGE_ICON ${CMAKE_CURRENT_LIST_DIR}/PackageLogo.icns)
-# elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    # CPACK_IFW_PACKAGE_ICON is ignored on Linux.
-endif()
-
-set(CPACK_IFW_PACKAGE_WINDOW_ICON ${CMAKE_CURRENT_LIST_DIR}/PackageLogo.png)
-set(CPACK_IFW_PACKAGE_LOGO ${CMAKE_CURRENT_LIST_DIR}/PackageLogo.png)
-
 
 ## Component setup.
 cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}

@@ -86,7 +86,7 @@ set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${CMagneto__SUBDIR_PACKAGES}")
 
 set(CPACK_PACKAGE_NAME "${CMagneto__PACKAGING_JSON__PACKAGE_NAME_PREFIX}")
-set(CPACK_PACKAGE_VENDOR "CMagneto__PROJECT_JSON__COMPANY_NAME_LEGAL")
+set(CPACK_PACKAGE_VENDOR "${CMagneto__PROJECT_JSON__COMPANY_NAME_LEGAL}")
 set(CPACK_PACKAGE_CONTACT "${CMagneto__PACKAGING_JSON__PACKAGE_MAINTAINER}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${CMAKE_PROJECT_DESCRIPTION}")
 
@@ -148,6 +148,8 @@ list(REMOVE_ITEM CPACK_COMPONENTS_ALL
 foreach(_generator IN LISTS _packageGenerators)
     if(_generator STREQUAL "DEB")
         include("${CMAKE_CURRENT_LIST_DIR}/Packager/DEB/DEBConfig_before_include_CPack.cmake")
+    elseif(_generator STREQUAL "IFW")
+        include("${CMAKE_CURRENT_LIST_DIR}/Packager/IFW/IFWConfig_before_include_CPack.cmake")
     endif()
 endforeach()
 
