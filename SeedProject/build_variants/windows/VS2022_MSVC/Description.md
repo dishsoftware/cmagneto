@@ -14,8 +14,8 @@ Tested with:
 
 
 ## VS Code
-Use the `Windows_VS2022_MSVC` configuration in the `C/C++ Configuration` settings.<br>
+Define the environment variable `VC2022ToolsInstallDir`.<br>
+E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207`.<br>
+It enables IntelliSense.
 
-## Shell setup
-No CMagneto-specific MSVC environment variable is required for this build variant.
-If you invoke `cmake` or `build.py` from a plain terminal, a Visual Studio developer shell is still the safest CLI entry point.
+Use the `Windows_VS2022_MSVC` configuration in the `C/C++ Configuration` settings.<br>
