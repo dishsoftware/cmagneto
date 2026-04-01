@@ -1,0 +1,87 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "VS2022_MSVC__base",
+      "hidden": true,
+      "inherits": "windows-host",
+      "vendor": {
+        "CMagneto": {
+          "buildVariant": {
+            "name": "VS2022_MSVC",
+            "multiConfig": true
+          }
+        }
+      },
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/VS2022_MSVC",
+      "installDir": "${sourceDir}/install/VS2022_MSVC",
+      "graphviz": "${sourceDir}/build/VS2022_MSVC/graphviz/targets_src/targets.dot",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{QT6_MSVC2022_DIR}/lib/cmake;$env{BOOST_MSVC2022_DIR}/cmake;$env{ZLIB_MSVC2022_DIR}/lib/cmake/zlib",
+        "CMAKE_IGNORE_PATH": "C:/msys64/ucrt64/lib/cmake/GTest",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "Qt6::Core;Qt6::Gui;Qt6::Widgets;ZLIB::ZLIB"
+      }
+    },
+    {
+      "name": "VS2022_MSVC",
+      "inherits": "VS2022_MSVC__base"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "VS2022_MSVC__Debug",
+      "configurePreset": "VS2022_MSVC",
+      "configuration": "Debug"
+    },
+    {
+      "name": "VS2022_MSVC__Release",
+      "configurePreset": "VS2022_MSVC",
+      "configuration": "Release"
+    },
+    {
+      "name": "VS2022_MSVC__RelWithDebInfo",
+      "configurePreset": "VS2022_MSVC",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "VS2022_MSVC__MinSizeRel",
+      "configurePreset": "VS2022_MSVC",
+      "configuration": "MinSizeRel"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "VS2022_MSVC__Debug",
+      "configurePreset": "VS2022_MSVC",
+      "configurations": [
+        "Debug"
+      ]
+    },
+    {
+      "name": "VS2022_MSVC__Release",
+      "configurePreset": "VS2022_MSVC",
+      "configurations": [
+        "Release"
+      ]
+    },
+    {
+      "name": "VS2022_MSVC__RelWithDebInfo",
+      "configurePreset": "VS2022_MSVC",
+      "configurations": [
+        "RelWithDebInfo"
+      ]
+    },
+    {
+      "name": "VS2022_MSVC__MinSizeRel",
+      "configurePreset": "VS2022_MSVC",
+      "configurations": [
+        "MinSizeRel"
+      ]
+    }
+  ]
+}

@@ -76,9 +76,9 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "Makefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Release
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_type Release
 
     # Append variables to inherited.env report artifact, in order to pass the variables to a following job(s). Newline in the end is added automatically.
     - echo "PLATFORM=${PLATFORM}" >> inherited.env
@@ -122,7 +122,7 @@ variables:
   # needs: [.deduce_image, .build-test-package]
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "Makefiles_GCC" # Default value. May be overridden.
   script:
     - |
       packagesDir="./build/${BUILD_VARIANT}/Release/packages"
@@ -259,9 +259,9 @@ variables:
   # needs: [.deduce_image] Template does not support "needs" attribute. Add the attribute in concrete jobs.
   image: ${REMOTE_IMAGE_NAME}:${IMAGE_VERSION}
   variables:
-    BUILD_VARIANT: "UnixMakefiles_GCC" # Default value. May be overridden.
+    BUILD_VARIANT: "Makefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --build_variant ${BUILD_VARIANT} --build_types Debug --build_stage RunTests --coverage
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_type Debug --build_stage RunTests --coverage
     - echo "Test coverage $(cat build/${BUILD_VARIANT}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
   coverage: '/Test coverage (\d+\.\d+%|N/A)/'
   rules:

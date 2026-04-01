@@ -16,4 +16,6 @@ Tested with:
 ## VS Code
 Define the environment variable `VC2022ToolsInstallDir`.<br>
 E.g. `VC2022ToolsInstallDir=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207`.<br>
+It enables IntelliSense.
+
 Use the `Windows_VS2022_MSVC` configuration in the `C/C++ Configuration` settings.<br>

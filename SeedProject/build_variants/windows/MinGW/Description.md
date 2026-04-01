@@ -17,7 +17,7 @@ pacman -S \
 
 ## Environment
 Define the environment variable `MSYS2_HOME`. E.g. `MSYS2_HOME=C:\msys64`.<br>
-The MinGW build variant uses this path to add `{MSYS2_HOME}\ucrt64` to `CMAKE_PREFIX_PATH`, which allows CMake to locate MSYS2 packages.<br>
+The MinGW preset uses this path to add `{MSYS2_HOME}\ucrt64` to `CMAKE_PREFIX_PATH`, which allows CMake to locate MSYS2 packages.<br>
 
 ## VS Code
-Use the `Windows_MinGW` configuration in the `C/C++ Configuration` settings.<br>
+Use the matching `Windows_MinGW_{BuildType}` configuration in the `C/C++ Configuration` settings.<br>

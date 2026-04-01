@@ -35,10 +35,10 @@ including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
 The framework is shipped with the following major components:
 - [`CMagneto CMake modules`](./cmake/) and [`primary coupled Python scripts`](./py/) in the [`./CMagneto/`](.) directory;
     * The [`CMagneto CMake modules`](./cmake/) contain functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
-    * The [`primary coupled Python scripts`](./py/) streamline the build process into a single command;
+    * The [`primary coupled Python scripts`](./py/) provide an optional frontend for preset-driven build and workflow tasks;
 - Template configuration files in [`./meta/`](./../meta/);
-- Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `build_variant.py` and `Description.md`;
-- One-command build script [`./build.py`](./../build.py);
+- Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `CMakePresets.json` and `Description.md`;
+- Optional build frontend [`./build.py`](./../build.py);
 - Pre-configured CTest files in [`./tests/`](./../tests/);
 - Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../packaging/@resources/);
 - Pre-configured [`Dockerfiles`](./../CI/Docker/), one-command [`Docker image build script`](./../CI/Docker/build_image.py) and [`GitLab CI pipeline`](./../CI/GitLab/pipeline.yml) in [`./CI/`](./../CI/);
@@ -83,7 +83,7 @@ In short: **commit freely, but rewrite with caution**. Let the repo tell the who
 
 ## Project Build Tools
 The CMagneto framework needs on the following software to build your project:
-- CMake 3.28 or later. Version is bound by the oldest tested version.
+- CMake 3.31 or later. Version is bound by the preset schema and the features used by the optional Python frontend.
 - C++ 17 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the GoogleTest CMake module.
 - Python 3.10 or later. Version is bound by the coupled Python code.
 - Graphviz (optional, for target graph).
@@ -107,7 +107,7 @@ The CMagneto framework needs on the following software to build your project:
 The framework mandates or endorses restrictions on locations of project files.
 ```text
 SeedProject/
-├── build.py                               # One-command project build script.
+├── build.py                               # Optional project build frontend over committed CMake presets.
 ├── CMakeLists.txt                         # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
 ├── CMagneto/                              # CMagneto framework core files.
 |   ├── LICENSE
@@ -124,10 +124,11 @@ SeedProject/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
-├── build_variants/                        # Build-variant descriptors and accompanying instructions.
+├── CMakePresets.json                      # Root preset manifest that includes concrete variant files from ./build_variants/.
+├── build_variants/                        # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
 |   |   ├── UnixMakefiles_GCC/
-|   |   |   ├── build_variant.py
+|   |   |   ├── CMakePresets.json
 |   |   |   ├── Description.md
 |   |   |   └── ...
 |   |   └── ...
@@ -205,7 +206,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
     and installation package resources in [`./packaging/@resources/`](./../packaging/@resources/).
 
-4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `build_variant.py` and `Description.md`.
+4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `CMakePresets.json` and `Description.md`.
 
 5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
 
@@ -225,7 +226,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     before `project()` command and inclusion of the rest of the `CMagneto` module.<br>
     Use `CMagneto__PROJECT_JSON__*` variables, defined by `CMagneto__parse__project_json()` function of the submodule, in the `project()` command:
     ```cmake
-    cmake_minimum_required(VERSION 3.28)
+    cmake_minimum_required(VERSION 3.31)
     include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/MetaLoader.cmake")
     CMagneto__parse__project_json()
     project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
@@ -273,49 +274,21 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/):
-    ```python
-    from pathlib import Path
-    from CMagneto.py.cmake.build_variant import (
-        DependencyPathSpec,
-        BuildVariant,
-        bundleExternalSharedLibraries,
-        bundleRuntimeDependencyFilePatterns,
-        excludeBundledRuntimeDependencyFilePatterns,
-        expectExternalSharedLibrariesOnTargetMachine,
-    )
-
-    BuildVariant(
-        ...,
-        dependencyPaths=(
-            DependencyPathSpec("QT6_MSVC2022_DIR", Path("lib/cmake")),
-        ),
-        externalSharedLibraryPolicies=(
-            *expectExternalSharedLibrariesOnTargetMachine(
-                "Qt6::Core",
-                "Qt6::Gui",
-                "Qt6::Widgets",
-            ),
-            *bundleExternalSharedLibraries(
-                "MyPrivateDependency::MyPrivateDependency",
-            ),
-        ),
-        bundledRuntimeDependencyFilePatterns=(
-            *bundleRuntimeDependencyFilePatterns(
-                "plugins/imageformats/*",
-            ),
-        ),
-        excludedBundledRuntimeDependencyFilePatterns=(
-            *excludeBundledRuntimeDependencyFilePatterns(
-                "libc.so*",
-                "ld-linux*.so*",
-            ),
-        ),
-    )
+6) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
+    ```json
+    {
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{QT6_MSVC2022_DIR}/lib/cmake",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "MyPrivateDependency::MyPrivateDependency",
+        "CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS": "plugins/imageformats/*",
+        "CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS": "libc.so*;ld-linux*.so*"
+      }
+    }
     ```
-    Use `expectExternalSharedLibrariesOnTargetMachine(...)` if the dependency is expected to be installed on the target machine at the same absolute location as on the build machine.
-    Use `bundleExternalSharedLibraries(...)` if the shared-library binaries must be included into the installation package.
-    Use the `bundledRuntimeDependency...` and `excludedBundledRuntimeDependency...` overrides only for low-level exceptions such as plugins, helper libraries, or bundling misdetections that are not represented cleanly by imported shared-library targets.
+    Use `CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE` if the dependency is expected to be installed on the target machine at the same absolute location as on the build machine.
+    Use `CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE` if the shared-library binaries must be included into the installation package.
+    Use the `CMagneto__BUNDLED_RUNTIME_DEPENDENCY...` and `CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY...` overrides only for low-level exceptions such as plugins, helper libraries, or bundling misdetections that are not represented cleanly by imported shared-library targets.
     When both target-based policy and low-level overrides are used, explicit exclude overrides win over explicit include overrides. Full precedence details are documented in [`./doc/SharedLibraryDeployment.md`](./doc/SharedLibraryDeployment.md).
 
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
@@ -365,22 +338,30 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 
 
 ### 1.3. Build Project
-Use [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) or its proxy [`./build.py`](./../build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the project and generate installation packages.<br>
+Use committed CMake presets from [`./CMakePresets.json`](./../CMakePresets.json) directly, or use [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) and its proxy [`./build.py`](./../build.py) as an optional frontend that selects presets and orchestrates build stages.<br>
 To see available options, run:
 ```bash
 python ./build.py --help
 ```
-The [`./CMagneto/py/cmake/build.py`](./py/cmake/build.py) supports multiple build variants.<br>
-A build variant is a bundle of a build system, a compiler, dependency lookup paths, runtime-deployment policy, and other build-time choices.<br>
-Build variants are defined under [`./build_variants/`](./../build_variants/) and loaded by the framework at build time.<br>
-Each build variant lives in its own directory named after the build variant and contains `build_variant.py` plus `Description.md` with setup notes such as dependency installation and VS Code hints.
+The presets file is the build source of truth.<br>
+The optional Python frontend keeps a consistent `--build_variant/--build_type` UX across single- and multi-config generators and performs a few convenience actions such as Graphviz rendering.
+
+`compile_commands.json` belongs to the preset-selected build directory generated by CMake. This keeps each configured build tree self-contained and allows several development modes to coexist without overwriting one another.
+
+Preset selection follows this rule:
+- for single-config generators, `build.py` uses `{build_variant}__{build_type}` as the configure, build, and package preset name;
+- for multi-config generators, `build.py` uses `{build_variant}` as the configure preset and `{build_variant}__{build_type}` as the build and package preset name.
+
+Examples:
+- `--build_variant Makefiles_GCC --build_type Debug` selects `Makefiles_GCC__Debug`;
+- `--build_variant VS2022_MSVC --build_type Debug` selects configure preset `VS2022_MSVC` and build/package preset `VS2022_MSVC__Debug`.
 
 
 ### 1.4. Run Project
 CMagneto separates deployment policy from platform-specific runtime mechanics:
-- The deployment policy is chosen in the active build variant with `expectExternalSharedLibrariesOnTargetMachine(...)` and `bundleExternalSharedLibraries(...)`.
+- The deployment policy is chosen in the active build variant preset through cache variables such as `CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE` and `CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE`.
 - On Linux, executables and shared libraries get `BUILD_RPATH` and `INSTALL_RPATH` values.
-- On Linux, imported shared libraries selected as `expectExternalSharedLibrariesOnTargetMachine(...)` contribute their build-machine directories to `INSTALL_RPATH`.
+- On Linux, imported shared libraries selected as `CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE` contribute their build-machine directories to `INSTALL_RPATH`.
 - Bundled imported shared libraries are copied into the install tree on all supported platforms. On Linux they are placed into `lib/`; on Windows they are placed into `bin/`.
 - On Windows, runtime DLLs of a target are still copied next to the target binary in the build tree as a local-development convenience.
 - For Debian packages, [`CPACK_DEBIAN_PACKAGE_SHLIBDEPS`](./cmake/Packager/DEB/DEBConfig_before_include_CPack.cmake) is enabled, so package dependencies on system-installed shared libraries are computed automatically.
@@ -429,7 +410,7 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb) .
 
 
 ## 2. Knowledge Base

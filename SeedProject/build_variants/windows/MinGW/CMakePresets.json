@@ -1,0 +1,99 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "MinGW__base",
+      "hidden": true,
+      "inherits": "windows-host",
+      "vendor": {
+        "CMagneto": {
+          "buildVariant": {
+            "name": "MinGW",
+            "multiConfig": false
+          }
+        }
+      },
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/MinGW/$env{BuildType}",
+      "installDir": "${sourceDir}/install/MinGW/$env{BuildType}",
+      "graphviz": "${sourceDir}/build/MinGW/$env{BuildType}/graphviz/targets_src/targets.dot",
+      "environment": {
+        "PATH": "$env{MSYS2_HOME}/ucrt64/bin${pathListSep}$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "$env{BuildType}",
+        "CMAKE_CXX_COMPILER": "$env{MSYS2_HOME}/ucrt64/bin/g++.exe",
+        "CMAKE_PREFIX_PATH": "$env{MSYS2_HOME}/ucrt64",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
+      }
+    },
+    {
+      "name": "MinGW__Debug",
+      "inherits": "MinGW__base",
+      "environment": {
+        "BuildType": "Debug"
+      }
+    },
+    {
+      "name": "MinGW__Release",
+      "inherits": "MinGW__base",
+      "environment": {
+        "BuildType": "Release"
+      }
+    },
+    {
+      "name": "MinGW__RelWithDebInfo",
+      "inherits": "MinGW__base",
+      "environment": {
+        "BuildType": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "MinGW__MinSizeRel",
+      "inherits": "MinGW__base",
+      "environment": {
+        "BuildType": "MinSizeRel"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "MinGW__Debug",
+      "configurePreset": "MinGW__Debug"
+    },
+    {
+      "name": "MinGW__Release",
+      "configurePreset": "MinGW__Release"
+    },
+    {
+      "name": "MinGW__RelWithDebInfo",
+      "configurePreset": "MinGW__RelWithDebInfo"
+    },
+    {
+      "name": "MinGW__MinSizeRel",
+      "configurePreset": "MinGW__MinSizeRel"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "MinGW__Debug",
+      "configurePreset": "MinGW__Debug"
+    },
+    {
+      "name": "MinGW__Release",
+      "configurePreset": "MinGW__Release"
+    },
+    {
+      "name": "MinGW__RelWithDebInfo",
+      "configurePreset": "MinGW__RelWithDebInfo"
+    },
+    {
+      "name": "MinGW__MinSizeRel",
+      "configurePreset": "MinGW__MinSizeRel"
+    }
+  ]
+}

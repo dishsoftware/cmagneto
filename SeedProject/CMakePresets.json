@@ -1,0 +1,21 @@
+{
+  "$schema": "https://cmake.org/cmake/help/v4.3/manual/cmake-presets.7.json",
+  "version": 10,
+  "$comment": [
+    "This file is the build source of truth.",
+    "Per-variant presets are split into smaller files under ./build_variants/.",
+    "Use the presets directly with cmake/cpack, or use build.py as an optional frontend."
+  ],
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 0
+  },
+  "include": [
+    "build_variants/CMakePresets.common.json",
+    "build_variants/linux/UnixMakefiles_GCC/CMakePresets.json",
+    "build_variants/windows/MinGW/CMakePresets.json",
+    "build_variants/windows/VS2022_MSVC/CMakePresets.json",
+    "build_variants/windows/NinjaMC_MSVC2022/CMakePresets.json"
+  ]
+}
