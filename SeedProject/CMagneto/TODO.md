@@ -4,10 +4,8 @@
 * ? Use `InstallRequiredSystemLibraries`, `BundleUtilities`, `qt_generate_deploy_app_script()`, `qt_deploy_runtime_dependencies()`, `windeployqt`, `macdeployqt`.
 * Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
 * Add function `set_up_interface_library`.
-* CMakePresets.json.
 * Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
 * Make Qt IFW interface.
-* Add system tests and an approppriate job in CI pipeline.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
@@ -42,7 +40,7 @@
 * Add memory leaks checks.
 * ? In CI: change artifacts ouput path from `*/Branch_or_Tag/*` to `*/CommitSHA_or_TAG/*`.
 * Why in `GUI` target is missing in the test coverage report?
-* Make options to compile as shared, measure code coverage and check memory leaks per target, e.g. `--coverage TargetA TargetB`, `--coverage ALL` or `--coverage ALL_EXCEPT TargetA`...
+* Make options to measure code coverage and check memory leaks per target, e.g. `--coverage TargetA TargetB`, `--coverage ALL` or `--coverage ALL_EXCEPT TargetA`...
 * Change `str += ...` to `"".join(strs)` in python code.
 * Add support of Android and WebAssembly.
 * Add build stage with all the stages, but in Docker containers locally.
