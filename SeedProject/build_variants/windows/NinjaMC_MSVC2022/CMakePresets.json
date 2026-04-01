@@ -1,0 +1,86 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "Ninja_MSVC2022__base",
+      "hidden": true,
+      "inherits": "windows-host",
+      "vendor": {
+        "CMagneto": {
+          "buildVariant": {
+            "name": "Ninja_MSVC2022",
+            "multiConfig": true
+          }
+        }
+      },
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/Ninja_MSVC2022",
+      "installDir": "${sourceDir}/install/Ninja_MSVC2022",
+      "graphviz": "${sourceDir}/build/Ninja_MSVC2022/graphviz/targets_src/targets.dot",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{QT6_MSVC2022_DIR}/lib/cmake;$env{BOOST_MSVC2022_DIR}/cmake;$env{ZLIB_MSVC2022_DIR}/lib/cmake/zlib",
+        "CMAKE_IGNORE_PATH": "C:/msys64/ucrt64/lib/cmake/GTest",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "Qt6::Core;Qt6::Gui;Qt6::Widgets;ZLIB::ZLIB"
+      }
+    },
+    {
+      "name": "Ninja_MSVC2022",
+      "inherits": "Ninja_MSVC2022__base"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Ninja_MSVC2022__Debug",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Ninja_MSVC2022__Release",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "Release"
+    },
+    {
+      "name": "Ninja_MSVC2022__RelWithDebInfo",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Ninja_MSVC2022__MinSizeRel",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "MinSizeRel"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "Ninja_MSVC2022__Debug",
+      "configurePreset": "Ninja_MSVC2022",
+      "configurations": [
+        "Debug"
+      ]
+    },
+    {
+      "name": "Ninja_MSVC2022__Release",
+      "configurePreset": "Ninja_MSVC2022",
+      "configurations": [
+        "Release"
+      ]
+    },
+    {
+      "name": "Ninja_MSVC2022__RelWithDebInfo",
+      "configurePreset": "Ninja_MSVC2022",
+      "configurations": [
+        "RelWithDebInfo"
+      ]
+    },
+    {
+      "name": "Ninja_MSVC2022__MinSizeRel",
+      "configurePreset": "Ninja_MSVC2022",
+      "configurations": [
+        "MinSizeRel"
+      ]
+    }
+  ]
+}

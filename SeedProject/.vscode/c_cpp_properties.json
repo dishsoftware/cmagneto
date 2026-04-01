@@ -2,8 +2,8 @@
     "version": 4,
     "configurations": [
         {
-            "name": "Linux_GCC",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "name": "Linux_GCC_Debug",
+            "compileCommands": "${workspaceFolder}/build/Makefiles_GCC/Debug/compile_commands.json",
             "compilerPath": "/usr/bin/g++",
             "intelliSenseMode": "linux-gcc-x64",
             "cStandard": "c17",
@@ -11,8 +11,62 @@
         },
 
         {
-            "name": "Windows_MinGW",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "name": "Linux_GCC_Release",
+            "compileCommands": "${workspaceFolder}/build/Makefiles_GCC/Release/compile_commands.json",
+            "compilerPath": "/usr/bin/g++",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Linux_GCC_RelWithDebInfo",
+            "compileCommands": "${workspaceFolder}/build/Makefiles_GCC/RelWithDebInfo/compile_commands.json",
+            "compilerPath": "/usr/bin/g++",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Linux_GCC_MinSizeRel",
+            "compileCommands": "${workspaceFolder}/build/Makefiles_GCC/MinSizeRel/compile_commands.json",
+            "compilerPath": "/usr/bin/g++",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Windows_MinGW_Debug",
+            "compileCommands": "${workspaceFolder}/build/MinGW/Debug/compile_commands.json",
+            "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
+            "intelliSenseMode": "windows-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Windows_MinGW_Release",
+            "compileCommands": "${workspaceFolder}/build/MinGW/Release/compile_commands.json",
+            "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
+            "intelliSenseMode": "windows-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Windows_MinGW_RelWithDebInfo",
+            "compileCommands": "${workspaceFolder}/build/MinGW/RelWithDebInfo/compile_commands.json",
+            "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
+            "intelliSenseMode": "windows-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17"
+        },
+
+        {
+            "name": "Windows_MinGW_MinSizeRel",
+            "compileCommands": "${workspaceFolder}/build/MinGW/MinSizeRel/compile_commands.json",
             "compilerPath": "${MSYS2_HOME}/ucrt64/bin/c++.exe",
             "intelliSenseMode": "windows-gcc-x64",
             "cStandard": "c17",
@@ -21,7 +75,7 @@
 
         {
             "name": "Windows_NinjaMC_MSVC",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/build/Ninja_MSVC2022/compile_commands.json",
             "compilerPath": "${VC2022ToolsInstallDir}/bin/Hostx64/x64/cl.exe",
             "intelliSenseMode": "windows-msvc-x64",
             "cStandard": "c17",

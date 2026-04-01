@@ -113,8 +113,9 @@ function(CMagnetoInternal__runtime_dependency_manifest__warn_about_target_unclas
     set(_message
         "CMagneto target \"${iTargetName}\" links imported shared libraries without an install mode decision: "
         "\"${_targetsJoined}\". Installed binaries may still require the `set_env` helper or rely on platform "
-        "default search paths. Configure such dependencies in the active build variant with "
-        "expectExternalSharedLibrariesOnTargetMachine(...) or bundleExternalSharedLibraries(...), "
+        "default search paths. Configure such dependencies in the active build-variant preset with "
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE or "
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE, "
         "or mark them explicitly in CMake as a manual override."
     )
     string(CONCAT _message ${_message})

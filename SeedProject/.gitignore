@@ -1,5 +1,6 @@
 /build/
 /install/
+/CMakeUserPresets.json
 /CI/Docker/.tmp/
 /CI/Docker/**/.tmp/
 *.directory

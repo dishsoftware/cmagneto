@@ -23,9 +23,9 @@
             "name": "Linux GCC. GDB Launch",
             "type": "cppdbg",
             "request": "launch",
-            "cwd":     "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}",
-            "program": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}/bin/${input:iTarget}",
-            "envFile": "${workspaceFolder}/build/UnixMakefiles_GCC/${input:iBuildType}/bin/.env.vscode",
+            "cwd":     "${workspaceFolder}/build/Makefiles_GCC/${input:iBuildType}",
+            "program": "${workspaceFolder}/build/Makefiles_GCC/${input:iBuildType}/bin/${input:iTarget}",
+            "envFile": "${workspaceFolder}/build/Makefiles_GCC/${input:iBuildType}/bin/.env.vscode",
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
@@ -76,6 +76,17 @@
             "cwd":     "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}",
             "program": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}/${input:iTarget}",
             "envFile": "${workspaceFolder}/build/VS2022_MSVC/bin/${input:iBuildType}/.env.vscode",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+
+        {
+            "name": "Windows Ninja MSVC. VSDBG Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "cwd":     "${workspaceFolder}/build/Ninja_MSVC2022/bin/${input:iBuildType}",
+            "program": "${workspaceFolder}/build/Ninja_MSVC2022/bin/${input:iBuildType}/${input:iTarget}",
+            "envFile": "${workspaceFolder}/build/Ninja_MSVC2022/bin/${input:iBuildType}/.env.vscode",
             "stopAtEntry": false,
             "console": "internalConsole"
         }

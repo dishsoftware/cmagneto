@@ -66,17 +66,19 @@ The same as in [`Project Build Tools` section the CMagneto framework doc](./CMag
 - zlib
 
 
-### 1.3. One-Command Build Script
-Use [`./build.py`](./build.py) to generate build system files (e.g. MakeFiles or MSVS solution), compile, test, install the CMake project and generate installation packages.<br>
+### 1.3. Build Entry Points
+The committed [`./CMakePresets.json`](./CMakePresets.json) is the source of truth for build configuration.<br>
+Use presets directly with `cmake --preset ...`, `cmake --build --preset ...`, and `cpack --preset ...`, or use the optional [`./build.py`](./build.py) frontend to keep a consistent `--build_variant/--build_type` workflow across single- and multi-config generators.<br>
 To see available options, run:
 ```bash
 python ./build.py --help
 ```
+When `build.py` is used, single-config variants map directly to `{build_variant}__{build_type}`, while multi-config variants use `{build_variant}` as the configure preset and `{build_variant}__{build_type}` as the build/package preset.<br>
 For details look into [`1.3. Build Project` section the CMagneto framework doc](./CMagneto/README.md#13-build-project).
 
 
 ## 2. Run
-Runtime dependency policy is defined by the active build variant under [`./build_variants/`](./build_variants/):
+Runtime dependency policy is encoded in the active configure preset and related CMake cache variables:
 - some imported shared libraries can be marked as expected on the target machine at the same absolute locations as on the build machine;
 - others can be marked as bundled into the installation package;
 - dependencies that are not marked explicitly may still need the legacy helper scripts or platform default loader paths.
@@ -112,4 +114,4 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./packaging/CPackConfig.cmake`](./packaging/CPackConfig.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/UnixMakefiles_GCC/Dish_ContactHolder-0.0.1.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb) .

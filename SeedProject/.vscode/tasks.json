@@ -26,8 +26,8 @@
             "command": "python",
             "args": [
                 "${workspaceFolder}/build.py",
-                "--build_variant", "UnixMakefiles_GCC",
-                "--build_types", "${input:buildType}",
+                "--build_variant", "Makefiles_GCC",
+                "--build_type", "${input:buildType}",
                 "--build_stage", "Compile"
             ],
             "problemMatcher": []
@@ -45,7 +45,7 @@
             "args": [
                 "${workspaceFolder}\\build.py",
                 "--build_variant", "MinGW",
-                "--build_types", "${input:buildType}",
+                "--build_type", "${input:buildType}",
                 "--build_stage", "Compile"
             ],
             "problemMatcher": []
@@ -63,7 +63,25 @@
             "args": [
                 "${workspaceFolder}\\build.py",
                 "--build_variant", "VS2022_MSVC",
-                "--build_types", "${input:buildType}",
+                "--build_type", "${input:buildType}",
+                "--build_stage", "Compile"
+            ],
+            "problemMatcher": []
+        },
+
+        {
+            "label": "Windows Ninja MSVC. Compile",
+            "detail": "Compile with Ninja Multi-Config and MSVC on Windows",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\build.py",
+                "--build_variant", "Ninja_MSVC2022",
+                "--build_type", "${input:buildType}",
                 "--build_stage", "Compile"
             ],
             "problemMatcher": []

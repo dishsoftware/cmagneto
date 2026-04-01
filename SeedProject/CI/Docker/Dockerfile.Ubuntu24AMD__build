@@ -4,6 +4,9 @@ FROM ubuntu:24.04
 ## Version of an the image, not the project.
 LABEL version="1.0.0"
 
+# Declare image build arguments.
+ARG CMAKE_VERSION=4.3.1
+
 # Avoid interactive prompts during installs.
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,7 +16,6 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python-is-python3 \
     build-essential \
-    cmake \
     graphviz \
     lcov \
     qt6-base-dev \
@@ -22,7 +24,21 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libgtest-dev \
     dpkg-dev \
+    wget \
     tree \
     && apt-get clean
+
+# Download and install CMake from Kitware release archives.
+RUN CMAKE_ARCHIVE_NAME=cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz && \
+    CMAKE_DIR_NAME=cmake-${CMAKE_VERSION}-linux-x86_64 && \
+    wget -O ${CMAKE_ARCHIVE_NAME} https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/${CMAKE_ARCHIVE_NAME} && \
+    tar -xzf ${CMAKE_ARCHIVE_NAME} && \
+    mv ${CMAKE_DIR_NAME} /opt/cmake-${CMAKE_VERSION} && \
+    ln -s /opt/cmake-${CMAKE_VERSION}/bin/cmake /usr/local/bin/cmake && \
+    rm ${CMAKE_ARCHIVE_NAME}
+
+RUN cmake --version | grep -q "cmake version ${CMAKE_VERSION}"
+
+ENV PATH="/opt/cmake-${CMAKE_VERSION}/bin:${PATH}"
 
 WORKDIR /project

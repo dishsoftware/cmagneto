@@ -1,0 +1,95 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "Makefiles_GCC__base",
+      "hidden": true,
+      "inherits": "linux-host",
+      "vendor": {
+        "CMagneto": {
+          "buildVariant": {
+            "name": "Makefiles_GCC",
+            "multiConfig": false
+          }
+        }
+      },
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/Makefiles_GCC/$env{BuildType}",
+      "installDir": "${sourceDir}/install/Makefiles_GCC/$env{BuildType}",
+      "graphviz": "${sourceDir}/build/Makefiles_GCC/$env{BuildType}/graphviz/targets_src/targets.dot",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "$env{BuildType}",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__Debug",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "Debug"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__Release",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "Release"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__RelWithDebInfo",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__MinSizeRel",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "MinSizeRel"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Makefiles_GCC__Debug",
+      "configurePreset": "Makefiles_GCC__Debug"
+    },
+    {
+      "name": "Makefiles_GCC__Release",
+      "configurePreset": "Makefiles_GCC__Release"
+    },
+    {
+      "name": "Makefiles_GCC__RelWithDebInfo",
+      "configurePreset": "Makefiles_GCC__RelWithDebInfo"
+    },
+    {
+      "name": "Makefiles_GCC__MinSizeRel",
+      "configurePreset": "Makefiles_GCC__MinSizeRel"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "Makefiles_GCC__Debug",
+      "configurePreset": "Makefiles_GCC__Debug"
+    },
+    {
+      "name": "Makefiles_GCC__Release",
+      "configurePreset": "Makefiles_GCC__Release"
+    },
+    {
+      "name": "Makefiles_GCC__RelWithDebInfo",
+      "configurePreset": "Makefiles_GCC__RelWithDebInfo"
+    },
+    {
+      "name": "Makefiles_GCC__MinSizeRel",
+      "configurePreset": "Makefiles_GCC__MinSizeRel"
+    }
+  ]
+}

@@ -25,22 +25,21 @@ CMagneto splits this problem into two distinct steps:
    - `EXPECT_ON_TARGET_MACHINE`;
    - `BUNDLE_WITH_PACKAGE`.
 
-The policy is normally declared in Python build variants with:
+The policy is now declared directly in build-variant presets through CMake cache variables such as:
 
-- `expectExternalSharedLibrariesOnTargetMachine(...)`;
-- `bundleExternalSharedLibraries(...)`.
+- `CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE`;
+- `CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE`.
 
-Low-level bundling overrides can also be declared with:
+Low-level bundling overrides can also be declared in presets with:
 
-- `bundleRuntimeDependencyFiles(...)`;
-- `bundleRuntimeDependencyFilePatterns(...)`;
-- `excludeBundledRuntimeDependencyFiles(...)`;
-- `excludeBundledRuntimeDependencyFilePatterns(...)`.
+- `CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES`;
+- `CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS`;
+- `CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES`;
+- `CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS`.
 
-The build runner converts that policy into `-D` CMake variables before project configuration. See:
+See:
 
-- [`./../py/cmake/build_variant.py`](./../py/cmake/build_variant.py)
-- [`./../py/cmake/build_runner.py`](./../py/cmake/build_runner.py)
+- [`./../../build_variants/`](./../../build_variants/)
 - [`./../README.md`](./../README.md)
 
 After all project targets are set up, a canonical build-tree artifact named
@@ -174,12 +173,12 @@ The public entry points are:
 - `CMagneto__exclude_bundled_runtime_dependency_files`
 - `CMagneto__exclude_bundled_runtime_dependency_file_patterns`
 
-The corresponding Python build-variant helpers are:
+The corresponding preset cache variables are:
 
-- `bundleRuntimeDependencyFiles(...)`
-- `bundleRuntimeDependencyFilePatterns(...)`
-- `excludeBundledRuntimeDependencyFiles(...)`
-- `excludeBundledRuntimeDependencyFilePatterns(...)`
+- `CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILES`
+- `CMagneto__BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS`
+- `CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILES`
+- `CMagneto__EXCLUDED_BUNDLED_RUNTIME_DEPENDENCY_FILE_PATTERNS`
 
 These overrides are intended for:
 

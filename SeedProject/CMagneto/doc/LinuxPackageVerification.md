@@ -89,10 +89,10 @@ Two modes are used:
 - `EXPECT_ON_TARGET_MACHINE`
 - `BUNDLE_WITH_PACKAGE`
 
-The policy is configured in Python build-variant files by helpers such as:
+The policy is configured in the active build-variant preset through cache variables such as:
 
-- `expectExternalSharedLibrariesOnTargetMachine(...)`
-- `bundleExternalSharedLibraries(...)`
+- `CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE`
+- `CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE`
 
 The policy is then passed to CMake and used during target setup.
 
@@ -131,7 +131,8 @@ The CMake side is responsible for:
 ### 5.2. Python side
 The Python-side verification is implemented mainly in:
 
-- `SeedProject/CMagneto/py/cmake/build_runner.py`
+- `SeedProject/CMagneto/py/cmake/linux_package_verifier.py`
+- `SeedProject/CMagneto/py/cmake/build.py`
 
 The Python side is responsible for:
 
@@ -165,7 +166,7 @@ For each project target, the following is also recorded:
 Low-level bundling overrides are recorded as well.
 
 This file is intended to be the shared handoff artifact between CMake configuration and later runtime-related stages.
-It is consumed directly by the Python build runner after package generation.
+It is consumed by the Linux package verifier invoked from the active package flow after package generation.
 
 It should be noted that recorded library paths are concrete paths discovered on the build machine.
 Because of that, file names in this metadata may contain build-machine-specific minor or patch versions, for example `libQt6Core.so.6.4.2`.
