@@ -15,6 +15,7 @@ include(CPackIFW)
 
 ## Component setup.
 cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
+    NAME "runtime"
     DISPLAY_NAME "${COMPONENT__RUNTIME___NAME}"
         ru "${COMPONENT__RUNTIME___NAME_ru}"
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
@@ -22,9 +23,11 @@ cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
 )
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}
+    NAME "development"
     DISPLAY_NAME "${COMPONENT__DEVELOPMENT___NAME}"
         ru "${COMPONENT__DEVELOPMENT___NAME_ru}"
     DESCRIPTION "${COMPONENT__DEVELOPMENT___DESCRIPTION}"
         ru "${COMPONENT__DEVELOPMENT___DESCRIPTION_ru}"
+    DEPENDENCIES "runtime"
     DEFAULT OFF # Do not select "Development" component by default in IFW UI.
 )

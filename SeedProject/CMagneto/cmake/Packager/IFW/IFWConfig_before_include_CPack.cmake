@@ -58,6 +58,36 @@ function(CMagnetoInternal__ifw_generate_default_control_script oScriptPath)
     set(_scriptText [=[
 function Controller()
 {
+    try {
+        var finishedPage = gui.pageByObjectName("FinishedPage");
+        if (finishedPage) {
+            finishedPage.entered.connect(this, Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage);
+        }
+    } catch (e) {
+    }
+}
+
+function CMagnetoInternal__ifw_clear_widget_text_and_hide(widget)
+{
+    if (widget == null) {
+        return;
+    }
+
+    try {
+        if (typeof widget.setText === "function") {
+            widget.setText("");
+        }
+    } catch (e) {
+    }
+
+    try {
+        if (typeof widget.hide === "function") {
+            widget.hide();
+        } else {
+            widget.visible = false;
+        }
+    } catch (e) {
+    }
 }
 
 ]=])
@@ -85,12 +115,26 @@ Controller.prototype.IntroductionPageCallback = function()
         string(APPEND _scriptText [=[
 Controller.prototype.FinishedPageCallback = function()
 {
+    Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage();
+}
+
+Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage = function()
+{
     var widget = gui.currentPageWidget();
-    if (widget != null && widget.MessageLabel) {
+    if (widget == null) {
+        return;
+    }
+
+    if (widget.MessageLabel) {
         widget.MessageLabel.setText("]=])
         string(APPEND _scriptText "${_finishedTextEscaped}")
         string(APPEND _scriptText [=[");
     }
+
+    CMagnetoInternal__ifw_clear_widget_text_and_hide(gui.findChild(widget, "FinishedText"));
+    CMagnetoInternal__ifw_clear_widget_text_and_hide(gui.findChild(widget, "LocationLabel"));
+    CMagnetoInternal__ifw_clear_widget_text_and_hide(gui.findChild(widget, "FinishText"));
+    CMagnetoInternal__ifw_clear_widget_text_and_hide(gui.findChild(widget, "RunItCheckBox"));
 }
 
 ]=])
