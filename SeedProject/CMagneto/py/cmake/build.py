@@ -457,63 +457,18 @@ def _isStageRequired(
 
     return False
 
-def _parseLibSharedOverrides(iUnknownArgs: list[str]) -> tuple[dict[str, str], list[str]]:
-    libSharedOptions: dict[str, str] = {}
-    unrecognizedArgs: list[str] = []
-
-    for arg in iUnknownArgs:
-        if not arg.startswith("--"):
-            unrecognizedArgs.append(arg)
-            continue
-
-        processedArg = arg[2:]
-        optionAndVal = processedArg.split("=")
-        if len(optionAndVal) != 2:
-            unrecognizedArgs.append(arg)
-            continue
-
-        option, optionVal = optionAndVal
-        if not option.startswith("LIB_") or not option.endswith("_SHARED"):
-            unrecognizedArgs.append(arg)
-            continue
-
-        if optionVal not in ["ON", "OFF", "DEFAULT"]:
-            unrecognizedArgs.append(arg)
-            continue
-
-        libTargetName = option[4:-7]
-        if re.match(r"^_+$", libTargetName):
-            Log.warning(f"Invalid library name \"{libTargetName}\". It must not be composed only of underscores.")
-            continue
-        if not re.match(r"^[A-Z_][A-Z0-9_]*$", libTargetName):
-            Log.warning(f"Invalid library name \"{libTargetName}\". Expected letters, digits and underscores. Must start with a letter or underscore.")
-            continue
-
-        libSharedOptions[libTargetName] = optionVal
-
-    return libSharedOptions, unrecognizedArgs
-
-
 def _configureCommand(
     iVariant: BuildVariantSpec,
     iBuildType: BuildRunner.BuildType,
-    iBuildSharedLibs: bool,
-    iEnableCoverage: bool,
-    iLibSharedOptions: dict[str, str]
+    iEnableCoverage: bool
 ) -> list[str]:
     command = ["cmake", "--preset", iVariant.configurePresetName(iBuildType)]
-    command.append("-DBUILD_SHARED_LIBS=ON" if iBuildSharedLibs else "-DBUILD_SHARED_LIBS=OFF")
 
     if iEnableCoverage:
         if iBuildType == BuildRunner.BuildType.Debug:
             command.append("-DENABLE_COVERAGE=ON")
         else:
             Log.warning(f"Code coverage is only enabled if the build type is {BuildRunner.BuildType.Debug.name}. Ignored.")
-
-    for libTargetName, sharedOption in iLibSharedOptions.items():
-        if sharedOption == "DEFAULT":
-            continue
-        command.append(f"-DLIB_{libTargetName}_SHARED={sharedOption}")
 
     return command
 
@@ -625,14 +580,6 @@ def buildProject() -> None:
         )
     )
     parser.add_argument(
-        "--BUILD_SHARED_LIBS",
-        action="store_true",
-        help=(
-            "Build implicit type (DEFAULT) libraries as shared.\n"
-            "Per-library overrides can still be passed as --LIB_<TARGET>_SHARED=ON|OFF|DEFAULT."
-        )
-    )
-    parser.add_argument(
         "--coverage",
         action="store_true",
         help=(
@@ -641,10 +588,7 @@ def buildProject() -> None:
         )
     )
 
-    args, unknownArgs = parser.parse_known_args()
-    libSharedOptions, unrecognizedArgs = _parseLibSharedOverrides(unknownArgs)
-    if unrecognizedArgs:
-        Log.error(f"Unknown arguments: {', '.join(unrecognizedArgs)}.")
+    args = parser.parse_args()
 
     buildVariant = availableBuildVariants[args.build_variant]
     buildType = BuildRunner.BuildType[args.build_type]
@@ -658,7 +602,7 @@ def buildProject() -> None:
         text = f"Generation of build system files ({buildType.name})"
         Log.status(text + "...")
         Process.runCommand(
-            _configureCommand(buildVariant, buildType, args.BUILD_SHARED_LIBS, args.coverage, libSharedOptions),
+            _configureCommand(buildVariant, buildType, args.coverage),
             PROJECT_ROOT
         )
         _renderGraphvizPicture(layout.graphvizDotfilePath)

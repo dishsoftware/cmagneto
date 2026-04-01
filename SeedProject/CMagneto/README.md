@@ -352,6 +352,18 @@ Preset selection follows this rule:
 - for single-config generators, `build.py` uses `{build_variant}__{build_type}` as the configure, build, and package preset name;
 - for multi-config generators, `build.py` uses `{build_variant}` as the configure preset and `{build_variant}__{build_type}` as the build and package preset name.
 
+Library type policy belongs to configure preset `cacheVariables`:
+- `BUILD_SHARED_LIBS` sets the default library type;
+- `LIB_<TARGET_NAME_UPPERCASED>_SHARED` overrides a specific target.
+
+Example:
+```json
+"cacheVariables": {
+  "BUILD_SHARED_LIBS": "OFF",
+  "LIB_DISH_CONTACTHOLDER_CONTACTS_SHARED": "ON"
+}
+```
+
 Examples:
 - `--build_variant Makefiles_GCC --build_type Debug` selects `Makefiles_GCC__Debug`;
 - `--build_variant VS2022_MSVC --build_type Debug` selects configure preset `VS2022_MSVC` and build/package preset `VS2022_MSVC__Debug`.
