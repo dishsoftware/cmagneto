@@ -82,7 +82,7 @@ endfunction()
     Every "/" in the relative path is replaced with "_".
 
     Example:
-        `${CMAKE_SOURCE_DIR}/src/Dish/ContactHolder/Contacts/` -> `Dish_ContactHolder_Contacts`
+        `${CMAKE_SOURCE_DIR}/src/DishSW/ContactHolder/Contacts/` -> `DishSW_ContactHolder_Contacts`
 ]]
 function(CMagnetoInternal__compose_target_name iAbsoluteTargetSourceRoot oTargetName)
     cmake_path(SET _absoluteTargetSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/")
@@ -110,7 +110,7 @@ endfunction()
     Composes a target alias from the target name by replacing every "_" with "::".
 
     Example:
-        `Dish_ContactHolder_Contacts` -> `Dish::ContactHolder::Contacts`
+        `DishSW_ContactHolder_Contacts` -> `DishSW::ContactHolder::Contacts`
 ]]
 function(CMagnetoInternal__compose_namespaced_target_name iTargetName oNamespacedTargetName)
     string(REPLACE "_" "::" _namespacedTargetName "${iTargetName}")
@@ -125,7 +125,7 @@ endfunction()
     If the file does not exist, generates it and prints a message about the generation.
 
     Parameters:
-        iTargetName          - Real CMake target name, e.g. `Dish_ContactHolder_Contacts`.
+        iTargetName          - Real CMake target name, e.g. `DishSW_ContactHolder_Contacts`.
         oExportHeaderRelPath - Relative path to the ensured header, e.g. `Contacts_EXPORT.hpp`.
 ]]
 function(CMagnetoInternal__set_up_export_header iTargetName oExportHeaderRelPath)
@@ -224,7 +224,7 @@ endfunction()
     If the file does not exist, generates it and prints a message about the generation.
 
     Parameters:
-        iTargetName         - Real CMake target name, e.g. `Dish_ContactHolder_Contacts`.
+        iTargetName         - Real CMake target name, e.g. `DishSW_ContactHolder_Contacts`.
         iIncludeExportHeader - If TRUE, generated defs header includes `<TargetLeafName>_EXPORT.hpp`.
         oDefsHeaderRelPath  - Relative path to the ensured header, e.g. `Contacts_DEFS.hpp`.
 ]]

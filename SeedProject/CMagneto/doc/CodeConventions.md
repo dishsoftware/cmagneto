@@ -175,60 +175,60 @@ but consumers may relocate it as needed.
 - Namespace:
     * Namespaces, encapsulating entities of a module, are composed as: `{CompanyName_SHORT}::{ProjectNameBase}::{ModuleName}`.
         ```c++
-        namespace Dish::ContactHolder::GUI {
+        namespace DishSW::ContactHolder::GUI {
             ...
-        } // namespace Dish::ContactHolder::GUI
+        } // namespace DishSW::ContactHolder::GUI
         ```
     * Namespace, encapsulating `enum class Enum` or its helper functions: CamelCase.
         ```c++
-        namespace Dish::ContactHolder::Contacts::FieldType {
+        namespace DishSW::ContactHolder::Contacts::FieldType {
             enum class CONTACTS_EXPORT Enum : std::uint8_t {
                 kString, // Generic string without restrictions.
                 kPhoneNumber
             };
 
             CONTACTS_EXPORT const QString& toString(const Enum iEnum);
-        } // namespace Dish::ContactHolder::Contacts::FieldType
+        } // namespace DishSW::ContactHolder::Contacts::FieldType
         ```
     * Other namspaces: camelCase.
 - Subdirectory structure and header naming convention follows naming conventions of entity or namespace the header contains:
     * Header contains a class, struct or enum:
         ```c++
-        // src/Dish/ContactHolder/Contacts/fields/EmailAddress.hpp
-        namespace Dish::ContactHolder::Contacts::fields {
+        // src/DishSW/ContactHolder/Contacts/fields/EmailAddress.hpp
+        namespace DishSW::ContactHolder::Contacts::fields {
             class CONTACTS_EXPORT EmailAddress {
             ...
             };
-        } // namespace Dish::ContactHolder::Contacts::fields
+        } // namespace DishSW::ContactHolder::Contacts::fields
         ```
     * Header contains `enum class Enum` or its helper functions:
         ```c++
-        // src/Dish/ContactHolder/Contacts/FieldType.hpp
-        namespace Dish::ContactHolder::Contacts::FieldType {
+        // src/DishSW/ContactHolder/Contacts/FieldType.hpp
+        namespace DishSW::ContactHolder::Contacts::FieldType {
             enum class CONTACTS_EXPORT Enum : std::uint8_t {
                 kString, // Generic string without restrictions.
                 kPhoneNumber
             };
-        } // namespace Dish::ContactHolder::Contacts::FieldType
+        } // namespace DishSW::ContactHolder::Contacts::FieldType
         ```
         ```c++
-        // src/Dish/ContactHolder/Contacts/FieldTypeExtension.hpp
-        namespace Dish::ContactHolder::Contacts::FieldType {
+        // src/DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp
+        namespace DishSW::ContactHolder::Contacts::FieldType {
             CONTACTS_EXPORT const QString& toString(const Enum iEnum);
-        } // namespace Dish::ContactHolder::Contacts::FieldType
+        } // namespace DishSW::ContactHolder::Contacts::FieldType
         ```
     * Header contains a namespace with standalone functions (which are not helpers of `enum class Enum`) or a standalone function:
         ```c++
-        // src/Dish/ContactHolder/GUI/namespaceWithStandaloneFunctions.hpp
-        namespace Dish::ContactHolder::GUI::namespaceWithStandaloneFunctions {
+        // src/DishSW/ContactHolder/GUI/namespaceWithStandaloneFunctions.hpp
+        namespace DishSW::ContactHolder::GUI::namespaceWithStandaloneFunctions {
             const QString& standaloneFunction();
-        } // namespace Dish::ContactHolder::GUI::namespaceWithStandaloneFunctions
+        } // namespace DishSW::ContactHolder::GUI::namespaceWithStandaloneFunctions
         ```
         ```c++
-        // src/Dish/ContactHolder/GUI/standaloneFunction.hpp
-        namespace Dish::ContactHolder::GUI {
+        // src/DishSW/ContactHolder/GUI/standaloneFunction.hpp
+        namespace DishSW::ContactHolder::GUI {
             const QString& standaloneFunction();
-        } // namespace Dish::ContactHolder::GUI
+        } // namespace DishSW::ContactHolder::GUI
         ```
     * Names of headers, containing module-related definitions, are appended with `_DEFS`.
 
@@ -291,4 +291,3 @@ Use `struct` only for Plain Data Structures, i.e. if they:
 - Job template names are lowercase and prepended with a dot.
 - Stage names are prepended with `STAGE-`, and everything next is lowercase.
 - Add 2 blank lines between first-level YML-properties in a file.
-

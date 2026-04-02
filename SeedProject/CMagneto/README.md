@@ -251,24 +251,24 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
 4) Add library targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
     ```cmake
     # The real target name must equal the path under `./src/` with "/" replaced by "_".
-    # Example: `./src/Dish/ContactHolder/Contacts` -> Dish_ContactHolder_Contacts
-    CMagneto__get_library_type(Dish_ContactHolder_Contacts _LIB_TYPE)
-    add_library(Dish_ContactHolder_Contacts ${_LIB_TYPE}) # Don't add any files to the target in the command.
-    target_link_libraries(Dish_ContactHolder_Contacts
+    # Example: `./src/DishSW/ContactHolder/Contacts` -> DishSW_ContactHolder_Contacts
+    CMagneto__get_library_type(DishSW_ContactHolder_Contacts _LIB_TYPE)
+    add_library(DishSW_ContactHolder_Contacts ${_LIB_TYPE}) # Don't add any files to the target in the command.
+    target_link_libraries(DishSW_ContactHolder_Contacts
         ...
         # Aliases are derived from the real target name by replacing "_" with "::":
-        # Dish_ContactHolder_Contacts -> Dish::ContactHolder::Contacts
+        # DishSW_ContactHolder_Contacts -> DishSW::ContactHolder::Contacts
     )
-    CMagneto__set_up__library(Dish_ContactHolder_Contacts
+    CMagneto__set_up__library(DishSW_ContactHolder_Contacts
         ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
     )
     ```
 
 5) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
     ```cmake
-    add_executable(Dish_ContactHolder_GUI) # Don't add any files to the target in the command.
-    target_link_libraries(Dish_ContactHolder_GUI ...)
-    CMagneto__set_up__executable(Dish_ContactHolder_GUI
+    add_executable(DishSW_ContactHolder_GUI) # Don't add any files to the target in the command.
+    target_link_libraries(DishSW_ContactHolder_GUI ...)
+    CMagneto__set_up__executable(DishSW_ContactHolder_GUI
         ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
     )
     ```
@@ -360,7 +360,7 @@ Example:
 ```json
 "cacheVariables": {
   "BUILD_SHARED_LIBS": "OFF",
-  "LIB_DISH_CONTACTHOLDER_CONTACTS_SHARED": "ON"
+  "LIB_DISHSW_CONTACTHOLDER_CONTACTS_SHARED": "ON"
 }
 ```
 
@@ -422,7 +422,7 @@ where:
 - `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and build variant.
 
 The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/Dish_ContactHolder-0.0.1.deb) .
+[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/DishSW_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/DishSW_ContactHolder-0.0.1.deb) .
 
 
 ## 2. Knowledge Base
