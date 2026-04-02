@@ -1,9 +1,0 @@
-@ProjectNameForUI@ has been installed successfully.
-
-Installation folder:
-@TargetDir@
-
-Project homepage:
-@ProjectHomepage@
-
-Click Finish to close the installer.

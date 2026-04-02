@@ -12,8 +12,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
 
+cmake_path(SET _ifwPackageResourcesDir NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/IFW")
+
 function(CMagnetoInternal__ifw_set_package_file_if_exists iVariable iFileName)
-    cmake_path(SET _absPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/${iFileName}")
+    cmake_path(SET _absPath NORMALIZE "${_ifwPackageResourcesDir}/${iFileName}")
     if(EXISTS "${_absPath}")
         set(${iVariable} "${_absPath}" PARENT_SCOPE)
     endif()
@@ -33,8 +35,8 @@ function(CMagnetoInternal__ifw_make_text_expression iInputText oOutputExpression
 endfunction()
 
 function(CMagnetoInternal__ifw_generate_default_control_script oScriptPath)
-    cmake_path(SET _welcomePath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Welcome.txt")
-    cmake_path(SET _finishedPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Finished.txt")
+    cmake_path(SET _welcomePath NORMALIZE "${_ifwPackageResourcesDir}/Welcome.html")
+    cmake_path(SET _finishedPath NORMALIZE "${_ifwPackageResourcesDir}/Finished.html")
     if(NOT EXISTS "${_welcomePath}" AND NOT EXISTS "${_finishedPath}")
         set(${oScriptPath} "" PARENT_SCOPE)
         return()
@@ -44,6 +46,11 @@ function(CMagnetoInternal__ifw_generate_default_control_script oScriptPath)
 function Controller()
 {
     try {
+        var introductionPage = gui.pageByObjectName("IntroductionPage");
+        if (introductionPage) {
+            introductionPage.entered.connect(this, Controller.prototype.CMagnetoInternal__ifw_customizeIntroductionPage);
+        }
+
         var finishedPage = gui.pageByObjectName("FinishedPage");
         if (finishedPage) {
             finishedPage.entered.connect(this, Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage);
@@ -75,6 +82,38 @@ function CMagnetoInternal__ifw_clear_widget_text_and_hide(widget)
     }
 }
 
+function CMagnetoInternal__ifw_prepare_message_label(widget)
+{
+    if (widget == null) {
+        return;
+    }
+
+    try {
+        widget.setTextFormat(1); // Qt.RichText
+    } catch (e) {
+    }
+
+    try {
+        widget.setTextInteractionFlags(13); // Qt.TextBrowserInteraction
+    } catch (e) {
+    }
+
+    try {
+        widget.setWordWrap(true);
+    } catch (e) {
+    }
+
+    try {
+        if (!widget.CMagnetoInternal__ifw_linksConnected && widget.linkActivated) {
+            widget.linkActivated.connect(function(link) {
+                QDesktopServices.openUrl(link);
+            });
+            widget.CMagnetoInternal__ifw_linksConnected = true;
+        }
+    } catch (e) {
+    }
+}
+
 ]=])
 
     if(EXISTS "${_welcomePath}")
@@ -83,8 +122,14 @@ function CMagnetoInternal__ifw_clear_widget_text_and_hide(widget)
         string(APPEND _scriptText [=[
 Controller.prototype.IntroductionPageCallback = function()
 {
+    Controller.prototype.CMagnetoInternal__ifw_customizeIntroductionPage();
+}
+
+Controller.prototype.CMagnetoInternal__ifw_customizeIntroductionPage = function()
+{
     var widget = gui.currentPageWidget();
     if (widget != null && widget.MessageLabel) {
+        CMagnetoInternal__ifw_prepare_message_label(widget.MessageLabel);
         widget.MessageLabel.setText("]=])
         string(APPEND _scriptText "${_welcomeTextEscaped}")
         string(APPEND _scriptText [=[");
@@ -111,6 +156,7 @@ Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage = function()
     }
 
     if (widget.MessageLabel) {
+        CMagnetoInternal__ifw_prepare_message_label(widget.MessageLabel);
         widget.MessageLabel.setText("]=])
         string(APPEND _scriptText "${_finishedTextEscaped}")
         string(APPEND _scriptText [=[");
@@ -175,7 +221,7 @@ if(NOT CPACK_IFW_PACKAGE_CONTROL_SCRIPT)
     endif()
 endif()
 
-cmake_path(SET _ifwPackageResourcesQrc NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/InstallerResources.qrc")
+cmake_path(SET _ifwPackageResourcesQrc NORMALIZE "${_ifwPackageResourcesDir}/InstallerResources.qrc")
 if(EXISTS "${_ifwPackageResourcesQrc}")
     cpack_ifw_add_package_resources("${_ifwPackageResourcesQrc}")
 endif()
