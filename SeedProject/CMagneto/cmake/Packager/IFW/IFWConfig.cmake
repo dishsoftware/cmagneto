@@ -20,6 +20,7 @@ cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
         ru "${COMPONENT__RUNTIME___NAME_ru}"
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
         ru "${COMPONENT__RUNTIME___DESCRIPTION_ru}"
+    LICENSES "MIT License" "${CMagneto__PACKAGE_RESOURCES_DIR}/License.txt"
 )
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}

@@ -46,6 +46,11 @@ function(CMagnetoInternal__ifw_generate_default_control_script oScriptPath)
 function Controller()
 {
     try {
+        installer.setDefaultPageVisible(QInstaller.LicenseCheck, true);
+    } catch (e) {
+    }
+
+    try {
         var introductionPage = gui.pageByObjectName("IntroductionPage");
         if (introductionPage) {
             introductionPage.entered.connect(this, Controller.prototype.CMagnetoInternal__ifw_customizeIntroductionPage);
@@ -182,6 +187,8 @@ set(CPACK_IFW_PACKAGE_TITLE "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI} Inst
 set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_IFW_PRODUCT_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}")
 set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
+
+list(APPEND CPACK_PRE_BUILD_SCRIPTS "${CMAKE_CURRENT_LIST_DIR}/InjectRuntimeLicense.cmake")
 
 # Force a consistent wizard presentation on Windows so the installer
 # does not inherit unreadable dark host palette combinations.
