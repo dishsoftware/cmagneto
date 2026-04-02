@@ -4,7 +4,7 @@ DishSW Contact Holder is open-source contact manager, that gives you full contro
 
 📦 Installation Path:
 By default, the library is installed to:
-  C:\Program Files\Dish\ContactHolder
+  C:\Program Files\DishSW\ContactHolder
 
 📚 Documentation & Usage:
 Refer to the GitLab repository for full documentation, examples, and API references:

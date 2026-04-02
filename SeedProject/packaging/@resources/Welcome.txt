@@ -5,4 +5,7 @@ open-source contact manager, that gives you full control over how, when, and whe
 
 Please review the license and follow the instructions to complete installation.
 
+Project homepage:
+@ProjectHomepage@
+
 Thank you for choosing @ProjectNameForUI@ and supporting open-source development!

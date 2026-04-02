@@ -25,6 +25,7 @@ function(CMagnetoInternal__ifw_make_text_expression iInputText oOutputExpression
     string(REPLACE "\"" "\\\"" _text "${_text}")
     string(REPLACE "\r" "" _text "${_text}")
     string(REPLACE "@ProjectNameForUI@" "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}" _text "${_text}")
+    string(REPLACE "@ProjectHomepage@" "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}" _text "${_text}")
     string(REPLACE "@ProductName@" "\" + installer.value(\"ProductName\") + \"" _text "${_text}")
     string(REPLACE "@TargetDir@" "\" + installer.value(\"TargetDir\") + \"" _text "${_text}")
     string(REPLACE "\n" "\\n\"\n        + \"" _text "${_text}")

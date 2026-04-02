@@ -25,7 +25,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget_Internals.cmake")
     CMagneto__compose_binary_OUTPUT_NAME
 
     Returns name of target's compiled binary without extension.
-    E.g. `Dish_ContactHolder_Contacts` -> `Dish_ContactHolderX_Contacts`, where "X" is major version of a project.
+    E.g. `DishSW_ContactHolder_Contacts` -> `DishSW_ContactHolderX_Contacts`, where "X" is major version of a project.
 ]]
 function(CMagneto__compose_binary_OUTPUT_NAME iTargetName oBinaryOutputName)
     set(_binaryTargetNamePostfix "${iTargetName}")

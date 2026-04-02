@@ -15,7 +15,7 @@
             "id": "iTarget",
             "type": "promptString",
             "description": "Type target for `launch.json`",
-            "default": "Dish_ContactHolder0_GUI"
+            "default": "DishSW_ContactHolder0_GUI"
         }
     ],
     "configurations": [
