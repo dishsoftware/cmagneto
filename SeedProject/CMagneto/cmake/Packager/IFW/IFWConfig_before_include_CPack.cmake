@@ -12,26 +12,10 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
 
-cmake_path(SET _ifwUiConfigPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Installer.json")
-if(EXISTS "${_ifwUiConfigPath}")
-    file(READ "${_ifwUiConfigPath}" _ifwUiConfigText)
-endif()
-
 function(CMagnetoInternal__ifw_set_package_file_if_exists iVariable iFileName)
     cmake_path(SET _absPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/${iFileName}")
     if(EXISTS "${_absPath}")
         set(${iVariable} "${_absPath}" PARENT_SCOPE)
-    endif()
-endfunction()
-
-function(CMagnetoInternal__ifw_set_string_from_config_if_present iVariable iJsonKey)
-    if(NOT DEFINED _ifwUiConfigText OR "${_ifwUiConfigText}" STREQUAL "")
-        return()
-    endif()
-
-    string(JSON _jsonValue ERROR_VARIABLE _jsonError GET "${_ifwUiConfigText}" "${iJsonKey}")
-    if(NOT _jsonError)
-        set(${iVariable} "${_jsonValue}" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -150,8 +134,7 @@ set(CPACK_IFW_PACKAGE_NAME "${CMagneto__PACKAGING_JSON__PACKAGE_ID}")
 set(CPACK_IFW_PACKAGE_TITLE "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI} Installer")
 set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_IFW_PRODUCT_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}")
-set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagneto__PACKAGING_JSON__PACKAGE_ID}")
-CMagnetoInternal__ifw_set_string_from_config_if_present(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "StartMenuDirectory")
+set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
 
 # Force a consistent wizard presentation on Windows so the installer
 # does not inherit unreadable dark host palette combinations.
