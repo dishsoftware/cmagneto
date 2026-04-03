@@ -191,6 +191,77 @@ endfunction()
 
 
 #[[
+    CMagneto__place_icon_near_executable
+
+    Places a platform-specific icon file near the executable in the build tree and install tree.
+
+    It must be called:
+    - After `${iExeTargetName}` has been created.
+    - From the root `CMakeLists.txt` of `${iExeTargetName}`.
+
+    Parameters:
+    iExeTargetName - The name of the executable target.
+
+    Named arguments (all optional):
+    WINDOWS_ICON - Path to a Windows icon file, typically `.ico`.
+    LINUX_ICON   - Path to a Linux icon file, typically `.png` or `.svg`.
+    MACOS_ICON   - Path to a macOS icon file, typically `.icns`.
+
+    Notes:
+    - Paths are expected to be relative to the executable target source root.
+    - Generated files under the target build base dir are also allowed.
+    - Only the icon matching the current platform is copied.
+    - The copied file keeps its original file name.
+    - The installed icon is placed into `${CMagneto__SUBDIR_EXECUTABLE}`, so packaging includes it as a runtime asset.
+]]
+function(CMagneto__place_icon_near_executable iExeTargetName)
+    CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__place_icon_near_executable")
+
+    cmake_parse_arguments(ARG "" "WINDOWS_ICON;LINUX_ICON;MACOS_ICON" "" ${ARGN})
+
+    if(ARG_WINDOWS_ICON STREQUAL "" AND ARG_LINUX_ICON STREQUAL "" AND ARG_MACOS_ICON STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__place_icon_near_executable(\"${iExeTargetName}\"): at least one of WINDOWS_ICON, LINUX_ICON or MACOS_ICON must be specified.")
+    endif()
+
+    set(_iconPath "")
+    if(WIN32)
+        set(_iconPath "${ARG_WINDOWS_ICON}")
+    elseif(APPLE)
+        set(_iconPath "${ARG_MACOS_ICON}")
+    elseif(UNIX)
+        set(_iconPath "${ARG_LINUX_ICON}")
+    endif()
+
+    if(_iconPath STREQUAL "")
+        return()
+    endif()
+
+    set(_baseDirDescription "executable target \"${iExeTargetName}\" adjacent icon")
+    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${_iconPath}"
+        OUTPUT_ABS_PATHS _iconAbsPaths
+        OUTPUT_REL_PATHS _iconRelPaths
+        IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
+        ALLOW_PATHS_UNDER_BUILD_BASE_DIR
+    )
+    list(GET _iconAbsPaths 0 _iconAbsPath)
+    list(GET _iconRelPaths 0 _iconRelPath)
+    cmake_path(GET _iconRelPath FILENAME _iconFileName)
+
+    add_custom_command(TARGET ${iExeTargetName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${_iconAbsPath}"
+            "$<TARGET_FILE_DIR:${iExeTargetName}>/${_iconFileName}"
+        COMMENT "Copying icon \"${_iconFileName}\" near executable target \"${iExeTargetName}\"."
+    )
+
+    install(FILES "${_iconAbsPath}"
+        DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
+        COMPONENT ${CMagneto__COMPONENT__RUNTIME}
+    )
+endfunction()
+
+
+#[[
     CMagneto__set_project_entrypoint
 
     Sets the project entry point executable.

@@ -69,8 +69,15 @@ CMagneto__set_up__executable(${_TARGET_NAME}
     OTHER_RESOURCES
         ${_other_RESOURCES}
 )
+
 CMagneto__bind_icon_to_exe_binary(${_TARGET_NAME}
     WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+    MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+)
+
+CMagneto__place_icon_near_executable(${_TARGET_NAME}
+    WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+    LINUX_ICON "@resources/AppIcon/ContactHolder.png"
     MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
 )
 
