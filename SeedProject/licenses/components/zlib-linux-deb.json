@@ -1,0 +1,12 @@
+{
+    "id": "zlib-linux-deb",
+    "name": "zlib from Debian/Ubuntu packages",
+    "notes": "Observed in the Ubuntu 24.04 build image at /usr/share/doc/zlib1g-dev/copyright.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "/usr/share/doc/zlib1g-dev/copyright",
+            "install": "licenses/3rd-party/zlib/copyright"
+        }
+    ]
+}

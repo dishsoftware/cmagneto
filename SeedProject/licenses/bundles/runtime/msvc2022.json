@@ -1,0 +1,10 @@
+{
+    "id": "runtime-msvc2022",
+    "name": "Runtime bundle for MSVC 2022 build variants",
+    "components": [
+        "seedproject",
+        "cmagneto",
+        "qt6-base-msvc2022",
+        "zlib-msvc2022"
+    ]
+}

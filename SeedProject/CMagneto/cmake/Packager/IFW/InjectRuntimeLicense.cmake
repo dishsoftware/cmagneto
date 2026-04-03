@@ -33,9 +33,10 @@ endif()
 
 set(_licensesXml [=[
 	<Licenses>
-		<License name="MIT License" file="License.txt" />
+		<License name="MIT License" file="@licenseFileName@" />
 	</Licenses>
 ]=])
+string(REPLACE "@licenseFileName@" "${_licenseFileName}" _licensesXml "${_licensesXml}")
 
 string(REPLACE "</Package>" "${_licensesXml}\n</Package>" _packageXmlText "${_packageXmlText}")
 file(WRITE "${_runtimePackageXml}" "${_packageXmlText}")

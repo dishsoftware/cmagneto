@@ -32,6 +32,9 @@ include(CMakePackageConfigHelpers)
 ## Define constants.
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
+## Define functions and variables for license bundle resolution and installation.
+include("${CMAKE_CURRENT_LIST_DIR}/LicenseManager.cmake")
+
 ## Defines general-purpose functions to simplify integration with CMake generators of build system files.
 include("${CMAKE_CURRENT_LIST_DIR}/GeneratorTools.cmake")
 

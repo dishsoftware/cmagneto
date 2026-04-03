@@ -1,0 +1,12 @@
+{
+    "id": "zlib-msys2-ucrt64",
+    "name": "zlib from MSYS2 UCRT64",
+    "notes": "Bundled with the MinGW build variant.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "$env{MSYS2_HOME}/ucrt64/share/licenses/zlib/LICENSE",
+            "install": "licenses/3rd-party/zlib/LICENSE.txt"
+        }
+    ]
+}

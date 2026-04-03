@@ -27,6 +27,7 @@
         "CMAKE_BUILD_TYPE": "$env{BuildType}",
         "CMAKE_CXX_COMPILER": "$env{MSYS2_HOME}/ucrt64/bin/g++.exe",
         "CMAKE_PREFIX_PATH": "$env{MSYS2_HOME}/ucrt64",
+        "CMagneto__LICENSE_BUNDLE": "runtime/mingw-msys2-ucrt64",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
       }

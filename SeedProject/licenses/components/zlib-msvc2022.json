@@ -1,0 +1,12 @@
+{
+    "id": "zlib-msvc2022",
+    "name": "zlib for MSVC 2022",
+    "notes": "Uses the local zlib installation selected by ZLIB_MSVC2022_DIR.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "$env{ZLIB_MSVC2022_DIR}/share/doc/zlib/zlib/LICENSE",
+            "install": "licenses/3rd-party/zlib/LICENSE.txt"
+        }
+    ]
+}

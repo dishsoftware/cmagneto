@@ -403,8 +403,19 @@ def _renderGraphvizPicture(iGraphvizDotfilePath: Path | None) -> None:
         Log.warning("Graphviz is not found. Target dependency graph picture is not generated.")
 
 
+def _isBuildSystemGenerated(iLayout: ResolvedVariantLayout) -> bool:
+    if not iLayout.buildDir.exists():
+        return False
+
+    requiredEntries = (
+        iLayout.buildDir / "CMakeCache.txt",
+        iLayout.buildDir / "cmake_install.cmake",
+    )
+    return all(path.exists() for path in requiredEntries)
+
+
 def _isBuildDirExist(iLayout: ResolvedVariantLayout) -> bool:
-    return iLayout.buildDir.exists()
+    return _isBuildSystemGenerated(iLayout)
 
 
 def _isBuildSummaryExist(iLayout: ResolvedVariantLayout) -> bool:

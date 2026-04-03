@@ -1,0 +1,12 @@
+{
+    "id": "seedproject",
+    "name": "SeedProject",
+    "notes": "Primary project license shipped with every distributable package.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "LICENSE",
+            "install": "licenses/ProjectLicense.txt"
+        }
+    ]
+}

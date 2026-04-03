@@ -12,15 +12,13 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
 
-
-## Component setup.
 cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
     NAME "runtime"
     DISPLAY_NAME "${COMPONENT__RUNTIME___NAME}"
         ru "${COMPONENT__RUNTIME___NAME_ru}"
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
         ru "${COMPONENT__RUNTIME___DESCRIPTION_ru}"
-    LICENSES "MIT License" "${CMagneto__PACKAGE_RESOURCES_DIR}/License.txt"
+    LICENSES "Project License" "${CMagneto__PROJECT_LICENSE_FILE}"
 )
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}

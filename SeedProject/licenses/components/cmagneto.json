@@ -1,0 +1,12 @@
+{
+    "id": "cmagneto",
+    "name": "CMagneto",
+    "notes": "Bundled framework license copied into the packaged licenses tree.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "CMagneto/LICENSE",
+            "install": "licenses/3rd-party/CMagneto/LICENSE.txt"
+        }
+    ]
+}

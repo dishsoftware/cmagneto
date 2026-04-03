@@ -1,0 +1,10 @@
+{
+    "id": "runtime-mingw-msys2-ucrt64",
+    "name": "Runtime bundle for the MinGW build variant with MSYS2 UCRT64",
+    "components": [
+        "seedproject",
+        "cmagneto",
+        "qt6-base-msys2-ucrt64",
+        "zlib-msys2-ucrt64"
+    ]
+}
