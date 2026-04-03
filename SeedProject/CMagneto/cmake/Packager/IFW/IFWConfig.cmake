@@ -11,10 +11,29 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
+include("${CMAKE_CURRENT_LIST_DIR}/IFWScriptSupport.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/IFWLicenseSupport.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/IFWShortcutSupport.cmake")
 
 cmake_path(SET _ifwLicenseBundleWidgetUi NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/IFW/LicenseBundleWidget.ui")
-CMagnetoInternal__ifw__generate_license_page_component_script(_ifwGeneratedLicensePageScript)
+CMagnetoInternal__ifw__generate_license_page_component_script_text(_ifwLicensePageScriptText)
+CMagnetoInternal__ifw__generate_windows_shortcut_component_script_text(_ifwShortcutScriptText)
+
+set(_ifwRuntimeComponentScriptText "")
+if(NOT _ifwLicensePageScriptText STREQUAL "")
+    string(APPEND _ifwRuntimeComponentScriptText "${_ifwLicensePageScriptText}")
+endif()
+
+if(NOT _ifwShortcutScriptText STREQUAL "")
+    if(_ifwRuntimeComponentScriptText STREQUAL "")
+        string(APPEND _ifwRuntimeComponentScriptText "function Component()\n{\n}\n\n")
+    else()
+        string(APPEND _ifwRuntimeComponentScriptText "\n\n")
+    endif()
+    string(APPEND _ifwRuntimeComponentScriptText "${_ifwShortcutScriptText}")
+endif()
+
+CMagnetoInternal__ifw__write_runtime_component_script("${_ifwRuntimeComponentScriptText}" _ifwGeneratedRuntimeComponentScript)
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
     NAME "runtime"
@@ -23,7 +42,7 @@ cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
         ru "${COMPONENT__RUNTIME___DESCRIPTION_ru}"
     USER_INTERFACES "${_ifwLicenseBundleWidgetUi}"
-    SCRIPT "${_ifwGeneratedLicensePageScript}"
+    SCRIPT "${_ifwGeneratedRuntimeComponentScript}"
 )
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}

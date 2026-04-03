@@ -363,6 +363,7 @@ To match that theme, the image assets should probably look like this:
 
 After the asset set is normalized, this directory should ideally contain:
 
+- `Installer.json`
 - `Finished.html`
 - `Installer.qss`
 - `LicenseBundleWidget.ui`
@@ -380,9 +381,33 @@ Optional:
 
 - `PackageWatermark.png`
 
-Candidate for removal:
+## Installer.json
 
-- `Installer.json`
+`Installer.json` configures Windows-specific IFW shortcut behavior.
+
+Current fields:
+
+- `StartMenuDirectory`
+  Name of the Start Menu folder used by IFW on Windows.
+
+- `CreateStartMenuShortcut`
+  Boolean flag. If `true`, CMagneto generates a Start Menu shortcut to the project entrypoint executable.
+
+- `StartMenuShortcutName`
+  File name of the Start Menu shortcut, without `.lnk`.
+
+- `CreateDesktopShortcut`
+  Boolean flag. If `true`, CMagneto generates a desktop shortcut to the project entrypoint executable.
+
+- `DesktopShortcutName`
+  File name of the desktop shortcut, without `.lnk`.
+
+Notes:
+
+- Shortcut generation currently applies to IFW packages on Windows.
+- Shortcuts are created for the executable previously registered through `CMagneto__set_project_entrypoint(...)`.
+- The shortcut icon comes from the installed executable, so on Windows the best result is to also embed a `.ico` into that executable with `CMagneto__bind_icon_to_exe_binary(...)`.
+- ZIP packages do not create Start Menu or desktop shortcuts.
 
 ## Small code follow-ups that would improve cross-platform behavior
 

@@ -310,6 +310,20 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     - The file is copied next to the built executable and installed into `bin/`, so packages include it too.
     - This function does not bind the icon to the executable binary itself. Use `CMagneto__bind_icon_to_exe_binary(...)` for that.
 
+   If you build IFW packages on Windows and want Start Menu and desktop shortcuts, configure them in `./packaging/@resources/IFW/Installer.json`, for example:
+    ```json
+    {
+      "StartMenuDirectory": "DishSW",
+      "CreateStartMenuShortcut": true,
+      "StartMenuShortcutName": "Contact Holder",
+      "CreateDesktopShortcut": false
+    }
+    ```
+    Notes:
+    - Shortcut generation currently applies to IFW packages on Windows.
+    - CMagneto creates shortcuts for the executable registered through `CMagneto__set_project_entrypoint(...)`.
+    - ZIP packages do not create Start Menu or desktop shortcuts.
+
 8) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
     {

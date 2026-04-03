@@ -10,16 +10,9 @@
 
 include_guard(GLOBAL)
 
-function(CMagnetoInternal__ifw__escape_js_string iInputText oEscapedText)
-    set(_text "${iInputText}")
-    string(REPLACE "\\" "\\\\" _text "${_text}")
-    string(REPLACE "\"" "\\\"" _text "${_text}")
-    string(REPLACE "\r" "" _text "${_text}")
-    string(REPLACE "\n" "\\n" _text "${_text}")
-    set(${oEscapedText} "${_text}" PARENT_SCOPE)
-endfunction()
+include("${CMAKE_CURRENT_LIST_DIR}/IFWScriptSupport.cmake")
 
-function(CMagnetoInternal__ifw__generate_license_page_component_script oScriptPath)
+function(CMagnetoInternal__ifw__generate_license_page_component_script_text oScriptText)
     set(_bundleFileEntries ${CMagneto__LICENSE_BUNDLE_FILE_ENTRIES})
     if(NOT _bundleFileEntries)
         get_property(_bundleFileEntries GLOBAL PROPERTY CMagneto__LICENSE_BUNDLE_FILE_ENTRIES)
@@ -27,12 +20,11 @@ function(CMagnetoInternal__ifw__generate_license_page_component_script oScriptPa
 
     list(LENGTH _bundleFileEntries _entriesCount)
     if(_entriesCount EQUAL 0)
-        set(${oScriptPath} "" PARENT_SCOPE)
+        set(${oScriptText} "" PARENT_SCOPE)
         return()
     endif()
 
-    cmake_path(SET _generatedScriptPath NORMALIZE "${CMAKE_CURRENT_BINARY_DIR}/CMagnetoGeneratedIfwLicensePageComponentScript.qs")
-    file(WRITE "${_generatedScriptPath}" [=[
+    set(_scriptText [=[
 var CMagnetoInternal__ifw_legalFiles = [
 ]=])
 
@@ -60,13 +52,13 @@ var CMagnetoInternal__ifw_legalFiles = [
             "    }"
         )
         if(NOT _isFirstLegalFile)
-            file(APPEND "${_generatedScriptPath}" ",\n")
+            string(APPEND _scriptText ",\n")
         endif()
-        file(APPEND "${_generatedScriptPath}" "${_legalFileObjectText}")
+        string(APPEND _scriptText "${_legalFileObjectText}")
         set(_isFirstLegalFile FALSE)
     endforeach()
 
-    file(APPEND "${_generatedScriptPath}" [=[
+    string(APPEND _scriptText [=[
 ];
 
 function Component()
@@ -281,5 +273,6 @@ Component.prototype.CMagnetoInternal__ifw_populateLegalFilesBrowser = function(w
     }
 }
 ]=])
-    set(${oScriptPath} "${_generatedScriptPath}" PARENT_SCOPE)
+
+    set(${oScriptText} "${_scriptText}" PARENT_SCOPE)
 endfunction()
