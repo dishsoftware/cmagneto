@@ -124,6 +124,10 @@ SeedProject/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
+├── licenses/                              # Installed/package legal files configuration and checked-in legal resources.
+|   ├── bundles/                           # License bundle manifests selected by build variants.
+|   ├── components/                        # Reusable license component manifests.
+|   └── 3rd-party/                         # Optional checked-in third-party legal files.
 ├── CMakePresets.json                      # Root preset manifest that includes concrete variant files from ./build_variants/.
 ├── build_variants/                        # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
@@ -180,6 +184,9 @@ SeedProject/
 
 ## Code Conventions
 Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
+
+## License Management
+Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
 
 ---
 
