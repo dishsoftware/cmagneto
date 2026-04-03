@@ -124,6 +124,73 @@ endfunction()
 
 
 #[[
+    CMagneto__bind_icon_to_exe_binary
+
+    Binds platform-specific application icons to the executable binary target `${iExeTargetName}`.
+
+    It must be called:
+    - After `${iExeTargetName}` has been created.
+    - From the root `CMakeLists.txt` of `${iExeTargetName}`.
+
+    Parameters:
+    iExeTargetName - The name of the executable target.
+
+    Named arguments (all optional):
+    WINDOWS_ICON - Path to a Windows `.ico` file to embed into the executable binary.
+    MACOS_ICON   - Path to a macOS `.icns` file to attach to the app bundle.
+
+    Notes:
+    - Paths are expected to be relative to the executable target source root.
+    - Generated files under the target build base dir are also allowed.
+    - Linux executables do not have a standard embedded desktop icon concept, so this function is a no-op there.
+    - On macOS, the icon only takes effect for `MACOSX_BUNDLE` executables.
+]]
+function(CMagneto__bind_icon_to_exe_binary iExeTargetName)
+    CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__bind_icon_to_exe_binary")
+
+    cmake_parse_arguments(ARG "" "WINDOWS_ICON;MACOS_ICON" "" ${ARGN})
+
+    if(ARG_WINDOWS_ICON STREQUAL "" AND ARG_MACOS_ICON STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bind_icon_to_exe_binary(\"${iExeTargetName}\"): at least one of WINDOWS_ICON or MACOS_ICON must be specified.")
+    endif()
+
+    set(_baseDirDescription "executable target \"${iExeTargetName}\" app icon")
+
+    if(WIN32 AND NOT ARG_WINDOWS_ICON STREQUAL "")
+        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_WINDOWS_ICON}"
+            OUTPUT_ABS_PATHS _windowsIconAbsPaths
+            IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
+            ALLOW_PATHS_UNDER_BUILD_BASE_DIR
+        )
+        list(GET _windowsIconAbsPaths 0 _windowsIconAbsPath)
+        CMagnetoInternal__set_up_windows_executable_icon("${iExeTargetName}" "${_windowsIconAbsPath}")
+    endif()
+
+    if(APPLE AND NOT ARG_MACOS_ICON STREQUAL "")
+        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_MACOS_ICON}"
+            OUTPUT_ABS_PATHS _macIconAbsPaths
+            OUTPUT_REL_PATHS _macIconRelPaths
+            IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
+            ALLOW_PATHS_UNDER_BUILD_BASE_DIR
+        )
+        list(GET _macIconAbsPaths 0 _macIconAbsPath)
+        list(GET _macIconRelPaths 0 _macIconRelPath)
+
+        get_target_property(_isMacBundle ${iExeTargetName} MACOSX_BUNDLE)
+        if(NOT _isMacBundle)
+            CMagnetoInternal__message(WARNING "CMagneto__bind_icon_to_exe_binary(\"${iExeTargetName}\"): target is not a MACOSX_BUNDLE executable, so MACOS_ICON has no effect.")
+            return()
+        endif()
+
+        cmake_path(GET _macIconRelPath FILENAME _macIconFileName)
+        set_source_files_properties("${_macIconAbsPath}" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+        target_sources(${iExeTargetName} PRIVATE "${_macIconAbsPath}")
+        set_target_properties(${iExeTargetName} PROPERTIES MACOSX_BUNDLE_ICON_FILE "${_macIconFileName}")
+    endif()
+endfunction()
+
+
+#[[
     CMagneto__set_project_entrypoint
 
     Sets the project entry point executable.

@@ -69,6 +69,10 @@ CMagneto__set_up__executable(${_TARGET_NAME}
     OTHER_RESOURCES
         ${_other_RESOURCES}
 )
+CMagneto__bind_icon_to_exe_binary(${_TARGET_NAME}
+    WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+    MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+)
 
 CMagneto__embed_QtRC_resources(${_TARGET_NAME} QtRC
     PREFIX "/DishSW/ContactHolder/GUI/"

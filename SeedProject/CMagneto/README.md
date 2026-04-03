@@ -281,7 +281,21 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
+6) If an executable should have a custom file-browser / shell icon, place icon files under the target source root, for example in `@resources/AppIcon/`, and call:
+    ```cmake
+    CMagneto__bind_icon_to_exe_binary(DishSW_ContactHolder_GUI
+        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+        MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+    )
+    ```
+    Notes:
+    - The function must be called after `add_executable(...)`.
+    - You may specify only `WINDOWS_ICON`, only `MACOS_ICON`, or both.
+    - On Windows, the `.ico` file is embedded into the `.exe` binary.
+    - On macOS, the `.icns` file is attached to the app bundle and only takes effect for `MACOSX_BUNDLE` executables.
+    - On Linux, the function is currently a no-op because ELF executables do not have a standard embedded desktop icon mechanism.
+
+7) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
     {
       "cacheVariables": {
@@ -301,22 +315,22 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
     Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)`, `CMagneto__bundle_external_shared_libraries(...)`, `CMagneto__bundle_runtime_dependency_files(...)`, or `CMagneto__exclude_bundled_runtime_dependency_file_patterns(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
-7) If the project defines an executable target, which is considered as the project entrypoint, call
+8) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-8) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+9) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         ... # List the files to embed here.
     )
     ```
 
-9) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+10) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
 
-10) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+11) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 
@@ -333,7 +347,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-11) After all targets are set up, call: `CMagneto__set_up__project()`.
+12) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;
