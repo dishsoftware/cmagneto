@@ -188,8 +188,6 @@ set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_IFW_PRODUCT_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}")
 set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
 
-list(APPEND CPACK_PRE_BUILD_SCRIPTS "${CMAKE_CURRENT_LIST_DIR}/InjectRuntimeLicense.cmake")
-
 # Force a consistent wizard presentation on Windows so the installer
 # does not inherit unreadable dark host palette combinations.
 if(WIN32)

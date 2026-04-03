@@ -11,6 +11,10 @@
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
 include(CPackIFW)
+include("${CMAKE_CURRENT_LIST_DIR}/IFWLicenseSupport.cmake")
+
+cmake_path(SET _ifwLicenseBundleWidgetUi NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/IFW/LicenseBundleWidget.ui")
+CMagnetoInternal__ifw__generate_license_page_component_script(_ifwGeneratedLicensePageScript)
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
     NAME "runtime"
@@ -18,7 +22,8 @@ cpack_ifw_configure_component(${CMagneto__COMPONENT__RUNTIME}
         ru "${COMPONENT__RUNTIME___NAME_ru}"
     DESCRIPTION "${COMPONENT__RUNTIME___DESCRIPTION}"
         ru "${COMPONENT__RUNTIME___DESCRIPTION_ru}"
-    LICENSES "Project License" "${CMagneto__PROJECT_LICENSE_FILE}"
+    USER_INTERFACES "${_ifwLicenseBundleWidgetUi}"
+    SCRIPT "${_ifwGeneratedLicensePageScript}"
 )
 
 cpack_ifw_configure_component(${CMagneto__COMPONENT__DEVELOPMENT}
