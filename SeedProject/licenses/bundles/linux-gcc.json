@@ -1,6 +1,6 @@
 {
-    "id": "runtime-linux-gcc",
-    "name": "Runtime bundle for the Makefiles_GCC build variant",
+    "id": "linux-gcc",
+    "name": "Distribution bundle for the Makefiles_GCC build variant",
     "components": [
         "seedproject",
         "cmagneto",

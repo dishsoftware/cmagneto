@@ -25,7 +25,7 @@ cmake_path(SET CMagneto__LICENSE_COMPONENTS_DIR NORMALIZE "${CMagneto__LICENSES_
 cmake_path(SET CMagneto__LICENSE_BUNDLES_DIR NORMALIZE "${CMagneto__LICENSES_DIR}/${CMagneto__SUBDIR_LICENSE_BUNDLES}")
 cmake_path(SET CMagneto__PROJECT_LICENSE_FILE NORMALIZE "${CMAKE_SOURCE_DIR}/LICENSE")
 
-set(CMagneto__LICENSE_BUNDLE "runtime/default"
+set(CMagneto__LICENSE_BUNDLE "default"
     CACHE STRING "License bundle to install and package, resolved relative to licenses/bundles/."
 )
 

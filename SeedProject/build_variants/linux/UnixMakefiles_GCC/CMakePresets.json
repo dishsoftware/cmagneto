@@ -23,7 +23,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "$env{BuildType}",
         "CMAKE_CXX_COMPILER": "g++",
-        "CMagneto__LICENSE_BUNDLE": "runtime/linux-gcc",
+        "CMagneto__LICENSE_BUNDLE": "linux-gcc",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
       }

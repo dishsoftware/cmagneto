@@ -1,0 +1,8 @@
+{
+    "id": "default",
+    "name": "Default distribution bundle",
+    "components": [
+        "seedproject",
+        "cmagneto"
+    ]
+}

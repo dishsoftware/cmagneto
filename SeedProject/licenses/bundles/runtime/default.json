@@ -1,8 +1,0 @@
-{
-    "id": "runtime-default",
-    "name": "Default runtime distribution bundle",
-    "components": [
-        "seedproject",
-        "cmagneto"
-    ]
-}

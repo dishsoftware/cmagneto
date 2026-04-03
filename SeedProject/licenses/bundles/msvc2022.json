@@ -1,6 +1,6 @@
 {
-    "id": "runtime-msvc2022",
-    "name": "Runtime bundle for MSVC 2022 build variants",
+    "id": "msvc2022",
+    "name": "Distribution bundle for MSVC 2022 build variants",
     "components": [
         "seedproject",
         "cmagneto",
