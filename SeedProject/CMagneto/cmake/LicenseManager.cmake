@@ -122,7 +122,23 @@ function(CMagnetoInternal__licenses__install_file iSourceAbs iInstallRel)
     )
 endfunction()
 
-function(CMagnetoInternal__licenses__install_component_from_manifest iComponentManifestPath oBundleFileEntries)
+function(CMagnetoInternal__licenses__set_up_build_tree_file iSourceAbs iInstallRel oBuildTreeOutputPath)
+    CMagnetoInternal__licenses__normalize_relative_path("${iInstallRel}" _installRelNormalized)
+    cmake_path(SET _buildTreeOutputPath NORMALIZE "${CMAKE_BINARY_DIR}/${_installRelNormalized}")
+    cmake_path(GET _buildTreeOutputPath PARENT_PATH _buildTreeOutputDir)
+
+    add_custom_command(
+        OUTPUT "${_buildTreeOutputPath}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${_buildTreeOutputDir}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${iSourceAbs}" "${_buildTreeOutputPath}"
+        DEPENDS "${iSourceAbs}"
+        COMMENT "Copying legal file into build tree: ${_installRelNormalized}"
+    )
+
+    set(${oBuildTreeOutputPath} "${_buildTreeOutputPath}" PARENT_SCOPE)
+endfunction()
+
+function(CMagnetoInternal__licenses__install_component_from_manifest iComponentManifestPath oBundleFileEntries oBuildTreeOutputs)
     file(READ "${iComponentManifestPath}" _componentJson)
 
     string(JSON _componentId GET "${_componentJson}" id)
@@ -133,10 +149,12 @@ function(CMagnetoInternal__licenses__install_component_from_manifest iComponentM
             "License component \"${_componentId}\" from \"${iComponentManifestPath}\" does not define any files."
         )
         set(${oBundleFileEntries} "" PARENT_SCOPE)
+        set(${oBuildTreeOutputs} "" PARENT_SCOPE)
         return()
     endif()
 
     set(_componentBundleFileEntries)
+    set(_componentBuildTreeOutputs)
     math(EXPR _lastFileIndex "${_filesCount} - 1")
     foreach(_fileIndex RANGE 0 ${_lastFileIndex})
         set(_kind "unspecified")
@@ -149,7 +167,9 @@ function(CMagnetoInternal__licenses__install_component_from_manifest iComponentM
         string(JSON _installRel GET "${_componentJson}" files ${_fileIndex} install)
         CMagnetoInternal__licenses__resolve_source_path("${_sourceRel}" _sourceAbs)
         CMagnetoInternal__licenses__install_file("${_sourceAbs}" "${_installRel}")
+        CMagnetoInternal__licenses__set_up_build_tree_file("${_sourceAbs}" "${_installRel}" _buildTreeOutputPath)
         CMagnetoInternal__licenses__normalize_relative_path("${_installRel}" _installRelNormalized)
+        list(APPEND _componentBuildTreeOutputs "${_buildTreeOutputPath}")
         list(APPEND _componentBundleFileEntries
             "${_componentName}"
             "${_filesCount}"
@@ -160,6 +180,7 @@ function(CMagnetoInternal__licenses__install_component_from_manifest iComponentM
     endforeach()
 
     set(${oBundleFileEntries} "${_componentBundleFileEntries}" PARENT_SCOPE)
+    set(${oBuildTreeOutputs} "${_componentBuildTreeOutputs}" PARENT_SCOPE)
 endfunction()
 
 function(CMagneto__set_up__license_bundle_installation)
@@ -181,6 +202,7 @@ function(CMagneto__set_up__license_bundle_installation)
     endif()
 
     set(_bundleFileEntries)
+    set(_bundleBuildTreeOutputs)
     math(EXPR _lastComponentIndex "${_componentsCount} - 1")
     foreach(_componentIndex RANGE 0 ${_lastComponentIndex})
         string(JSON _componentRef GET "${_bundleJson}" components ${_componentIndex})
@@ -192,9 +214,17 @@ function(CMagneto__set_up__license_bundle_installation)
         CMagnetoInternal__licenses__install_component_from_manifest(
             "${_componentManifestPath}"
             _componentBundleFileEntries
+            _componentBuildTreeOutputs
         )
         list(APPEND _bundleFileEntries ${_componentBundleFileEntries})
+        list(APPEND _bundleBuildTreeOutputs ${_componentBuildTreeOutputs})
     endforeach()
+
+    if(_bundleBuildTreeOutputs)
+        add_custom_target(CMagneto__build_tree_legal_files ALL
+            DEPENDS ${_bundleBuildTreeOutputs}
+        )
+    endif()
 
     set(CMagneto__LICENSE_BUNDLE_FILE_ENTRIES "${_bundleFileEntries}" PARENT_SCOPE)
     set_property(GLOBAL PROPERTY CMagneto__LICENSE_BUNDLE_FILE_ENTRIES "${_bundleFileEntries}")
