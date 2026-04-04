@@ -94,7 +94,7 @@ endfunction()
 
     Icon inputs may be provided either as source-root-relative paths
     (`WINDOWS_ICON`, `LINUX_ICON`) or as already-resolved absolute paths
-    (`WINDOWS_ICON_ABS_PATH`, `LINUX_ICON_ABS_PATH`).
+    (`RESOLVED_WINDOWS_ICON_ABS_PATH`, `RESOLVED_LINUX_ICON_ABS_PATH`).
 
     Stored metadata:
     - generated entry id
@@ -102,6 +102,7 @@ endfunction()
     - normalized installed file path
     - installed Windows icon path, if provided
     - installed Linux icon path, if provided
+    - whether the launcher should start in a terminal, if requested
 
     Side effects:
     - installs the optional Windows and Linux icon assets into
@@ -114,31 +115,36 @@ endfunction()
     - DEB on Linux for `.desktop` launchers
 ]]
 function(CMagnetoInternal__application_menu__register_entry iEntryName iInstalledFilePath)
-    cmake_parse_arguments(ARG "" "WINDOWS_ICON;LINUX_ICON;WINDOWS_ICON_ABS_PATH;LINUX_ICON_ABS_PATH" "" ${ARGN})
+    cmake_parse_arguments(APP_MENU_ENTRY "LAUNCH_IN_TERMINAL" "WINDOWS_ICON;LINUX_ICON;RESOLVED_WINDOWS_ICON_ABS_PATH;RESOLVED_LINUX_ICON_ABS_PATH" "" ${ARGN})
 
-    if(iEntryName STREQUAL "")
+    if("${iEntryName}" STREQUAL "")
         CMagnetoInternal__message(FATAL_ERROR "CMagneto application-menu registration for installed file \"${iInstalledFilePath}\": NAME must be specified.")
     endif()
 
     CMagnetoInternal__application_menu__normalize_installed_file_path("${iInstalledFilePath}" _normalizedInstalledFilePath)
     CMagnetoInternal__application_menu__make_entry_id("${iEntryName}" _entryId)
 
-    if(NOT ARG_WINDOWS_ICON STREQUAL "" AND NOT ARG_WINDOWS_ICON_ABS_PATH STREQUAL "")
-        CMagnetoInternal__message(FATAL_ERROR "CMagneto application-menu registration for installed file \"${iInstalledFilePath}\": WINDOWS_ICON and WINDOWS_ICON_ABS_PATH are mutually exclusive.")
+    if(NOT "${APP_MENU_ENTRY_WINDOWS_ICON}" STREQUAL "" AND NOT "${APP_MENU_ENTRY_RESOLVED_WINDOWS_ICON_ABS_PATH}" STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto application-menu registration for installed file \"${iInstalledFilePath}\": WINDOWS_ICON and RESOLVED_WINDOWS_ICON_ABS_PATH are mutually exclusive.")
     endif()
 
-    if(NOT ARG_LINUX_ICON STREQUAL "" AND NOT ARG_LINUX_ICON_ABS_PATH STREQUAL "")
-        CMagnetoInternal__message(FATAL_ERROR "CMagneto application-menu registration for installed file \"${iInstalledFilePath}\": LINUX_ICON and LINUX_ICON_ABS_PATH are mutually exclusive.")
+    if(NOT "${APP_MENU_ENTRY_LINUX_ICON}" STREQUAL "" AND NOT "${APP_MENU_ENTRY_RESOLVED_LINUX_ICON_ABS_PATH}" STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto application-menu registration for installed file \"${iInstalledFilePath}\": LINUX_ICON and RESOLVED_LINUX_ICON_ABS_PATH are mutually exclusive.")
+    endif()
+
+    set(_launchInTerminal FALSE)
+    if(APP_MENU_ENTRY_LAUNCH_IN_TERMINAL)
+        set(_launchInTerminal TRUE)
     endif()
 
     set(_windowsIconInstallRelPath "")
-    if(NOT ARG_WINDOWS_ICON STREQUAL "" OR NOT ARG_WINDOWS_ICON_ABS_PATH STREQUAL "")
-        if(NOT ARG_WINDOWS_ICON_ABS_PATH STREQUAL "")
-            set(_windowsIconAbsPath "${ARG_WINDOWS_ICON_ABS_PATH}")
+    if(NOT "${APP_MENU_ENTRY_WINDOWS_ICON}" STREQUAL "" OR NOT "${APP_MENU_ENTRY_RESOLVED_WINDOWS_ICON_ABS_PATH}" STREQUAL "")
+        if(NOT "${APP_MENU_ENTRY_RESOLVED_WINDOWS_ICON_ABS_PATH}" STREQUAL "")
+            set(_windowsIconAbsPath "${APP_MENU_ENTRY_RESOLVED_WINDOWS_ICON_ABS_PATH}")
             cmake_path(GET _windowsIconAbsPath EXTENSION _windowsIconExtension)
         else()
             set(_baseDirDescription "application-menu entry \"${iEntryName}\"")
-            CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription} Windows icon" "${ARG_WINDOWS_ICON}"
+            CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription} Windows icon" "${APP_MENU_ENTRY_WINDOWS_ICON}"
                 OUTPUT_ABS_PATHS _windowsIconAbsPaths
                 OUTPUT_REL_PATHS _windowsIconRelPaths
                 IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
@@ -148,7 +154,7 @@ function(CMagnetoInternal__application_menu__register_entry iEntryName iInstalle
             list(GET _windowsIconRelPaths 0 _windowsIconRelPath)
             cmake_path(GET _windowsIconRelPath EXTENSION _windowsIconExtension)
         endif()
-        if(_windowsIconExtension STREQUAL "")
+        if("${_windowsIconExtension}" STREQUAL "")
             set(_windowsIconExtension ".ico")
         endif()
 
@@ -164,13 +170,13 @@ function(CMagnetoInternal__application_menu__register_entry iEntryName iInstalle
     endif()
 
     set(_linuxIconInstallRelPath "")
-    if(NOT ARG_LINUX_ICON STREQUAL "" OR NOT ARG_LINUX_ICON_ABS_PATH STREQUAL "")
-        if(NOT ARG_LINUX_ICON_ABS_PATH STREQUAL "")
-            set(_linuxIconAbsPath "${ARG_LINUX_ICON_ABS_PATH}")
+    if(NOT "${APP_MENU_ENTRY_LINUX_ICON}" STREQUAL "" OR NOT "${APP_MENU_ENTRY_RESOLVED_LINUX_ICON_ABS_PATH}" STREQUAL "")
+        if(NOT "${APP_MENU_ENTRY_RESOLVED_LINUX_ICON_ABS_PATH}" STREQUAL "")
+            set(_linuxIconAbsPath "${APP_MENU_ENTRY_RESOLVED_LINUX_ICON_ABS_PATH}")
             cmake_path(GET _linuxIconAbsPath EXTENSION _linuxIconExtension)
         else()
             set(_baseDirDescription "application-menu entry \"${iEntryName}\"")
-            CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription} Linux icon" "${ARG_LINUX_ICON}"
+            CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription} Linux icon" "${APP_MENU_ENTRY_LINUX_ICON}"
                 OUTPUT_ABS_PATHS _linuxIconAbsPaths
                 OUTPUT_REL_PATHS _linuxIconRelPaths
                 IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
@@ -180,7 +186,7 @@ function(CMagnetoInternal__application_menu__register_entry iEntryName iInstalle
             list(GET _linuxIconRelPaths 0 _linuxIconRelPath)
             cmake_path(GET _linuxIconRelPath EXTENSION _linuxIconExtension)
         endif()
-        if(_linuxIconExtension STREQUAL "")
+        if("${_linuxIconExtension}" STREQUAL "")
             set(_linuxIconExtension ".png")
         endif()
 
@@ -202,6 +208,7 @@ function(CMagnetoInternal__application_menu__register_entry iEntryName iInstalle
         "${_normalizedInstalledFilePath}"
         "${_windowsIconInstallRelPath}"
         "${_linuxIconInstallRelPath}"
+        "${_launchInTerminal}"
     )
     set_property(GLOBAL PROPERTY CMagnetoInternal__ApplicationMenuEntries "${_applicationMenuEntries}")
 endfunction()
@@ -212,7 +219,9 @@ endfunction()
     Registers an executable target as an application-menu entry.
 
     Named arguments:
-    NAME - Display name of the menu entry.
+    NAME               - Display name of the menu entry.
+    LAUNCH_IN_TERMINAL - Request launching through a terminal window on platforms
+                         whose launcher formats support that concept.
 
     Notes:
     - The executable target itself must already exist.
@@ -226,8 +235,8 @@ endfunction()
 function(CMagneto__add_executable_to_application_menu iExeTargetName)
     CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__add_executable_to_application_menu")
 
-    cmake_parse_arguments(ARG "" "NAME" "" ${ARGN})
-    if(ARG_NAME STREQUAL "")
+    cmake_parse_arguments(EXE_MENU_ENTRY "LAUNCH_IN_TERMINAL" "NAME" "" ${ARGN})
+    if("${EXE_MENU_ENTRY_NAME}" STREQUAL "")
         CMagnetoInternal__message(FATAL_ERROR "CMagneto__add_executable_to_application_menu(\"${iExeTargetName}\"): NAME must be specified.")
     endif()
 
@@ -237,10 +246,15 @@ function(CMagneto__add_executable_to_application_menu iExeTargetName)
 
     CMagnetoInternal__get_executable_icon_metadata("${iExeTargetName}" _windowsIconAbsPath _linuxIconAbsPath _macIconAbsPath)
 
-    CMagnetoInternal__application_menu__register_entry("${ARG_NAME}" "${_installedFilePath}"
-        WINDOWS_ICON_ABS_PATH "${_windowsIconAbsPath}"
-        LINUX_ICON_ABS_PATH "${_linuxIconAbsPath}"
+    set(_registerEntryArgs
+        RESOLVED_WINDOWS_ICON_ABS_PATH "${_windowsIconAbsPath}"
+        RESOLVED_LINUX_ICON_ABS_PATH "${_linuxIconAbsPath}"
     )
+    if(EXE_MENU_ENTRY_LAUNCH_IN_TERMINAL)
+        list(APPEND _registerEntryArgs LAUNCH_IN_TERMINAL)
+    endif()
+
+    CMagnetoInternal__application_menu__register_entry("${EXE_MENU_ENTRY_NAME}" "${_installedFilePath}" ${_registerEntryArgs})
 endfunction()
 
 #[[
@@ -249,10 +263,12 @@ endfunction()
     Registers an installed file, specified relative to the installation prefix, as an application-menu entry.
 
     Named arguments:
-    NAME         - Display name of the menu entry.
-    WINDOWS_ICON - Optional `.ico` file to use for Windows launcher shortcuts.
-    LINUX_ICON   - Optional Linux icon asset used by Linux launcher backends such
-                   as the DEB `.desktop` integration.
+    NAME               - Display name of the menu entry.
+    WINDOWS_ICON       - Optional `.ico` file to use for Windows launcher shortcuts.
+    LINUX_ICON         - Optional Linux icon asset used by Linux launcher backends such
+                         as the DEB `.desktop` integration.
+    LAUNCH_IN_TERMINAL - Request launching through a terminal window on platforms
+                         whose launcher formats support that concept.
 
     Notes:
     - `iInstalledFilePath` must be relative to the final installation prefix.
@@ -262,13 +278,18 @@ endfunction()
       integration metadata and related icon assets.
 ]]
 function(CMagneto__add_installed_file_to_application_menu iInstalledFilePath)
-    cmake_parse_arguments(ARG "" "NAME;WINDOWS_ICON;LINUX_ICON" "" ${ARGN})
-    if(ARG_NAME STREQUAL "")
+    cmake_parse_arguments(INSTALLED_FILE_MENU_ENTRY "LAUNCH_IN_TERMINAL" "NAME;WINDOWS_ICON;LINUX_ICON" "" ${ARGN})
+    if("${INSTALLED_FILE_MENU_ENTRY_NAME}" STREQUAL "")
         CMagnetoInternal__message(FATAL_ERROR "CMagneto__add_installed_file_to_application_menu(\"${iInstalledFilePath}\"): NAME must be specified.")
     endif()
 
-    CMagnetoInternal__application_menu__register_entry("${ARG_NAME}" "${iInstalledFilePath}"
-        WINDOWS_ICON "${ARG_WINDOWS_ICON}"
-        LINUX_ICON "${ARG_LINUX_ICON}"
+    set(_registerEntryArgs
+        WINDOWS_ICON "${INSTALLED_FILE_MENU_ENTRY_WINDOWS_ICON}"
+        LINUX_ICON "${INSTALLED_FILE_MENU_ENTRY_LINUX_ICON}"
     )
+    if(INSTALLED_FILE_MENU_ENTRY_LAUNCH_IN_TERMINAL)
+        list(APPEND _registerEntryArgs LAUNCH_IN_TERMINAL)
+    endif()
+
+    CMagnetoInternal__application_menu__register_entry("${INSTALLED_FILE_MENU_ENTRY_NAME}" "${iInstalledFilePath}" ${_registerEntryArgs})
 endfunction()

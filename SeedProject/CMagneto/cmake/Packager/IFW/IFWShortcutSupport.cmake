@@ -34,8 +34,8 @@ Component.prototype.createOperations = function()
         return;
 ]=])
 
-    math(EXPR _lastEntryIndex "${_entriesCount} - 5")
-    foreach(_entryIndex RANGE 0 ${_lastEntryIndex} 5)
+    math(EXPR _lastEntryIndex "${_entriesCount} - 6")
+    foreach(_entryIndex RANGE 0 ${_lastEntryIndex} 6)
         math(EXPR _nameIndex "${_entryIndex} + 1")
         math(EXPR _targetPathIndex "${_entryIndex} + 2")
         math(EXPR _windowsIconInstallPathIndex "${_entryIndex} + 3")

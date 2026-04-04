@@ -88,16 +88,24 @@ function(CMagnetoInternal__deb__write_linux_desktop_entry_assets)
 
     set(_desktopAssetInstallDir "${CMagneto__SUBDIR_APPLICATION_MENU_ASSETS}desktop-entries")
 
-    math(EXPR _lastEntryIndex "${_entriesCount} - 5")
-    foreach(_entryIndex RANGE 0 ${_lastEntryIndex} 5)
+    math(EXPR _lastEntryIndex "${_entriesCount} - 6")
+    foreach(_entryIndex RANGE 0 ${_lastEntryIndex} 6)
         math(EXPR _nameIndex "${_entryIndex} + 1")
         math(EXPR _targetPathIndex "${_entryIndex} + 2")
         math(EXPR _linuxIconInstallPathIndex "${_entryIndex} + 4")
+        math(EXPR _launchInTerminalIndex "${_entryIndex} + 5")
 
         list(GET _applicationMenuEntries ${_entryIndex} _entryId)
         list(GET _applicationMenuEntries ${_nameIndex} _entryName)
         list(GET _applicationMenuEntries ${_targetPathIndex} _installedFileRelPath)
         list(GET _applicationMenuEntries ${_linuxIconInstallPathIndex} _linuxIconInstallPath)
+        list(GET _applicationMenuEntries ${_launchInTerminalIndex} _launchInTerminal)
+
+        if(_launchInTerminal)
+            set(_terminalFieldValue "true")
+        else()
+            set(_terminalFieldValue "false")
+        endif()
 
         set(_desktopFileName "${CMagneto__PACKAGING_JSON__PACKAGE_ID}.${_entryId}.desktop")
         set(_desktopAssetInstallRelPath "${_desktopAssetInstallDir}/${_desktopFileName}")
@@ -126,7 +134,7 @@ function(CMagnetoInternal__deb__write_linux_desktop_entry_assets)
             "Exec=${_launcherExecEscaped}"
             "TryExec=${_launcherTryExecEscaped}"
             "Path=${_launcherWorkingDirEscaped}"
-            "Terminal=false"
+            "Terminal=${_terminalFieldValue}"
             "Categories=Utility\\;"
             "StartupNotify=true"
         )

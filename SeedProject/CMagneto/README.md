@@ -312,6 +312,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```cmake
     CMagneto__add_executable_to_application_menu(DishSW_ContactHolder_GUI
         NAME "Contact Holder"
+        # LAUNCH_IN_TERMINAL
     )
     ```
     If another installed file should appear there instead, register it by its install-relative path:
@@ -319,15 +320,18 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     CMagneto__add_installed_file_to_application_menu("bin/MyHelper.exe"
         NAME "My Helper"
         WINDOWS_ICON "@resources/AppIcon/MyHelper.ico"
+        # LAUNCH_IN_TERMINAL
     )
     ```
     Notes:
     - `NAME` is the launcher label shown to users.
+    - `LAUNCH_IN_TERMINAL` requests terminal-style launching on platforms whose launcher formats support it. For DEB packages, this maps to the XDG desktop-entry `Terminal=true` field.
     - `CMagneto__add_installed_file_to_application_menu(...)` accepts a path relative to the installation prefix.
     - `CMagneto__add_executable_to_application_menu(...)` reuses icon metadata previously declared through `CMagneto__bind_icon_to_executable(...)`.
     - On Windows, registered entries are used by IFW packages to create Start Menu shortcuts.
     - On Linux, DEB packages create XDG desktop-entry launchers under `/usr/share/applications/`.
     - On Linux, the declared Linux icon is exposed to desktop environments through the generated launcher as an absolute icon path inside the package install tree, so no GUI-specific installation step is required.
+    - If no icon is declared, the launcher is still generated and the desktop environment falls back to its default generic application or executable icon.
     - On Linux, launcher setup is safe on headless systems. Optional desktop-database refresh commands are attempted only when available and are non-fatal.
     - On Linux, the generated `.desktop` launchers are package-owned assets under `/usr/share/applications/`, so uninstalling the package removes them automatically.
     - ZIP packages do not create Start Menu entries.
