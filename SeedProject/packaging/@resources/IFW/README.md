@@ -398,6 +398,7 @@ Notes:
 - If a registered item provides `WINDOWS_ICON`, CMagneto installs that icon asset and points the shortcut at it.
 - Otherwise the shortcut uses the target file's default associated icon.
 - ZIP packages do not create Start Menu entries.
+- On Windows 11, the Start Menu UI may flatten a folder that contains only one shortcut and show that shortcut as if it were placed at the Start Menu root. This is a shell presentation behavior; the underlying Start Menu filesystem layout still uses the configured directory.
 
 Recommended split:
 

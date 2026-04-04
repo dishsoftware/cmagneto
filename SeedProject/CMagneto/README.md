@@ -344,6 +344,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     Notes:
     - If `StartMenuDirectory` is omitted, CMagneto uses `CompanyName_SHORT`.
     - If `StartMenuDirectory` is an empty string, IFW places shortcuts in the Start Menu root.
+    - On Windows 11, the Start Menu UI may flatten a folder that contains only one shortcut and show that shortcut as if it were placed at the Start Menu root. The underlying Start Menu filesystem layout still uses the configured directory.
 
 9) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
