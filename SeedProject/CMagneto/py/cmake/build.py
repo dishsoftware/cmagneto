@@ -33,6 +33,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -405,7 +406,16 @@ def _renderGraphvizPicture(iGraphvizDotfilePath: Path | None) -> None:
 
 def _prepareDir(iDir: Path) -> None:
     if iDir.exists():
-        shutil.rmtree(iDir)
+        # Files in CPack/IFW staging on Windows may be marked read-only, which
+        # causes shutil.rmtree to fail during rerun builds unless the bit is cleared.
+        def _removeReadOnlyAndRetry(iFunc: Any, iPath: str, iExc: BaseException) -> None:
+            if not isinstance(iExc, PermissionError):
+                raise iExc
+
+            os.chmod(iPath, stat.S_IWRITE)
+            iFunc(iPath)
+
+        shutil.rmtree(iDir, onexc=_removeReadOnlyAndRetry)
     iDir.mkdir(parents=True, exist_ok=True)
 
 
