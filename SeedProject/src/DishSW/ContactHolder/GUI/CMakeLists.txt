@@ -81,6 +81,12 @@ CMagneto__place_icon_near_executable(${_TARGET_NAME}
     MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
 )
 
+CMagneto__add_executable_to_application_menu(${_TARGET_NAME}
+    NAME "Contact Holder"
+    WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+    LINUX_ICON "@resources/AppIcon/ContactHolder.png"
+)
+
 CMagneto__embed_QtRC_resources(${_TARGET_NAME} QtRC
     PREFIX "/DishSW/ContactHolder/GUI/"
     BASE "@resources/QtRC"

@@ -125,7 +125,7 @@ If a referenced environment variable is missing, configuration fails.
 Typical values:
 - `licenses/ProjectLicense.txt`
 - `licenses/3rd-party/CMagneto/LICENSE.txt`
-- `licenses/3rd-party/qt6-base/LGPL-3.0-only.txt`
+- `licenses/3rd-party/Qt6-base/LGPL-3.0-only.txt`
 
 The path is normalized and must stay inside the install tree.
 
@@ -227,10 +227,10 @@ licenses/
 └── 3rd-party/
     ├── CMagneto/
     │   └── LICENSE.txt
-    ├── qt6-base/
+    ├── Qt6-base/
     │   ├── LGPL-3.0-only.txt
     │   └── Qt-GPL-exception-1.0.txt
-    └── zlib/
+    └── ZLib/
         └── LICENSE.txt
 ```
 

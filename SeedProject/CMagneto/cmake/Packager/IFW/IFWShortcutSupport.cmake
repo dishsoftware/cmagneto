@@ -18,30 +18,12 @@ function(CMagnetoInternal__ifw__generate_windows_shortcut_component_script_text 
         return()
     endif()
 
-    if(NOT (CMagnetoInternal__IFW__CREATE_START_MENU_SHORTCUT OR CMagnetoInternal__IFW__CREATE_DESKTOP_SHORTCUT))
+    get_property(_applicationMenuEntries GLOBAL PROPERTY CMagnetoInternal__ApplicationMenuEntries)
+    list(LENGTH _applicationMenuEntries _entriesCount)
+    if(_entriesCount EQUAL 0)
         set(${oScriptText} "" PARENT_SCOPE)
         return()
     endif()
-
-    CMagneto__get_project_entrypoint(_entrypointExeTargetName)
-    if(_entrypointExeTargetName STREQUAL "")
-        CMagnetoInternal__message(WARNING "CMagneto IFW shortcut generation is enabled, but the project entrypoint executable target is not set. Windows shortcuts will not be created.")
-        set(${oScriptText} "" PARENT_SCOPE)
-        return()
-    endif()
-
-    CMagneto__compose_binary_OUTPUT_NAME("${_entrypointExeTargetName}" _entrypointBinaryNameWE)
-    CMagneto__platform__add_executable_extension("${_entrypointBinaryNameWE}" _entrypointBinaryName)
-    set(_shortcutInstallSubdir "${CMagneto__SUBDIR_EXECUTABLE}")
-    string(REGEX REPLACE "/+$" "" _shortcutInstallSubdir "${_shortcutInstallSubdir}")
-
-    set(_shortcutTargetPath "@TargetDir@/${_shortcutInstallSubdir}/${_entrypointBinaryName}")
-    set(_shortcutWorkingDirectory "@TargetDir@/${_shortcutInstallSubdir}")
-    set(_shortcutDescription "Launch ${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}")
-
-    CMagnetoInternal__ifw__escape_js_string("${_shortcutTargetPath}" _shortcutTargetPathEscaped)
-    CMagnetoInternal__ifw__escape_js_string("${_shortcutWorkingDirectory}" _shortcutWorkingDirectoryEscaped)
-    CMagnetoInternal__ifw__escape_js_string("${_shortcutDescription}" _shortcutDescriptionEscaped)
 
     set(_scriptText [=[
 Component.prototype.createOperations = function()
@@ -52,25 +34,46 @@ Component.prototype.createOperations = function()
         return;
 ]=])
 
-    if(CMagnetoInternal__IFW__CREATE_START_MENU_SHORTCUT)
-        set(_startMenuShortcutLink "@StartMenuDir@/${CMagnetoInternal__IFW__START_MENU_SHORTCUT_NAME}.lnk")
-        CMagnetoInternal__ifw__escape_js_string("${_startMenuShortcutLink}" _startMenuShortcutLinkEscaped)
-        string(APPEND _scriptText
-            "\n"
-            "    component.addOperation(\"CreateShortcut\", \"${_shortcutTargetPathEscaped}\", \"${_startMenuShortcutLinkEscaped}\",\n"
-            "        \"workingDirectory=${_shortcutWorkingDirectoryEscaped}\", \"description=${_shortcutDescriptionEscaped}\");\n"
-        )
-    endif()
+    math(EXPR _lastEntryIndex "${_entriesCount} - 5")
+    foreach(_entryIndex RANGE 0 ${_lastEntryIndex} 5)
+        math(EXPR _nameIndex "${_entryIndex} + 1")
+        math(EXPR _targetPathIndex "${_entryIndex} + 2")
+        math(EXPR _windowsIconInstallPathIndex "${_entryIndex} + 3")
 
-    if(CMagnetoInternal__IFW__CREATE_DESKTOP_SHORTCUT)
-        set(_desktopShortcutLink "@DesktopDir@/${CMagnetoInternal__IFW__DESKTOP_SHORTCUT_NAME}.lnk")
-        CMagnetoInternal__ifw__escape_js_string("${_desktopShortcutLink}" _desktopShortcutLinkEscaped)
+        list(GET _applicationMenuEntries ${_nameIndex} _entryName)
+        list(GET _applicationMenuEntries ${_targetPathIndex} _installedFileRelPath)
+        list(GET _applicationMenuEntries ${_windowsIconInstallPathIndex} _windowsIconInstallPath)
+
+        cmake_path(GET _installedFileRelPath PARENT_PATH _shortcutWorkingDirRelPath)
+        if(_shortcutWorkingDirRelPath STREQUAL "")
+            set(_shortcutWorkingDirectory "@TargetDir@")
+        else()
+            set(_shortcutWorkingDirectory "@TargetDir@/${_shortcutWorkingDirRelPath}")
+        endif()
+
+        set(_shortcutTargetPath "@TargetDir@/${_installedFileRelPath}")
+        set(_shortcutLinkPath "@StartMenuDir@/${_entryName}.lnk")
+        set(_shortcutDescription "Open ${_entryName}")
+
+        CMagnetoInternal__ifw__escape_js_string("${_shortcutTargetPath}" _shortcutTargetPathEscaped)
+        CMagnetoInternal__ifw__escape_js_string("${_shortcutWorkingDirectory}" _shortcutWorkingDirectoryEscaped)
+        CMagnetoInternal__ifw__escape_js_string("${_shortcutLinkPath}" _shortcutLinkPathEscaped)
+        CMagnetoInternal__ifw__escape_js_string("${_shortcutDescription}" _shortcutDescriptionEscaped)
+
         string(APPEND _scriptText
             "\n"
-            "    component.addOperation(\"CreateShortcut\", \"${_shortcutTargetPathEscaped}\", \"${_desktopShortcutLinkEscaped}\",\n"
-            "        \"workingDirectory=${_shortcutWorkingDirectoryEscaped}\", \"description=${_shortcutDescriptionEscaped}\");\n"
+            "    component.addOperation(\"CreateShortcut\", \"${_shortcutTargetPathEscaped}\", \"${_shortcutLinkPathEscaped}\",\n"
+            "        \"workingDirectory=${_shortcutWorkingDirectoryEscaped}\""
         )
-    endif()
+
+        if(NOT _windowsIconInstallPath STREQUAL "")
+            set(_shortcutIconPath "@TargetDir@/${_windowsIconInstallPath}")
+            CMagnetoInternal__ifw__escape_js_string("${_shortcutIconPath}" _shortcutIconPathEscaped)
+            string(APPEND _scriptText ", \"iconPath=${_shortcutIconPathEscaped}\"")
+        endif()
+
+        string(APPEND _scriptText ", \"description=${_shortcutDescriptionEscaped}\");\n")
+    endforeach()
 
     string(APPEND _scriptText [=[
 }

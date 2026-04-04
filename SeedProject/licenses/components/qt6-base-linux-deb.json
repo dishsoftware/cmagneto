@@ -6,7 +6,7 @@
         {
             "kind": "notice",
             "source": "/usr/share/doc/qt6-base-dev/copyright",
-            "install": "licenses/3rd-party/qt6-base/copyright"
+            "install": "licenses/3rd-party/Qt6-base/copyright"
         }
     ]
 }

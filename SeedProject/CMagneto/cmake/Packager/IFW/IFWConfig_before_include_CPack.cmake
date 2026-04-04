@@ -21,7 +21,7 @@ function(CMagnetoInternal__ifw_set_package_file_if_exists iVariable iFileName)
     endif()
 endfunction()
 
-function(CMagnetoInternal__ifw_read_installer_json_value iJsonText iKey iDefaultValue oValue)
+function(CMagnetoInternal__ifw_read_json_value_or_default iJsonText iKey iDefaultValue oValue)
     string(JSON _value ERROR_VARIABLE _error GET "${iJsonText}" "${iKey}")
     if(_error)
         set(${oValue} "${iDefaultValue}" PARENT_SCOPE)
@@ -31,43 +31,22 @@ function(CMagnetoInternal__ifw_read_installer_json_value iJsonText iKey iDefault
     set(${oValue} "${_value}" PARENT_SCOPE)
 endfunction()
 
-function(CMagnetoInternal__ifw_initialize_installer_options)
-    set(CMagnetoInternal__IFW__START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__CREATE_START_MENU_SHORTCUT ON PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__START_MENU_SHORTCUT_NAME "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__CREATE_DESKTOP_SHORTCUT OFF PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__DESKTOP_SHORTCUT_NAME "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}" PARENT_SCOPE)
+function(CMagnetoInternal__ifw_initialize_application_menu_options)
+    set(CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" PARENT_SCOPE)
 
-    cmake_path(SET _installerJsonPath NORMALIZE "${_ifwPackageResourcesDir}/Installer.json")
-    if(NOT EXISTS "${_installerJsonPath}")
+    cmake_path(SET _applicationMenuJsonPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/ApplicationMenu.json")
+    if(NOT EXISTS "${_applicationMenuJsonPath}")
         return()
     endif()
 
-    file(READ "${_installerJsonPath}" _installerJsonText)
+    file(READ "${_applicationMenuJsonPath}" _applicationMenuJsonText)
 
-    CMagnetoInternal__ifw_read_installer_json_value("${_installerJsonText}" "StartMenuDirectory" "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" _startMenuDirectory)
-    CMagnetoInternal__ifw_read_installer_json_value("${_installerJsonText}" "CreateStartMenuShortcut" ON _createStartMenuShortcut)
-    CMagnetoInternal__ifw_read_installer_json_value("${_installerJsonText}" "StartMenuShortcutName" "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}" _startMenuShortcutName)
-    CMagnetoInternal__ifw_read_installer_json_value("${_installerJsonText}" "CreateDesktopShortcut" OFF _createDesktopShortcut)
-    CMagnetoInternal__ifw_read_installer_json_value("${_installerJsonText}" "DesktopShortcutName" "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}" _desktopShortcutName)
-
-    if(_startMenuDirectory STREQUAL "")
-        set(_startMenuDirectory "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
+    CMagnetoInternal__ifw_read_json_value_or_default("${_applicationMenuJsonText}" "WindowsStartMenuDirectory" "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" _windowsStartMenuDirectory)
+    if(_windowsStartMenuDirectory STREQUAL "")
+        set(_windowsStartMenuDirectory "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
     endif()
 
-    if(_startMenuShortcutName STREQUAL "")
-        set(_startMenuShortcutName "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}")
-    endif()
-
-    if(_desktopShortcutName STREQUAL "")
-        set(_desktopShortcutName "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}")
-    endif()
-
-    set(CMagnetoInternal__IFW__START_MENU_DIRECTORY "${_startMenuDirectory}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__CREATE_START_MENU_SHORTCUT "${_createStartMenuShortcut}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__START_MENU_SHORTCUT_NAME "${_startMenuShortcutName}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__CREATE_DESKTOP_SHORTCUT "${_createDesktopShortcut}" PARENT_SCOPE)
-    set(CMagnetoInternal__IFW__DESKTOP_SHORTCUT_NAME "${_desktopShortcutName}" PARENT_SCOPE)
+    set(CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY "${_windowsStartMenuDirectory}" PARENT_SCOPE)
 endfunction()
 
 function(CMagnetoInternal__ifw_make_text_expression iInputText oOutputExpression)
@@ -234,8 +213,8 @@ set(CPACK_IFW_PACKAGE_NAME "${CMagneto__PACKAGING_JSON__PACKAGE_ID}")
 set(CPACK_IFW_PACKAGE_TITLE "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI} Installer")
 set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_IFW_PRODUCT_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}")
-CMagnetoInternal__ifw_initialize_installer_options()
-set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagnetoInternal__IFW__START_MENU_DIRECTORY}")
+CMagnetoInternal__ifw_initialize_application_menu_options()
+set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY}")
 
 # Force a consistent wizard presentation on Windows so the installer
 # does not inherit unreadable dark host palette combinations.

@@ -64,6 +64,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpLibTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/ApplicationMenu.cmake")
 
 ## Define functions for GoogleTest integration.
 include("${CMAKE_CURRENT_LIST_DIR}/TestTools.cmake")

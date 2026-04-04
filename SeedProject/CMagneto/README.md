@@ -310,21 +310,36 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     - The file is copied next to the built executable and installed into `bin/`, so packages include it too.
     - This function does not bind the icon to the executable binary itself. Use `CMagneto__bind_icon_to_exe_binary(...)` for that.
 
-   If you build IFW packages on Windows and want Start Menu and desktop shortcuts, configure them in `./packaging/@resources/IFW/Installer.json`, for example:
-    ```json
-    {
-      "StartMenuDirectory": "DishSW",
-      "CreateStartMenuShortcut": true,
-      "StartMenuShortcutName": "Contact Holder",
-      "CreateDesktopShortcut": false
-    }
+8) If an executable should appear in the application menu, register it explicitly:
+    ```cmake
+    CMagneto__add_executable_to_application_menu(DishSW_ContactHolder_GUI
+        NAME "Contact Holder"
+        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+        LINUX_ICON "@resources/AppIcon/ContactHolder.png"
+    )
+    ```
+    If another installed file should appear there instead, register it by its install-relative path:
+    ```cmake
+    CMagneto__add_installed_file_to_application_menu("bin/MyHelper.exe"
+        NAME "My Helper"
+        WINDOWS_ICON "@resources/AppIcon/MyHelper.ico"
+    )
     ```
     Notes:
-    - Shortcut generation currently applies to IFW packages on Windows.
-    - CMagneto creates shortcuts for the executable registered through `CMagneto__set_project_entrypoint(...)`.
-    - ZIP packages do not create Start Menu or desktop shortcuts.
+    - `NAME` is the launcher label shown to users.
+    - `CMagneto__add_installed_file_to_application_menu(...)` accepts a path relative to the installation prefix.
+    - On Windows, registered entries are used by IFW packages to create Start Menu shortcuts.
+    - Linux icon metadata can already be registered through `LINUX_ICON`, but a Linux application-menu backend is not wired yet.
+    - ZIP packages do not create Start Menu entries.
 
-8) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
+   Configure the Windows Start Menu folder in `./packaging/@resources/ApplicationMenu.json`, for example:
+    ```json
+    {
+      "WindowsStartMenuDirectory": "DishSW"
+    }
+    ```
+
+9) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
     {
       "cacheVariables": {
@@ -344,22 +359,22 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
     Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)`, `CMagneto__bundle_external_shared_libraries(...)`, `CMagneto__bundle_runtime_dependency_files(...)`, or `CMagneto__exclude_bundled_runtime_dependency_file_patterns(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
-9) If the project defines an executable target, which is considered as the project entrypoint, call
+10) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-10) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+11) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         ... # List the files to embed here.
     )
     ```
 
-11) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+12) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
 
-12) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+13) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 
@@ -376,7 +391,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-13) After all targets are set up, call: `CMagneto__set_up__project()`.
+14) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;

@@ -6,7 +6,7 @@
         {
             "kind": "license",
             "source": "$env{MSYS2_HOME}/ucrt64/share/licenses/zlib/LICENSE",
-            "install": "licenses/3rd-party/zlib/LICENSE.txt"
+            "install": "licenses/3rd-party/ZLib/LICENSE.txt"
         }
     ]
 }

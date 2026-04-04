@@ -6,12 +6,12 @@
         {
             "kind": "license",
             "source": "$env{QT6_MSVC2022_DIR}/../Src/qtbase/LICENSES/LGPL-3.0-only.txt",
-            "install": "licenses/3rd-party/qt6-base/LGPL-3.0-only.txt"
+            "install": "licenses/3rd-party/Qt6-base/LGPL-3.0-only.txt"
         },
         {
             "kind": "notice",
             "source": "$env{QT6_MSVC2022_DIR}/../Src/qtbase/LICENSES/Qt-GPL-exception-1.0.txt",
-            "install": "licenses/3rd-party/qt6-base/Qt-GPL-exception-1.0.txt"
+            "install": "licenses/3rd-party/Qt6-base/Qt-GPL-exception-1.0.txt"
         }
     ]
 }

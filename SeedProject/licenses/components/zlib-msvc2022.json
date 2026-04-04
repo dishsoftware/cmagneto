@@ -6,7 +6,7 @@
         {
             "kind": "license",
             "source": "$env{ZLIB_MSVC2022_DIR}/share/doc/zlib/zlib/LICENSE",
-            "install": "licenses/3rd-party/zlib/LICENSE.txt"
+            "install": "licenses/3rd-party/ZLib/LICENSE.txt"
         }
     ]
 }

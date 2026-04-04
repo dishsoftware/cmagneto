@@ -363,7 +363,6 @@ To match that theme, the image assets should probably look like this:
 
 After the asset set is normalized, this directory should ideally contain:
 
-- `Installer.json`
 - `Finished.html`
 - `Installer.qss`
 - `LicenseBundleWidget.ui`
@@ -377,37 +376,30 @@ After the asset set is normalized, this directory should ideally contain:
 - `PackageWizardLogo.png`
 - `Welcome.html`
 
+The parent `packaging/@resources/` directory should also contain:
+
+- `ApplicationMenu.json`
+
 Optional:
 
 - `PackageWatermark.png`
 
-## Installer.json
+## ApplicationMenu.json
 
-`Installer.json` configures Windows-specific IFW shortcut behavior.
+`../ApplicationMenu.json` configures packaging-wide application-menu placement.
 
 Current fields:
 
-- `StartMenuDirectory`
+- `WindowsStartMenuDirectory`
   Name of the Start Menu folder used by IFW on Windows.
-
-- `CreateStartMenuShortcut`
-  Boolean flag. If `true`, CMagneto generates a Start Menu shortcut to the project entrypoint executable.
-
-- `StartMenuShortcutName`
-  File name of the Start Menu shortcut, without `.lnk`.
-
-- `CreateDesktopShortcut`
-  Boolean flag. If `true`, CMagneto generates a desktop shortcut to the project entrypoint executable.
-
-- `DesktopShortcutName`
-  File name of the desktop shortcut, without `.lnk`.
 
 Notes:
 
-- Shortcut generation currently applies to IFW packages on Windows.
-- Shortcuts are created for the executable previously registered through `CMagneto__set_project_entrypoint(...)`.
-- The shortcut icon comes from the installed executable, so on Windows the best result is to also embed a `.ico` into that executable with `CMagneto__bind_icon_to_exe_binary(...)`.
-- ZIP packages do not create Start Menu or desktop shortcuts.
+- Individual menu entries are not configured in JSON. They are registered in CMake with `CMagneto__add_executable_to_application_menu(...)` or `CMagneto__add_installed_file_to_application_menu(...)`.
+- IFW currently uses these registrations to create Start Menu shortcuts on Windows.
+- If a registered item provides `WINDOWS_ICON`, CMagneto installs that icon asset and points the shortcut at it.
+- Otherwise the shortcut uses the target file's default associated icon.
+- ZIP packages do not create Start Menu entries.
 
 ## Small code follow-ups that would improve cross-platform behavior
 

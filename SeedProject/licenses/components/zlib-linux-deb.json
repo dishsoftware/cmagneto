@@ -6,7 +6,7 @@
         {
             "kind": "license",
             "source": "/usr/share/doc/zlib1g-dev/copyright",
-            "install": "licenses/3rd-party/zlib/copyright"
+            "install": "licenses/3rd-party/ZLib/copyright"
         }
     ]
 }
