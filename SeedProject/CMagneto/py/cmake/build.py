@@ -403,6 +403,12 @@ def _renderGraphvizPicture(iGraphvizDotfilePath: Path | None) -> None:
         Log.warning("Graphviz is not found. Target dependency graph picture is not generated.")
 
 
+def _prepareDir(iDir: Path) -> None:
+    if iDir.exists():
+        shutil.rmtree(iDir)
+    iDir.mkdir(parents=True, exist_ok=True)
+
+
 def _isBuildSystemGenerated(iLayout: ResolvedVariantLayout) -> bool:
     if not iLayout.buildDir.exists():
         return False
@@ -612,6 +618,7 @@ def buildProject() -> None:
     if _isStageRequired(BuildRunner.BuildStage.Generate, _isBuildDirExist(layout), buildStage, runPrecedingStages):
         text = f"Generation of build system files ({buildType.name})"
         Log.status(text + "...")
+        _prepareDir(layout.buildDir)
         Process.runCommand(
             _configureCommand(buildVariant, buildType, args.coverage),
             PROJECT_ROOT
@@ -637,7 +644,7 @@ def buildProject() -> None:
     if _isStageRequired(BuildRunner.BuildStage.Install, _isInstallDirExist(layout), buildStage, runPrecedingStages):
         text = f"Installing ({buildType.name})"
         Log.status(text + "...")
-        layout.installDir.mkdir(parents=True, exist_ok=True)
+        _prepareDir(layout.installDir)
         Process.runCommand(_installCommand(buildVariant, buildType), PROJECT_ROOT)
         Log.status(text + " finished.\n")
 
