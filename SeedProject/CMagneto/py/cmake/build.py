@@ -348,7 +348,7 @@ def _resolvedVariantLayout(iVariant: BuildVariantSpec, iBuildType: BuildRunner.B
 
 
 def _ensureCompatibleCMakeOnPath() -> None:
-    cmakeExecutable = shutil.which("cmake")
+    cmakeExecutable = Process.findExecutable("cmake")
     if cmakeExecutable is None:
         Log.error("`cmake` was not found in PATH.")
     assert cmakeExecutable is not None

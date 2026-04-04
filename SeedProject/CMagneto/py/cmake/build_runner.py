@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import Callable, Protocol
 import inspect
 import os
-import shutil
 import subprocess
 
 
@@ -304,7 +303,7 @@ class BuildRunner(ABC):
 
         @staticmethod
         def generateTestCoverageReport(iBuildDir: Path, iSummaryDir: Path) -> None:
-            if shutil.which("lcov") is None:
+            if Process.findExecutable("lcov") is None:
                 Log.warning("LCOV is not installed. Can't generate test coverage report.")
                 return
 

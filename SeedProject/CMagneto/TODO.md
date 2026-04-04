@@ -17,7 +17,6 @@
 * Add resource manager C++ code.
 * In the `_DEFS.hpp` files add relative paths to resources.
 * Add `Project_DEFS.hpp` file, common for all targets in the project, witgh project version and compatibility definitions.
-* Don't look for lrelerase every time a ts file occurs.
 * Do the same for each used build tool. Log versions and paths to these tools.
 * Rewrite `QtWrappers.cmake`. Check if `automoc` is enabled.
 * Make setting resource paths relative to:
