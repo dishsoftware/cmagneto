@@ -21,31 +21,8 @@ function(CMagnetoInternal__ifw_set_package_file_if_exists iVariable iFileName)
     endif()
 endfunction()
 
-function(CMagnetoInternal__ifw_read_json_value_or_default iJsonText iKey iDefaultValue oValue)
-    string(JSON _value ERROR_VARIABLE _error GET "${iJsonText}" "${iKey}")
-    if(_error)
-        set(${oValue} "${iDefaultValue}" PARENT_SCOPE)
-        return()
-    endif()
-
-    set(${oValue} "${_value}" PARENT_SCOPE)
-endfunction()
-
 function(CMagnetoInternal__ifw_initialize_application_menu_options)
-    set(CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" PARENT_SCOPE)
-
-    cmake_path(SET _applicationMenuJsonPath NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/ApplicationMenu.json")
-    if(NOT EXISTS "${_applicationMenuJsonPath}")
-        return()
-    endif()
-
-    file(READ "${_applicationMenuJsonPath}" _applicationMenuJsonText)
-
-    CMagnetoInternal__ifw_read_json_value_or_default("${_applicationMenuJsonText}" "WindowsStartMenuDirectory" "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}" _windowsStartMenuDirectory)
-    if(_windowsStartMenuDirectory STREQUAL "")
-        set(_windowsStartMenuDirectory "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
-    endif()
-
+    set(_windowsStartMenuDirectory "${CMagneto__PACKAGING_JSON__START_MENU_DIRECTORY}")
     set(CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY "${_windowsStartMenuDirectory}" PARENT_SCOPE)
 endfunction()
 

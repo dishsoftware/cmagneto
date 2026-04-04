@@ -332,12 +332,18 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     - Linux icon metadata can already be registered through `LINUX_ICON`, but a Linux application-menu backend is not wired yet.
     - ZIP packages do not create Start Menu entries.
 
-   Configure the Windows Start Menu folder in `./packaging/@resources/ApplicationMenu.json`, for example:
+   Configure the Windows Start Menu folder in `./meta/Packaging.json`, for example:
     ```json
     {
-      "WindowsStartMenuDirectory": "DishSW"
+      "PackageID": "org.example.myapp",
+      "PackageNamePrefix": "MyApp",
+      "PackageMaintainer": "Jane Doe <jane@example.com>",
+      "StartMenuDirectory": "DishSW"
     }
     ```
+    Notes:
+    - If `StartMenuDirectory` is omitted, CMagneto uses `CompanyName_SHORT`.
+    - If `StartMenuDirectory` is an empty string, IFW places shortcuts in the Start Menu root.
 
 9) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
