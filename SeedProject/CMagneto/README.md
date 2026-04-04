@@ -401,6 +401,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
 
 13) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+    For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).
 
 14) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
