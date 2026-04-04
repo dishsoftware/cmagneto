@@ -20,6 +20,11 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # Load internals of the submodule.
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget_Internals.cmake")
 
+set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_WINDOWS_ICON_ABS_PATH "CMagnetoInternal__EXECUTABLE_WINDOWS_ICON_ABS_PATH")
+set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_LINUX_ICON_ABS_PATH   "CMagnetoInternal__EXECUTABLE_LINUX_ICON_ABS_PATH")
+set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_MACOS_ICON_ABS_PATH   "CMagnetoInternal__EXECUTABLE_MACOS_ICON_ABS_PATH")
+set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_PLATFORM_ICON_PLACED   "CMagnetoInternal__EXECUTABLE_PLATFORM_ICON_PLACED")
+
 
 #[[
     CMagneto__set_up__executable
@@ -123,10 +128,71 @@ function(CMagneto__set_up__executable iExeTargetName)
 endfunction()
 
 
-#[[
-    CMagneto__bind_icon_to_exe_binary
+function(CMagnetoInternal__set_executable_icon_metadata iExeTargetName)
+    cmake_parse_arguments(ARG "" "WINDOWS_ICON_ABS_PATH;LINUX_ICON_ABS_PATH;MACOS_ICON_ABS_PATH" "" ${ARGN})
 
-    Binds platform-specific application icons to the executable binary target `${iExeTargetName}`.
+    set_target_properties(${iExeTargetName} PROPERTIES
+        ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_WINDOWS_ICON_ABS_PATH} "${ARG_WINDOWS_ICON_ABS_PATH}"
+        ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_LINUX_ICON_ABS_PATH}   "${ARG_LINUX_ICON_ABS_PATH}"
+        ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_MACOS_ICON_ABS_PATH}   "${ARG_MACOS_ICON_ABS_PATH}"
+    )
+endfunction()
+
+function(CMagnetoInternal__get_executable_icon_metadata iExeTargetName oWindowsIconAbsPath oLinuxIconAbsPath oMacIconAbsPath)
+    get_target_property(_windowsIconAbsPath ${iExeTargetName} ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_WINDOWS_ICON_ABS_PATH})
+    get_target_property(_linuxIconAbsPath   ${iExeTargetName} ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_LINUX_ICON_ABS_PATH})
+    get_target_property(_macIconAbsPath     ${iExeTargetName} ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_MACOS_ICON_ABS_PATH})
+
+    if(_windowsIconAbsPath MATCHES "-NOTFOUND$")
+        set(_windowsIconAbsPath "")
+    endif()
+    if(_linuxIconAbsPath MATCHES "-NOTFOUND$")
+        set(_linuxIconAbsPath "")
+    endif()
+    if(_macIconAbsPath MATCHES "-NOTFOUND$")
+        set(_macIconAbsPath "")
+    endif()
+
+    set(${oWindowsIconAbsPath} "${_windowsIconAbsPath}" PARENT_SCOPE)
+    set(${oLinuxIconAbsPath}   "${_linuxIconAbsPath}" PARENT_SCOPE)
+    set(${oMacIconAbsPath}     "${_macIconAbsPath}" PARENT_SCOPE)
+endfunction()
+
+function(CMagnetoInternal__place_executable_platform_icon iExeTargetName iIconAbsPath)
+    if(iIconAbsPath STREQUAL "")
+        return()
+    endif()
+
+    get_target_property(_iconAlreadyPlaced ${iExeTargetName} ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_PLATFORM_ICON_PLACED})
+    if(NOT _iconAlreadyPlaced MATCHES "-NOTFOUND$" AND _iconAlreadyPlaced)
+        return()
+    endif()
+
+    cmake_path(GET iIconAbsPath FILENAME _iconFileName)
+
+    add_custom_command(TARGET ${iExeTargetName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${iIconAbsPath}"
+            "$<TARGET_FILE_DIR:${iExeTargetName}>/${_iconFileName}"
+        COMMENT "Copying icon \"${_iconFileName}\" near executable target \"${iExeTargetName}\"."
+    )
+
+    install(FILES "${iIconAbsPath}"
+        DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
+        COMPONENT ${CMagneto__COMPONENT__RUNTIME}
+    )
+
+    set_target_properties(${iExeTargetName} PROPERTIES
+        ${CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_PLATFORM_ICON_PLACED} TRUE
+    )
+endfunction()
+
+
+#[[
+    CMagneto__bind_icon_to_executable
+
+    Declares platform-specific application icons for the executable target `${iExeTargetName}`
+    and performs platform-native binding where applicable.
 
     It must be called:
     - After `${iExeTargetName}` has been created.
@@ -137,63 +203,94 @@ endfunction()
 
     Named arguments (all optional):
     WINDOWS_ICON - Path to a Windows `.ico` file to embed into the executable binary.
+    LINUX_ICON   - Path to a Linux icon file, typically `.png` or `.svg`.
     MACOS_ICON   - Path to a macOS `.icns` file to attach to the app bundle.
 
     Notes:
     - Paths are expected to be relative to the executable target source root.
     - Generated files under the target build base dir are also allowed.
-    - Linux executables do not have a standard embedded desktop icon concept, so this function is a no-op there.
+    - The declared icon paths are stored as target metadata and reused by
+      `CMagneto__place_icon_near_executable(...)` and
+      `CMagneto__add_executable_to_application_menu(...)`.
+    - Linux executables do not have a standard embedded desktop icon concept, so on
+      Linux this function places the Linux icon near the executable instead.
     - On macOS, the icon only takes effect for `MACOSX_BUNDLE` executables.
 ]]
-function(CMagneto__bind_icon_to_exe_binary iExeTargetName)
-    CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__bind_icon_to_exe_binary")
+function(CMagneto__bind_icon_to_executable iExeTargetName)
+    CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__bind_icon_to_executable")
 
-    cmake_parse_arguments(ARG "" "WINDOWS_ICON;MACOS_ICON" "" ${ARGN})
+    cmake_parse_arguments(ARG "" "WINDOWS_ICON;LINUX_ICON;MACOS_ICON" "" ${ARGN})
 
-    if(ARG_WINDOWS_ICON STREQUAL "" AND ARG_MACOS_ICON STREQUAL "")
-        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bind_icon_to_exe_binary(\"${iExeTargetName}\"): at least one of WINDOWS_ICON or MACOS_ICON must be specified.")
+    if(ARG_WINDOWS_ICON STREQUAL "" AND ARG_LINUX_ICON STREQUAL "" AND ARG_MACOS_ICON STREQUAL "")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__bind_icon_to_executable(\"${iExeTargetName}\"): at least one of WINDOWS_ICON, LINUX_ICON or MACOS_ICON must be specified.")
     endif()
 
     set(_baseDirDescription "executable target \"${iExeTargetName}\" app icon")
+    set(_windowsIconAbsPath "")
+    set(_linuxIconAbsPath "")
+    set(_macIconAbsPath "")
 
-    if(WIN32 AND NOT ARG_WINDOWS_ICON STREQUAL "")
+    if(NOT ARG_WINDOWS_ICON STREQUAL "")
         CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_WINDOWS_ICON}"
             OUTPUT_ABS_PATHS _windowsIconAbsPaths
             IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
             ALLOW_PATHS_UNDER_BUILD_BASE_DIR
         )
         list(GET _windowsIconAbsPaths 0 _windowsIconAbsPath)
-        CMagnetoInternal__set_up_windows_executable_icon("${iExeTargetName}" "${_windowsIconAbsPath}")
     endif()
 
-    if(APPLE AND NOT ARG_MACOS_ICON STREQUAL "")
+    if(NOT ARG_LINUX_ICON STREQUAL "")
+        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_LINUX_ICON}"
+            OUTPUT_ABS_PATHS _linuxIconAbsPaths
+            IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
+            ALLOW_PATHS_UNDER_BUILD_BASE_DIR
+        )
+        list(GET _linuxIconAbsPaths 0 _linuxIconAbsPath)
+    endif()
+
+    if(NOT ARG_MACOS_ICON STREQUAL "")
         CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_MACOS_ICON}"
             OUTPUT_ABS_PATHS _macIconAbsPaths
-            OUTPUT_REL_PATHS _macIconRelPaths
             IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
             ALLOW_PATHS_UNDER_BUILD_BASE_DIR
         )
         list(GET _macIconAbsPaths 0 _macIconAbsPath)
-        list(GET _macIconRelPaths 0 _macIconRelPath)
+    endif()
+
+    CMagnetoInternal__set_executable_icon_metadata(${iExeTargetName}
+        WINDOWS_ICON_ABS_PATH "${_windowsIconAbsPath}"
+        LINUX_ICON_ABS_PATH "${_linuxIconAbsPath}"
+        MACOS_ICON_ABS_PATH "${_macIconAbsPath}"
+    )
+
+    if(WIN32 AND NOT _windowsIconAbsPath STREQUAL "")
+        CMagnetoInternal__set_up_windows_executable_icon("${iExeTargetName}" "${_windowsIconAbsPath}")
+    endif()
+
+    if(UNIX AND NOT APPLE AND NOT _linuxIconAbsPath STREQUAL "")
+        CMagnetoInternal__place_executable_platform_icon("${iExeTargetName}" "${_linuxIconAbsPath}")
+    endif()
+
+    if(APPLE AND NOT _macIconAbsPath STREQUAL "")
 
         get_target_property(_isMacBundle ${iExeTargetName} MACOSX_BUNDLE)
         if(NOT _isMacBundle)
-            CMagnetoInternal__message(WARNING "CMagneto__bind_icon_to_exe_binary(\"${iExeTargetName}\"): target is not a MACOSX_BUNDLE executable, so MACOS_ICON has no effect.")
+            CMagnetoInternal__message(WARNING "CMagneto__bind_icon_to_executable(\"${iExeTargetName}\"): target is not a MACOSX_BUNDLE executable, so MACOS_ICON has no effect.")
             return()
         endif()
 
-        cmake_path(GET _macIconRelPath FILENAME _macIconFileName)
+        cmake_path(GET _macIconAbsPath FILENAME _macIconFileName)
         set_source_files_properties("${_macIconAbsPath}" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
         target_sources(${iExeTargetName} PRIVATE "${_macIconAbsPath}")
         set_target_properties(${iExeTargetName} PROPERTIES MACOSX_BUNDLE_ICON_FILE "${_macIconFileName}")
     endif()
 endfunction()
 
-
 #[[
     CMagneto__place_icon_near_executable
 
-    Places a platform-specific icon file near the executable in the build tree and install tree.
+    Places the already-declared platform-specific icon near the executable in the
+    build tree and install tree.
 
     It must be called:
     - After `${iExeTargetName}` has been created.
@@ -202,14 +299,9 @@ endfunction()
     Parameters:
     iExeTargetName - The name of the executable target.
 
-    Named arguments (all optional):
-    WINDOWS_ICON - Path to a Windows icon file, typically `.ico`.
-    LINUX_ICON   - Path to a Linux icon file, typically `.png` or `.svg`.
-    MACOS_ICON   - Path to a macOS icon file, typically `.icns`.
-
     Notes:
-    - Paths are expected to be relative to the executable target source root.
-    - Generated files under the target build base dir are also allowed.
+    - The function reuses icon metadata previously declared through
+      `CMagneto__bind_icon_to_executable(...)`.
     - Only the icon matching the current platform is copied.
     - The copied file keeps its original file name.
     - The installed icon is placed into `${CMagneto__SUBDIR_EXECUTABLE}`, so packaging includes it as a runtime asset.
@@ -217,47 +309,18 @@ endfunction()
 function(CMagneto__place_icon_near_executable iExeTargetName)
     CMagnetoInternal__check_executable_target_type("${iExeTargetName}" "CMagneto__place_icon_near_executable")
 
-    cmake_parse_arguments(ARG "" "WINDOWS_ICON;LINUX_ICON;MACOS_ICON" "" ${ARGN})
+    CMagnetoInternal__get_executable_icon_metadata("${iExeTargetName}" _windowsIconAbsPath _linuxIconAbsPath _macIconAbsPath)
 
-    if(ARG_WINDOWS_ICON STREQUAL "" AND ARG_LINUX_ICON STREQUAL "" AND ARG_MACOS_ICON STREQUAL "")
-        CMagnetoInternal__message(FATAL_ERROR "CMagneto__place_icon_near_executable(\"${iExeTargetName}\"): at least one of WINDOWS_ICON, LINUX_ICON or MACOS_ICON must be specified.")
-    endif()
-
-    set(_iconPath "")
+    set(_iconAbsPath "")
     if(WIN32)
-        set(_iconPath "${ARG_WINDOWS_ICON}")
+        set(_iconAbsPath "${_windowsIconAbsPath}")
     elseif(APPLE)
-        set(_iconPath "${ARG_MACOS_ICON}")
+        set(_iconAbsPath "${_macIconAbsPath}")
     elseif(UNIX)
-        set(_iconPath "${ARG_LINUX_ICON}")
+        set(_iconAbsPath "${_linuxIconAbsPath}")
     endif()
 
-    if(_iconPath STREQUAL "")
-        return()
-    endif()
-
-    set(_baseDirDescription "executable target \"${iExeTargetName}\" adjacent icon")
-    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${_iconPath}"
-        OUTPUT_ABS_PATHS _iconAbsPaths
-        OUTPUT_REL_PATHS _iconRelPaths
-        IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
-        ALLOW_PATHS_UNDER_BUILD_BASE_DIR
-    )
-    list(GET _iconAbsPaths 0 _iconAbsPath)
-    list(GET _iconRelPaths 0 _iconRelPath)
-    cmake_path(GET _iconRelPath FILENAME _iconFileName)
-
-    add_custom_command(TARGET ${iExeTargetName} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_iconAbsPath}"
-            "$<TARGET_FILE_DIR:${iExeTargetName}>/${_iconFileName}"
-        COMMENT "Copying icon \"${_iconFileName}\" near executable target \"${iExeTargetName}\"."
-    )
-
-    install(FILES "${_iconAbsPath}"
-        DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
-        COMPONENT ${CMagneto__COMPONENT__RUNTIME}
-    )
+    CMagnetoInternal__place_executable_platform_icon("${iExeTargetName}" "${_iconAbsPath}")
 endfunction()
 
 

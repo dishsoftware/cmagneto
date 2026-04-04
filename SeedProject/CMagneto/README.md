@@ -281,23 +281,9 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) If an executable should have a custom file-browser / shell icon, place icon files under the target source root, for example in `@resources/AppIcon/`, and call:
+6) If an executable should have platform-specific icons, place icon files under the target source root, for example in `@resources/AppIcon/`, and declare them once with:
     ```cmake
-    CMagneto__bind_icon_to_exe_binary(DishSW_ContactHolder_GUI
-        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
-        MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
-    )
-    ```
-    Notes:
-    - The function must be called after `add_executable(...)`.
-    - You may specify only `WINDOWS_ICON`, only `MACOS_ICON`, or both.
-    - On Windows, the `.ico` file is embedded into the `.exe` binary.
-    - On macOS, the `.icns` file is attached to the app bundle and only takes effect for `MACOSX_BUNDLE` executables.
-    - On Linux, the function is currently a no-op because ELF executables do not have a standard embedded desktop icon mechanism.
-
-7) If an executable should also have an icon file placed next to it in the build tree and install tree, call:
-    ```cmake
-    CMagneto__place_icon_near_executable(DishSW_ContactHolder_GUI
+    CMagneto__bind_icon_to_executable(DishSW_ContactHolder_GUI
         WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
         LINUX_ICON "@resources/AppIcon/ContactHolder.png"
         MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
@@ -306,16 +292,26 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     Notes:
     - The function must be called after `add_executable(...)`.
     - You may specify only the platforms you care about.
+    - On Windows, the `.ico` file is embedded into the `.exe` binary.
+    - On macOS, the `.icns` file is attached to the app bundle and only takes effect for `MACOSX_BUNDLE` executables.
+    - On Linux, the declared icon is placed next to the executable in the build tree and install tree, because ELF executables do not have a standard embedded desktop icon mechanism.
+    - The declared icon paths are stored as target metadata and reused by other executable-icon helpers.
+
+    ```cmake
+    CMagneto__place_icon_near_executable(DishSW_ContactHolder_GUI)
+    ```
+    Notes:
+    - The function must be called after `add_executable(...)`.
+    - By default, the function reuses icon paths previously declared through `CMagneto__bind_icon_to_executable(...)`.
     - Only the icon matching the current platform is copied.
     - The file is copied next to the built executable and installed into `bin/`, so packages include it too.
-    - This function does not bind the icon to the executable binary itself. Use `CMagneto__bind_icon_to_exe_binary(...)` for that.
+    - This is useful when you want the installed icon file to be available to users directly, for example so they can assign it to a directory with related files.
+    - On Linux, `CMagneto__bind_icon_to_executable(...)` already performs the same adjacent placement, so this call becomes a no-op there if the icon was already placed.
 
 8) If an executable should appear in the application menu, register it explicitly:
     ```cmake
     CMagneto__add_executable_to_application_menu(DishSW_ContactHolder_GUI
         NAME "Contact Holder"
-        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
-        LINUX_ICON "@resources/AppIcon/ContactHolder.png"
     )
     ```
     If another installed file should appear there instead, register it by its install-relative path:
@@ -328,8 +324,12 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     Notes:
     - `NAME` is the launcher label shown to users.
     - `CMagneto__add_installed_file_to_application_menu(...)` accepts a path relative to the installation prefix.
+    - `CMagneto__add_executable_to_application_menu(...)` reuses icon metadata previously declared through `CMagneto__bind_icon_to_executable(...)`.
     - On Windows, registered entries are used by IFW packages to create Start Menu shortcuts.
-    - Linux icon metadata can already be registered through `LINUX_ICON`, but a Linux application-menu backend is not wired yet.
+    - On Linux, DEB packages create XDG desktop-entry launchers under `/usr/share/applications/`.
+    - On Linux, the declared Linux icon is exposed to desktop environments through the generated launcher as an absolute icon path inside the package install tree, so no GUI-specific installation step is required.
+    - On Linux, launcher setup is safe on headless systems. Optional desktop-database refresh commands are attempted only when available and are non-fatal.
+    - On Linux, the generated `.desktop` launchers are package-owned assets under `/usr/share/applications/`, so uninstalling the package removes them automatically.
     - ZIP packages do not create Start Menu entries.
 
    Configure the Windows Start Menu folder in `./meta/Packaging.json`, for example:

@@ -10,6 +10,8 @@
 
 include_guard(GLOBAL)  # Ensures this file is included only once.
 
+include("${CMAKE_CURRENT_LIST_DIR}/DEBDesktopEntrySupport.cmake")
+
 # Generates separate .deb packages for each CMake component defined in the project.
 # set(CPACK_DEB_COMPONENT_INSTALL ON)
 
@@ -31,3 +33,5 @@ set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
 
 # Filename format.
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)  # Default naming, e.g. "project-version-arch.deb".
+
+CMagnetoInternal__deb__write_linux_desktop_entry_assets()
