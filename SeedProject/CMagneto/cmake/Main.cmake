@@ -41,6 +41,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/GeneratorTools.cmake")
 ## Define general-purpose functions for path handling.
 include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
 
+## Define internal process-wide tool registry helpers.
+include("${CMAKE_CURRENT_LIST_DIR}/ToolRegistry.cmake")
+
 ## Define constants and functions for handling scripts.
 include("${CMAKE_CURRENT_LIST_DIR}/Platform.cmake")
 
