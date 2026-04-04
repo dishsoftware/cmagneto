@@ -4,14 +4,12 @@
 * ? Use `InstallRequiredSystemLibraries`, `BundleUtilities`, `qt_generate_deploy_app_script()`, `qt_deploy_runtime_dependencies()`, `windeployqt`, `macdeployqt`.
 * Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
 * Add function `set_up_interface_library`.
+* Add instructions on when to use interface and object libraries.
 * Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
-* Make Qt IFW interface.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
-* Target name validity check must be done by the same piece of code both in the one-command-build-script and in CMagneto CMake modules.
 * Packaging of Debug fails, if generator is multi-config.
-* Add instructions on when to use interface and object libraries.
 * Add integration and system tests for CMagneto framework.
 * Support newer C++ standards' features, including C++ modules.
 * Add copying (installing) of runtime-loaded resources into build and install dirs.
@@ -19,7 +17,6 @@
 * Add resource manager C++ code.
 * In the `_DEFS.hpp` files add relative paths to resources.
 * Add `Project_DEFS.hpp` file, common for all targets in the project, witgh project version and compatibility definitions.
-* Don't look for lrelerase every time a ts file occurs.
 * Do the same for each used build tool. Log versions and paths to these tools.
 * Rewrite `QtWrappers.cmake`. Check if `automoc` is enabled.
 * Make setting resource paths relative to:
@@ -30,11 +27,9 @@
   Add files in these dirs automatically?
 
 * Automatically merge ts files of a target into a monolitic ts file?
-* Does Google Test degrade performance of Release binaries?
 * When to throw (raise) and when to exit in the one-command-build-scripts?
 * Add possibility to add files to a target from a CMakeLists.txt in any subdir of the target using a path, relative to the lists file.
 * Use `os.PathLike` instead of `Path` or `str` in python code as widely as possible.
-* Run system tests only after merge into the main branch.
 * Add a description how to work with and `TODO.md` and sync it with task managers.
 * Sync test projects, while preserving CMagneto repo graph topology.
 * Add memory leaks checks.

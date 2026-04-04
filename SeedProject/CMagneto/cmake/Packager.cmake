@@ -28,6 +28,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader.cmake")
 
 CMagneto__parse__packaging_json()
 
+set(CMagneto__PACKAGE_GENERATORS "AUTO"
+    CACHE STRING
+    "Engaged CPack generators. Use AUTO for platform-based defaults or a semicolon-separated list such as ZIP;IFW."
+)
+
 
 # Check if Qt IFW is available.
 find_program(QTIFW_BINARYCREATOR_EXECUTABLE binarycreator)
@@ -44,15 +49,36 @@ Qt Installer Framework found:
 endif()
 
 
+function(CMagnetoInternal__packager__resolve_generator_module iGenerator iModuleFileName oModulePath)
+    cmake_path(SET _projectModulePath NORMALIZE
+        "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_CPACKCONFIG}/Packager/${iGenerator}/${iModuleFileName}"
+    )
+    if(EXISTS "${_projectModulePath}")
+        set(${oModulePath} "${_projectModulePath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    cmake_path(SET _frameworkModulePath NORMALIZE
+        "${CMAKE_CURRENT_LIST_DIR}/Packager/${iGenerator}/${iModuleFileName}"
+    )
+    if(EXISTS "${_frameworkModulePath}")
+        set(${oModulePath} "${_frameworkModulePath}" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(${oModulePath} "" PARENT_SCOPE)
+endfunction()
+
+
 # Default package generators for each supported platform.
 ## _packageGenerators is defined along with the CPACK_GENERATOR variable, because include(CPack) overrides CPACK_GENERATOR with a default list.
 if(WIN32)
-    set(_packageGenerators "ZIP")
+    set(_autoPackageGenerators "ZIP")
     if(QT_IFW_AVAILABLE)
-        list(APPEND _packageGenerators "IFW")
+        list(APPEND _autoPackageGenerators "IFW")
     endif()
 # elseif(APPLE)
-    # set(_packageGenerators productbuild)
+    # set(_autoPackageGenerators productbuild)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     execute_process(COMMAND which dpkg
                     RESULT_VARIABLE _hasDPKG
@@ -63,19 +89,34 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
                     OUTPUT_QUIET ERROR_QUIET)
 
     if(_hasDPKG EQUAL 0)
-        set(_packageGenerators "DEB")
+        set(_autoPackageGenerators "DEB")
     elseif(_hasRPM EQUAL 0)
-        set(_packageGenerators "RPM")
+        set(_autoPackageGenerators "RPM")
     else()
-        set(_packageGenerators "TGZ")
+        set(_autoPackageGenerators "TGZ")
     endif()
 
     if(QT_IFW_AVAILABLE)
-        list(APPEND _packageGenerators "IFW")
+        list(APPEND _autoPackageGenerators "IFW")
     endif()
 else()
-    set(_packageGenerators "TGZ")
+    set(_autoPackageGenerators "TGZ")
 endif()
+
+if(CMagneto__PACKAGE_GENERATORS STREQUAL "AUTO")
+    set(_packageGenerators "${_autoPackageGenerators}")
+else()
+    set(_packageGenerators "${CMagneto__PACKAGE_GENERATORS}")
+    string(REPLACE "," ";" _packageGenerators "${_packageGenerators}")
+    list(FILTER _packageGenerators EXCLUDE REGEX "^$")
+    if(NOT _packageGenerators)
+        CMagnetoInternal__message(FATAL_ERROR
+            "CMagneto__PACKAGE_GENERATORS must be AUTO or a non-empty semicolon-separated generator list."
+        )
+    endif()
+endif()
+
+list(REMOVE_DUPLICATES _packageGenerators)
 set(CPACK_GENERATOR "${_packageGenerators}")
 
 
@@ -110,7 +151,7 @@ set(CMagneto__PACKAGE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_CPAC
 
 cmake_path(SET CPACK_PACKAGE_DESCRIPTION_FILE NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Description.txt")
 cmake_path(SET CPACK_RESOURCE_FILE_WELCOME NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/IFW/Welcome.html")
-cmake_path(SET CPACK_RESOURCE_FILE_LICENSE NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/License.txt")
+cmake_path(SET CPACK_RESOURCE_FILE_LICENSE NORMALIZE "${CMagneto__PROJECT_LICENSE_FILE}")
 cmake_path(SET CPACK_RESOURCE_FILE_README NORMALIZE "${CMagneto__PACKAGE_RESOURCES_DIR}/Readme.txt")
 
 
@@ -146,10 +187,13 @@ list(REMOVE_ITEM CPACK_COMPONENTS_ALL
 # Include generator-specific (*Config_before_include_CPack.cmake) config files.
 # If these files are included after include(CPack), they have no effect.
 foreach(_generator IN LISTS _packageGenerators)
-    if(_generator STREQUAL "DEB")
-        include("${CMAKE_CURRENT_LIST_DIR}/Packager/DEB/DEBConfig_before_include_CPack.cmake")
-    elseif(_generator STREQUAL "IFW")
-        include("${CMAKE_CURRENT_LIST_DIR}/Packager/IFW/IFWConfig_before_include_CPack.cmake")
+    CMagnetoInternal__packager__resolve_generator_module(
+        "${_generator}"
+        "${_generator}Config_before_include_CPack.cmake"
+        _generatorConfigBeforePath
+    )
+    if(NOT _generatorConfigBeforePath STREQUAL "")
+        include("${_generatorConfigBeforePath}")
     endif()
 endforeach()
 
@@ -188,13 +232,22 @@ cpack_add_component(${CMagneto__COMPONENT__BUILD_MACHINE_SPECIFIC}
 
 # Include generator-specific config files.
 foreach(_generator IN LISTS _packageGenerators)
-    if(_generator STREQUAL "IFW")
-        include("${CMAKE_CURRENT_LIST_DIR}/Packager/IFW/IFWConfig.cmake")
-    elseif(_generator STREQUAL "DEB")
-        include("${CMAKE_CURRENT_LIST_DIR}/Packager/DEB/DEBConfig.cmake")
-    elseif(_generator STREQUAL "ZIP")
-        include("${CMAKE_CURRENT_LIST_DIR}/Packager/ZIP/ZIPConfig.cmake")
-    else()
-        CMagnetoInternal__message(WARNING "CPack configuration for generator '${_generator}' is not supported properly. Only the package properties common to all generators are set.")
+    CMagnetoInternal__packager__resolve_generator_module(
+        "${_generator}"
+        "${_generator}Config_before_include_CPack.cmake"
+        _generatorConfigBeforePath
+    )
+    CMagnetoInternal__packager__resolve_generator_module(
+        "${_generator}"
+        "${_generator}Config.cmake"
+        _generatorConfigPath
+    )
+
+    if(NOT _generatorConfigPath STREQUAL "")
+        include("${_generatorConfigPath}")
+    elseif(_generatorConfigBeforePath STREQUAL "")
+        CMagnetoInternal__message(WARNING
+            "CPack configuration for generator '${_generator}' has no project-side or framework-specific config module. Only the package properties common to all generators are set."
+        )
     endif()
 endforeach()

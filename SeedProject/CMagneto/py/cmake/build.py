@@ -33,6 +33,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -348,7 +349,7 @@ def _resolvedVariantLayout(iVariant: BuildVariantSpec, iBuildType: BuildRunner.B
 
 
 def _ensureCompatibleCMakeOnPath() -> None:
-    cmakeExecutable = shutil.which("cmake")
+    cmakeExecutable = Process.findExecutable("cmake")
     if cmakeExecutable is None:
         Log.error("`cmake` was not found in PATH.")
     assert cmakeExecutable is not None
@@ -403,8 +404,34 @@ def _renderGraphvizPicture(iGraphvizDotfilePath: Path | None) -> None:
         Log.warning("Graphviz is not found. Target dependency graph picture is not generated.")
 
 
+def _prepareDir(iDir: Path) -> None:
+    if iDir.exists():
+        # Files in CPack/IFW staging on Windows may be marked read-only, which
+        # causes shutil.rmtree to fail during rerun builds unless the bit is cleared.
+        def _removeReadOnlyAndRetry(iFunc: Any, iPath: str, iExc: BaseException) -> None:
+            if not isinstance(iExc, PermissionError):
+                raise iExc
+
+            os.chmod(iPath, stat.S_IWRITE)
+            iFunc(iPath)
+
+        shutil.rmtree(iDir, onexc=_removeReadOnlyAndRetry)
+    iDir.mkdir(parents=True, exist_ok=True)
+
+
+def _isBuildSystemGenerated(iLayout: ResolvedVariantLayout) -> bool:
+    if not iLayout.buildDir.exists():
+        return False
+
+    requiredEntries = (
+        iLayout.buildDir / "CMakeCache.txt",
+        iLayout.buildDir / "cmake_install.cmake",
+    )
+    return all(path.exists() for path in requiredEntries)
+
+
 def _isBuildDirExist(iLayout: ResolvedVariantLayout) -> bool:
-    return iLayout.buildDir.exists()
+    return _isBuildSystemGenerated(iLayout)
 
 
 def _isBuildSummaryExist(iLayout: ResolvedVariantLayout) -> bool:
@@ -601,6 +628,7 @@ def buildProject() -> None:
     if _isStageRequired(BuildRunner.BuildStage.Generate, _isBuildDirExist(layout), buildStage, runPrecedingStages):
         text = f"Generation of build system files ({buildType.name})"
         Log.status(text + "...")
+        _prepareDir(layout.buildDir)
         Process.runCommand(
             _configureCommand(buildVariant, buildType, args.coverage),
             PROJECT_ROOT
@@ -626,7 +654,7 @@ def buildProject() -> None:
     if _isStageRequired(BuildRunner.BuildStage.Install, _isInstallDirExist(layout), buildStage, runPrecedingStages):
         text = f"Installing ({buildType.name})"
         Log.status(text + "...")
-        layout.installDir.mkdir(parents=True, exist_ok=True)
+        _prepareDir(layout.installDir)
         Process.runCommand(_installCommand(buildVariant, buildType), PROJECT_ROOT)
         Log.status(text + " finished.\n")
 

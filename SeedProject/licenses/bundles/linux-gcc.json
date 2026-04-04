@@ -1,0 +1,10 @@
+{
+    "id": "linux-gcc",
+    "name": "Distribution bundle for the Makefiles_GCC build variant",
+    "components": [
+        "seedproject",
+        "cmagneto",
+        "qt6-base-linux-deb",
+        "zlib-linux-deb"
+    ]
+}

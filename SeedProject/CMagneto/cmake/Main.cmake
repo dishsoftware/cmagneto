@@ -32,11 +32,17 @@ include(CMakePackageConfigHelpers)
 ## Define constants.
 include("${CMAKE_CURRENT_LIST_DIR}/Constants.cmake")
 
+## Define functions and variables for license bundle resolution and installation.
+include("${CMAKE_CURRENT_LIST_DIR}/LicenseManager.cmake")
+
 ## Defines general-purpose functions to simplify integration with CMake generators of build system files.
 include("${CMAKE_CURRENT_LIST_DIR}/GeneratorTools.cmake")
 
 ## Define general-purpose functions for path handling.
 include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
+
+## Define internal process-wide tool registry helpers.
+include("${CMAKE_CURRENT_LIST_DIR}/ToolRegistry.cmake")
 
 ## Define constants and functions for handling scripts.
 include("${CMAKE_CURRENT_LIST_DIR}/Platform.cmake")
@@ -61,6 +67,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpLibTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpExeTarget.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/ApplicationMenu.cmake")
 
 ## Define functions for GoogleTest integration.
 include("${CMAKE_CURRENT_LIST_DIR}/TestTools.cmake")

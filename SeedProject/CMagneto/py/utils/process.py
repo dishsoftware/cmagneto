@@ -22,6 +22,7 @@ PathLikeStr: TypeAlias = os.PathLike[str] | str
 
 class Process:
     __cachedEnvironments: dict[tuple[str, tuple[str, ...]], dict[str, str]] = {}
+    __cachedExecutables: dict[tuple[str, ...], str | None] = {}
 
     @staticmethod
     def applyEnvFromScript(iScriptPath: PathLikeStr, iArgs: list[str] | tuple[str, ...] | None = None) -> None:
@@ -137,11 +138,25 @@ class Process:
 
     @staticmethod
     def _findPowerShellExecutable() -> str | None:
-        for executableName in ("pwsh", "powershell.exe", "powershell"):
-            executablePath = shutil.which(executableName)
-            if executablePath is not None:
-                return executablePath
-        return None
+        return Process.findFirstExecutable(("pwsh", "powershell.exe", "powershell"))
+
+    @staticmethod
+    def findExecutable(iExecutableName: str) -> str | None:
+        cacheKey = (iExecutableName,)
+        if cacheKey not in Process.__cachedExecutables:
+            Process.__cachedExecutables[cacheKey] = shutil.which(iExecutableName)
+        return Process.__cachedExecutables[cacheKey]
+
+    @staticmethod
+    def findFirstExecutable(iExecutableNames: tuple[str, ...]) -> str | None:
+        if iExecutableNames not in Process.__cachedExecutables:
+            resolvedExecutablePath: str | None = None
+            for executableName in iExecutableNames:
+                resolvedExecutablePath = Process.findExecutable(executableName)
+                if resolvedExecutablePath is not None:
+                    break
+            Process.__cachedExecutables[iExecutableNames] = resolvedExecutablePath
+        return Process.__cachedExecutables[iExecutableNames]
 
     @staticmethod
     def _resolvePosixShellExecutable(scriptPath: str) -> str:

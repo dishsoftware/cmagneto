@@ -1,0 +1,12 @@
+{
+    "id": "qt6-base-linux-deb",
+    "name": "Qt 6 Base from Debian/Ubuntu packages",
+    "notes": "Observed in the Ubuntu 24.04 build image at /usr/share/doc/qt6-base-dev/copyright.",
+    "files": [
+        {
+            "kind": "notice",
+            "source": "/usr/share/doc/qt6-base-dev/copyright",
+            "install": "licenses/3rd-party/Qt6-base/copyright"
+        }
+    ]
+}

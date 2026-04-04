@@ -41,6 +41,9 @@ set(CMagneto__SUBDIR_CMAKE "lib/cmake/")
 ## Under project install dir: parent for all resources of all targets.
 set(CMagneto__SUBDIR_TARGET_RESOURCES "@resources/")
 
+## Under project install dir: parent for application menu helper assets such as launcher icons.
+set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")
+
 ## Under target source dir: parent for target's resources, which must be embedded into the target's binary using Qt RCC.
 set(CMagneto__SUBDIR_QTRC "QtRC/")
 
@@ -63,6 +66,15 @@ set(CMagneto__SUBDIR_CPACKCONFIG "packaging/")
 
 ## Under `{CMagneto__SUBDIR_CPACKCONFIG}`: parent for package resources (e.g. license, user agreement, etc).
 set(CMagneto__SUBDIR_PACKAGE_RESOURCES "@resources/")
+
+## Under project root: parent for distributable license and notice files plus their manifests.
+set(CMagneto__SUBDIR_LICENSES "licenses/")
+
+## Under `{CMagneto__SUBDIR_LICENSES}`: parent for reusable license components.
+set(CMagneto__SUBDIR_LICENSES_COMPONENTS "components/")
+
+## Under `{CMagneto__SUBDIR_LICENSES}`: parent for release bundles that select license components.
+set(CMagneto__SUBDIR_LICENSE_BUNDLES "bundles/")
 
 ## Under project build dir: parent for generated packages.
 set(CMagneto__SUBDIR_PACKAGES "packages/")

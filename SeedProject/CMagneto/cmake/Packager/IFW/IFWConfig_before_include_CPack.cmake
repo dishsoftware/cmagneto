@@ -21,6 +21,11 @@ function(CMagnetoInternal__ifw_set_package_file_if_exists iVariable iFileName)
     endif()
 endfunction()
 
+function(CMagnetoInternal__ifw_initialize_application_menu_options)
+    set(_windowsStartMenuDirectory "${CMagneto__PACKAGING_JSON__START_MENU_DIRECTORY}")
+    set(CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY "${_windowsStartMenuDirectory}" PARENT_SCOPE)
+endfunction()
+
 function(CMagnetoInternal__ifw_make_text_expression iInputText oOutputExpression)
     set(_text "${iInputText}")
     string(REPLACE "\\" "\\\\" _text "${_text}")
@@ -181,14 +186,12 @@ Controller.prototype.CMagnetoInternal__ifw_customizeFinishedPage = function()
     set(${oScriptPath} "${_generatedScriptPath}" PARENT_SCOPE)
 endfunction()
 
-
 set(CPACK_IFW_PACKAGE_NAME "${CMagneto__PACKAGING_JSON__PACKAGE_ID}")
 set(CPACK_IFW_PACKAGE_TITLE "${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI} Installer")
 set(CPACK_IFW_PACKAGE_PUBLISHER "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_IFW_PRODUCT_URL "${CMagneto__PROJECT_JSON__PROJECT_HOMEPAGE}")
-set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}")
-
-list(APPEND CPACK_PRE_BUILD_SCRIPTS "${CMAKE_CURRENT_LIST_DIR}/InjectRuntimeLicense.cmake")
+CMagnetoInternal__ifw_initialize_application_menu_options()
+set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${CMagnetoInternal__IFW__WINDOWS_START_MENU_DIRECTORY}")
 
 # Force a consistent wizard presentation on Windows so the installer
 # does not inherit unreadable dark host palette combinations.

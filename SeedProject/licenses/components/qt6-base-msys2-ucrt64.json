@@ -1,0 +1,17 @@
+{
+    "id": "qt6-base-msys2-ucrt64",
+    "name": "Qt 6 Base from MSYS2 UCRT64",
+    "notes": "Used by the MinGW build variant through the MSYS2 UCRT64 Qt packages.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "$env{MSYS2_HOME}/ucrt64/share/licenses/qt6-base/LGPL-3.0-only.txt",
+            "install": "licenses/3rd-party/Qt6-base/LGPL-3.0-only.txt"
+        },
+        {
+            "kind": "notice",
+            "source": "$env{MSYS2_HOME}/ucrt64/share/licenses/qt6-base/Qt-GPL-exception-1.0.txt",
+            "install": "licenses/3rd-party/Qt6-base/Qt-GPL-exception-1.0.txt"
+        }
+    ]
+}

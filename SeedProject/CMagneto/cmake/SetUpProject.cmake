@@ -63,6 +63,7 @@ function(CMagneto__set_up__project)
     # Configure packaging.
     ## The project only sets up packaging, if it is the top level project.
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        CMagneto__set_up__license_bundle_installation()
         CMagnetoInternal__install_bundled_external_shared_libraries()
 
         cmake_path(SET _CPACKCONFIG_PATH NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_CPACKCONFIG}/CPackConfig.cmake")

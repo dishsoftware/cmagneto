@@ -1,0 +1,10 @@
+{
+    "id": "msvc2022",
+    "name": "Distribution bundle for MSVC 2022 build variants",
+    "components": [
+        "seedproject",
+        "cmagneto",
+        "qt6-base-msvc2022",
+        "zlib-msvc2022"
+    ]
+}

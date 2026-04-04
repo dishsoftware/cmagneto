@@ -124,6 +124,10 @@ SeedProject/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
+├── licenses/                              # Installed/package legal files configuration and checked-in legal resources.
+|   ├── bundles/                           # License bundle manifests selected by build variants.
+|   ├── components/                        # Reusable license component manifests.
+|   └── 3rd-party/                         # Optional checked-in third-party legal files.
 ├── CMakePresets.json                      # Root preset manifest that includes concrete variant files from ./build_variants/.
 ├── build_variants/                        # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
@@ -180,6 +184,9 @@ SeedProject/
 
 ## Code Conventions
 Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
+
+## License Management
+Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
 
 ---
 
@@ -274,7 +281,76 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
+6) If an executable should have platform-specific icons, place icon files under the target source root, for example in `@resources/AppIcon/`, and declare them once with:
+    ```cmake
+    CMagneto__bind_icon_to_executable(DishSW_ContactHolder_GUI
+        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
+        LINUX_ICON "@resources/AppIcon/ContactHolder.png"
+        MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+    )
+    ```
+    Notes:
+    - The function must be called after `add_executable(...)`.
+    - You may specify only the platforms you care about.
+    - On Windows, the `.ico` file is embedded into the `.exe` binary.
+    - On macOS, the `.icns` file is attached to the app bundle and only takes effect for `MACOSX_BUNDLE` executables.
+    - On Linux, the declared icon is placed next to the executable in the build tree and install tree, because ELF executables do not have a standard embedded desktop icon mechanism.
+    - The declared icon paths are stored as target metadata and reused by other executable-icon helpers.
+
+    ```cmake
+    CMagneto__place_icon_near_executable(DishSW_ContactHolder_GUI)
+    ```
+    Notes:
+    - The function must be called after `add_executable(...)`.
+    - By default, the function reuses icon paths previously declared through `CMagneto__bind_icon_to_executable(...)`.
+    - Only the icon matching the current platform is copied.
+    - The file is copied next to the built executable and installed into `bin/`, so packages include it too.
+    - This is useful when you want the installed icon file to be available to users directly, for example so they can assign it to a directory with related files.
+    - On Linux, `CMagneto__bind_icon_to_executable(...)` already performs the same adjacent placement, so this call becomes a no-op there if the icon was already placed.
+
+8) If an executable should appear in the application menu, register it explicitly:
+    ```cmake
+    CMagneto__add_executable_to_application_menu(DishSW_ContactHolder_GUI
+        NAME "Contact Holder"
+        # LAUNCH_IN_TERMINAL
+    )
+    ```
+    If another installed file should appear there instead, register it by its install-relative path:
+    ```cmake
+    CMagneto__add_installed_file_to_application_menu("bin/MyHelper.exe"
+        NAME "My Helper"
+        WINDOWS_ICON "@resources/AppIcon/MyHelper.ico"
+        # LAUNCH_IN_TERMINAL
+    )
+    ```
+    Notes:
+    - `NAME` is the launcher label shown to users.
+    - `LAUNCH_IN_TERMINAL` requests terminal-style launching on platforms whose launcher formats support it. For DEB packages, this maps to the XDG desktop-entry `Terminal=true` field.
+    - `CMagneto__add_installed_file_to_application_menu(...)` accepts a path relative to the installation prefix.
+    - `CMagneto__add_executable_to_application_menu(...)` reuses icon metadata previously declared through `CMagneto__bind_icon_to_executable(...)`.
+    - On Windows, registered entries are used by IFW packages to create Start Menu shortcuts.
+    - On Linux, DEB packages create XDG desktop-entry launchers under `/usr/share/applications/`.
+    - On Linux, the declared Linux icon is exposed to desktop environments through the generated launcher as an absolute icon path inside the package install tree, so no GUI-specific installation step is required.
+    - If no icon is declared, the launcher is still generated and the desktop environment falls back to its default generic application or executable icon.
+    - On Linux, launcher setup is safe on headless systems. Optional desktop-database refresh commands are attempted only when available and are non-fatal.
+    - On Linux, the generated `.desktop` launchers are package-owned assets under `/usr/share/applications/`, so uninstalling the package removes them automatically.
+    - ZIP packages do not create Start Menu entries.
+
+   Configure the Windows Start Menu folder in `./meta/Packaging.json`, for example:
+    ```json
+    {
+      "PackageID": "org.example.myapp",
+      "PackageNamePrefix": "MyApp",
+      "PackageMaintainer": "Jane Doe <jane@example.com>",
+      "StartMenuDirectory": "DishSW"
+    }
+    ```
+    Notes:
+    - If `StartMenuDirectory` is omitted, CMagneto uses `CompanyName_SHORT`.
+    - If `StartMenuDirectory` is an empty string, IFW places shortcuts in the Start Menu root.
+    - On Windows 11, the Start Menu UI may flatten a folder that contains only one shortcut and show that shortcut as if it were placed at the Start Menu root. The underlying Start Menu filesystem layout still uses the configured directory.
+
+9) Define runtime-installation policy for imported shared-library dependencies in the active build variant under [`./build_variants/`](./../build_variants/) by setting preset `cacheVariables`:
     ```json
     {
       "cacheVariables": {
@@ -294,22 +370,40 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
     Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)`, `CMagneto__bundle_external_shared_libraries(...)`, `CMagneto__bundle_runtime_dependency_files(...)`, or `CMagneto__exclude_bundled_runtime_dependency_file_patterns(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
-7) If the project defines an executable target, which is considered as the project entrypoint, call
+10) Select engaged packagers in the active build variant with preset `cacheVariables`:
+    ```json
+    {
+      "cacheVariables": {
+        "CMagneto__PACKAGE_GENERATORS": "ZIP;IFW"
+      }
+    }
+    ```
+    Notes:
+    - `CMagneto__PACKAGE_GENERATORS=AUTO` keeps the framework defaults for the current platform.
+    - Use a semicolon-separated list such as `ZIP`, `IFW`, `DEB`, or `ZIP;IFW`.
+    - Project-side custom generator modules may be added under `./packaging/Packager/{GENERATOR}/` as optional files:
+      `./packaging/Packager/{GENERATOR}/{GENERATOR}Config_before_include_CPack.cmake`
+      and
+      `./packaging/Packager/{GENERATOR}/{GENERATOR}Config.cmake`
+    - If a selected generator has no project-side or framework-specific module, CMagneto applies only generic CPack settings and warns.
+
+11) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-8) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+12) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         ... # List the files to embed here.
     )
     ```
 
-9) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+13) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+    For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).
 
-10) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+14) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 
@@ -326,7 +420,7 @@ Look into [`./CMagneto/doc/CodeConventions.md`](./doc/CodeConventions.md).
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-11) After all targets are set up, call: `CMagneto__set_up__project()`.
+15) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;

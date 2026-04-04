@@ -19,6 +19,16 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 # Load internals of the submodule.
 include("${CMAKE_CURRENT_LIST_DIR}/MetaLoader_Internals.cmake")
 
+function(CMagnetoInternal__meta_read_json_value_or_default iJsonText iKey iDefaultValue oValue)
+    string(JSON _value ERROR_VARIABLE _error GET "${iJsonText}" "${iKey}")
+    if(_error)
+        set(${oValue} "${iDefaultValue}" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(${oValue} "${_value}" PARENT_SCOPE)
+endfunction()
+
 
 #[[
     CMagneto__parse__project_json
@@ -67,9 +77,16 @@ function(CMagneto__parse__packaging_json)
     string(JSON CMagneto__PACKAGING_JSON__PACKAGE_ID          GET "${PACKAGING_JSON_TEXT}" "PackageID")
     string(JSON CMagneto__PACKAGING_JSON__PACKAGE_NAME_PREFIX GET "${PACKAGING_JSON_TEXT}" "PackageNamePrefix")
     string(JSON CMagneto__PACKAGING_JSON__PACKAGE_MAINTAINER  GET "${PACKAGING_JSON_TEXT}" "PackageMaintainer")
+    CMagnetoInternal__meta_read_json_value_or_default(
+        "${PACKAGING_JSON_TEXT}"
+        "StartMenuDirectory"
+        "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}"
+        CMagneto__PACKAGING_JSON__START_MENU_DIRECTORY
+    )
 
     # Export to parent scope so they're accessible after calling the function.
     set(CMagneto__PACKAGING_JSON__PACKAGE_ID          "${CMagneto__PACKAGING_JSON__PACKAGE_ID}"          PARENT_SCOPE)
     set(CMagneto__PACKAGING_JSON__PACKAGE_NAME_PREFIX "${CMagneto__PACKAGING_JSON__PACKAGE_NAME_PREFIX}" PARENT_SCOPE)
     set(CMagneto__PACKAGING_JSON__PACKAGE_MAINTAINER  "${CMagneto__PACKAGING_JSON__PACKAGE_MAINTAINER}"  PARENT_SCOPE)
+    set(CMagneto__PACKAGING_JSON__START_MENU_DIRECTORY "${CMagneto__PACKAGING_JSON__START_MENU_DIRECTORY}" PARENT_SCOPE)
 endfunction()
