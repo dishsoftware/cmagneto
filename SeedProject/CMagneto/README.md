@@ -359,22 +359,39 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     The build variant is the preferred place for this decision because the required policy may depend on compiler, package manager, deployment model, or other build-variant details.
     Advanced users may still call `CMagneto__expect_external_shared_libraries_on_target_machine(...)`, `CMagneto__bundle_external_shared_libraries(...)`, `CMagneto__bundle_runtime_dependency_files(...)`, or `CMagneto__exclude_bundled_runtime_dependency_file_patterns(...)` directly in CMake as manual overrides, but this is not the primary workflow.
 
-10) If the project defines an executable target, which is considered as the project entrypoint, call
+10) Select engaged packagers in the active build variant with preset `cacheVariables`:
+    ```json
+    {
+      "cacheVariables": {
+        "CMagneto__PACKAGE_GENERATORS": "ZIP;IFW"
+      }
+    }
+    ```
+    Notes:
+    - `CMagneto__PACKAGE_GENERATORS=AUTO` keeps the framework defaults for the current platform.
+    - Use a semicolon-separated list such as `ZIP`, `IFW`, `DEB`, or `ZIP;IFW`.
+    - Project-side custom generator modules may be added under `./packaging/Packager/{GENERATOR}/` as optional files:
+      `./packaging/Packager/{GENERATOR}/{GENERATOR}Config_before_include_CPack.cmake`
+      and
+      `./packaging/Packager/{GENERATOR}/{GENERATOR}Config.cmake`
+    - If a selected generator has no project-side or framework-specific module, CMagneto applies only generic CPack settings and warns.
+
+11) If the project defines an executable target, which is considered as the project entrypoint, call
     ```cmake
     CMagneto__set_project_entrypoint(EntrypointTargetName)
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-11) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+12) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         ... # List the files to embed here.
     )
     ```
 
-12) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+13) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
 
-13) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+14) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 
@@ -391,7 +408,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     CMagneto__register_test_target(${_TESTS_TargetName})
     ```
 
-14) After all targets are set up, call: `CMagneto__set_up__project()`.
+15) After all targets are set up, call: `CMagneto__set_up__project()`.
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;
