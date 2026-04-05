@@ -45,6 +45,8 @@ function(CMagneto__set_up__project)
         CMagnetoInternal__set_up_targets_runtime_resolution()
     endif()
 
+    CMagnetoInternal__install_project_defs_header()
+
     # Generate build stage reports, helper scripts, etc.
     CMagnetoInternal__set_up__CMake_package_export()
     CMagnetoInternal__set_up__build_summary__file() # Required by `build.py` in the project root.

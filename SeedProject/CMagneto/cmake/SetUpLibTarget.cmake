@@ -165,6 +165,7 @@ function(CMagneto__set_up__library iLibTargetName)
             $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}> # Set up compiler.
             $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
     )
+    CMagnetoInternal__set_up_project_build_info_for_target(${iLibTargetName} PUBLIC)
 
     # Set up binary.
     CMagneto__compose_binary_OUTPUT_NAME(${iLibTargetName} _binaryOutputName)

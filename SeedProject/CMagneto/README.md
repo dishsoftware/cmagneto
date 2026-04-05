@@ -140,6 +140,7 @@ SeedProject/
 ├── src/                                   # Project source root.
 │   └── {CompanyName_SHORT}/               # The nesting is mandated.
 │       └── {ProjectNameBase}/             # The nesting is mandated.
+│           ├── {ProjectNameBase}_DEFS.hpp # Generated automatically if absent. Defines project-level helper APIs such as version(), versionMajor(), versionMinor(), versionPatch(), and gitCommitSHA(). Added to public headers transitively through target `_DEFS.hpp` headers.
 │           └── TargetName/                # Target source root. Code of the target can be nested arbitrary under this dir.
 |               ├── CMakeLists.txt         # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
 │               ├── TargetName_EXPORT.hpp  # Generated automatically if absent for library targets. Defines export/import macro for shared libraries. Added to the target implicitly.
@@ -424,6 +425,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     The function sets up:
     - CMake project package export (`*Config.cmake`, etc);
     - target runtime lookup configuration for build and install trees;
+    - generation and installation of the project-level `{ProjectNameBase}_DEFS.hpp` header if it is absent;
     - installation of build-variant-selected bundled external shared libraries into the package;
     - optional legacy `set_env` and `run` helper scripts in the build tree (see section [`1.4. Run Project`](#14-run-project));
     - Auxilliary files, required by the coupled Python code and VS Code.

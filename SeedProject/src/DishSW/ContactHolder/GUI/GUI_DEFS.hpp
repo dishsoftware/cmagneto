@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DishSW/ContactHolder/ContactHolder_DEFS.hpp"
+
 #if defined(_DEBUG) || defined(DEBUG)
     #include <assert.h>
     #define DISHSW_CONTACTHOLDER_GUI_VERIFY(x) assert(x);
