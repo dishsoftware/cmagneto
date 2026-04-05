@@ -166,37 +166,30 @@ variables:
       fi
 
     - |
-      # `dpkg-deb -c` prints entries in a tar-like tabular format.
-      # In the `awk` script below:
-      # - `$1` is the permissions/mode field, e.g. `-rwxr-xr-x`
-      # - `$6` is the packaged path, e.g. `./opt/DishSW/ContactHolder/bin/DishSW_ContactHolder0_GUI`
-      # We therefore pick the first regular file under `.../bin/` that has at least one execute bit set.
-      # In a mode string like `-rwxr-xr-x`, the execute-related slots are:
-      # - char 4: owner execute bit
-      # - char 7: group execute bit
-      # - char 10: other/world execute bit
-      # The `substr(...)` checks below accept the entry if any of those slots contains
-      # an execute-related marker such as `x` (or special-mode variants like `s`/`t`).
-      installedExecutablePath="$(dpkg-deb -c "${PACKAGE_PATH}" | awk '
-        $6 ~ /^\.\/opt\/.*\/bin\/[^/]+$/ &&
-        $1 ~ /^-/ &&
-        (
-          substr($1, 4, 1) ~ /[xs]/ ||
-          substr($1, 7, 1) ~ /[xs]/ ||
-          substr($1, 10, 1) ~ /[xts]/
-        ) &&
-        firstMatch == "" {
-          firstMatch = $6
-        }
-        END {
-          print firstMatch
-        }
-      ')"
+      # Resolve the Debian package name from the `.deb` metadata, then inspect the
+      # files that were actually installed for that package.
+      installedPackageName="$(dpkg-deb -f "${PACKAGE_PATH}" Package)"
+      if [ -z "${installedPackageName}" ]; then
+        echo "Failed to detect Debian package name from ${PACKAGE_PATH}."
+        exit 1
+      fi
+
+      # Pick the first package-owned regular executable directly under `/opt/.../bin/`.
+      # This avoids relying on `dpkg-deb -c` text parsing and skips non-executable
+      # assets such as `ContactHolder.png` that may live alongside the real binary.
+      installedExecutablePath=""
+      while IFS= read -r candidatePath; do
+        if [ -f "${candidatePath}" ] && [ -x "${candidatePath}" ]; then
+          installedExecutablePath="${candidatePath}"
+          break
+        fi
+      done < <(dpkg-query -L "${installedPackageName}" | grep '^/opt/.*/bin/[^/]\+$' | sort)
+
       if [ -z "${installedExecutablePath}" ]; then
         echo "Failed to detect installed executable path from ${PACKAGE_PATH}."
         exit 1
       fi
-      export INSTALLED_EXECUTABLE_PATH="/${installedExecutablePath#./}"
+      export INSTALLED_EXECUTABLE_PATH="${installedExecutablePath}"
       echo "INSTALLED_EXECUTABLE_PATH=${INSTALLED_EXECUTABLE_PATH}" >> inherited.env
 
     # The executable is a Qt GUI app, so it is run with the offscreen platform plugin to avoid requiring a display server.
