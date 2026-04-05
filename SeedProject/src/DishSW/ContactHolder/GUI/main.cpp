@@ -21,18 +21,18 @@
 #include <iostream>
 
 
-int main(int argc, char* argv[]) {
+int main(int iArgumentsSize, char* iArguments[]) {
     CLI::App cliApp{DishSW::ContactHolder::projectNameForUI()};
     cliApp.description(DishSW::ContactHolder::projectDescription());
     cliApp.allow_extras();
 
     bool cliVersionFlag = false;
-    cliApp.add_flag("--version,-v", cliVersionFlag, "Print version and exit.");
+    cliApp.add_flag("--version, -v", cliVersionFlag, "Print version and exit.");
 
-    CLI11_PARSE(cliApp, argc, argv);
+    CLI11_PARSE(cliApp, iArgumentsSize, iArguments);
 
     if(cliVersionFlag) {
-        if(argc != 2) {
+        if(iArgumentsSize != 2) {
             std::cerr << "The --version command must be used without any other arguments." << std::endl;
             return 1;
         }
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    QApplication qApplication(argc, argv);
+    QApplication qApplication(iArgumentsSize, iArguments);
 
     std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
 

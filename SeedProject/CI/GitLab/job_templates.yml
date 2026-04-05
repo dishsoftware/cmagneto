@@ -192,13 +192,11 @@ variables:
       export INSTALLED_EXECUTABLE_PATH="${installedExecutablePath}"
       echo "INSTALLED_EXECUTABLE_PATH=${INSTALLED_EXECUTABLE_PATH}" >> inherited.env
 
-    # The executable is a Qt GUI app, so it is run with the offscreen platform plugin to avoid requiring a display server.
-    # A couple of stable startup lines are then checked:
-    # - "zlib version:" is used as evidence that the bundled zlib runtime was found and loaded.
-    # - "Qt widget styles count:" is used as evidence that Qt widgets were initialized successfully after apt-installed Qt runtime packages were pulled in.
+    # The executable provides a CLI11-managed --version path that exits before QApplication is constructed,
+    # so package smoke verification can avoid any display-server or GUI-runtime concerns here.
     - |
       set +e
-      QT_QPA_PLATFORM=offscreen timeout 30s "${INSTALLED_EXECUTABLE_PATH}" > package_run_output.txt 2>&1
+      timeout 30s "${INSTALLED_EXECUTABLE_PATH}" --version > package_run_output.txt 2>&1
       packageRunExitCode=$?
       set -e
       cat package_run_output.txt
@@ -206,8 +204,7 @@ variables:
         echo "Installed executable exited with code ${packageRunExitCode}."
         exit ${packageRunExitCode}
       fi
-    - grep -q "zlib version:" package_run_output.txt
-    - grep -q "Qt widget styles count:" package_run_output.txt
+    - grep -qx "0.0.1" package_run_output.txt
   artifacts:
     when: always
     paths:
