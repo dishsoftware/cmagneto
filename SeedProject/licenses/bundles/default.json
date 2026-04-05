@@ -3,6 +3,7 @@
     "name": "Default distribution bundle",
     "components": [
         "seedproject",
-        "cmagneto"
+        "cmagneto",
+        "cli11"
     ]
 }

@@ -1,0 +1,8 @@
+This placeholder keeps `3rdParty/sources/` in the repository.
+
+Use this directory for vendored 3rd-party source code that is compiled or included from source.
+Examples:
+- header-only libraries vendored as source;
+- static/shared libraries built from vendored source with CMake or another build integration layer.
+
+Do not place generated build artifacts here.

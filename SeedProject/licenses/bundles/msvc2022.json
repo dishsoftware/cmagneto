@@ -4,6 +4,7 @@
     "components": [
         "seedproject",
         "cmagneto",
+        "cli11",
         "qt6-base-msvc2022",
         "zlib-msvc2022"
     ]

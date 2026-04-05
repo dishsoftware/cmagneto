@@ -54,7 +54,15 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 # Target
 set(_TARGET_NAME DishSW_ContactHolder_GUI)
 add_executable(${_TARGET_NAME})
-target_link_libraries(${_TARGET_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets ZLIB::ZLIB DishSW::ContactHolder::Contacts)
+target_link_libraries(${_TARGET_NAME}
+    PRIVATE
+        CLI11::CLI11
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        ZLIB::ZLIB
+        DishSW::ContactHolder::Contacts
+)
 ####################################################################
 
 

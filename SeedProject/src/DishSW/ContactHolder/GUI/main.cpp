@@ -5,6 +5,8 @@
 // The MIT license text is available in the LICENSE file
 // located at the root directory of the project.
 
+#include "GUI_DEFS.hpp"
+
 #include "DishSW/ContactHolder/Contacts/FieldType.hpp"
 #include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
 #include "DishSW/ContactHolder/Contacts/fields/EmailAddress.hpp"
@@ -33,6 +35,8 @@ int main(int argc, char* argv[]) {
     auto emailAddress = DishSW::ContactHolder::Contacts::fields::EmailAddress();
     std::wcout << "zlib version: " << zlibVersion() << std::endl;
     std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
+
+    std::wcout << "Project version: " << DishSW::ContactHolder::version() << std::endl;
 
     QIcon iconContacts(":/DishSW/ContactHolder/Contacts/icons/logo.svg");
     QIcon iconGUI(":/DishSW/ContactHolder/GUI/icons/logo.svg");

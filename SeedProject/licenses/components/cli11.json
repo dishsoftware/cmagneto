@@ -1,0 +1,12 @@
+{
+    "id": "cli11",
+    "name": "CLI11",
+    "notes": "Vendored CLI11 license shipped with distributable packages.",
+    "files": [
+        {
+            "kind": "license",
+            "source": "3rdParty/sources/CLI11/LICENSE",
+            "install": "licenses/3rd-party/CLI11/LICENSE.txt"
+        }
+    ]
+}

@@ -1,0 +1,6 @@
+This placeholder keeps `3rdParty/prebuilt/` in the repository.
+
+Use this directory for checked-in 3rd-party binary artifacts when source builds are unavailable,
+impractical, or the vendor distributes only binaries.
+
+Prefer documenting provenance, version, checksum, and license obligations for each dependency.
