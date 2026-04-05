@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DishSW/ContactHolder/ContactHolder_DEFS.hpp"
 #include "PhoneNumberFormatter_EXPORT.hpp"
 
 #if defined(_DEBUG) || defined(DEBUG)

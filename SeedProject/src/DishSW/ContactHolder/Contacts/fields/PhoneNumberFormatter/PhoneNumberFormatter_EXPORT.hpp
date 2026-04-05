@@ -44,7 +44,6 @@
                 #pragma message ("Windows Compiler (unknown) Import")
             #endif
         #else
-            COMPILE_TIME_MESSAGE("NOT WIN")
             #if defined(__GNUC__)
                 #define DISHSW_CONTACTHOLDER_CONTACTS_FIELDS_PHONENUMBERFORMATTER_EXPORT
                 #pragma message ("GCC Import")

@@ -31,6 +31,220 @@ include("${CMAKE_CURRENT_LIST_DIR}/PathTools.cmake")
 set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "")
 
 
+function(CMagnetoInternal__get_git_commit_sha oGitCommitSha)
+    get_property(_isSet GLOBAL PROPERTY CMagnetoInternal__GitCommitSha SET)
+    if(_isSet)
+        get_property(_gitCommitSha GLOBAL PROPERTY CMagnetoInternal__GitCommitSha)
+        set(${oGitCommitSha} "${_gitCommitSha}" PARENT_SCOPE)
+        return()
+    endif()
+
+    execute_process(
+        COMMAND git rev-parse HEAD
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        OUTPUT_VARIABLE _gitCommitSha
+        ERROR_QUIET
+        RESULT_VARIABLE _gitResult
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(NOT _gitResult EQUAL 0 OR _gitCommitSha STREQUAL "")
+        set(_gitCommitSha "UNKNOWN")
+    endif()
+
+    set_property(GLOBAL PROPERTY CMagnetoInternal__GitCommitSha "${_gitCommitSha}")
+    set(${oGitCommitSha} "${_gitCommitSha}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_project_source_root oProjectSourceRoot)
+    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+    set(${oProjectSourceRoot} "${_projectSourceRoot}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_project_defs_header_info
+    oProjectDefsHeaderAbsPath
+    oProjectDefsHeaderFileName
+    oVersionMacroName
+    oVersionMajorMacroName
+    oVersionMinorMacroName
+    oVersionPatchMacroName
+    oGitCommitShaMacroName
+    oProjectNamespace
+)
+    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
+    cmake_path(GET _projectSourceRoot FILENAME _projectLeafName)
+
+    set(_projectDefsHeaderFileName "${_projectLeafName}_DEFS.hpp")
+    set(_projectDefsHeaderAbsPath "${_projectSourceRoot}/${_projectDefsHeaderFileName}")
+    set(_versionMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION")
+    set(_versionMajorMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_MAJOR")
+    set(_versionMinorMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_MINOR")
+    set(_versionPatchMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_PATCH")
+    set(_gitCommitShaMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__GIT_COMMIT_SHA")
+    string(TOUPPER "${_versionMacroName}" _versionMacroName)
+    string(TOUPPER "${_versionMajorMacroName}" _versionMajorMacroName)
+    string(TOUPPER "${_versionMinorMacroName}" _versionMinorMacroName)
+    string(TOUPPER "${_versionPatchMacroName}" _versionPatchMacroName)
+    string(TOUPPER "${_gitCommitShaMacroName}" _gitCommitShaMacroName)
+    set(_projectNamespace "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}::${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+
+    set(${oProjectDefsHeaderAbsPath} "${_projectDefsHeaderAbsPath}" PARENT_SCOPE)
+    set(${oProjectDefsHeaderFileName} "${_projectDefsHeaderFileName}" PARENT_SCOPE)
+    set(${oVersionMacroName} "${_versionMacroName}" PARENT_SCOPE)
+    set(${oVersionMajorMacroName} "${_versionMajorMacroName}" PARENT_SCOPE)
+    set(${oVersionMinorMacroName} "${_versionMinorMacroName}" PARENT_SCOPE)
+    set(${oVersionPatchMacroName} "${_versionPatchMacroName}" PARENT_SCOPE)
+    set(${oGitCommitShaMacroName} "${_gitCommitShaMacroName}" PARENT_SCOPE)
+    set(${oProjectNamespace} "${_projectNamespace}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderBlock)
+    CMagnetoInternal__get_project_defs_header_info(
+        _projectDefsHeaderAbsPath
+        _projectDefsHeaderFileName
+        _versionMacroName
+        _versionMajorMacroName
+        _versionMinorMacroName
+        _versionPatchMacroName
+        _gitCommitShaMacroName
+        _projectNamespace
+    )
+
+    set(_projectDefsHeaderBlockTemplate [=[
+#ifndef @VERSION_MACRO_NAME@
+    #define @VERSION_MACRO_NAME@ "0.0.0"
+#endif
+
+#ifndef @VERSION_MAJOR_MACRO_NAME@
+    #define @VERSION_MAJOR_MACRO_NAME@ 0
+#endif
+
+#ifndef @VERSION_MINOR_MACRO_NAME@
+    #define @VERSION_MINOR_MACRO_NAME@ 0
+#endif
+
+#ifndef @VERSION_PATCH_MACRO_NAME@
+    #define @VERSION_PATCH_MACRO_NAME@ 0
+#endif
+
+#ifndef @GIT_COMMIT_SHA_MACRO_NAME@
+    #define @GIT_COMMIT_SHA_MACRO_NAME@ "UNKNOWN"
+#endif
+
+namespace @PROJECT_NAMESPACE@ {
+    inline constexpr const char* version() noexcept {
+        return @VERSION_MACRO_NAME@;
+    }
+
+    inline constexpr unsigned int versionMajor() noexcept {
+        return @VERSION_MAJOR_MACRO_NAME@;
+    }
+
+    inline constexpr unsigned int versionMinor() noexcept {
+        return @VERSION_MINOR_MACRO_NAME@;
+    }
+
+    inline constexpr unsigned int versionPatch() noexcept {
+        return @VERSION_PATCH_MACRO_NAME@;
+    }
+
+    inline constexpr const char* gitCommitSHA() noexcept {
+        return @GIT_COMMIT_SHA_MACRO_NAME@;
+    }
+} // namespace @PROJECT_NAMESPACE@
+]=])
+    set(VERSION_MACRO_NAME "${_versionMacroName}")
+    set(VERSION_MAJOR_MACRO_NAME "${_versionMajorMacroName}")
+    set(VERSION_MINOR_MACRO_NAME "${_versionMinorMacroName}")
+    set(VERSION_PATCH_MACRO_NAME "${_versionPatchMacroName}")
+    set(GIT_COMMIT_SHA_MACRO_NAME "${_gitCommitShaMacroName}")
+    set(PROJECT_NAMESPACE "${_projectNamespace}")
+    string(CONFIGURE "${_projectDefsHeaderBlockTemplate}" _projectDefsHeaderBlock @ONLY)
+    set(${oProjectDefsHeaderBlock} "${_projectDefsHeaderBlock}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__set_up_project_defs_header oProjectDefsHeaderIncludePath)
+    CMagnetoInternal__get_project_defs_header_info(
+        _projectDefsHeaderAbsPath
+        _projectDefsHeaderFileName
+        _versionMacroName
+        _versionMajorMacroName
+        _versionMinorMacroName
+        _versionPatchMacroName
+        _gitCommitShaMacroName
+        _projectNamespace
+    )
+    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
+
+    if(NOT EXISTS "${_projectDefsHeaderAbsPath}")
+        CMagnetoInternal__compose_project_defs_header_block(_projectDefsHeaderBlock)
+
+        set(_projectDefsHeaderTemplate [=[
+#pragma once
+
+@PROJECT_DEFS_HEADER_BLOCK@
+]=])
+        set(PROJECT_DEFS_HEADER_BLOCK "${_projectDefsHeaderBlock}")
+        string(CONFIGURE "${_projectDefsHeaderTemplate}" _projectDefsHeaderContent @ONLY)
+
+        file(WRITE "${_projectDefsHeaderAbsPath}" "${_projectDefsHeaderContent}")
+        CMagnetoInternal__message(STATUS "Generated missing project defs header \"${_projectDefsHeaderAbsPath}\".")
+    endif()
+
+    CMagneto__get_dir_relative_to_project_source_root("${_projectSourceRoot}" _projectSourceRootRelativeToProjectSourceRoot)
+    set(${oProjectDefsHeaderIncludePath} "${_projectSourceRootRelativeToProjectSourceRoot}/${_projectDefsHeaderFileName}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__install_project_defs_header)
+    CMagnetoInternal__set_up_project_defs_header(_projectDefsHeaderIncludePath)
+    CMagnetoInternal__get_project_defs_header_info(
+        _projectDefsHeaderAbsPath
+        _projectDefsHeaderFileName
+        _versionMacroName
+        _versionMajorMacroName
+        _versionMinorMacroName
+        _versionPatchMacroName
+        _gitCommitShaMacroName
+        _projectNamespace
+    )
+    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
+    CMagneto__get_dir_relative_to_project_source_root("${_projectSourceRoot}" _projectSourceRootRelativeToProjectSourceRoot)
+
+    install(FILES "${_projectDefsHeaderAbsPath}"
+        DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_projectSourceRootRelativeToProjectSourceRoot}"
+        COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
+    )
+endfunction()
+
+
+function(CMagnetoInternal__set_up_project_build_info_for_target iTargetName iVisibility)
+    CMagnetoInternal__get_git_commit_sha(_gitCommitSha)
+    CMagnetoInternal__get_project_defs_header_info(
+        _projectDefsHeaderAbsPath
+        _projectDefsHeaderFileName
+        _versionMacroName
+        _versionMajorMacroName
+        _versionMinorMacroName
+        _versionPatchMacroName
+        _gitCommitShaMacroName
+        _projectNamespace
+    )
+
+    target_compile_definitions(${iTargetName} ${iVisibility}
+        ${_versionMacroName}="${PROJECT_VERSION}"
+        ${_versionMajorMacroName}=${PROJECT_VERSION_MAJOR}
+        ${_versionMinorMacroName}=${PROJECT_VERSION_MINOR}
+        ${_versionPatchMacroName}=${PROJECT_VERSION_PATCH}
+        ${_gitCommitShaMacroName}="${_gitCommitSha}"
+    )
+endfunction()
+
+
 #[[
     CMagnetoInternal__check_target_name_validity
 
@@ -184,7 +398,6 @@ function(CMagnetoInternal__set_up_export_header iTargetName oExportHeaderRelPath
                 #pragma message ("Windows Compiler (unknown) Import")
             #endif
         #else
-            COMPILE_TIME_MESSAGE("NOT WIN")
             #if defined(__GNUC__)
                 #define @EXPORT_MACRO_NAME@
                 #pragma message ("GCC Import")
@@ -232,22 +445,49 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iIncludeExportHeader o
     cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _targetLeafName)
     set(_defsHeaderFileName "${_targetLeafName}_DEFS.hpp")
     set(_defsHeaderAbsPath "${CMAKE_CURRENT_SOURCE_DIR}/${_defsHeaderFileName}")
+    CMagnetoInternal__get_project_defs_header_info(
+        _projectDefsHeaderAbsPath
+        _projectDefsHeaderFileName
+        _versionMacroName
+        _versionMajorMacroName
+        _versionMinorMacroName
+        _versionPatchMacroName
+        _gitCommitShaMacroName
+        _projectNamespace
+    )
 
     if(NOT EXISTS "${_defsHeaderAbsPath}")
         string(TOUPPER "${iTargetName}" _targetNameUC)
         set(_verifyMacroName "${_targetNameUC}_VERIFY")
         set(_assertMacroName "${_targetNameUC}_ASSERT")
 
+        if("${_defsHeaderAbsPath}" STREQUAL "${_projectDefsHeaderAbsPath}")
+            set(_projectDefsIncludeBlock "")
+            CMagnetoInternal__compose_project_defs_header_block(_projectDefsHeaderBlock)
+        else()
+            CMagnetoInternal__set_up_project_defs_header(_projectDefsHeaderIncludePath)
+            set(_projectDefsIncludeBlock "#include \"${_projectDefsHeaderIncludePath}\"\n")
+            set(_projectDefsHeaderBlock "")
+        endif()
+
         if(iIncludeExportHeader)
-            set(_includeExportHeaderBlock "#include \"${_targetLeafName}_EXPORT.hpp\"\n\n")
+            set(_includeExportHeaderBlock "#include \"${_targetLeafName}_EXPORT.hpp\"\n")
         else()
             set(_includeExportHeaderBlock "")
+        endif()
+
+        set(_headerPreamble "${_projectDefsIncludeBlock}${_includeExportHeaderBlock}")
+        if(NOT _headerPreamble STREQUAL "")
+            string(APPEND _headerPreamble "\n")
+        endif()
+        if(NOT _projectDefsHeaderBlock STREQUAL "")
+            string(APPEND _headerPreamble "${_projectDefsHeaderBlock}\n\n")
         endif()
 
         set(_defsHeaderTemplate [=[
 #pragma once
 
-@INCLUDE_EXPORT_HEADER_BLOCK@#if defined(_DEBUG) || defined(DEBUG)
+@HEADER_PREAMBLE@#if defined(_DEBUG) || defined(DEBUG)
     #include <assert.h>
     #define @VERIFY_MACRO_NAME@(x) assert(x);
     #define @ASSERT_MACRO_NAME@(x) assert(x);
@@ -257,7 +497,7 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iIncludeExportHeader o
 #endif
 ]=])
 
-        set(INCLUDE_EXPORT_HEADER_BLOCK "${_includeExportHeaderBlock}")
+        set(HEADER_PREAMBLE "${_headerPreamble}")
         set(VERIFY_MACRO_NAME "${_verifyMacroName}")
         set(ASSERT_MACRO_NAME "${_assertMacroName}")
         string(CONFIGURE "${_defsHeaderTemplate}" _defsHeaderContent @ONLY)

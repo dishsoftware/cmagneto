@@ -101,6 +101,7 @@ set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_
 ]]
 function(CMagnetoInternal__set_up__build_summary__file)
     set(_summaryOutputDir "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SUMMARY}")
+    CMagnetoInternal__get_git_commit_sha(_gitCommitSha)
 
     CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
@@ -130,6 +131,7 @@ function(CMagnetoInternal__set_up__build_summary__file)
             -DCMAKE_CXX_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
             -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
             -DCMAKE_BUILD_TYPE="${_buildType}"
+            -DGIT_COMMIT_SHA="${_gitCommitSha}"
             -P "${CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH}"
     )
 
