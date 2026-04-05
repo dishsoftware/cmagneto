@@ -1,5 +1,13 @@
 #pragma once
 
+#ifndef DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI
+    #define DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI "Unknown Project"
+#endif
+
+#ifndef DISHSW_CONTACTHOLDER__PROJECT_DESCRIPTION
+    #define DISHSW_CONTACTHOLDER__PROJECT_DESCRIPTION ""
+#endif
+
 #ifndef DISHSW_CONTACTHOLDER__VERSION
     #define DISHSW_CONTACTHOLDER__VERSION "0.0.0"
 #endif
@@ -21,6 +29,14 @@
 #endif
 
 namespace DishSW::ContactHolder {
+    inline constexpr const char* projectNameForUI() noexcept {
+        return DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI;
+    }
+
+    inline constexpr const char* projectDescription() noexcept {
+        return DISHSW_CONTACTHOLDER__PROJECT_DESCRIPTION;
+    }
+
     inline constexpr const char* version() noexcept {
         return DISHSW_CONTACTHOLDER__VERSION;
     }

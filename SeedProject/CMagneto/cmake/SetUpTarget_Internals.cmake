@@ -66,6 +66,8 @@ endfunction()
 function(CMagnetoInternal__get_project_defs_header_info
     oProjectDefsHeaderAbsPath
     oProjectDefsHeaderFileName
+    oProjectNameForUIMacroName
+    oProjectDescriptionMacroName
     oVersionMacroName
     oVersionMajorMacroName
     oVersionMinorMacroName
@@ -78,11 +80,15 @@ function(CMagnetoInternal__get_project_defs_header_info
 
     set(_projectDefsHeaderFileName "${_projectLeafName}_DEFS.hpp")
     set(_projectDefsHeaderAbsPath "${_projectSourceRoot}/${_projectDefsHeaderFileName}")
+    set(_projectNameForUIMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__PROJECT_NAME_FOR_UI")
+    set(_projectDescriptionMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__PROJECT_DESCRIPTION")
     set(_versionMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION")
     set(_versionMajorMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_MAJOR")
     set(_versionMinorMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_MINOR")
     set(_versionPatchMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__VERSION_PATCH")
     set(_gitCommitShaMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__GIT_COMMIT_SHA")
+    string(TOUPPER "${_projectNameForUIMacroName}" _projectNameForUIMacroName)
+    string(TOUPPER "${_projectDescriptionMacroName}" _projectDescriptionMacroName)
     string(TOUPPER "${_versionMacroName}" _versionMacroName)
     string(TOUPPER "${_versionMajorMacroName}" _versionMajorMacroName)
     string(TOUPPER "${_versionMinorMacroName}" _versionMinorMacroName)
@@ -92,6 +98,8 @@ function(CMagnetoInternal__get_project_defs_header_info
 
     set(${oProjectDefsHeaderAbsPath} "${_projectDefsHeaderAbsPath}" PARENT_SCOPE)
     set(${oProjectDefsHeaderFileName} "${_projectDefsHeaderFileName}" PARENT_SCOPE)
+    set(${oProjectNameForUIMacroName} "${_projectNameForUIMacroName}" PARENT_SCOPE)
+    set(${oProjectDescriptionMacroName} "${_projectDescriptionMacroName}" PARENT_SCOPE)
     set(${oVersionMacroName} "${_versionMacroName}" PARENT_SCOPE)
     set(${oVersionMajorMacroName} "${_versionMajorMacroName}" PARENT_SCOPE)
     set(${oVersionMinorMacroName} "${_versionMinorMacroName}" PARENT_SCOPE)
@@ -105,6 +113,8 @@ function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderB
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
+        _projectNameForUIMacroName
+        _projectDescriptionMacroName
         _versionMacroName
         _versionMajorMacroName
         _versionMinorMacroName
@@ -114,6 +124,14 @@ function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderB
     )
 
     set(_projectDefsHeaderBlockTemplate [=[
+#ifndef @PROJECT_NAME_FOR_UI_MACRO_NAME@
+    #define @PROJECT_NAME_FOR_UI_MACRO_NAME@ "Unknown Project"
+#endif
+
+#ifndef @PROJECT_DESCRIPTION_MACRO_NAME@
+    #define @PROJECT_DESCRIPTION_MACRO_NAME@ ""
+#endif
+
 #ifndef @VERSION_MACRO_NAME@
     #define @VERSION_MACRO_NAME@ "0.0.0"
 #endif
@@ -135,6 +153,14 @@ function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderB
 #endif
 
 namespace @PROJECT_NAMESPACE@ {
+    inline constexpr const char* projectNameForUI() noexcept {
+        return @PROJECT_NAME_FOR_UI_MACRO_NAME@;
+    }
+
+    inline constexpr const char* projectDescription() noexcept {
+        return @PROJECT_DESCRIPTION_MACRO_NAME@;
+    }
+
     inline constexpr const char* version() noexcept {
         return @VERSION_MACRO_NAME@;
     }
@@ -156,6 +182,8 @@ namespace @PROJECT_NAMESPACE@ {
     }
 } // namespace @PROJECT_NAMESPACE@
 ]=])
+    set(PROJECT_NAME_FOR_UI_MACRO_NAME "${_projectNameForUIMacroName}")
+    set(PROJECT_DESCRIPTION_MACRO_NAME "${_projectDescriptionMacroName}")
     set(VERSION_MACRO_NAME "${_versionMacroName}")
     set(VERSION_MAJOR_MACRO_NAME "${_versionMajorMacroName}")
     set(VERSION_MINOR_MACRO_NAME "${_versionMinorMacroName}")
@@ -171,6 +199,8 @@ function(CMagnetoInternal__set_up_project_defs_header oProjectDefsHeaderIncludeP
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
+        _projectNameForUIMacroName
+        _projectDescriptionMacroName
         _versionMacroName
         _versionMajorMacroName
         _versionMinorMacroName
@@ -205,6 +235,8 @@ function(CMagnetoInternal__install_project_defs_header)
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
+        _projectNameForUIMacroName
+        _projectDescriptionMacroName
         _versionMacroName
         _versionMajorMacroName
         _versionMinorMacroName
@@ -227,6 +259,8 @@ function(CMagnetoInternal__set_up_project_build_info_for_target iTargetName iVis
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
+        _projectNameForUIMacroName
+        _projectDescriptionMacroName
         _versionMacroName
         _versionMajorMacroName
         _versionMinorMacroName
@@ -236,6 +270,8 @@ function(CMagnetoInternal__set_up_project_build_info_for_target iTargetName iVis
     )
 
     target_compile_definitions(${iTargetName} ${iVisibility}
+        ${_projectNameForUIMacroName}="${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}"
+        ${_projectDescriptionMacroName}="${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
         ${_versionMacroName}="${PROJECT_VERSION}"
         ${_versionMajorMacroName}=${PROJECT_VERSION_MAJOR}
         ${_versionMinorMacroName}=${PROJECT_VERSION_MINOR}
@@ -448,6 +484,8 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iIncludeExportHeader o
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
+        _projectNameForUIMacroName
+        _projectDescriptionMacroName
         _versionMacroName
         _versionMajorMacroName
         _versionMinorMacroName
