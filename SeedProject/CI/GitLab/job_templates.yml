@@ -166,7 +166,32 @@ variables:
       fi
 
     - |
-      installedExecutablePath="$(dpkg-deb -c "${PACKAGE_PATH}" | awk '$6 ~ /^\.\/opt\/.*\/bin\/[^/]+$/ && firstMatch == "" { firstMatch = $6 } END { print firstMatch }')"
+      # `dpkg-deb -c` prints entries in a tar-like tabular format.
+      # In the `awk` script below:
+      # - `$1` is the permissions/mode field, e.g. `-rwxr-xr-x`
+      # - `$6` is the packaged path, e.g. `./opt/DishSW/ContactHolder/bin/DishSW_ContactHolder0_GUI`
+      # We therefore pick the first regular file under `.../bin/` that has at least one execute bit set.
+      # In a mode string like `-rwxr-xr-x`, the execute-related slots are:
+      # - char 4: owner execute bit
+      # - char 7: group execute bit
+      # - char 10: other/world execute bit
+      # The `substr(...)` checks below accept the entry if any of those slots contains
+      # an execute-related marker such as `x` (or special-mode variants like `s`/`t`).
+      installedExecutablePath="$(dpkg-deb -c "${PACKAGE_PATH}" | awk '
+        $6 ~ /^\.\/opt\/.*\/bin\/[^/]+$/ &&
+        $1 ~ /^-/ &&
+        (
+          substr($1, 4, 1) ~ /[xs]/ ||
+          substr($1, 7, 1) ~ /[xs]/ ||
+          substr($1, 10, 1) ~ /[xts]/
+        ) &&
+        firstMatch == "" {
+          firstMatch = $6
+        }
+        END {
+          print firstMatch
+        }
+      ')"
       if [ -z "${installedExecutablePath}" ]; then
         echo "Failed to detect installed executable path from ${PACKAGE_PATH}."
         exit 1
@@ -178,8 +203,16 @@ variables:
     # A couple of stable startup lines are then checked:
     # - "zlib version:" is used as evidence that the bundled zlib runtime was found and loaded.
     # - "Qt widget styles count:" is used as evidence that Qt widgets were initialized successfully after apt-installed Qt runtime packages were pulled in.
-    - QT_QPA_PLATFORM=offscreen timeout 30s "${INSTALLED_EXECUTABLE_PATH}" > package_run_output.txt 2>&1
-    - cat package_run_output.txt
+    - |
+      set +e
+      QT_QPA_PLATFORM=offscreen timeout 30s "${INSTALLED_EXECUTABLE_PATH}" > package_run_output.txt 2>&1
+      packageRunExitCode=$?
+      set -e
+      cat package_run_output.txt
+      if [ ${packageRunExitCode} -ne 0 ]; then
+        echo "Installed executable exited with code ${packageRunExitCode}."
+        exit ${packageRunExitCode}
+      fi
     - grep -q "zlib version:" package_run_output.txt
     - grep -q "Qt widget styles count:" package_run_output.txt
   artifacts:

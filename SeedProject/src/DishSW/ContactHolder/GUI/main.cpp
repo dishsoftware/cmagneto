@@ -9,17 +9,19 @@
 #include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
 #include "DishSW/ContactHolder/Contacts/fields/EmailAddress.hpp"
 
+#include <QApplication>
 #include <QCoreApplication>
 #include <QIcon>
 #include <QStyleFactory>
-#include <QApplication>
 
 #include <iostream>
 
 #include <zlib.h>
 
 
-int main() {
+int main(int argc, char* argv[]) {
+    QApplication application(argc, argv);
+
     std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
 
     const auto fieldType = DishSW::ContactHolder::Contacts::FieldType::Enum::kEMailAddress;
