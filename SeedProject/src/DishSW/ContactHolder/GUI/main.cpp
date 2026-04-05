@@ -11,18 +11,37 @@
 #include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
 #include "DishSW/ContactHolder/Contacts/fields/EmailAddress.hpp"
 
+#include <CLI/CLI.hpp>
 #include <QApplication>
 #include <QCoreApplication>
 #include <QIcon>
 #include <QStyleFactory>
+#include <zlib.h>
 
 #include <iostream>
 
-#include <zlib.h>
 
+int main(int iArgumentsSize, char* iArguments[]) {
+    CLI::App cliApp{DishSW::ContactHolder::projectNameForUI()};
+    cliApp.description(DishSW::ContactHolder::projectDescription());
+    cliApp.allow_extras();
 
-int main(int argc, char* argv[]) {
-    QApplication application(argc, argv);
+    bool cliVersionFlag = false;
+    cliApp.add_flag("--version, -v", cliVersionFlag, "Print version and exit.");
+
+    CLI11_PARSE(cliApp, iArgumentsSize, iArguments);
+
+    if(cliVersionFlag) {
+        if(iArgumentsSize != 2) {
+            std::cerr << "The --version command must be used without any other arguments." << std::endl;
+            return 1;
+        }
+
+        std::cout << DishSW::ContactHolder::version() << std::endl;
+        return 0;
+    }
+
+    QApplication qApplication(iArgumentsSize, iArguments);
 
     std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
 
