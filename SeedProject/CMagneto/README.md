@@ -83,7 +83,7 @@ In short: **commit freely, but rewrite with caution**. Let the repo tell the who
 
 ## Project Build Tools
 The CMagneto framework needs on the following software to build your project:
-- CMake 3.31 or later. Version is bound by the preset schema and the features used by the optional Python frontend.
+- CMake 3.31 or later. This is the project-wide minimum because the committed `CMakePresets.json` files use preset schema `version: 10` and declare `cmakeMinimumRequired` `3.31.0`.
 - C++ 17 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the GoogleTest CMake module.
 - Python 3.10 or later. Version is bound by the coupled Python code.
 - Graphviz (optional, for target graph).
