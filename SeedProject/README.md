@@ -68,6 +68,7 @@ The same as in [`Project Build Tools` section the CMagneto framework doc](./CMag
 
 ### 1.3. Build Entry Points
 The committed [`./CMakePresets.json`](./CMakePresets.json) is the source of truth for build configuration.<br>
+Those presets use schema `version: 10`, so the supported project-wide minimum is CMake 3.31.<br>
 Use presets directly with `cmake --preset ...`, `cmake --build --preset ...`, and `cpack --preset ...`, or use the optional [`./build.py`](./build.py) frontend to keep a consistent `--build_variant/--build_type` workflow across single- and multi-config generators.<br>
 To see available options, run:
 ```bash

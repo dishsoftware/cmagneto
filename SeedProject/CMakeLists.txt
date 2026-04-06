@@ -8,7 +8,7 @@
 # By default, the CMagneto framework root resides at the root of the project where it is used,
 # but consumers may relocate it as needed.
 
-cmake_minimum_required(VERSION 3.28) # The oldest version of CMake (on Ubuntu 24 LTS) among the platforms supported by the project.
+cmake_minimum_required(VERSION 3.31) # Keep in sync with ./CMakePresets.json: preset schema version 10 makes CMake 3.31 the supported project minimum.
 # set(CMAKE_MESSAGE_LOG_LEVEL DEBUG)
 
 # Newer CMake versions warn unless the intended modern behavior of these
