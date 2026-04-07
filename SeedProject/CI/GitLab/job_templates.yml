@@ -16,10 +16,8 @@ variables:
 
 .on_main:
   rules:
-    # If trigger is:
-    # - commit into $CI_DEFAULT_BRANCH branch;
-    # - merge request into $CI_DEFAULT_BRANCH branch.
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
+    # If trigger is merge request into $CI_DEFAULT_BRANCH branch.
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
       when: always
 
     # In other cases don't run the job.
