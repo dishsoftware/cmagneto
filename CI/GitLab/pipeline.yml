@@ -14,7 +14,7 @@ variables:
 
 stages:
   - STAGE-run_unit_and_integration_tests
-  # Seed project is in './SeedProject/'. Its pipeline is triggered only after a merge reaches the default branch.
+  # Seed project is in './SeedProject/'. Its pipelines are run according to the pipeline wokflow.
   - STAGE-trigger__seed_project__pipeline
   - STAGE-wait__seed_project__pipeline
 
@@ -23,23 +23,15 @@ stages:
   # - STAGE-wait__test_projects__pipelines
 
 
-run_unit_and_integration_tests:
-  stage: STAGE-run_unit_and_integration_tests
+.run_always_except_on_push_to_default_branch:
   rules:
-    # Allow explicit pipeline creation on any branch.
-    - if: '$CI_COMMIT_MESSAGE =~ /RUN_CI_PIPELINE\s*$/'
-      when: always
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
+    - when: always
 
-    # Run for release tags.
-    - if: '$CI_COMMIT_TAG'
-      when: always
 
-    # Run in merge request pipelines that target the default branch.
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
-      when: on_success
-
-    # Do not run in other pipelines, including the push pipeline created after merge.
-    - when: never
+.run_unit_and_integration_tests__base:
+  stage: STAGE-run_unit_and_integration_tests
 
   # Run `./CI/Docker/build_image__unit_and_integration_tests.py` to build and push the image.
   image: registry.gitlab.com/dishsoftware/cmagneto/unit_and_integration_tests:1.0.0
@@ -52,29 +44,51 @@ run_unit_and_integration_tests:
       junit: ./tests/summary/pytest-report.xml
     paths:
       - ./tests/summary/
+
+
+run_unit_and_integration_tests__not_on_tag:
+  extends:
+    - .run_unit_and_integration_tests__base
+  rules: # Job-level `rules:` array replaces, not extends, inherited `rules:` array.
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
+    - when: always
+  artifacts:
+    when: always
+    reports:
+      junit: ./tests/summary/pytest-report.xml
+    paths:
+      - ./tests/summary/
     expire_in: 30 days
 
 
-.seed_project__post_merge_rules:
+run_unit_and_integration_tests__on_tag:
+  extends:
+    - .run_unit_and_integration_tests__base
   rules:
-    # Run for release tags.
     - if: '$CI_COMMIT_TAG'
       when: always
-
-    # Run only in the push pipeline created after merge to sync the actual default branch state.
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: on_success
-
     - when: never
+  artifacts:
+    when: always
+    reports:
+      junit: ./tests/summary/pytest-report.xml
+    paths:
+      - ./tests/summary/
+    expire_in: never
 
 
 sync__seed_project__to__seed_project_repo:
-  extends: .seed_project__post_merge_rules
   stage: STAGE-trigger__seed_project__pipeline
   needs:
-    - job: run_unit_and_integration_tests
-      artifacts: false
-      optional: true # If the upstream job exists, wait for it. If it is not created, do not fail because of the missing dependency.
+  - job: run_unit_and_integration_tests__not_on_tag
+    artifacts: false
+    optional: true # If the needed job is skipped, this job is still run.
+  - job: run_unit_and_integration_tests__on_tag
+    artifacts: false
+    optional: true # If the needed job is skipped, this job is still run.
 
   # Run `./CI/Docker/build_image__for_repo_shenanigans.py` to build and push the image.
   image: registry.gitlab.com/dishsoftware/cmagneto/for_repo_shenanigans:1.0.0
@@ -87,7 +101,8 @@ sync__seed_project__to__seed_project_repo:
 
 
 trigger__seed_project__pipeline:
-  extends: .seed_project__post_merge_rules
+  extends:
+    - .run_always_except_on_push_to_default_branch
   stage: STAGE-trigger__seed_project__pipeline
   needs:
     - job: sync__seed_project__to__seed_project_repo
@@ -99,7 +114,8 @@ trigger__seed_project__pipeline:
 
 
 wait__seed_project__pipeline:
-  extends: .seed_project__post_merge_rules
+  extends:
+    - .run_always_except_on_push_to_default_branch
   stage: STAGE-wait__seed_project__pipeline
   needs:
     - job: trigger__seed_project__pipeline
