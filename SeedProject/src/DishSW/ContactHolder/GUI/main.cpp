@@ -13,11 +13,12 @@
 
 #include <CLI/CLI.hpp>
 #include <QApplication>
-#include <QCoreApplication>
 #include <QIcon>
+#include <QMainWindow>
 #include <QStyleFactory>
 #include <zlib.h>
 
+#include <cstdlib>
 #include <iostream>
 
 
@@ -31,34 +32,71 @@ int main(int iArgumentsSize, char* iArguments[]) {
 
     CLI11_PARSE(cliApp, iArgumentsSize, iArguments);
 
-    if(cliVersionFlag) {
+    if (cliVersionFlag) {
         if(iArgumentsSize != 2) {
             std::cerr << "The --version command must be used without any other arguments." << std::endl;
-            return 1;
+            return EXIT_FAILURE;
         }
 
         std::cout << DishSW::ContactHolder::version() << std::endl;
-        return 0;
+        return EXIT_SUCCESS;
     }
 
+
     QApplication qApplication(iArgumentsSize, iArguments);
+	qApplication.setApplicationName(QString::fromUtf8(DishSW::ContactHolder::projectNameForUI()));
+	qApplication.setApplicationVersion(QString::fromUtf8(DishSW::ContactHolder::version()));
+	qApplication.setWindowIcon(QIcon(QStringLiteral(":/DishSW/ContactHolder/GUI/icons/logo.svg")));
 
-    std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
+    try {
 
-    const auto fieldType = DishSW::ContactHolder::Contacts::FieldType::Enum::kEMailAddress;
-    std::wcout << "DishSW::ContactHolder::Contacts::FieldType::Enum::kEMailAddress index: " << static_cast<int>(fieldType) << std::endl;
+        { // Boilerplate output
+            std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;
 
-    const auto& fieldTypeString = DishSW::ContactHolder::Contacts::FieldType::toString(fieldType);
-    std::wcout << "DishSW::ContactHolder::Contacts::FieldType::toString(kEMailAddress): " << fieldTypeString.toStdWString() << std::endl;
+            const auto fieldType = DishSW::ContactHolder::Contacts::FieldType::Enum::kEMailAddress;
+            std::wcout << "DishSW::ContactHolder::Contacts::FieldType::Enum::kEMailAddress index: " << static_cast<int>(fieldType) << std::endl;
 
-    auto emailAddress = DishSW::ContactHolder::Contacts::fields::EmailAddress();
-    std::wcout << "zlib version: " << zlibVersion() << std::endl;
-    std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
+            const auto& fieldTypeString = DishSW::ContactHolder::Contacts::FieldType::toString(fieldType);
+            std::wcout << "DishSW::ContactHolder::Contacts::FieldType::toString(kEMailAddress): " << fieldTypeString.toStdWString() << std::endl;
 
-    std::wcout << "Project version: " << DishSW::ContactHolder::version() << std::endl;
+            auto emailAddress = DishSW::ContactHolder::Contacts::fields::EmailAddress();
+            std::wcout << "zlib version: " << zlibVersion() << std::endl;
+            std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
 
-    QIcon iconContacts(":/DishSW/ContactHolder/Contacts/icons/logo.svg");
-    QIcon iconGUI(":/DishSW/ContactHolder/GUI/icons/logo.svg");
+            QIcon iconContacts(":/DishSW/ContactHolder/Contacts/icons/logo.svg");
+            QIcon iconGUI(":/DishSW/ContactHolder/GUI/icons/logo.svg");
+        } // Boilerplate output
 
-    return 0;
+        QMainWindow mainWindow;
+        mainWindow.setWindowTitle(QString::fromUtf8(DishSW::ContactHolder::projectNameForUI()));
+        mainWindow.setWindowIcon(qApplication.windowIcon()); // Window instance may use non application-wide default window icon.
+        mainWindow.resize(960, 640);
+        mainWindow.show();
+
+		return qApplication.exec();
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Unknown unhandled exception" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // TODO
+    // Best options to notify GUI user about an exception caught by the last resort catch blocks.
+    //
+    // 1. Record crash info, notify on next launch.
+    //      In the catch block, write an error file or crash marker.
+    //      On next startup, if that marker exists, show a normal QMessageBox saying the previous run failed.
+    //      This is the safest GUI-user notification approach.
+    // 2. Best-effort native OS dialog.
+    //      In the catch block, call a platform-native API instead of Qt GUI.
+    //      Example: Windows MessageBoxW(...).
+    //      This avoids relying on Qt’s possibly-broken GUI state.
+    //      Downside: platform-specific, still not 100% guaranteed.
+    // 3. Spawn external helper process.
+    //      In the catch block, start a tiny separate executable/script that shows an error dialog.
+    //      That helper is outside the broken process, so it is more reliable than showing a Qt dialog inside the crashing app.
 }
