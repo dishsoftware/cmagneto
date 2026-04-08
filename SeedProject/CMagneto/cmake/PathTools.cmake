@@ -62,18 +62,18 @@ function(CMagneto__is_path_under_dir iAbsolutePath iAbsoluteDirPath oPathIsUnder
     cmake_path(SET _normalizedPath NORMALIZE "${iAbsolutePath}")
     cmake_path(SET _normalizedDirPath NORMALIZE "${iAbsoluteDirPath}")
 
-    # Ensure dir ends with a slash to avoid erroneous matches.
-    if(NOT _normalizedDirPath MATCHES "/$")
-        CMagnetoInternal__message(FATAL_ERROR "CMagneto__is_path_under_dir: iAbsoluteDirPath is not a dir path: \"${iAbsoluteDirPath}\".")
-    endif()
-
-    string(FIND "${_normalizedPath}" "${_normalizedDirPath}" _pos)
-
-    # Check if the path starts with the dir.
-    if(_pos EQUAL 0)
+    if("${_normalizedPath}" STREQUAL "${_normalizedDirPath}")
         set(${oPathIsUnderDir} TRUE PARENT_SCOPE)
     else()
-        set(${oPathIsUnderDir} FALSE PARENT_SCOPE)
+        cmake_path(APPEND _normalizedDirPath "")
+        string(FIND "${_normalizedPath}" "${_normalizedDirPath}" _pos)
+
+        # Check if the path starts with the dir.
+        if(_pos EQUAL 0)
+            set(${oPathIsUnderDir} TRUE PARENT_SCOPE)
+        else()
+            set(${oPathIsUnderDir} FALSE PARENT_SCOPE)
+        endif()
     endif()
 endfunction()
 
@@ -86,4 +86,14 @@ function(CMagneto__get_dir_relative_to_project_source_root iAbsoluteDir oDirRela
         set(_dirRelativeToProjectSourceRoot "")
     endif()
     set(${oDirRelativeToProjectSourceRoot} "${_dirRelativeToProjectSourceRoot}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagneto__get_dir_relative_to_sources_root iAbsoluteDir oDirRelativeToSourcesRoot)
+    cmake_path(RELATIVE_PATH iAbsoluteDir BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_ROOT}/" OUTPUT_VARIABLE _dirRelativeToSourcesRoot)
+    cmake_path(SET _dirRelativeToSourcesRoot NORMALIZE "${_dirRelativeToSourcesRoot}")
+    if(_dirRelativeToSourcesRoot STREQUAL ".")
+        set(_dirRelativeToSourcesRoot "")
+    endif()
+    set(${oDirRelativeToSourcesRoot} "${_dirRelativeToSourcesRoot}" PARENT_SCOPE)
 endfunction()

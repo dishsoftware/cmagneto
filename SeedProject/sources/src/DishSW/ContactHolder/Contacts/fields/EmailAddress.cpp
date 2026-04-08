@@ -5,7 +5,7 @@
 // The MIT license text is available in the LICENSE file
 // located at the root directory of the project.
 
-#include "EmailAddress.hpp"
+#include "DishSW/ContactHolder/Contacts/fields/EmailAddress.hpp"
 
 
 namespace DishSW::ContactHolder::Contacts::fields {

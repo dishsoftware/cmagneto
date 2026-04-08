@@ -5,9 +5,9 @@
 // The MIT license text is available in the LICENSE file
 // located at the root directory of the project.
 
-#include "Field.hpp"
+#include "DishSW/ContactHolder/Contacts/Field.hpp"
 
-#include "FieldTypeExtension.hpp"
+#include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
 
 #include <stdexcept>
 

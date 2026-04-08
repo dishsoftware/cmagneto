@@ -16,8 +16,17 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 # Build/install subdirectory names.
-## Under project root: project source dir.
-set(CMagneto__SUBDIR_SOURCE "src/")
+## Under project root: parent dir for all native source categories.
+set(CMagneto__SUBDIR_SOURCES_ROOT "sources/")
+
+## Under project root: project implementation source dir tree.
+set(CMagneto__SUBDIR_SOURCE "${CMagneto__SUBDIR_SOURCES_ROOT}src/")
+
+## Under project root: public/interface headers tree mirroring `${CMagneto__SUBDIR_SOURCE}`.
+set(CMagneto__SUBDIR_SOURCE_INCLUDE "${CMagneto__SUBDIR_SOURCES_ROOT}include/")
+
+## Under project root: source resources tree mirroring `${CMagneto__SUBDIR_SOURCE}`.
+set(CMagneto__SUBDIR_SOURCE_RESOURCES "${CMagneto__SUBDIR_SOURCES_ROOT}res/")
 
 ## Under project build and install dirs: parent for compiled static libs.
 set(CMagneto__SUBDIR_STATIC "lib/")
@@ -37,9 +46,9 @@ set(CMagneto__SUBDIR_INCLUDE "include/")
 ## Under project install dir: parent for CMake package configuration files of the project and all its library targets.
 set(CMagneto__SUBDIR_CMAKE "lib/cmake/")
 
-## Under target source dir: parent for all resources of a target.
-## Under project install dir: parent for all resources of all targets.
-set(CMagneto__SUBDIR_TARGET_RESOURCES "@resources/")
+## Under project build and install dirs: parent for all runtime resources of all targets.
+## The structure under this dir mirrors the source resource tree relative to `${CMagneto__SUBDIR_SOURCE_RESOURCES}`.
+set(CMagneto__SUBDIR_TARGET_RESOURCES "res/")
 
 ## Under project install dir: parent for application menu helper assets such as launcher icons.
 set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")

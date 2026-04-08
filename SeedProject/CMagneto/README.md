@@ -394,10 +394,11 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-12) If a target has resources to embed into its binary, place them under the `@resources/QtRC/` target subdirectory and call:
+12) If a target has resources to embed into its binary, place them under the mirrored `./sources/res/.../QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
-        ... # List the files to embed here.
+        FILES
+            ... # List the files to embed here.
     )
     ```
 

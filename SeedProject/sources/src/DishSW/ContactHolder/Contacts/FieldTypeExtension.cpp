@@ -5,7 +5,7 @@
 // The MIT license text is available in the LICENSE file
 // located at the root directory of the project.
 
-#include "FieldTypeExtension.hpp"
+#include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
 
 #include <boost/bimap.hpp>
 #include <QtGlobal>

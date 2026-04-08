@@ -1,4 +1,8 @@
-find_package(Qt6 REQUIRED COMPONENTS Core)
+add_subdirectory(fields/PhoneNumberFormatter)
+
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui)
+find_package(Boost CONFIG REQUIRED)
 
 
 # Headers
@@ -26,7 +30,16 @@ set(_QtMOC_HEADERS
 
 ## Regular headers.
 set(_regular_PUBLIC_HEADERS
-    Formatter.hpp
+    Contact.hpp
+    Field.hpp
+    FieldType.hpp
+    FieldTypeExtension.hpp
+    fields/EmailAddress.hpp
+    fields/PhoneNumber.hpp
+    # Invalid paths to test.
+    #..\\../../in_src_with_no_subdir.hpp
+    # ../../../in_src_with_no_subdir.hpp
+    # C:/Data/Work/DishSW/Note.hpp
 )
 
 set(_regular_INTERFACE_HEADERS
@@ -42,14 +55,13 @@ set(_regular_PRIVATE_HEADERS
 # Resources
 ## Resources to embed into the lib's binary using Qt RCC.
 set(_QtRCC_RESOURCE_FILES
-
+    "QtRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
 set(_QtTS_RESOURCES
-    #resources/PhoneNumberFormatter_txt_en.ts
-    #resources/PhoneNumberFormatter_txt_fr.ts
-    #resources/PhoneNumberFormatter_txt_images.ts
+    "fields/QtTS/PhoneNumber_en.ts"
+    "fields/QtTS/PhoneNumber_ru.ts"
 )
 
 ## Regular resource files.
@@ -66,7 +78,11 @@ QtWrappers__qt_wrap_cpp(_QtMOC_SOURCES ${_QtMOC_HEADERS})
 
 ## Regular sources.
 set(_regular_SOURCES
-    Formatter.cpp
+    Contact.cpp
+    Field.cpp
+    FieldTypeExtension.cpp
+    fields/EmailAddress.cpp
+    fields/PhoneNumber.cpp
 )
 
 ## All sources.
@@ -75,15 +91,17 @@ set(_sources ${_QtMOC_SOURCES} ${_regular_SOURCES})
 
 
 # Target
-set(_TARGET_NAME DishSW_ContactHolder_Contacts_fields_PhoneNumberFormatter)
+set(_TARGET_NAME DishSW_ContactHolder_Contacts)
 CMagneto__get_library_type(${_TARGET_NAME} _LIB_TYPE)
 add_library(${_TARGET_NAME} ${_LIB_TYPE})
-## If _LIB_TYPE is SHARED, a preproceccor macro DishSW_ContactHolder_Contacts_fields_PhoneNumberFormatter_EXPORTS or DISHSW_CONTACTHOLDER_CONTACTS_FIELDS_PHONENUMBERFORMATTER_EXPORTS is defined implicitly when the target is compiled.
-## No need to target_compile_definitions(${_TARGET_NAME} PRIVATE DishSW_ContactHolder_Contacts_fields_PhoneNumberFormatter_EXPORTS) explicitly.
+## If _LIB_TYPE is SHARED, a preproceccor macro DishSW_ContactHolder_Contacts_EXPORTS or DISHSW_CONTACTHOLDER_CONTACTS_EXPORTS is defined implicitly when the target is compiled.
+## No need to target_compile_definitions(${_TARGET_NAME} PRIVATE DishSW_ContactHolder_Contacts_EXPORTS) explicitly.
 
 target_link_libraries(${_TARGET_NAME}
     PUBLIC
-        Qt6::Core
+        Qt6::Core Qt6::Gui Boost::boost
+    PRIVATE
+        DishSW::ContactHolder::Contacts::fields::PhoneNumberFormatter
 )
 ####################################################################
 
@@ -105,8 +123,6 @@ CMagneto__set_up__library(${_TARGET_NAME}
 )
 
 CMagneto__embed_QtRC_resources(${_TARGET_NAME} QtRC
-    PREFIX "/DishSW/ContactHolder/Contacts/fields/PhoneNumberFormatter"
-    BASE "@resources/QtRC"
     FILES
         ${_QtRCC_RESOURCE_FILES}
 )

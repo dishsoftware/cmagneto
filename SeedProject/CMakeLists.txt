@@ -47,4 +47,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
 include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
+add_subdirectory(
+    "${CMAKE_SOURCE_DIR}/CMagneto/cpp/CMagneto"
+    "${CMAKE_BINARY_DIR}/CMagneto/build/cpp/CMagneto"
+)
 CMagneto__set_up__project()

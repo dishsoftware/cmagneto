@@ -49,12 +49,12 @@ set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_PLATFORM_ICON_PLACED   "CMagne
     OTHER_RESOURCES - Other non-code resources (e.g. icons, JSON files) used in the executable.
 
     Notes:
-    - All paths: of headers, sources and resources - must be relative to the source root directory of the target (parent dir of the target's CMakeLists.txt).
-      The paths must reside under the source root directory of the target.
-      The paths must not contain backslashes.
-      It is made to keep both source and install directories layout clean and relocatable.
-
-      Source file paths are also allowed to reside under the build root directory of the target,
+    - HEADERS and SOURCES paths must be relative to the source root directory of the target
+      (parent dir of the target's CMakeLists.txt) and must reside under that source root directory.
+    - OTHER_RESOURCES paths must be relative to the mirrored resource root of the target,
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCE}` with `${CMagneto__SUBDIR_SOURCE_RESOURCES}`.
+    - All paths must not contain backslashes.
+    - Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
 function(CMagneto__set_up__executable iExeTargetName)
@@ -70,17 +70,20 @@ function(CMagneto__set_up__executable iExeTargetName)
         list(APPEND ARG_HEADERS "${_defsHeaderRelPath}")
     endif()
 
+    CMagnetoInternal__get_target_resource_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetResourceRoot)
+
     set(_baseDirDescription "executable target \"${iExeTargetName}\"")
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_HEADERS}" OUTPUT_REL_PATHS _relHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
-    #CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
+    CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_OTHER_RESOURCES}" OUTPUT_ABS_PATHS _absOtherResources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
 
     # Add target sources.
-    target_sources(${iExeTargetName} PRIVATE ${_relSources} ${_relHeaders}) # Headers are added to make them appear in IDEs like Visual Studio.
+    target_sources(${iExeTargetName} PRIVATE ${_relSources} ${_relHeaders} ${_absOtherResources}) # Headers and resources are added to make them appear in IDEs like Visual Studio.
     ####################################################################
 
     target_include_directories(${iExeTargetName} PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>  # Set up compiler.
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE_INCLUDE}>  # Set up compiler.
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iExeTargetName} PRIVATE)
 
@@ -108,7 +111,7 @@ function(CMagneto__set_up__executable iExeTargetName)
     CMagnetoInternal__set_up_QtTS_files(${iExeTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
-    # TODO
+    CMagnetoInternal__set_up_other_resource_files(${iExeTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_OTHER_RESOURCES}")
     ####################################################################
 
 
@@ -208,7 +211,7 @@ endfunction()
     MACOS_ICON   - Path to a macOS `.icns` file to attach to the app bundle.
 
     Notes:
-    - Paths are expected to be relative to the executable target source root.
+    - Paths are expected to be relative to the executable target resource root mirrored from the executable target source root.
     - Generated files under the target build base dir are also allowed.
     - The declared icon paths are stored as target metadata and reused by
       `CMagneto__place_icon_near_executable(...)` and
@@ -226,13 +229,15 @@ function(CMagneto__bind_icon_to_executable iExeTargetName)
         CMagnetoInternal__message(FATAL_ERROR "CMagneto__bind_icon_to_executable(\"${iExeTargetName}\"): at least one of WINDOWS_ICON, LINUX_ICON or MACOS_ICON must be specified.")
     endif()
 
+    CMagnetoInternal__get_target_resource_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetResourceRoot)
+
     set(_baseDirDescription "executable target \"${iExeTargetName}\" app icon")
     set(_windowsIconAbsPath "")
     set(_linuxIconAbsPath "")
     set(_macIconAbsPath "")
 
     if(NOT ARG_WINDOWS_ICON STREQUAL "")
-        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_WINDOWS_ICON}"
+        CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_WINDOWS_ICON}"
             OUTPUT_ABS_PATHS _windowsIconAbsPaths
             IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
             ALLOW_PATHS_UNDER_BUILD_BASE_DIR
@@ -241,7 +246,7 @@ function(CMagneto__bind_icon_to_executable iExeTargetName)
     endif()
 
     if(NOT ARG_LINUX_ICON STREQUAL "")
-        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_LINUX_ICON}"
+        CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_LINUX_ICON}"
             OUTPUT_ABS_PATHS _linuxIconAbsPaths
             IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
             ALLOW_PATHS_UNDER_BUILD_BASE_DIR
@@ -250,7 +255,7 @@ function(CMagneto__bind_icon_to_executable iExeTargetName)
     endif()
 
     if(NOT ARG_MACOS_ICON STREQUAL "")
-        CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_MACOS_ICON}"
+        CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_MACOS_ICON}"
             OUTPUT_ABS_PATHS _macIconAbsPaths
             IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL
             ALLOW_PATHS_UNDER_BUILD_BASE_DIR

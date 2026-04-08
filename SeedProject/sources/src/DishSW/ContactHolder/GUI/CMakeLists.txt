@@ -21,13 +21,13 @@ set(_regular_HEADERS
 # Resources
 ## Resources to embed into the executable's binary using Qt RCC.
 set(_QtRCC_RESOURCE_FILES
-    "@resources/QtRC/icons/logo.svg"
+    "QtRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
 set(_QtTS_RESOURCES
-    "@resources/QtTS/main_en.ts"
-    "@resources/QtTS/main_ru.ts"
+    "QtTS/main_en.ts"
+    "QtTS/main_ru.ts"
 )
 
 ## Regular resource files.
@@ -79,9 +79,9 @@ CMagneto__set_up__executable(${_TARGET_NAME}
 )
 
 CMagneto__bind_icon_to_executable(${_TARGET_NAME}
-    WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
-    LINUX_ICON "@resources/AppIcon/ContactHolder.png"
-    MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+    WINDOWS_ICON "AppIcon/ContactHolder.ico"
+    LINUX_ICON "AppIcon/ContactHolder.png"
+    MACOS_ICON "AppIcon/ContactHolder.icns"
 )
 
 CMagneto__place_icon_near_executable(${_TARGET_NAME})
@@ -92,8 +92,6 @@ CMagneto__add_executable_to_application_menu(${_TARGET_NAME}
 )
 
 CMagneto__embed_QtRC_resources(${_TARGET_NAME} QtRC
-    PREFIX "/DishSW/ContactHolder/GUI/"
-    BASE "@resources/QtRC"
     FILES
         ${_QtRCC_RESOURCE_FILES}
 )
