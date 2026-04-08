@@ -404,7 +404,7 @@ Recommended split:
 
 - Keep small scalar packaging metadata in `meta/Packaging.json`.
   Good candidates are values such as `StartMenuDirectory`, a future explicit IFW window title override, or future plain-text Linux desktop metadata such as category strings.
-- Keep rich or design-heavy content in files under `packaging/@resources/IFW/`.
+- Keep rich or design-heavy content in files under `packaging/resources/IFW/`.
   `Welcome.html`, `Finished.html`, `Installer.qss`, and image assets are better kept as files because they are multiline, visual, or markup-heavy resources.
 
 ## Small code follow-ups that would improve cross-platform behavior

@@ -74,7 +74,7 @@ set(CMagneto__SUBDIR_TESTS "tests/")
 set(CMagneto__SUBDIR_CPACKCONFIG "packaging/")
 
 ## Under `{CMagneto__SUBDIR_CPACKCONFIG}`: parent for package resources (e.g. license, user agreement, etc).
-set(CMagneto__SUBDIR_PACKAGE_RESOURCES "@resources/")
+set(CMagneto__SUBDIR_PACKAGE_RESOURCES "resources/")
 
 ## Under project root: parent for distributable license and notice files plus their manifests.
 set(CMagneto__SUBDIR_LICENSES "licenses/")

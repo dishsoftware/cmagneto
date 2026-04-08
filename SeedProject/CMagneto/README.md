@@ -40,7 +40,7 @@ The framework is shipped with the following major components:
 - Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `CMakePresets.json` and `Description.md`;
 - Optional build frontend [`./build.py`](./../build.py);
 - Pre-configured CTest files in [`./tests/`](./../tests/);
-- Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/@resources/`](./../packaging/@resources/);
+- Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/resources/`](./../packaging/resources/);
 - Pre-configured [`Dockerfiles`](./../CI/Docker/), one-command [`Docker image build script`](./../CI/Docker/build_image.py) and [`GitLab CI pipeline`](./../CI/GitLab/pipeline.yml) in [`./CI/`](./../CI/);
 - Pre-configured VS Code files at [`./.vscode/`](./../.vscode/).
 
@@ -172,7 +172,7 @@ SeedProject/
 │   └── ...                                # Tests for external projects can be placed here.
 ├── packaging/
 │   ├── CPackConfig.cmake
-│   └── @resources/                        # Package resources root. Under this dir, the resources can be nested arbitrary.
+│   └── resources/                         # Package resources root. Under this dir, the resources can be nested arbitrary.
 ├── CI/
 │   ├── Docker/                            # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
 |   |   ├── build_image.py                 # One-command Docker image build script.
@@ -212,7 +212,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     - [`./meta/Project.json`](./../meta/Project.json)
     - [`./meta/Packaging.json`](./../meta/Packaging.json)
 
-    and installation package resources in [`./packaging/@resources/`](./../packaging/@resources/).
+    and installation package resources in [`./packaging/resources/`](./../packaging/resources/).
 
 4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `CMakePresets.json` and `Description.md`.
 
