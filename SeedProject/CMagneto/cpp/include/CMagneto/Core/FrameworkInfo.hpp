@@ -3,6 +3,6 @@
 #include <string_view>
 
 
-namespace DishSW::CMagneto::Core {
+namespace CMagneto::Core {
     [[nodiscard]] std::string_view frameworkName() noexcept;
-} // namespace DishSW::CMagneto::Core
+} // namespace CMagneto::Core

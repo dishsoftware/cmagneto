@@ -3,6 +3,6 @@
 #include <QString>
 
 
-namespace DishSW::CMagneto::Qt {
+namespace CMagneto::Qt {
     [[nodiscard]] QString frameworkName();
-} // namespace DishSW::CMagneto::Qt
+} // namespace CMagneto::Qt
