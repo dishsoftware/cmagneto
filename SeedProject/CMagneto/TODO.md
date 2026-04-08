@@ -3,7 +3,6 @@
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
 * ? Use `InstallRequiredSystemLibraries`, `BundleUtilities`, `qt_generate_deploy_app_script()`, `qt_deploy_runtime_dependencies()`, `windeployqt`, `macdeployqt`.
 * Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
-* Add function `set_up_interface_library`.
 * Add instructions on when to use interface and object libraries.
 * Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
 * Add ignition switch to branding assets.

@@ -419,11 +419,37 @@ endfunction()
         iTargetName          - Real CMake target name, e.g. `DishSW_ContactHolder_Contacts`.
         oExportHeaderRelPath - Relative path to the ensured header, e.g. `Contacts_EXPORT.hpp`.
 ]]
-function(CMagnetoInternal__set_up_export_header iTargetName oExportHeaderRelPath)
+function(CMagnetoInternal__normalize_generated_headers_visibility iGeneratedHeadersVisibility oGeneratedHeadersVisibility)
+    if("${iGeneratedHeadersVisibility}" STREQUAL "")
+        set(_generatedHeadersVisibility "PUBLIC")
+    elseif("${iGeneratedHeadersVisibility}" STREQUAL "PUBLIC" OR "${iGeneratedHeadersVisibility}" STREQUAL "PRIVATE")
+        set(_generatedHeadersVisibility "${iGeneratedHeadersVisibility}")
+    else()
+        CMagnetoInternal__message(FATAL_ERROR "Generated headers visibility must be either \"PUBLIC\" or \"PRIVATE\", got \"${iGeneratedHeadersVisibility}\".")
+    endif()
+
+    set(${oGeneratedHeadersVisibility} "${_generatedHeadersVisibility}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__get_target_generated_headers_root iAbsoluteTargetSourceRoot iGeneratedHeadersVisibility oTargetGeneratedHeadersRoot)
+    CMagnetoInternal__normalize_generated_headers_visibility("${iGeneratedHeadersVisibility}" _generatedHeadersVisibility)
+
+    if("${_generatedHeadersVisibility}" STREQUAL "PUBLIC")
+        CMagnetoInternal__get_target_include_root("${iAbsoluteTargetSourceRoot}" _targetGeneratedHeadersRoot)
+    else()
+        cmake_path(SET _targetGeneratedHeadersRoot NORMALIZE "${iAbsoluteTargetSourceRoot}")
+    endif()
+
+    set(${oTargetGeneratedHeadersRoot} "${_targetGeneratedHeadersRoot}" PARENT_SCOPE)
+endfunction()
+
+
+function(CMagnetoInternal__set_up_export_header iTargetName iGeneratedHeadersVisibility oExportHeaderRelPath)
     cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _targetLeafName)
     set(_exportHeaderFileName "${_targetLeafName}_EXPORT.hpp")
-    CMagnetoInternal__get_target_include_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetIncludeRoot)
-    set(_exportHeaderAbsPath "${_targetIncludeRoot}/${_exportHeaderFileName}")
+    CMagnetoInternal__get_target_generated_headers_root("${CMAKE_CURRENT_SOURCE_DIR}" "${iGeneratedHeadersVisibility}" _targetGeneratedHeadersRoot)
+    set(_exportHeaderAbsPath "${_targetGeneratedHeadersRoot}/${_exportHeaderFileName}")
 
     if(NOT EXISTS "${_exportHeaderAbsPath}")
         string(TOUPPER "${iTargetName}" _targetNameUC)
@@ -500,7 +526,7 @@ function(CMagnetoInternal__set_up_export_header iTargetName oExportHeaderRelPath
         set(EXPORT_MACRO_NAME "${_exportMacroName}")
         string(CONFIGURE "${_exportHeaderTemplate}" _exportHeaderContent @ONLY)
 
-        file(MAKE_DIRECTORY "${_targetIncludeRoot}")
+        file(MAKE_DIRECTORY "${_targetGeneratedHeadersRoot}")
         file(WRITE "${_exportHeaderAbsPath}" "${_exportHeaderContent}")
         CMagnetoInternal__message(STATUS "Generated missing export header \"${_exportHeaderAbsPath}\".")
     endif()
@@ -512,23 +538,20 @@ endfunction()
 #[[
     CMagnetoInternal__set_up_defs_header
 
-    Ensures that `<TargetLeafName>_DEFS.hpp` exists in the target public include root for library targets,
-    or in the target source root for executable targets.
+    Ensures that `<TargetLeafName>_DEFS.hpp` exists in the target generated-headers root.
     If the file does not exist, generates it and prints a message about the generation.
 
     Parameters:
-        iTargetName         - Real CMake target name, e.g. `DishSW_ContactHolder_Contacts`.
-        iIncludeExportHeader - If TRUE, generated defs header includes `<TargetLeafName>_EXPORT.hpp`.
+        iTargetName                - Real CMake target name, e.g. `DishSW_ContactHolder_Contacts`.
+        iGeneratedHeadersVisibility - `PUBLIC` to place generated headers under the mirrored include root,
+                                      `PRIVATE` to place them under the target source root.
+        iIncludeExportHeader       - If TRUE, generated defs header includes `<TargetLeafName>_EXPORT.hpp`.
         oDefsHeaderRelPath  - Relative path to the ensured header, e.g. `Contacts_DEFS.hpp`.
 ]]
-function(CMagnetoInternal__set_up_defs_header iTargetName iIncludeExportHeader oDefsHeaderRelPath)
+function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisibility iIncludeExportHeader oDefsHeaderRelPath)
     cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _targetLeafName)
     set(_defsHeaderFileName "${_targetLeafName}_DEFS.hpp")
-    if(iIncludeExportHeader)
-        CMagnetoInternal__get_target_include_root("${CMAKE_CURRENT_SOURCE_DIR}" _defsHeaderDir)
-    else()
-        set(_defsHeaderDir "${CMAKE_CURRENT_SOURCE_DIR}")
-    endif()
+    CMagnetoInternal__get_target_generated_headers_root("${CMAKE_CURRENT_SOURCE_DIR}" "${iGeneratedHeadersVisibility}" _defsHeaderDir)
     set(_defsHeaderAbsPath "${_defsHeaderDir}/${_defsHeaderFileName}")
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath

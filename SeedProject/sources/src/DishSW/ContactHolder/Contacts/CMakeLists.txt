@@ -108,6 +108,7 @@ target_link_libraries(${_TARGET_NAME}
 
 # Building and installation
 CMagneto__set_up__library(${_TARGET_NAME}
+    GENERATED_HEADERS_VISIBILITY PUBLIC
     PUBLIC_HEADERS
         ${_QtMOC_PUBLIC_HEADERS} ${_regular_PUBLIC_HEADERS}
     INTERFACE_HEADERS

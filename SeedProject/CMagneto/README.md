@@ -287,7 +287,22 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
         # DishSW_ContactHolder_Contacts -> DishSW::ContactHolder::Contacts
     )
     CMagneto__set_up__library(DishSW_ContactHolder_Contacts
+        GENERATED_HEADERS_VISIBILITY PUBLIC
         ... # List all target's files here, except resources to embed into the target's binary using Qt RCC.
+    )
+    ```
+
+    For a header-only interface library, declare the target with plain CMake and then call:
+    ```cmake
+    add_library(DishSW_ContactHolder_Contacts_API INTERFACE)
+    target_link_libraries(DishSW_ContactHolder_Contacts_API
+        INTERFACE
+            ...
+    )
+    CMagneto__set_up__interface_library(DishSW_ContactHolder_Contacts_API
+        INTERFACE_HEADERS
+            Header.hpp
+            Detail/Forward.hpp
     )
     ```
 

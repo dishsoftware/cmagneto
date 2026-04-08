@@ -64,7 +64,7 @@ function(CMagneto__set_up__executable iExeTargetName)
 
     cmake_parse_arguments(ARG "" "" "HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" ${ARGN})
 
-    CMagnetoInternal__set_up_defs_header("${iExeTargetName}" FALSE _defsHeaderRelPath)
+    CMagnetoInternal__set_up_defs_header("${iExeTargetName}" "PRIVATE" FALSE _defsHeaderRelPath)
     list(FIND ARG_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
     if(_defsHeaderIndex EQUAL -1)
         list(APPEND ARG_HEADERS "${_defsHeaderRelPath}")

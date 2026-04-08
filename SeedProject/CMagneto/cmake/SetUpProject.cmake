@@ -28,7 +28,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject_Internals.cmake")
     - Packaging.
 
     It must be called:
-    - After all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    - After all CMagneto__set_up__library(iLibTargetName), CMagneto__set_up__interface_library(iLibTargetName)
+      and CMagneto__set_up__executable(iExeTargetName) are called.
     - From a CMakeLists.txt, where the `project(...) command is called.
 ]]
 function(CMagneto__set_up__project)

@@ -95,7 +95,8 @@ set(CMagnetoInternal__GENERATE_BUILD_SUMMARY__SCRIPT_PATH "${CMAKE_CURRENT_LIST_
 
     After all registered targets are built, the function composes, places to build directory and installs "build_summary.txt".
 
-    The function must be called after all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    The function must be called after all CMagneto__set_up__library(iLibTargetName),
+    CMagneto__set_up__interface_library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
     If the function is not called, "build.py" will not work correctly:
     "build.py" checks for the presence of "build_summary.txt" to determine whether the project is compiled.
 ]]
