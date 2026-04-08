@@ -115,10 +115,10 @@ function(CMagnetoInternal__generate__run_tests__script_content iBuildType oScrip
 
     CMagneto__is_multiconfig(IS_MULTICONFIG)
     if(IS_MULTICONFIG)
-        set(_dirWithCtestTestFile "../../${CMagneto__SUBDIR_TESTS}")
+        set(_dirWithCtestTestFile "../../${CMagneto__SUBDIR_TESTS_NATIVE}")
         set(_reportPath "../../${CMagneto__SUBDIR_SUMMARY}/${iBuildType}/${CMagneto__TEST_REPORT__FILE_NAME}")
     else()
-        set(_dirWithCtestTestFile "../${CMagneto__SUBDIR_TESTS}")
+        set(_dirWithCtestTestFile "../${CMagneto__SUBDIR_TESTS_NATIVE}")
         set(_reportPath "../${CMagneto__SUBDIR_SUMMARY}/${CMagneto__TEST_REPORT__FILE_NAME}")
     endif()
 

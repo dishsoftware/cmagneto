@@ -66,9 +66,18 @@ set(CMagneto__SUBDIR_TMP "TMP/")
 ## Under project build and install dirs: parent for build and test reports.
 set(CMagneto__SUBDIR_SUMMARY "summary/")
 
-## Under project root: parent for unit and integration tests' code and resources.
-## Under project build dir: parent for `CTestTestfile.cmake` and built test files.
+## Under project root: parent for all test-related directories.
+## Under project build dir: parent for `CTestTestfile.cmake` and built native test files.
 set(CMagneto__SUBDIR_TESTS "tests/")
+
+## Under project root and build dir: parent for native CMake-managed test code and resources.
+set(CMagneto__SUBDIR_TESTS_NATIVE "${CMagneto__SUBDIR_TESTS}native/")
+
+## Under project root: parent for system-test drivers/scripts.
+set(CMagneto__SUBDIR_TESTS_SYSTEM "${CMagneto__SUBDIR_TESTS}system/")
+
+## Under project root: parent for external-style fixture projects used by system tests.
+set(CMagneto__SUBDIR_TESTS_TEST_PROJECTS "${CMagneto__SUBDIR_TESTS}@TestProjects/")
 
 ## Under project root: parent for `CPackConfig.cmake` and `{CMagneto__SUBDIR_PACKAGE_RESOURCES}`.
 set(CMagneto__SUBDIR_CPACKCONFIG "packaging/")

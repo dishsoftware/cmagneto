@@ -80,8 +80,8 @@ function(CMagneto__set_up__project)
     ####################################################
 
     # Configure tests.
-    cmake_path(SET _PROJECT_TESTS_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TESTS}/")
-    add_subdirectory("${_PROJECT_TESTS_DIR}" EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
+    cmake_path(SET _PROJECT_NATIVE_TESTS_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TESTS_NATIVE}/")
+    add_subdirectory("${_PROJECT_NATIVE_TESTS_DIR}" EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
     CMagnetoInternal__add__build_tests__target() # Required by `build.py` in the project root.
     CMagnetoInternal__set_up__run_tests__script() # Required by `build.py` in the project root.
 

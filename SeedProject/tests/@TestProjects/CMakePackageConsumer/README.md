@@ -1,16 +1,16 @@
-# SeedProject Package Consumer
+# CMake Package Consumer
 
-This test project verifies that an installed `SeedProject` package can be found
+This test project verifies that an installed primary project CMake package can be found
 by CMake and linked against from an external consumer project.
 
-It reads the SeedProject install prefix from the environment variable:
+It reads the primary package install prefix from the environment variable:
 
-`SEEDPROJECT_INSTALL_DIR`
+`PRIMARY_PROJECT_INSTALL_DIR`
 
 Example:
 
 ```bash
-export SEEDPROJECT_INSTALL_DIR=/home/dim/Work/Dish/CMagneto/SeedProject/install/Makefiles_GCC/Release
+export PRIMARY_PROJECT_INSTALL_DIR=/path/to/PrimaryProject/install/<build-variant>/<build-type>
 cmake -S . -B build
 cmake --build build
 ```

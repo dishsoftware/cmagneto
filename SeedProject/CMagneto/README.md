@@ -39,7 +39,7 @@ The framework is shipped with the following major components:
 - Template configuration files in [`./meta/`](./../meta/);
 - Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `CMakePresets.json` and `Description.md`;
 - Optional build frontend [`./build.py`](./../build.py);
-- Pre-configured CTest files in [`./tests/`](./../tests/);
+- Pre-configured native-test CTest files in [`./tests/native/`](./../tests/native/);
 - Pre-configured CPack files in [`./packaging/`](./../packaging/) and installation package resource templates in [`./packaging/resources/`](./../packaging/resources/);
 - Pre-configured [`Dockerfiles`](./../CI/Docker/), one-command [`Docker image build script`](./../CI/Docker/build_image.py) and [`GitLab CI pipeline`](./../CI/GitLab/pipeline.yml) in [`./CI/`](./../CI/);
 - Pre-configured VS Code files at [`./.vscode/`](./../.vscode/).
@@ -177,18 +177,20 @@ SeedProject/
 │                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt `*.ts` files to compile into external `*.qm` runtime resource files.
 │                   └── ...                    # Other external runtime resources.
 ├── res/                                       # Build/install runtime resources root. Mirrors `./sources/res/` for copied/generated runtime resources.
-├── tests/                                     # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
-|   ├── CMakeLists.txt                         # GoogleTest is set up here. No need to change the file.
-│   ├── {CompanyName_SHORT}/                   # The nesting is mandated.
-│   |   └── {ProjectNameBase}/                 # The nesting is mandated.
-│   |       ├── TargetName/                    # Test target source root.
-|   |       |   ├── CMakeLists.txt             # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
-|   |       |   |                              # ^ The naming of test targets is not mandated, but endorsed.
-|   |       |   ├── TEST_Header.hpp            # The naming is not mandated, but endorsed.
-|   |       |   ├── TEST_Source.cpp            # The naming is not mandated, but endorsed.
-│   |       |   └── ...
-│   |       └── ...
-│   └── ...                                    # Tests for external projects can be placed here.
+├── tests/                                     # Project tests' umbrella dir.
+│   ├── native/                                # Native CMake-managed test tree.
+|   |   ├── CMakeLists.txt                     # Native test framework setup lives here. No need to change the file in a basic setup.
+│   |   ├── {CompanyName_SHORT}/               # The nesting is mandated.
+│   |   |   └── {ProjectNameBase}/             # The nesting is mandated.
+│   |   |       ├── TargetName/                # Test target source root.
+|   |   |       |   ├── CMakeLists.txt         # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+|   |   |       |   |                          # ^ The naming of test targets is not mandated, but endorsed.
+|   |   |       |   ├── TEST_Header.hpp        # The naming is not mandated, but endorsed.
+|   |   |       |   ├── TEST_Source.cpp        # The naming is not mandated, but endorsed.
+│   |   |       |   └── ...
+│   |   |       └── ...
+│   ├── system/                                # System-test drivers/scripts.
+│   └── @TestProjects/                         # Fixture projects used by system tests (for example package-consumer smoke projects).
 ├── packaging/
 │   ├── CPackConfig.cmake
 │   └── resources/                             # Package resources root. Under this dir, the resources can be nested arbitrary.
@@ -446,10 +448,10 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     Place Qt translation source files under the mirrored `./sources/res/.../@QtTS/` target subdirectory.
 
-13) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
+13) Keep [`./tests/native/CMakeLists.txt`](./../tests/native/CMakeLists.txt) as is.
     For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).
 
-14) Add test targets in `CMakeLists.txt` files under subdirectories of [`./tests/`](./../tests/):
+14) Add native test targets in `CMakeLists.txt` files under subdirectories of [`./tests/native/`](./../tests/native/):
     ```cmake
     set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_TargetName")
 

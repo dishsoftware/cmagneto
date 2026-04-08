@@ -282,7 +282,7 @@ variables:
   variables:
     BUILD_VARIANT: "Makefiles_GCC" # Default value. May be overridden.
   script:
-    - python3 build.py --build_variant ${BUILD_VARIANT} --build_type Debug --build_stage RunTests --coverage
+    - python3 build.py --build_variant ${BUILD_VARIANT} --build_type Debug --build_stage RunNativeTests --coverage
     - echo "Test coverage $(cat build/${BUILD_VARIANT}/Debug/summary/test_coverage_report_percentage.txt 2>/dev/null || echo 'N/A')"
   coverage: '/Test coverage (\d+\.\d+%|N/A)/'
   rules:

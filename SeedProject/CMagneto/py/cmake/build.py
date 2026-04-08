@@ -648,7 +648,7 @@ def buildProject() -> None:
         Process.runCommand(_buildCommand(buildVariant, buildType, "build_tests"), PROJECT_ROOT)
         Log.status(text + " finished.\n")
 
-    if _isStageRequired(BuildRunner.BuildStage.RunTests, _isTestReportExist(layout), buildStage, runPrecedingStages):
+    if _isStageRequired(BuildRunner.BuildStage.RunNativeTests, _isTestReportExist(layout), buildStage, runPrecedingStages):
         _runTests(layout, args.coverage)
 
     if _isStageRequired(BuildRunner.BuildStage.Install, _isInstallDirExist(layout), buildStage, runPrecedingStages):
