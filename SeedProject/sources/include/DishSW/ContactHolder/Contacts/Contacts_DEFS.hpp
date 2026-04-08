@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DishSW/ContactHolder/ContactHolder_DEFS.hpp"
-#include "Contacts_EXPORT.hpp"
+#include "DishSW/ContactHolder/Contacts/Contacts_EXPORT.hpp"
 
 #if defined(_DEBUG) || defined(DEBUG)
     #include <assert.h>

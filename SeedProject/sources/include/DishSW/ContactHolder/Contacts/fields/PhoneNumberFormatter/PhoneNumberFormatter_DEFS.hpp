@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DishSW/ContactHolder/ContactHolder_DEFS.hpp"
-#include "PhoneNumberFormatter_EXPORT.hpp"
+#include "DishSW/ContactHolder/Contacts/fields/PhoneNumberFormatter/PhoneNumberFormatter_EXPORT.hpp"
 
 #if defined(_DEBUG) || defined(DEBUG)
     #include <assert.h>

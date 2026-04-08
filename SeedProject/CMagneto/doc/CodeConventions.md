@@ -149,7 +149,8 @@ but consumers may relocate it as needed.
 
 
 ## 3. C++ Conventions
-- Place sources of a module under `./src/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
+- Place public and interface headers of a module under `./sources/include/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
+- Place implementation sources and private headers of a module under `./sources/src/{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/`.
 - The project endorses inclusions of headers of other modules within the project as:
   ```c++
   #include "{CompanyName_SHORT}/{ProjectNameBase}/{ModuleName}/{HeaderNameWE}.hpp"
@@ -241,7 +242,13 @@ but consumers may relocate it as needed.
 - Each group is separated with a blank line.
 - The last `#include` directive is separated from the following code with two blank lines.
 - Inside each group, headers are sorted alphabetically.
-- Use `#include "..."` for this project's headers, and `#include <...>` for system/third-party/standard headers.
+- Use `#include <...>` for system/third-party/standard headers.
+- Use `#include "..."` for this project's headers, whether they are under `./sources/include/` or `./sources/src/`.
+- Headers from `./sources/include/` should usually be included by project-rooted path, e.g.:
+  ```c++
+  #include "DishSW/ContactHolder/Contacts/Contact.hpp" // NOT #include "Contact.hpp"
+  ```
+- Headers from `./sources/src/` may use a local quoted include such as `#include "PrivateHeader.hpp"` when they are private to the target and located nearby.
 - Class, its fields and methods are separated with two blank lines from anything which is not field or method of the class.
 
 ### 3.3. Classes And Structs

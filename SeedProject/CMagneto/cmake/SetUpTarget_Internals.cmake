@@ -553,6 +553,7 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
     set(_defsHeaderFileName "${_targetLeafName}_DEFS.hpp")
     CMagnetoInternal__get_target_generated_headers_root("${CMAKE_CURRENT_SOURCE_DIR}" "${iGeneratedHeadersVisibility}" _defsHeaderDir)
     set(_defsHeaderAbsPath "${_defsHeaderDir}/${_defsHeaderFileName}")
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
@@ -581,7 +582,7 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
         endif()
 
         if(iIncludeExportHeader)
-            set(_includeExportHeaderBlock "#include \"${_targetLeafName}_EXPORT.hpp\"\n")
+            set(_includeExportHeaderBlock "#include \"${_targetSourceRootRelativeToProjectSourcesSrcRoot}/${_targetLeafName}_EXPORT.hpp\"\n")
         else()
             set(_includeExportHeaderBlock "")
         endif()
