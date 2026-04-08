@@ -1,5 +1,6 @@
 /build/
 /install/
+/tests/@TestProjects/CMakePackageConsumer/build/
 /CMakeUserPresets.json
 /CI/Docker/.tmp/
 /CI/Docker/**/.tmp/

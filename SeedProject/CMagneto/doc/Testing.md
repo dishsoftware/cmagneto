@@ -20,7 +20,9 @@ The typical setup is:
 - application and library targets are defined under `./sources/`;
 - native test executables are defined separately under `./tests/native/`;
 - the optional Python build frontend builds tests only when the `CompileTests`
-  or `RunNativeTests` stages are requested.
+  or `RunNativeTests` stages are requested;
+- system-level workflow checks under `./tests/system/` are only run when the
+  `RunSystemTests` stage is requested.
 
 As a result:
 - runtime performance of the final application is not degraded just because

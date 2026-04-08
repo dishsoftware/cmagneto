@@ -50,8 +50,6 @@ include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
 CMagneto__set_CMake_package_find_dependencies(
     "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
     "find_dependency(Boost CONFIG REQUIRED)"
-    "find_dependency(CLI11 CONFIG REQUIRED)"
-    "find_dependency(ZLIB REQUIRED)"
 )
 add_subdirectory(
     "${CMAKE_SOURCE_DIR}/CMagneto/cpp/CMagneto"

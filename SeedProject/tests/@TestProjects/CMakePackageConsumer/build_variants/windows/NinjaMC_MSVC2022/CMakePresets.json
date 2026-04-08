@@ -1,0 +1,45 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "Ninja_MSVC2022__base",
+      "hidden": true,
+      "inherits": "windows-host",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/Ninja_MSVC2022",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{QT6_MSVC2022_DIR}/lib/cmake;$env{BOOST_MSVC2022_DIR}/cmake;$env{ZLIB_MSVC2022_DIR}/lib/cmake/zlib",
+        "CMAKE_IGNORE_PATH": "C:/msys64/ucrt64/lib/cmake/GTest"
+      }
+    },
+    {
+      "name": "Ninja_MSVC2022",
+      "inherits": "Ninja_MSVC2022__base"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Ninja_MSVC2022__Debug",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Ninja_MSVC2022__Release",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "Release"
+    },
+    {
+      "name": "Ninja_MSVC2022__RelWithDebInfo",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Ninja_MSVC2022__MinSizeRel",
+      "configurePreset": "Ninja_MSVC2022",
+      "configuration": "MinSizeRel"
+    }
+  ]
+}

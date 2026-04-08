@@ -541,6 +541,29 @@ def _runTests(iLayout: ResolvedVariantLayout, iEnableCoverage: bool) -> None:
         )
 
 
+def _runSystemTests(iVariant: BuildVariantSpec, iBuildType: BuildRunner.BuildType, iLayout: ResolvedVariantLayout) -> None:
+    text = f"Running system tests ({iBuildType.name})"
+    Log.status(text + "...")
+
+    runAllScriptPath = PROJECT_ROOT / BuildRunner.CMagneto__SUBDIR_TESTS_SYSTEM / "RUN_ALL.py"
+    if not runAllScriptPath.exists():
+        Log.error(f"System-test entry script was not found: \"{runAllScriptPath}\".")
+
+    Process.runCommand(
+        [
+            sys.executable,
+            str(runAllScriptPath),
+            "--primary_project_path", str(iLayout.installDir),
+            "--primary_configure_preset", iVariant.configurePresetName(iBuildType),
+            "--primary_build_preset", iVariant.buildPresetName(iBuildType),
+            "--primary_package_preset", iVariant.packagePresetName(iBuildType),
+        ],
+        PROJECT_ROOT
+    )
+
+    Log.status(text + " finished.\n")
+
+
 def _variantDescription(iVariant: BuildVariantSpec, iBuildType: BuildRunner.BuildType, iLayout: ResolvedVariantLayout) -> str:
     configurePresetName = iVariant.configurePresetName(iBuildType)
     buildPresetName = iVariant.buildPresetName(iBuildType)
@@ -592,8 +615,8 @@ def buildProject() -> None:
     parser.add_argument(
         "--build_stage",
         choices=[buildStage.name for buildStage in BuildRunner.BuildStage],
-        default=BuildRunner.BuildStage.Package.name,
-        help=f"Specify a build stage to run. Default is {BuildRunner.BuildStage.Package.name}."
+        default=BuildRunner.BuildStage.RunSystemTests.name,
+        help=f"Specify a build stage to run. Default is {BuildRunner.BuildStage.RunSystemTests.name}."
     )
     parser.add_argument(
         "--run_preceding_stages", "--RPS",
@@ -672,6 +695,9 @@ def buildProject() -> None:
             BuildRunner.CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME
         )
         Log.status(text + " finished.\n")
+
+    if _isStageRequired(BuildRunner.BuildStage.RunSystemTests, False, buildStage, runPrecedingStages):
+        _runSystemTests(buildVariant, buildType, layout)
 
 
 if __name__ == "__main__":

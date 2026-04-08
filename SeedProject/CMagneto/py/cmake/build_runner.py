@@ -75,6 +75,7 @@ class BuildRunner(ABC):
         RunNativeTests = 3
         Install = 4 # Install the project (copy scripts and compiled binaries to an install directory).
         Package = 5 # Package the project (create packages, e.g. .deb, .rpm, .zip, etc.).
+        RunSystemTests = 6
         # Install stage is technically not required for Package stage. But the file is written .
 
 
@@ -467,6 +468,8 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 return isStageRequiredFor(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Package:
                 return isStageRequiredFor(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
+            case BuildRunner.BuildStage.RunSystemTests:
+                return isStageRequiredFor(BuildRunner.BuildStage.RunSystemTests, lambda _buildType: False, iBuildType, iBuildStage)
             case _:
                 Log.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 
