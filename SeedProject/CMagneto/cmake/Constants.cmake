@@ -53,12 +53,12 @@ set(CMagneto__SUBDIR_TARGET_RESOURCES "res/")
 ## Under project install dir: parent for application menu helper assets such as launcher icons.
 set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")
 
-## Under target source dir: parent for target's resources, which must be embedded into the target's binary using Qt RCC.
-set(CMagneto__SUBDIR_QTRC "QtRC/")
+## Under target resource dir: reserved parent for target resources, which must be embedded into the target's binary using Qt RCC.
+set(CMagneto__SUBDIR_QTRC "@QtRC/")
 
-## Under target source dir: parent for target's Qt translation files (`*.ts`).
+## Under target resource dir: reserved parent for target Qt translation source files (`*.ts`).
 ## Under project install dir: parent for `*.qm` (compiled `*.ts`) resources of all targets.
-set(CMagneto__SUBDIR_QTTS "QtTS/")
+set(CMagneto__SUBDIR_QTTS "@QtTS/")
 
 ## Under project build dir: temporary files, created during `Generation` and `Build` stages.
 set(CMagneto__SUBDIR_TMP "TMP/")

@@ -107,29 +107,29 @@ The CMagneto framework needs on the following software to build your project:
 The framework mandates or endorses restrictions on locations of project files.
 ```text
 SeedProject/
-├── build.py                               # Optional project build frontend over committed CMake presets.
-├── CMakeLists.txt                         # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
-├── CMagneto/                              # CMagneto framework core files.
+├── build.py                                   # Optional project build frontend over committed CMake presets.
+├── CMakeLists.txt                             # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
+├── CMagneto/                                  # CMagneto framework core files.
 |   ├── LICENSE
-|   ├── README.md                          # This file.
-|   ├── TODO.md                            # Limitations and known issues.
-|   ├── cmake/                             # CMagneto CMake modules root.
-|   |   ├── Main.cmake                     # CMagneto CMake entrypoint-module.
-|   |   ├── MetaLoader.cmake               # The module must be loaded prior to Main.cmake.
-|   |   ├── Packager.cmake                 # Loaded separately.
+|   ├── README.md                              # This file.
+|   ├── TODO.md                                # Limitations and known issues.
+|   ├── cmake/                                 # CMagneto CMake modules root.
+|   |   ├── Main.cmake                         # CMagneto CMake entrypoint-module.
+|   |   ├── MetaLoader.cmake                   # The module must be loaded prior to Main.cmake.
+|   |   ├── Packager.cmake                     # Loaded separately.
 |   |   └── ...
-|   ├── doc/                               # Other documentation.
-|   └── py/                                # Coupled Python code.
+|   ├── doc/                                   # Other documentation.
+|   └── py/                                    # Coupled Python code.
 ├── meta/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
-├── licenses/                              # Installed/package legal files configuration and checked-in legal resources.
-|   ├── bundles/                           # License bundle manifests selected by build variants.
-|   ├── components/                        # Reusable license component manifests.
-|   └── 3rd-party/                         # Optional checked-in third-party legal files.
-├── CMakePresets.json                      # Root preset manifest that includes concrete variant files from ./build_variants/.
-├── build_variants/                        # Concrete build variants owned by per-variant CMakePresets files.
+├── licenses/                                  # Installed/package legal files configuration and checked-in legal resources.
+|   ├── bundles/                               # License bundle manifests selected by build variants.
+|   ├── components/                            # Reusable license component manifests.
+|   └── 3rd-party/                             # Optional checked-in third-party legal files.
+├── CMakePresets.json                          # Root preset manifest that includes concrete variant files from ./build_variants/.
+├── build_variants/                            # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
 |   |   ├── UnixMakefiles_GCC/
 |   |   |   ├── CMakePresets.json
@@ -137,47 +137,66 @@ SeedProject/
 |   |   |   └── ...
 |   |   └── ...
 │   └── ...
-├── src/                                   # Project source root.
-│   └── {CompanyName_SHORT}/               # The nesting is mandated.
-│       └── {ProjectNameBase}/             # The nesting is mandated.
-│           ├── {ProjectNameBase}_DEFS.hpp # Generated automatically if absent. Defines project-level helper APIs such as version(), versionMajor(), versionMinor(), versionPatch(), and gitCommitSHA(). Added to public headers transitively through target `_DEFS.hpp` headers.
-│           └── TargetName/                # Target source root. Code of the target can be nested arbitrary under this dir.
-|               ├── CMakeLists.txt         # Target top-level (target root) `CMakeLists.txt`. Target Add target here.
-│               ├── TargetName_EXPORT.hpp  # Generated automatically if absent for library targets. Defines export/import macro for shared libraries. Added to the target implicitly.
-│               ├── TargetName_DEFS.hpp    # Generated automatically if absent. Defines target-specific helper macros such as ASSERT/VERIFY. Added to the target implicitly.
-|               ├── Header.hpp
-|               ├── Source.cpp
-|               ├── Code/
-│               |   ├── Header.hpp
-│               |   ├── Source.cpp
-│               |   ├── Code/
-|               |   |   └── ...
-│               |   └── ...
-|               ├── ...
-|               └── @resources/            # Target resources root.
-|                   ├── QtRC/              # Resources to embed into target's binary using Qt RCC. Under this dir, the resources can be nested arbitrary.
-|                   ├── QtTS/              # Qt `*.ts` files to compile `*.qm` external resource files. Under this dir, `*.ts` files can be nested arbitrary.
-|                   └── other/             # Other external resources (loaded dynamically during runtime). Under this dir, the resources can be nested arbitrary.
-├── tests/                                 # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
-|   ├── CMakeLists.txt                     # GoogleTest is set up here. No need to change the file.
-│   ├── {CompanyName_SHORT}/               # The nesting is mandated.
-│   |   └── {ProjectNameBase}/             # The nesting is mandated.
-│   |       ├── TargetName/                # Test target source root.
-|   |       |   ├── CMakeLists.txt         # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
-|   |       |   |                          # ^ The naming of test targets is not mandated, but endorsed.
-|   |       |   ├── TEST_Header.hpp        # The naming is not mandated, but endorsed.
-|   |       |   ├── TEST_Source.cpp        # The naming is not mandated, but endorsed.
+├── sources/                                   # Project native-source umbrella dir.
+│   ├── include/                               # Public/interface file tree.
+│   │   └── {CompanyName_SHORT}/               # The nesting is mandated.
+│   │       └── {ProjectNameBase}/             # The nesting is mandated.
+│   │           ├── {ProjectNameBase}_DEFS.hpp # Generated automatically if absent.
+│   │           │                              # ^ Defines project-level helper APIs such as version(), versionMajor(), versionMinor(), versionPatch() and gitCommitSHA().
+│   │           │                              # ^ Added transitively through target `_DEFS.hpp` headers.
+│   │           │
+│   │           └── TargetName/                # Target public/interface file root. Public headers can be nested arbitrary under this dir.
+│   │               ├── TargetName_EXPORT.hpp  # Generated automatically if absent for library targets. Defines export/import macro for shared libraries.
+│   │               │                          # ^ Added to the target implicitly.
+│   │               │
+│   │               ├── TargetName_DEFS.hpp    # Generated automatically if absent for library targets. Defines target-specific helper macros and includes project defs.
+│   │               │                          # ^ Added to the target implicitly.
+│   │               │
+│   │               ├── Header.hpp
+│   │               └── ...
+│   ├── src/                                   # Implementation-source tree and `CMakeLists.txt` files.
+│   │   └── {CompanyName_SHORT}/               # The nesting is mandated.
+│   │       └── {ProjectNameBase}/             # The nesting is mandated.
+│   │           └── TargetName/                # Target source root. Implementation code can be nested arbitrary under this dir.
+│   │               ├── CMakeLists.txt         # Target top-level (target root) `CMakeLists.txt`. Add target here.
+│   │               ├── TargetName_DEFS.hpp    # Generated automatically if absent for executable targets. Defines target-specific helper macros such as ASSERT/VERIFY.
+│   │               │                          # ^ Added to the target implicitly.
+│   │               │
+│   │               ├── Source.cpp
+│   │               ├── Code/
+│   │               │   ├── Source.cpp
+│   │               │   └── ...
+│   │               └── ...
+│   └── res/                                   # Runtime resources tree mirroring `./sources/src/`.
+│       │                                      # ^ Can contain runtime resource inputs - files, which are tranformed into runtime resources.
+│       │
+│       └── {CompanyName_SHORT}/               # The nesting is mandated.
+│           └── {ProjectNameBase}/             # The nesting is mandated.
+│               └── TargetName/                # Target resource root.
+│                   ├── @QtRC/                 # Reserved CMagneto subdir. Resources to embed into target's binary using Qt RCC. Resources can be nested arbitrary under this dir.
+│                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt `*.ts` files to compile into external `*.qm` runtime resource files.
+│                   └── ...                    # Other external runtime resources.
+├── res/                                       # Build/install runtime resources root. Mirrors `./sources/res/` for copied/generated runtime resources.
+├── tests/                                     # Project tests' root. Under this dir, headers, sources and resources of unit and integration tests can be nested arbitrary.
+|   ├── CMakeLists.txt                         # GoogleTest is set up here. No need to change the file.
+│   ├── {CompanyName_SHORT}/                   # The nesting is mandated.
+│   |   └── {ProjectNameBase}/                 # The nesting is mandated.
+│   |       ├── TargetName/                    # Test target source root.
+|   |       |   ├── CMakeLists.txt             # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+|   |       |   |                              # ^ The naming of test targets is not mandated, but endorsed.
+|   |       |   ├── TEST_Header.hpp            # The naming is not mandated, but endorsed.
+|   |       |   ├── TEST_Source.cpp            # The naming is not mandated, but endorsed.
 │   |       |   └── ...
 │   |       └── ...
-│   └── ...                                # Tests for external projects can be placed here.
+│   └── ...                                    # Tests for external projects can be placed here.
 ├── packaging/
 │   ├── CPackConfig.cmake
-│   └── resources/                         # Package resources root. Under this dir, the resources can be nested arbitrary.
+│   └── resources/                             # Package resources root. Under this dir, the resources can be nested arbitrary.
 ├── CI/
-│   ├── Docker/                            # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
-|   |   ├── build_image.py                 # One-command Docker image build script.
+│   ├── Docker/                                # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
+|   |   ├── build_image.py                     # One-command Docker image build script.
 │   |   └── ...
-│   └── GitLab/                            # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
+│   └── GitLab/                                # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
 └── ...
 ```
 > **Note:** Targets can be nested arbitrary, i.e. a target's subdir can contain a target root of another target.
@@ -256,10 +275,10 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
     ```
 
-4) Add library targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
+4) Add library targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
     ```cmake
-    # The real target name must equal the path under `./src/` with "/" replaced by "_".
-    # Example: `./src/DishSW/ContactHolder/Contacts` -> DishSW_ContactHolder_Contacts
+    # The real target name must equal the path under `./sources/src/` with "/" replaced by "_".
+    # Example: `./sources/src/DishSW/ContactHolder/Contacts` -> DishSW_ContactHolder_Contacts
     CMagneto__get_library_type(DishSW_ContactHolder_Contacts _LIB_TYPE)
     add_library(DishSW_ContactHolder_Contacts ${_LIB_TYPE}) # Don't add any files to the target in the command.
     target_link_libraries(DishSW_ContactHolder_Contacts
@@ -272,7 +291,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     )
     ```
 
-5) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./src/`](./../src/):
+5) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
     ```cmake
     add_executable(DishSW_ContactHolder_GUI) # Don't add any files to the target in the command.
     target_link_libraries(DishSW_ContactHolder_GUI ...)
@@ -282,12 +301,12 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) If an executable should have platform-specific icons, place icon files under the target source root, for example in `@resources/AppIcon/`, and declare them once with:
+6) If an executable should have platform-specific icons, place icon files under the mirrored target resource root, for example in `./sources/res/.../AppIcon/`, and declare them once with:
     ```cmake
     CMagneto__bind_icon_to_executable(DishSW_ContactHolder_GUI
-        WINDOWS_ICON "@resources/AppIcon/ContactHolder.ico"
-        LINUX_ICON "@resources/AppIcon/ContactHolder.png"
-        MACOS_ICON "@resources/AppIcon/ContactHolder.icns"
+        WINDOWS_ICON "AppIcon/ContactHolder.ico"
+        LINUX_ICON "AppIcon/ContactHolder.png"
+        MACOS_ICON "AppIcon/ContactHolder.icns"
     )
     ```
     Notes:
@@ -320,7 +339,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```cmake
     CMagneto__add_installed_file_to_application_menu("bin/MyHelper.exe"
         NAME "My Helper"
-        WINDOWS_ICON "@resources/AppIcon/MyHelper.ico"
+        WINDOWS_ICON "AppIcon/MyHelper.ico"
         # LAUNCH_IN_TERMINAL
     )
     ```
@@ -394,13 +413,14 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     to configure the optional `run` helper script (see section [`1.4. Run Project`](#14-run-project)).
 
-12) If a target has resources to embed into its binary, place them under the mirrored `./sources/res/.../QtRC/` target subdirectory and call:
+12) If a target has resources to embed into its binary, place them under the mirrored `./sources/res/.../@QtRC/` target subdirectory and call:
     ```cmake
     CMagneto__embed_QtRC_resources(TargetName # Must be called from the target root `CMakeLists.txt`.
         FILES
             ... # List the files to embed here.
     )
     ```
+    Place Qt translation source files under the mirrored `./sources/res/.../@QtTS/` target subdirectory.
 
 13) Keep [`./tests/CMakeLists.txt`](./../tests/CMakeLists.txt) as is.
     For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).

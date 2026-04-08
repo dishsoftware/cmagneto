@@ -62,9 +62,6 @@ int main(int iArgumentsSize, char* iArguments[]) {
             auto emailAddress = DishSW::ContactHolder::Contacts::fields::EmailAddress();
             std::wcout << "zlib version: " << zlibVersion() << std::endl;
             std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
-
-            QIcon iconContacts(":/DishSW/ContactHolder/Contacts/icons/logo.svg");
-            QIcon iconGUI(":/DishSW/ContactHolder/GUI/icons/logo.svg");
         } // Boilerplate output
 
         QMainWindow mainWindow;

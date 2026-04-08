@@ -19,13 +19,6 @@
 * Add `Project_DEFS.hpp` file, common for all targets in the project, witgh project version and compatibility definitions.
 * Do the same for each used build tool. Log versions and paths to these tools.
 * Rewrite `QtWrappers.cmake`. Check if `automoc` is enabled.
-* Make setting resource paths relative to:
-  - `@resources/QtRC`
-  - `@resources/QtTS`
-  - `@resources/other`
-  - etc.
-  Add files in these dirs automatically?
-
 * Automatically merge ts files of a target into a monolitic ts file?
 * When to throw (raise) and when to exit in the one-command-build-scripts?
 * Add possibility to add files to a target from a CMakeLists.txt in any subdir of the target using a path, relative to the lists file.

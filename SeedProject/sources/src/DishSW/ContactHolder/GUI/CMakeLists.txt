@@ -21,13 +21,13 @@ set(_regular_HEADERS
 # Resources
 ## Resources to embed into the executable's binary using Qt RCC.
 set(_QtRCC_RESOURCE_FILES
-    "QtRC/icons/logo.svg"
+    "@QtRC/icons/logo.svg"
 )
 
 ## Resource files to be processed by Qt LRelease.
 set(_QtTS_RESOURCES
-    "QtTS/main_en.ts"
-    "QtTS/main_ru.ts"
+    "@QtTS/main_en.ts"
+    "@QtTS/main_ru.ts"
 )
 
 ## Regular resource files.
