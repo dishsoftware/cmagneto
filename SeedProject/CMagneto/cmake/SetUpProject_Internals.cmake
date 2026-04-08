@@ -47,6 +47,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/TestTools.cmake")
     - After all library and executable targets has been set up.
 ]]
 function(CMagnetoInternal__set_up__CMake_package_export)
+    CMagnetoInternal__compose_CMake_package_find_dependency_block(_findDependencyBlock)
+
     # Export all targets to a single export set.
     # The exported target names are fully qualified already via each target's EXPORT_NAME.
     install(EXPORT ${PROJECT_NAME}Targets
@@ -58,12 +60,14 @@ function(CMagnetoInternal__set_up__CMake_package_export)
     set(_cmake_in__content [[
 @PACKAGE_INIT@
 
+@FIND_DEPENDENCY_BLOCK@
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
     ]])
     set(_cmake_in__path "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in")
     file(WRITE "${_cmake_in__path}" "${_cmake_in__content}")
 
     # Generate the ${PROJECT_NAME}Config.cmake using the template file.
+    set(FIND_DEPENDENCY_BLOCK "${_findDependencyBlock}")
     configure_package_config_file(
         "${_cmake_in__path}"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
@@ -84,6 +88,20 @@ include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
         DESTINATION ${CMagneto__SUBDIR_CMAKE}/${PROJECT_NAME}
         COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
     )
+endfunction()
+
+
+function(CMagnetoInternal__compose_CMake_package_find_dependency_block oFindDependencyBlock)
+    get_property(_findDependencyLines GLOBAL PROPERTY CMagnetoInternal__CMakePackageFindDependencies)
+    if(NOT DEFINED _findDependencyLines OR _findDependencyLines STREQUAL "")
+        set(${oFindDependencyBlock} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    list(REMOVE_DUPLICATES _findDependencyLines)
+    string(JOIN "\n" _findDependencyBlockLines ${_findDependencyLines})
+    set(_findDependencyBlock "include(CMakeFindDependencyMacro)\n${_findDependencyBlockLines}\n")
+    set(${oFindDependencyBlock} "${_findDependencyBlock}" PARENT_SCOPE)
 endfunction()
 
 

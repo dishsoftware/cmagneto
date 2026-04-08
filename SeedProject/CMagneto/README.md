@@ -275,7 +275,16 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
     ```
 
-4) Add library targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
+4) If the installed CMake package of your project depends on external packages, declare the exact dependency calls manually:
+    ```cmake
+    CMagneto__set_CMake_package_find_dependencies(
+        "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
+        "find_dependency(Boost CONFIG REQUIRED)"
+    )
+    ```
+    These lines are inserted verbatim into the generated `*Config.cmake` before `*Targets.cmake` is included.
+
+5) Add library targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
     ```cmake
     # The real target name must equal the path under `./sources/src/` with "/" replaced by "_".
     # Example: `./sources/src/DishSW/ContactHolder/Contacts` -> DishSW_ContactHolder_Contacts
@@ -306,7 +315,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     )
     ```
 
-5) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
+6) Add executable targets in `CMakeLists.txt` files under subdirectories of [`./sources/src/`](./../sources/src/):
     ```cmake
     add_executable(DishSW_ContactHolder_GUI) # Don't add any files to the target in the command.
     target_link_libraries(DishSW_ContactHolder_GUI ...)
@@ -316,7 +325,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     ```
     The alias is generated automatically from the real target name by replacing each `_` with `::`.
 
-6) If an executable should have platform-specific icons, place icon files under the mirrored target resource root, for example in `./sources/res/.../AppIcon/`, and declare them once with:
+7) If an executable should have platform-specific icons, place icon files under the mirrored target resource root, for example in `./sources/res/.../AppIcon/`, and declare them once with:
     ```cmake
     CMagneto__bind_icon_to_executable(DishSW_ContactHolder_GUI
         WINDOWS_ICON "AppIcon/ContactHolder.ico"
@@ -343,7 +352,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     - This is useful when you want the installed icon file to be available to users directly, for example so they can assign it to a directory with related files.
     - On Linux, `CMagneto__bind_icon_to_executable(...)` already performs the same adjacent placement, so this call becomes a no-op there if the icon was already placed.
 
-8) If an executable should appear in the application menu, register it explicitly:
+9) If an executable should appear in the application menu, register it explicitly:
     ```cmake
     CMagneto__add_executable_to_application_menu(DishSW_ContactHolder_GUI
         NAME "Contact Holder"

@@ -20,6 +20,28 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject_Internals.cmake")
 
 
 #[[
+    CMagneto__set_CMake_package_find_dependencies
+
+    Defines exact `find_dependency(...)` lines to be written into the generated `*Config.cmake`
+    of the project.
+
+    Parameters:
+    iDependencyCalls - Each argument must be a complete CMake line, typically a `find_dependency(...)` call.
+
+    Example:
+    ```cmake
+    CMagneto__set_CMake_package_find_dependencies(
+        "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
+        "find_dependency(Boost CONFIG REQUIRED)"
+    )
+    ```
+]]
+function(CMagneto__set_CMake_package_find_dependencies)
+    set_property(GLOBAL PROPERTY CMagnetoInternal__CMakePackageFindDependencies "${ARGN}")
+endfunction()
+
+
+#[[
     CMagneto__set_up__project
 
     Sets up:
