@@ -1,4 +1,5 @@
 add_subdirectory(fields/PhoneNumberFormatter)
+add_subdirectory(PrivateDummy)
 
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui)
@@ -101,6 +102,7 @@ target_link_libraries(${_TARGET_NAME}
     PUBLIC
         Qt6::Core Qt6::Gui Boost::boost
     PRIVATE
+        DishSW::ContactHolder::Contacts::PrivateDummy
         DishSW::ContactHolder::Contacts::fields::PhoneNumberFormatter
 )
 ####################################################################

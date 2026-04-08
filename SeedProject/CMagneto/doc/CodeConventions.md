@@ -249,6 +249,12 @@ but consumers may relocate it as needed.
   #include "DishSW/ContactHolder/Contacts/Contact.hpp" // NOT #include "Contact.hpp"
   ```
 - Headers from `./sources/src/` may use a local quoted include such as `#include "PrivateHeader.hpp"` when they are private to the target and located nearby.
+- When including private headers through the project's private include root, use an explicit `src/...` path, e.g.:
+  ```c++
+  #include "src/DishSW/ContactHolder/Contacts/PrivateHeader.hpp"
+  ```
+- Public headers under `./sources/include/` must not use `..` in `#include` directives.
+- Public headers under `./sources/include/` must not include `src/...` paths.
 - Class, its fields and methods are separated with two blank lines from anything which is not field or method of the class.
 
 ### 3.3. Classes And Structs

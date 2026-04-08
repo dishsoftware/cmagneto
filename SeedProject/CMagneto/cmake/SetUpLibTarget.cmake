@@ -279,7 +279,7 @@ function(CMagneto__set_up__library iLibTargetName)
             $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}> # Set up compiler.
             $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
         PRIVATE
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iLibTargetName} PUBLIC)
 
