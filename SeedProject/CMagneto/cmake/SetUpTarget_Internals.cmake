@@ -57,47 +57,47 @@ function(CMagnetoInternal__get_git_commit_sha oGitCommitSha)
 endfunction()
 
 
-function(CMagnetoInternal__get_project_source_root oProjectSourceRoot)
-    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
-    set(${oProjectSourceRoot} "${_projectSourceRoot}" PARENT_SCOPE)
+function(CMagnetoInternal__get_project_sources_src_root oProjectSourcesSrcRoot)
+    cmake_path(SET _projectSourcesSrcRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+    set(${oProjectSourcesSrcRoot} "${_projectSourcesSrcRoot}" PARENT_SCOPE)
 endfunction()
 
 
 function(CMagnetoInternal__get_project_include_root oProjectIncludeRoot)
-    cmake_path(SET _projectIncludeRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE_INCLUDE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+    cmake_path(SET _projectIncludeRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
     set(${oProjectIncludeRoot} "${_projectIncludeRoot}" PARENT_SCOPE)
 endfunction()
 
 
 function(CMagnetoInternal__get_project_resource_root oProjectResourceRoot)
-    cmake_path(SET _projectResourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE_RESOURCES}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+    cmake_path(SET _projectResourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_RESOURCES}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
     set(${oProjectResourceRoot} "${_projectResourceRoot}" PARENT_SCOPE)
 endfunction()
 
 
 function(CMagnetoInternal__compose_target_mirrored_root iAbsoluteTargetSourceRoot iMirroredRootPrefix oAbsoluteTargetMirroredRoot)
     cmake_path(SET _absoluteTargetSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/")
-    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
-    cmake_path(APPEND _projectSourceRoot "")
-    CMagneto__is_path_under_dir("${_absoluteTargetSourceRoot}" "${_projectSourceRoot}" _isTargetSourceRootUnderProjectSourceRoot)
-    if(NOT _isTargetSourceRootUnderProjectSourceRoot)
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_mirrored_root: target source root \"${_absoluteTargetSourceRoot}\" is not under the project source root \"${_projectSourceRoot}\".")
+    CMagnetoInternal__get_project_sources_src_root(_projectSourcesSrcRoot)
+    cmake_path(APPEND _projectSourcesSrcRoot "")
+    CMagneto__is_path_under_dir("${_absoluteTargetSourceRoot}" "${_projectSourcesSrcRoot}" _isTargetSourceRootUnderProjectSourcesSrcRoot)
+    if(NOT _isTargetSourceRootUnderProjectSourcesSrcRoot)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_mirrored_root: target source root \"${_absoluteTargetSourceRoot}\" is not under the project source root \"${_projectSourcesSrcRoot}\".")
     endif()
 
-    CMagneto__get_dir_relative_to_project_source_root("${_absoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
-    cmake_path(SET _absoluteTargetMirroredRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${iMirroredRootPrefix}/${_targetSourceRootRelativeToProjectSourceRoot}")
+    CMagneto__get_dir_relative_to_project_sources_src_root("${_absoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
+    cmake_path(SET _absoluteTargetMirroredRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${iMirroredRootPrefix}/${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
     set(${oAbsoluteTargetMirroredRoot} "${_absoluteTargetMirroredRoot}" PARENT_SCOPE)
 endfunction()
 
 
 function(CMagnetoInternal__get_target_include_root iAbsoluteTargetSourceRoot oTargetIncludeRoot)
-    CMagnetoInternal__compose_target_mirrored_root("${iAbsoluteTargetSourceRoot}" "${CMagneto__SUBDIR_SOURCE_INCLUDE}" _targetIncludeRoot)
+    CMagnetoInternal__compose_target_mirrored_root("${iAbsoluteTargetSourceRoot}" "${CMagneto__SUBDIR_SOURCES_INCLUDE}" _targetIncludeRoot)
     set(${oTargetIncludeRoot} "${_targetIncludeRoot}" PARENT_SCOPE)
 endfunction()
 
 
 function(CMagnetoInternal__get_target_resource_root iAbsoluteTargetSourceRoot oTargetResourceRoot)
-    CMagnetoInternal__compose_target_mirrored_root("${iAbsoluteTargetSourceRoot}" "${CMagneto__SUBDIR_SOURCE_RESOURCES}" _targetResourceRoot)
+    CMagnetoInternal__compose_target_mirrored_root("${iAbsoluteTargetSourceRoot}" "${CMagneto__SUBDIR_SOURCES_RESOURCES}" _targetResourceRoot)
     set(${oTargetResourceRoot} "${_targetResourceRoot}" PARENT_SCOPE)
 endfunction()
 
@@ -114,9 +114,9 @@ function(CMagnetoInternal__get_project_defs_header_info
     oGitCommitShaMacroName
     oProjectNamespace
 )
-    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
+    CMagnetoInternal__get_project_sources_src_root(_projectSourcesSrcRoot)
     CMagnetoInternal__get_project_include_root(_projectIncludeRoot)
-    cmake_path(GET _projectSourceRoot FILENAME _projectLeafName)
+    cmake_path(GET _projectSourcesSrcRoot FILENAME _projectLeafName)
 
     set(_projectDefsHeaderFileName "${_projectLeafName}_DEFS.hpp")
     set(_projectDefsHeaderAbsPath "${_projectIncludeRoot}/${_projectDefsHeaderFileName}")
@@ -248,7 +248,7 @@ function(CMagnetoInternal__set_up_project_defs_header oProjectDefsHeaderIncludeP
         _gitCommitShaMacroName
         _projectNamespace
     )
-    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
+    CMagnetoInternal__get_project_sources_src_root(_projectSourcesSrcRoot)
 
     if(NOT EXISTS "${_projectDefsHeaderAbsPath}")
         CMagnetoInternal__compose_project_defs_header_block(_projectDefsHeaderBlock)
@@ -266,8 +266,8 @@ function(CMagnetoInternal__set_up_project_defs_header oProjectDefsHeaderIncludeP
         CMagnetoInternal__message(STATUS "Generated missing project defs header \"${_projectDefsHeaderAbsPath}\".")
     endif()
 
-    CMagneto__get_dir_relative_to_project_source_root("${_projectSourceRoot}" _projectSourceRootRelativeToProjectSourceRoot)
-    set(${oProjectDefsHeaderIncludePath} "${_projectSourceRootRelativeToProjectSourceRoot}/${_projectDefsHeaderFileName}" PARENT_SCOPE)
+    CMagneto__get_dir_relative_to_project_sources_src_root("${_projectSourcesSrcRoot}" _projectSourcesSrcRootRelativeToProjectSourcesSrcRoot)
+    set(${oProjectDefsHeaderIncludePath} "${_projectSourcesSrcRootRelativeToProjectSourcesSrcRoot}/${_projectDefsHeaderFileName}" PARENT_SCOPE)
 endfunction()
 
 
@@ -285,11 +285,11 @@ function(CMagnetoInternal__install_project_defs_header)
         _gitCommitShaMacroName
         _projectNamespace
     )
-    CMagnetoInternal__get_project_source_root(_projectSourceRoot)
-    CMagneto__get_dir_relative_to_project_source_root("${_projectSourceRoot}" _projectSourceRootRelativeToProjectSourceRoot)
+    CMagnetoInternal__get_project_sources_src_root(_projectSourcesSrcRoot)
+    CMagneto__get_dir_relative_to_project_sources_src_root("${_projectSourcesSrcRoot}" _projectSourcesSrcRootRelativeToProjectSourcesSrcRoot)
 
     install(FILES "${_projectDefsHeaderAbsPath}"
-        DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_projectSourceRootRelativeToProjectSourceRoot}"
+        DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_projectSourcesSrcRootRelativeToProjectSourcesSrcRoot}"
         COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
     )
 endfunction()
@@ -325,13 +325,13 @@ endfunction()
 #[[
     CMagnetoInternal__check_target_name_validity
 
-    Checks if a target name is valid, matches the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`,
+    Checks if a target name is valid, matches the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}`,
     and is not already registered. Registered target names are compared case-insensitively.
     Valid target names:
         * must start with a letter or underscore;
         * must contain only letters, digits, and underscores;
         * must not be made only of underscores.
-        * must equal the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`, with "/" replaced by "_".
+        * must equal the target root path under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}`, with "/" replaced by "_".
 ]]
 function(CMagnetoInternal__check_target_name_validity iTargetName)
     # Reject names made only of underscores
@@ -369,7 +369,7 @@ endfunction()
 #[[
     CMagnetoInternal__compose_target_name
 
-    Composes a target name from the path of the target root under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}`.
+    Composes a target name from the path of the target root under `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}`.
     Every "/" in the relative path is replaced with "_".
 
     Example:
@@ -377,20 +377,20 @@ endfunction()
 ]]
 function(CMagnetoInternal__compose_target_name iAbsoluteTargetSourceRoot oTargetName)
     cmake_path(SET _absoluteTargetSourceRoot NORMALIZE "${iAbsoluteTargetSourceRoot}/")
-    cmake_path(SET _projectSourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/")
+    cmake_path(SET _projectSourcesSrcRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}/")
 
-    CMagneto__is_path_under_dir("${_absoluteTargetSourceRoot}" "${_projectSourceRoot}" _isTargetSourceRootUnderProjectSourceRoot)
-    if(NOT _isTargetSourceRootUnderProjectSourceRoot)
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_name: target source root \"${_absoluteTargetSourceRoot}\" is not under the project source root \"${_projectSourceRoot}\".")
+    CMagneto__is_path_under_dir("${_absoluteTargetSourceRoot}" "${_projectSourcesSrcRoot}" _isTargetSourceRootUnderProjectSourcesSrcRoot)
+    if(NOT _isTargetSourceRootUnderProjectSourcesSrcRoot)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_name: target source root \"${_absoluteTargetSourceRoot}\" is not under the project source root \"${_projectSourcesSrcRoot}\".")
     endif()
 
-    CMagneto__get_dir_relative_to_project_source_root("${_absoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourceRoot)
-    if("${_targetSourceRootRelativeToProjectSourceRoot}" STREQUAL "")
+    CMagneto__get_dir_relative_to_project_sources_src_root("${_absoluteTargetSourceRoot}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
+    if("${_targetSourceRootRelativeToProjectSourcesSrcRoot}" STREQUAL "")
         CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__compose_target_name: target source root \"${_absoluteTargetSourceRoot}\" must not equal the project source root.")
     endif()
 
-    string(REGEX REPLACE "/$" "" _targetSourceRootRelativeToProjectSourceRoot "${_targetSourceRootRelativeToProjectSourceRoot}")
-    string(REPLACE "/" "_" _targetName "${_targetSourceRootRelativeToProjectSourceRoot}")
+    string(REGEX REPLACE "/$" "" _targetSourceRootRelativeToProjectSourcesSrcRoot "${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
+    string(REPLACE "/" "_" _targetName "${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
     set(${oTargetName} "${_targetName}" PARENT_SCOPE)
 endfunction()
 
@@ -622,24 +622,24 @@ endfunction()
         - OUTPUT_REL_PATHS: normalized paths relative to iAbsoluteSourceBaseDir;
         - OUTPUT_ABS_PATHS: normalized absolute paths.
 
-    iPaths must reside under the project sources root `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_ROOT}`, otherwise fails,
+    iPaths must reside under the project sources dir `${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES}`, otherwise fails,
     unless a set of allowed locations is overridden by named parameters.
 
     Parameters:
-        iAbsoluteSourceBaseDir             - Absolute path to a source base dir. Must be under the project sources root.
+        iAbsoluteSourceBaseDir             - Absolute path to a source base dir. Must be under the project sources dir.
         iAbsoluteSourceBaseDirDescription  - Description of the source base dir, e.g. `target "Contacts" TS files`. Used in logged messages.
         iPaths                             - Paths relative to iAbsoluteSourceBaseDir.
-                                             Absolute paths and paths, containing backslashes, are prohibited under the project sources root.
+                                             Absolute paths and paths, containing backslashes, are prohibited under the project sources dir.
 
     Named input arguments:
         ALLOW_PATHS_UNDER_BUILD_BASE_DIR   - Flag (optional).
-                                             If defined, paths under the build base dir `${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCES_ROOT}/${_sourceBaseDirRelativeToSourcesRoot}/`
+                                             If defined, paths under the build base dir `${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCES}/${_sourceBaseDirRelativeToSources}/`
                                              are also allowed. Paths under the dir can be absolute or contain backslashes.
 
         IF_PATH_OUTSIDE_SOURCE_BASE_DIR    - String (optional). Accepts one of: USE_ANYWAY (default), WARN, FAIL.
-                                             If not USE_ANYWAY, restriction "iPaths must reside under the project sources root"
+                                             If not USE_ANYWAY, restriction "iPaths must reside under the project sources dir"
                                              is narrowed down to "iPaths must reside under iAbsoluteSourceBaseDir".
-                                             If WARN - just warns, doesn't fail. But still fails if an input path is not under the project sources root.
+                                             If WARN - just warns, doesn't fail. But still fails if an input path is not under the project sources dir.
 
     Named output arguments:
         OUTPUT_REL_PATHS                   - String (optional). Variable name in parent scope to assign normalized relative path.
@@ -650,10 +650,10 @@ endfunction()
 ]]
 function(CMagnetoInternal__handle_source_paths iAbsoluteSourceBaseDir iAbsoluteSourceBaseDirDescription iPaths)
     cmake_path(SET _absoluteSourceBaseDir NORMALIZE "${iAbsoluteSourceBaseDir}/")
-    cmake_path(SET _projectSourcesRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_ROOT}/")
-    CMagneto__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourcesRoot}" _isSourceBaseDirUnderProjectSourcesRoot)
-    if(NOT _isSourceBaseDirUnderProjectSourcesRoot)
-        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" sources root \"${_projectSourcesRoot}\".")
+    cmake_path(SET _projectSourcesDir NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES}/")
+    CMagneto__is_path_under_dir("${_absoluteSourceBaseDir}" "${_projectSourcesDir}" _isSourceBaseDirUnderProjectSourcesDir)
+    if(NOT _isSourceBaseDirUnderProjectSourcesDir)
+        CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): _absoluteSourceBaseDir is not under project \"${PROJECT_NAME}\" sources dir \"${_projectSourcesDir}\".")
     endif()
 
     cmake_parse_arguments(ARG
@@ -688,8 +688,8 @@ CMagnetoInternal__handle_source_paths: invalid value "${ARG_IF_PATH_OUTSIDE_SOUR
     set(_pathsOutsideProjectSourceRoot "")
     set(_pathsOutsideSourceBaseDir "")
 
-    CMagneto__get_dir_relative_to_sources_root("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToSourcesRoot)
-    cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCES_ROOT}/${_sourceBaseDirRelativeToSourcesRoot}/")
+    CMagneto__get_dir_relative_to_sources("${_absoluteSourceBaseDir}" _sourceBaseDirRelativeToSources)
+    cmake_path(SET _absoluteBuildBaseDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_SOURCES}/${_sourceBaseDirRelativeToSources}/")
     CMagnetoInternal__message(TRACE "CMagnetoInternal__handle_source_paths(${iAbsoluteSourceBaseDirDescription}): build base dir = \"${_absoluteBuildBaseDir}\".\n")
 
     foreach(_path IN LISTS iPaths)
@@ -751,10 +751,10 @@ are only allowed under the build base dir
             endif()
         endif()
 
-        # Check if the path is not under the project sources root.
-        CMagneto__is_path_under_dir("${_absPath}" "${_projectSourcesRoot}" _pathIsUnderProjectSourcesRoot)
-        if(NOT _pathIsUnderProjectSourcesRoot)
-            set(_msg "Path \"${_path}\" is\n\toutside of the project \"${PROJECT_NAME}\" sources root\n\t\"${_projectSourcesRoot}\"")
+        # Check if the path is not under the project sources dir.
+        CMagneto__is_path_under_dir("${_absPath}" "${_projectSourcesDir}" _pathIsUnderProjectSourcesDir)
+        if(NOT _pathIsUnderProjectSourcesDir)
+            set(_msg "Path \"${_path}\" is\n\toutside of the project \"${PROJECT_NAME}\" sources dir\n\t\"${_projectSourcesDir}\"")
             if(ARG_ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
                 set(_msg "${_msg}\n\tand outside of the {iAbsoluteSourceBaseDirDescription} build base dir\n\t\"${_absoluteBuildBaseDir}\"")
             endif()

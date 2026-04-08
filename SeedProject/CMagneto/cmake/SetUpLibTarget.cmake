@@ -87,9 +87,9 @@ endfunction()
     - PRIVATE_HEADERS and SOURCES paths must be relative to the source root directory of the target
       (parent dir of the target's CMakeLists.txt) and must reside under that source root directory.
     - PUBLIC_HEADERS and INTERFACE_HEADERS paths must be relative to the mirrored public include root of the target,
-      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCE}` with `${CMagneto__SUBDIR_SOURCE_INCLUDE}`.
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_INCLUDE}`.
     - OTHER_RESOURCES paths must be relative to the mirrored resource root of the target,
-      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCE}` with `${CMagneto__SUBDIR_SOURCE_RESOURCES}`.
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
     - All paths must not contain backslashes.
     - Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
@@ -167,10 +167,10 @@ function(CMagneto__set_up__library iLibTargetName)
 
     target_include_directories(${iLibTargetName}
         PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE_INCLUDE}> # Set up compiler.
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}> # Set up compiler.
             $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
         PRIVATE
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iLibTargetName} PUBLIC)
 
@@ -185,9 +185,9 @@ function(CMagneto__set_up__library iLibTargetName)
     )
 
     # Install.
-    ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
+    ## _libSourceRootRelativeToProjectSourcesSrcRoot helps to keep install dir structure the same as source dir structure.
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourcesSrcRoot)
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourcesSrcRoot}\"")
 
     install(TARGETS ${iLibTargetName}
         EXPORT ${PROJECT_NAME}Targets
@@ -201,10 +201,10 @@ function(CMagneto__set_up__library iLibTargetName)
             DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
             COMPONENT ${CMagneto__COMPONENT__RUNTIME}
         FILE_SET public_headers
-            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourcesSrcRoot}"
             COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         FILE_SET interface_headers
-            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourcesSrcRoot}"
             COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         # INCLUDES
         #     DESTINATION ...
@@ -212,7 +212,7 @@ function(CMagneto__set_up__library iLibTargetName)
         # is redundant, because it is effectively set by:
         # target_include_directories(${iLibTargetName}
         #     PUBLIC
-        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
+        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
         #         $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}>
         # )
         # above.

@@ -45,7 +45,7 @@ endfunction()
 
     The function does the same as qt_add_resources, but the CMagneto__embed_QtRC_resources also
     - checks if all paths from the named arguments BIG_RESOURCES and FILES are under target QtRC directory;
-    - derives resource prefix automatically from the target source root mirrored under `${CMagneto__SUBDIR_SOURCE}`;
+    - derives resource prefix automatically from the target source root mirrored under `${CMagneto__SUBDIR_SOURCES_SRC}`;
     - composes resource name as `${iTargetName}__${iResourceNamePostfix}`;
     - if Qt creates auxilliary resource targets, the targets are exported (added to *Config.cmake).
 
@@ -102,11 +102,11 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
         endif()
     endforeach()
 
-    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetSourceRootRelativeToProjectSourceRoot)
-    if(_targetSourceRootRelativeToProjectSourceRoot STREQUAL "")
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
+    if(_targetSourceRootRelativeToProjectSourcesSrcRoot STREQUAL "")
         set(_qtRCPrefix "/")
     else()
-        set(_qtRCPrefix "/${_targetSourceRootRelativeToProjectSourceRoot}")
+        set(_qtRCPrefix "/${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
     endif()
 
     qt_add_resources(${iTargetName} "${iTargetName}__${iResourceNamePostfix}"

@@ -36,8 +36,8 @@ function(CMagneto__set_up__project)
     CMagneto__print_platform_and_compiler()
 
     # Add source directory.
-    cmake_path(SET _PROJECT_SOURCE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
-    add_subdirectory("${_PROJECT_SOURCE_DIR}")
+    cmake_path(SET _PROJECT_SOURCES_SRC_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
+    add_subdirectory("${_PROJECT_SOURCES_SRC_DIR}")
     # Strategies based on embedded runtime paths may be applied later from the
     # central project setup directory.
     CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)

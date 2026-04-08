@@ -52,7 +52,7 @@ set(CMagnetoInternal__TARGET_PROPERTY__EXECUTABLE_PLATFORM_ICON_PLACED   "CMagne
     - HEADERS and SOURCES paths must be relative to the source root directory of the target
       (parent dir of the target's CMakeLists.txt) and must reside under that source root directory.
     - OTHER_RESOURCES paths must be relative to the mirrored resource root of the target,
-      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCE}` with `${CMagneto__SUBDIR_SOURCE_RESOURCES}`.
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
     - All paths must not contain backslashes.
     - Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
@@ -82,8 +82,8 @@ function(CMagneto__set_up__executable iExeTargetName)
     ####################################################################
 
     target_include_directories(${iExeTargetName} PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE_INCLUDE}>  # Set up compiler.
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}>  # Set up compiler.
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iExeTargetName} PRIVATE)
 
@@ -96,9 +96,9 @@ function(CMagneto__set_up__executable iExeTargetName)
     )
 
     # Install.
-    ## _exeSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeTargetName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourceRoot}\"")
+    ## _exeSourceRootRelativeToProjectSourcesSrcRoot helps to keep install dir structure the same as source dir structure.
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _exeSourceRootRelativeToProjectSourcesSrcRoot)
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__executable(${iExeTargetName}): exe's root CMakeLists.txt directory relative to project source dir: \"${_exeSourceRootRelativeToProjectSourcesSrcRoot}\"")
 
     install(TARGETS ${iExeTargetName}
         EXPORT ${PROJECT_NAME}Targets

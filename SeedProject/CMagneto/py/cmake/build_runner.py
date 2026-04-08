@@ -87,7 +87,7 @@ class BuildRunner(ABC):
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
-    CMagneto__SUBDIR_SOURCE  = Path("src/")
+    CMagneto__SUBDIR_SOURCES = Path("sources/")
     CMagneto__SUBDIR_TESTS   = Path("tests/")
     CMagneto__SUBDIR_BUILD   = Path("build/")
     CMagneto__SUBDIR_INSTALL = Path("install/")
@@ -104,7 +104,7 @@ class BuildRunner(ABC):
     CMagneto__COMPILE_COMMANDS__FILE_NAME = "compile_commands.json"
     CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME = "runtime_dependency_manifest.json"
 
-    # Report of source code (under './src/' ) test coverage.
+    # Report of source code (under './sources/' ) test coverage.
     CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
 
     # Report of test   code (under './test/') coverage.
@@ -307,10 +307,10 @@ class BuildRunner(ABC):
                 Log.warning("LCOV is not installed. Can't generate test coverage report.")
                 return
 
-            # 1. Generate code coverage report for source code files (under './src/').
+            # 1. Generate code coverage report for source code files (under './sources/').
             BuildRunner._LCOVRunner.__generateCoverageReport(
                 iBuildDir,
-                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCE,
+                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCES,
                 iSummaryDir,
                 BuildRunner.CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE
             )
