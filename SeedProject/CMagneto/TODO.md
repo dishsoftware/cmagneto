@@ -9,12 +9,10 @@
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.
 * Packaging of Debug fails, if generator is multi-config.
-* Add integration and system tests for CMagneto framework.
 * Support newer C++ standards' features, including C++ modules.
-* Add copying (installing) of runtime-loaded resources into build and install dirs.
 * Add a script, which generates `*.ts` files, using Qt lupdate.
 * Add resource manager C++ code.
-* In the `_DEFS.hpp` files add relative paths to resources.
+* In the `_DEFS.hpp` files add relative paths to resources ?
 * Add `Project_DEFS.hpp` file, common for all targets in the project, witgh project version and compatibility definitions.
 * Do the same for each used build tool. Log versions and paths to these tools.
 * Rewrite `QtWrappers.cmake`. Check if `automoc` is enabled.
