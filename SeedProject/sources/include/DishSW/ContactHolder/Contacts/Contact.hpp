@@ -13,6 +13,12 @@
 
 #include <list>
 
+// #include                                                "PrivateDummy.hpp" // Build must fail.
+// #include     "DishSW/ContactHolder/Contacts/PrivateDummy/PrivateDummy.hpp" // Build must fail.
+// #include "src/DishSW/ContactHolder/Contacts/PrivateDummy/PrivateDummy.hpp" // Build passes, but violation is obvious.
+// #include "../../../../src/DishSW/ContactHolder/Contacts/PrivateDummy/PrivateDummy.hpp" // Build passes, but violation is obvious. And ".." is against code conventions.
+
+
 
 namespace DishSW::ContactHolder::Contacts {
     class DISHSW_CONTACTHOLDER_CONTACTS_EXPORT Contact {

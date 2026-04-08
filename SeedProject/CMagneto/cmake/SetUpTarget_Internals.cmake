@@ -582,7 +582,11 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
         endif()
 
         if(iIncludeExportHeader)
-            set(_includeExportHeaderBlock "#include \"${_targetSourceRootRelativeToProjectSourcesSrcRoot}/${_targetLeafName}_EXPORT.hpp\"\n")
+            if("${iGeneratedHeadersVisibility}" STREQUAL "PUBLIC")
+                set(_includeExportHeaderBlock "#include \"${_targetSourceRootRelativeToProjectSourcesSrcRoot}/${_targetLeafName}_EXPORT.hpp\"\n")
+            else()
+                set(_includeExportHeaderBlock "#include \"${CMagneto__SUBDIR_SOURCES_SRC}${_targetSourceRootRelativeToProjectSourcesSrcRoot}/${_targetLeafName}_EXPORT.hpp\"\n")
+            endif()
         else()
             set(_includeExportHeaderBlock "")
         endif()

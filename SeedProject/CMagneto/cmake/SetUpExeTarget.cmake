@@ -83,7 +83,7 @@ function(CMagneto__set_up__executable iExeTargetName)
 
     target_include_directories(${iExeTargetName} PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}>  # Set up compiler.
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iExeTargetName} PRIVATE)
 
