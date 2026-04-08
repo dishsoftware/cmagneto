@@ -25,7 +25,7 @@ set(CMagneto__SUBDIR_SOURCES_SRC "${CMagneto__SUBDIR_SOURCES}src/")
 ## Under project root: public/interface headers tree mirroring `${CMagneto__SUBDIR_SOURCES_SRC}`.
 set(CMagneto__SUBDIR_SOURCES_INCLUDE "${CMagneto__SUBDIR_SOURCES}include/")
 
-## Under project root: source resources tree mirroring `${CMagneto__SUBDIR_SOURCES_SRC}`.
+## Under project root: runtime resources tree mirroring `${CMagneto__SUBDIR_SOURCES_SRC}`.
 set(CMagneto__SUBDIR_SOURCES_RESOURCES "${CMagneto__SUBDIR_SOURCES}res/")
 
 ## Under project build and install dirs: parent for compiled static libs.
@@ -47,8 +47,8 @@ set(CMagneto__SUBDIR_INCLUDE "include/")
 set(CMagneto__SUBDIR_CMAKE "lib/cmake/")
 
 ## Under project build and install dirs: parent for all runtime resources of all targets.
-## The structure under this dir mirrors the source resource tree relative to `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
-set(CMagneto__SUBDIR_TARGET_RESOURCES "res/")
+## The structure under this dir mirrors the runtime resource tree relative to `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
+set(CMagneto__SUBDIR_RESOURCES "res/")
 
 ## Under project install dir: parent for application menu helper assets such as launcher icons.
 set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")
