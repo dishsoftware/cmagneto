@@ -60,9 +60,101 @@ endfunction()
 
 
 #[[
+    CMagneto__set_up__interface_library
+
+    Sets up the build and installation process for the interface library target `${iLibTargetName}`.
+    This function also registers `${iLibTargetName}` in the global property `CMagnetoInternal__RegisteredTargets`.
+
+    It must be called:
+    - Once for the interface library target.
+    - After `${iLibTargetName}` has been created and linked against its dependencies.
+    - From the root `CMakeLists.txt` of `${iLibTargetName}`. The root `CMakeLists.txt` must be in the source root of the lib.
+
+    Parameters:
+    iLibTargetName           - The name of the interface library target to configure.
+
+    Named arguments (all optional):
+    INTERFACE_HEADERS  - List of interface headers made available to consumers.
+    QT_TS_RESOURCES    - List of Qt translation source files (`.ts`) to be processed.
+    OTHER_RESOURCES    - Other non-code resources (e.g. icons, JSON files) associated with the interface library.
+
+    Notes:
+    - INTERFACE_HEADERS paths must be relative to the mirrored public include root of the target,
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_INCLUDE}`.
+    - OTHER_RESOURCES paths must be relative to the mirrored resource root of the target,
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
+    - All paths must not contain backslashes.
+]]
+function(CMagneto__set_up__interface_library iLibTargetName)
+    CMagnetoInternal__check_target_name_validity(${iLibTargetName})
+    get_target_property(_targetType ${iLibTargetName} TYPE)
+    if(NOT _targetType STREQUAL "INTERFACE_LIBRARY")
+        CMagnetoInternal__message(FATAL_ERROR "CMagneto__set_up__interface_library(${iLibTargetName}): target type must be INTERFACE_LIBRARY, got \"${_targetType}\".")
+    endif()
+
+    CMagnetoInternal__compose_namespaced_target_name("${iLibTargetName}" _namespacedTargetName)
+    add_library(${_namespacedTargetName} ALIAS ${iLibTargetName})
+
+    cmake_parse_arguments(ARG
+        "" # Options (boolean flags).
+        "" # Single-value keywords (strings).
+        "INTERFACE_HEADERS;QT_TS_RESOURCES;OTHER_RESOURCES" # Multi-value keywords (lists).
+        ${ARGN}
+    )
+
+    CMagnetoInternal__get_target_include_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetIncludeRoot)
+    CMagnetoInternal__get_target_resource_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetResourceRoot)
+
+    set(_baseDirDescription "interface library target \"${iLibTargetName}\"")
+    CMagnetoInternal__handle_source_paths("${_targetIncludeRoot}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_ABS_PATHS _absInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_OTHER_RESOURCES}" OUTPUT_ABS_PATHS _absOtherResources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+
+    target_sources(${iLibTargetName}
+        INTERFACE
+            FILE_SET interface_headers TYPE HEADERS
+            BASE_DIRS "${_targetIncludeRoot}"
+            FILES ${_absInterfaceHeaders}
+    )
+
+    set_target_properties(${iLibTargetName} PROPERTIES
+        INTERFACE_HEADER_SET interface_headers
+        EXPORT_NAME ${_namespacedTargetName}
+    )
+
+    target_sources(${iLibTargetName} INTERFACE ${_absOtherResources}) # Added to surface the files in IDEs and exports.
+
+    target_include_directories(${iLibTargetName}
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}>
+            $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}>
+    )
+    CMagnetoInternal__set_up_project_build_info_for_target(${iLibTargetName} INTERFACE)
+
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourcesSrcRoot)
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__interface_library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourcesSrcRoot}\"")
+
+    install(TARGETS ${iLibTargetName}
+        EXPORT ${PROJECT_NAME}Targets
+        FILE_SET interface_headers
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourcesSrcRoot}"
+            COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
+    )
+
+    CMagnetoInternal__set_up_QtTS_files(${iLibTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
+    CMagnetoInternal__set_up_other_resource_files(${iLibTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_OTHER_RESOURCES}")
+
+    get_property(_registeredTargets GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets)
+    list(APPEND _registeredTargets ${iLibTargetName})
+    set_property(GLOBAL PROPERTY CMagnetoInternal__RegisteredTargets "${_registeredTargets}")
+
+    CMagnetoInternal__register_linked_imported_shared_library_targets(${iLibTargetName})
+endfunction()
+
+
+#[[
     CMagneto__set_up__library
 
-    Sets up the build and installation process for the library target `${iLibTargetName}`.
+    Sets up the build and installation process for the STATIC/SHARED library target `${iLibTargetName}`.
     This function also registers `${iLibTargetName}` in the global property `CMagnetoInternal__RegisteredTargets`.
 
     It must be called:
@@ -74,6 +166,9 @@ endfunction()
     iLibTargetName           - The name of the library target to configure.
 
     Named arguments (all optional):
+    GENERATED_HEADERS_VISIBILITY - `PUBLIC` to place generated `<TargetLeafName>_EXPORT.hpp` and `<TargetLeafName>_DEFS.hpp`
+                                   under the mirrored include root and expose them as public headers;
+                                   `PRIVATE` to place them under the target source root and treat them as private headers.
     PUBLIC_HEADERS     - List of public headers used for compiling the library and to be installed and made available to consumers.
     INTERFACE_HEADERS  - List of interface-only headers (used by consumers, but not compiled into the library).
     PRIVATE_HEADERS    - List of private headers used only for compiling the library, not exposed to consumers.
@@ -84,12 +179,14 @@ endfunction()
     OTHER_RESOURCES    - Other non-code resources (e.g. icons, JSON files) used in the library.
 
     Notes:
-    - All paths: of headers, sources and resources - must be relative to the source root directory of the target (parent dir of the target's CMakeLists.txt).
-      The paths must reside under the source root directory of the target.
-      The paths must not contain backslashes.
-      It is made to keep both source and install directories layout clean and relocatable.
-
-      Source file paths are also allowed to reside under the build root directory of the target,
+    - PRIVATE_HEADERS and SOURCES paths must be relative to the source root directory of the target
+      (parent dir of the target's CMakeLists.txt) and must reside under that source root directory.
+    - PUBLIC_HEADERS and INTERFACE_HEADERS paths must be relative to the mirrored public include root of the target,
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_INCLUDE}`.
+    - OTHER_RESOURCES paths must be relative to the mirrored resource root of the target,
+      obtained from the target source root by replacing `${CMagneto__SUBDIR_SOURCES_SRC}` with `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
+    - All paths must not contain backslashes.
+    - Source file paths are also allowed to reside under the build root directory of the target,
       and if they are under the dir, are allowed to be absolute and contain backslashes.
 ]]
 function(CMagneto__set_up__library iLibTargetName)
@@ -99,37 +196,54 @@ function(CMagneto__set_up__library iLibTargetName)
 
     cmake_parse_arguments(ARG
         "" # Options (boolean flags).
-        "" # Single-value keywords (strings).
+        "GENERATED_HEADERS_VISIBILITY" # Single-value keywords (strings).
         "PUBLIC_HEADERS;INTERFACE_HEADERS;PRIVATE_HEADERS;SOURCES;QT_TS_RESOURCES;OTHER_RESOURCES" # Multi-value keywords (lists).
         ${ARGN}
     )
 
-    CMagnetoInternal__set_up_export_header("${iLibTargetName}" _exportHeaderRelPath)
-    list(FIND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}" _exportHeaderIndex)
-    if(_exportHeaderIndex EQUAL -1)
-        list(APPEND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}")
+    CMagnetoInternal__normalize_generated_headers_visibility("${ARG_GENERATED_HEADERS_VISIBILITY}" _generatedHeadersVisibility)
+
+    CMagnetoInternal__set_up_export_header("${iLibTargetName}" "${_generatedHeadersVisibility}" _exportHeaderRelPath)
+    CMagnetoInternal__set_up_defs_header("${iLibTargetName}" "${_generatedHeadersVisibility}" TRUE _defsHeaderRelPath)
+    if("${_generatedHeadersVisibility}" STREQUAL "PUBLIC")
+        list(FIND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}" _exportHeaderIndex)
+        if(_exportHeaderIndex EQUAL -1)
+            list(APPEND ARG_PUBLIC_HEADERS "${_exportHeaderRelPath}")
+        endif()
+
+        list(FIND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+        if(_defsHeaderIndex EQUAL -1)
+            list(APPEND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}")
+        endif()
+    else()
+        list(FIND ARG_PRIVATE_HEADERS "${_exportHeaderRelPath}" _exportHeaderIndex)
+        if(_exportHeaderIndex EQUAL -1)
+            list(APPEND ARG_PRIVATE_HEADERS "${_exportHeaderRelPath}")
+        endif()
+
+        list(FIND ARG_PRIVATE_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
+        if(_defsHeaderIndex EQUAL -1)
+            list(APPEND ARG_PRIVATE_HEADERS "${_defsHeaderRelPath}")
+        endif()
     endif()
 
-    CMagnetoInternal__set_up_defs_header("${iLibTargetName}" TRUE _defsHeaderRelPath)
-    list(FIND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}" _defsHeaderIndex)
-    if(_defsHeaderIndex EQUAL -1)
-        list(APPEND ARG_PUBLIC_HEADERS "${_defsHeaderRelPath}")
-    endif()
+    CMagnetoInternal__get_target_include_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetIncludeRoot)
+    CMagnetoInternal__get_target_resource_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetResourceRoot)
 
     set(_baseDirDescription "library target \"${iLibTargetName}\"")
-    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_REL_PATHS _relPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_targetIncludeRoot}/" "${_baseDirDescription}" "${ARG_PUBLIC_HEADERS}" OUTPUT_ABS_PATHS _absPublicHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_PRIVATE_HEADERS}" OUTPUT_REL_PATHS _relPrivateHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_REL_PATHS _relInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_targetIncludeRoot}/" "${_baseDirDescription}" "${ARG_INTERFACE_HEADERS}" OUTPUT_ABS_PATHS _absInterfaceHeaders IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
     CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${ARG_SOURCES}" OUTPUT_REL_PATHS _relSources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL ALLOW_PATHS_UNDER_BUILD_BASE_DIR)
-    #CMagnetoInternal__handle_source_paths("${CMAKE_CURRENT_SOURCE_DIR}/" "${_baseDirDescription}" "${OTHER_RESOURCES}" OUTPUT_REL_PATHS _relOtherResources)
+    CMagnetoInternal__handle_source_paths("${_targetResourceRoot}/" "${_baseDirDescription}" "${ARG_OTHER_RESOURCES}" OUTPUT_ABS_PATHS _absOtherResources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
 
     # Add target sources.
     ## Add header sets.
     target_sources(${iLibTargetName}
         PUBLIC
             FILE_SET public_headers TYPE HEADERS
-            BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
-            FILES ${_relPublicHeaders}
+            BASE_DIRS "${_targetIncludeRoot}"
+            FILES ${_absPublicHeaders}
     )
 
     target_sources(${iLibTargetName}
@@ -142,8 +256,8 @@ function(CMagneto__set_up__library iLibTargetName)
     target_sources(${iLibTargetName}
         INTERFACE
             FILE_SET interface_headers TYPE HEADERS
-            BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
-            FILES ${_relInterfaceHeaders}
+            BASE_DIRS "${_targetIncludeRoot}"
+            FILES ${_absInterfaceHeaders}
     )
 
     ## Assign header set visibility.
@@ -156,14 +270,16 @@ function(CMagneto__set_up__library iLibTargetName)
     )
 
     ## Add sources.
-    target_sources(${iLibTargetName} PRIVATE $<BUILD_INTERFACE:${_relSources}>)
+    target_sources(${iLibTargetName} PRIVATE $<BUILD_INTERFACE:${_relSources}> ${_absOtherResources})
     #target_sources(${iLibTargetName} PRIVATE ${_relSources})
     ####################################################################
 
     target_include_directories(${iLibTargetName}
         PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}> # Set up compiler.
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_INCLUDE}> # Set up compiler.
             $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}> # Set up *Config.cmake.
+        PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
     )
     CMagnetoInternal__set_up_project_build_info_for_target(${iLibTargetName} PUBLIC)
 
@@ -178,9 +294,9 @@ function(CMagneto__set_up__library iLibTargetName)
     )
 
     # Install.
-    ## _libSourceRootRelativeToProjectSourceRoot helps to keep install dir structure the same as source dir structure.
-    CMagneto__get_dir_relative_to_project_source_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourceRoot)
-    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourceRoot}\"")
+    ## _libSourceRootRelativeToProjectSourcesSrcRoot helps to keep install dir structure the same as source dir structure.
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _libSourceRootRelativeToProjectSourcesSrcRoot)
+    CMagnetoInternal__message(TRACE "CMagneto__set_up__library(${iLibTargetName}): lib's root CMakeLists.txt directory relative to project source dir: \"${_libSourceRootRelativeToProjectSourcesSrcRoot}\"")
 
     install(TARGETS ${iLibTargetName}
         EXPORT ${PROJECT_NAME}Targets
@@ -194,10 +310,10 @@ function(CMagneto__set_up__library iLibTargetName)
             DESTINATION ${CMagneto__SUBDIR_EXECUTABLE}
             COMPONENT ${CMagneto__COMPONENT__RUNTIME}
         FILE_SET public_headers
-            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourcesSrcRoot}"
             COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         FILE_SET interface_headers
-            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourceRoot}"
+            DESTINATION "${CMagneto__SUBDIR_INCLUDE}/${_libSourceRootRelativeToProjectSourcesSrcRoot}"
             COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
         # INCLUDES
         #     DESTINATION ...
@@ -205,7 +321,7 @@ function(CMagneto__set_up__library iLibTargetName)
         # is redundant, because it is effectively set by:
         # target_include_directories(${iLibTargetName}
         #     PUBLIC
-        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}>
+        #         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}>
         #         $<INSTALL_INTERFACE:${CMagneto__SUBDIR_INCLUDE}>
         # )
         # above.
@@ -216,7 +332,7 @@ function(CMagneto__set_up__library iLibTargetName)
     CMagnetoInternal__set_up_QtTS_files(${iLibTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_QT_TS_RESOURCES}")
 
     # Set up other resources (not Qt RCC embedded, not Qt TS).
-    # TODO
+    CMagnetoInternal__set_up_other_resource_files(${iLibTargetName} "${CMAKE_CURRENT_SOURCE_DIR}/" "${ARG_OTHER_RESOURCES}")
     ####################################################################
 
 

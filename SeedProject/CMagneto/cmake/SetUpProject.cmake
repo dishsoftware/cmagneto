@@ -20,6 +20,28 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject_Internals.cmake")
 
 
 #[[
+    CMagneto__set_CMake_package_find_dependencies
+
+    Defines exact `find_dependency(...)` lines to be written into the generated `*Config.cmake`
+    of the project.
+
+    Parameters:
+    iDependencyCalls - Each argument must be a complete CMake line, typically a `find_dependency(...)` call.
+
+    Example:
+    ```cmake
+    CMagneto__set_CMake_package_find_dependencies(
+        "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
+        "find_dependency(Boost CONFIG REQUIRED)"
+    )
+    ```
+]]
+function(CMagneto__set_CMake_package_find_dependencies)
+    set_property(GLOBAL PROPERTY CMagnetoInternal__CMakePackageFindDependencies "${ARGN}")
+endfunction()
+
+
+#[[
     CMagneto__set_up__project
 
     Sets up:
@@ -28,7 +50,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/SetUpProject_Internals.cmake")
     - Packaging.
 
     It must be called:
-    - After all CMagneto__set_up__library(iLibTargetName) and CMagneto__set_up__executable(iExeTargetName) are called.
+    - After all CMagneto__set_up__library(iLibTargetName), CMagneto__set_up__interface_library(iLibTargetName)
+      and CMagneto__set_up__executable(iExeTargetName) are called.
     - From a CMakeLists.txt, where the `project(...) command is called.
 ]]
 function(CMagneto__set_up__project)
@@ -36,8 +59,8 @@ function(CMagneto__set_up__project)
     CMagneto__print_platform_and_compiler()
 
     # Add source directory.
-    cmake_path(SET _PROJECT_SOURCE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCE}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
-    add_subdirectory("${_PROJECT_SOURCE_DIR}")
+    cmake_path(SET _PROJECT_SOURCES_SRC_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_SRC}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}/")
+    add_subdirectory("${_PROJECT_SOURCES_SRC_DIR}")
     # Strategies based on embedded runtime paths may be applied later from the
     # central project setup directory.
     CMagnetoInternal__get_runtime_resolution_strategy(_runtimeResolutionStrategy)
@@ -57,8 +80,8 @@ function(CMagneto__set_up__project)
     ####################################################
 
     # Configure tests.
-    cmake_path(SET _PROJECT_TESTS_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TESTS}/")
-    add_subdirectory("${_PROJECT_TESTS_DIR}" EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
+    cmake_path(SET _PROJECT_NATIVE_TESTS_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TESTS_NATIVE}/")
+    add_subdirectory("${_PROJECT_NATIVE_TESTS_DIR}" EXCLUDE_FROM_ALL) # Exclude tests from the default build target, so they are not built unless explicitly requested.
     CMagnetoInternal__add__build_tests__target() # Required by `build.py` in the project root.
     CMagnetoInternal__set_up__run_tests__script() # Required by `build.py` in the project root.
 

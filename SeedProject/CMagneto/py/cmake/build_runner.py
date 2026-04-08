@@ -72,9 +72,10 @@ class BuildRunner(ABC):
         Generate = 0 # Generate build system files (e.g. Makefiles or MSVS solution).
         Compile = 1 # Compile the project (create project's binaries, create auxilliary scripts, and place all of them into a build directory).
         CompileTests = 2
-        RunTests = 3
+        RunNativeTests = 3
         Install = 4 # Install the project (copy scripts and compiled binaries to an install directory).
         Package = 5 # Package the project (create packages, e.g. .deb, .rpm, .zip, etc.).
+        RunSystemTests = 6
         # Install stage is technically not required for Package stage. But the file is written .
 
 
@@ -87,10 +88,13 @@ class BuildRunner(ABC):
 
     # CMagneto__* constants are in synch (as the methods of this file) with the CMagneto CMake module,
     # and the constants' names do not obey the Python naming convention.
-    CMagneto__SUBDIR_SOURCE  = Path("src/")
-    CMagneto__SUBDIR_TESTS   = Path("tests/")
-    CMagneto__SUBDIR_BUILD   = Path("build/")
-    CMagneto__SUBDIR_INSTALL = Path("install/")
+    CMagneto__SUBDIR_SOURCES            = Path("sources/")
+    CMagneto__SUBDIR_TESTS              = Path("tests/")
+    CMagneto__SUBDIR_TESTS_NATIVE       = Path("tests/native/")
+    CMagneto__SUBDIR_TESTS_SYSTEM       = Path("tests/system/")
+    CMagneto__SUBDIR_TESTS_TEST_PROJECTS = Path("tests/@TestProjects/")
+    CMagneto__SUBDIR_BUILD              = Path("build/")
+    CMagneto__SUBDIR_INSTALL            = Path("install/")
     CMagneto__SUBDIR_STATIC     = Path("lib/")
     CMagneto__SUBDIR_SHARED     = Path("lib/")
     CMagneto__SUBDIR_EXECUTABLE = Path("bin/")
@@ -104,10 +108,10 @@ class BuildRunner(ABC):
     CMagneto__COMPILE_COMMANDS__FILE_NAME = "compile_commands.json"
     CMagneto__RUNTIME_DEPENDENCY_MANIFEST__FILE_NAME = "runtime_dependency_manifest.json"
 
-    # Report of source code (under './src/' ) test coverage.
+    # Report of source code (under './sources/' ) test coverage.
     CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE      = "test_coverage_report"
 
-    # Report of test   code (under './test/') coverage.
+    # Report of native test code (under './tests/native/') coverage.
     # This coverage report helps identify non-executed parts of tests themselves.
     CMagneto__TEST_CODE_COVERAGE_REPORT__FILE_NAME_WE = "test_code_coverage_report"
 
@@ -307,19 +311,19 @@ class BuildRunner(ABC):
                 Log.warning("LCOV is not installed. Can't generate test coverage report.")
                 return
 
-            # 1. Generate code coverage report for source code files (under './src/').
+            # 1. Generate code coverage report for source code files (under './sources/').
             BuildRunner._LCOVRunner.__generateCoverageReport(
                 iBuildDir,
-                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCE,
+                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCES,
                 iSummaryDir,
                 BuildRunner.CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE
             )
 
-            # 2. Generate code coverage report for test code files (under './tests/').
+            # 2. Generate code coverage report for native test code files (under './tests/native/').
             # This coverage report helps identify non-executed parts of tests themselves.
             BuildRunner._LCOVRunner.__generateCoverageReport(
                 iBuildDir,
-                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_TESTS,
+                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_TESTS_NATIVE,
                 iSummaryDir,
                 BuildRunner.CMagneto__TEST_CODE_COVERAGE_REPORT__FILE_NAME_WE
             )
@@ -458,12 +462,14 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 return isStageRequiredFor(BuildRunner.BuildStage.Compile, self.isBuildSummaryExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.CompileTests:
                 return isStageRequiredFor(BuildRunner.BuildStage.CompileTests, self.isCompiledTestsFileExistForBuildType, iBuildType, iBuildStage)
-            case BuildRunner.BuildStage.RunTests:
-                return isStageRequiredFor(BuildRunner.BuildStage.RunTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
+            case BuildRunner.BuildStage.RunNativeTests:
+                return isStageRequiredFor(BuildRunner.BuildStage.RunNativeTests, self.isTestReportExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Install:
                 return isStageRequiredFor(BuildRunner.BuildStage.Install, self.isInstallDirExistForBuildType, iBuildType, iBuildStage)
             case BuildRunner.BuildStage.Package:
                 return isStageRequiredFor(BuildRunner.BuildStage.Package, self.isPackageExistForBuildType, iBuildType, iBuildStage)
+            case BuildRunner.BuildStage.RunSystemTests:
+                return isStageRequiredFor(BuildRunner.BuildStage.RunSystemTests, lambda _buildType: False, iBuildType, iBuildStage)
             case _:
                 Log.error(f"Invalid logics of {__file__}: unknown build stage: {iBuildStageOfStage}.")
 

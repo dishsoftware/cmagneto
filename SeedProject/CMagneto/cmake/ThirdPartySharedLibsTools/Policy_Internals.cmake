@@ -200,7 +200,12 @@ endfunction()
     iTargetName - name of a target created in the project.
 ]]
 function(CMagnetoInternal__register_linked_imported_shared_library_targets iTargetName)
-    get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)
+    get_target_property(_targetType ${iTargetName} TYPE)
+    if(_targetType STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(_targetLinkLibraries ${iTargetName} INTERFACE_LINK_LIBRARIES)
+    else()
+        get_target_property(_targetLinkLibraries ${iTargetName} LINK_LIBRARIES)
+    endif()
     if(_targetLinkLibraries STREQUAL "NOTFOUND")
         return()
     endif()

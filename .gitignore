@@ -1,6 +1,7 @@
 /tests/summary/
 /SeedProject/build/
 /SeedProject/install/
+/SeedProject/tests/@TestProjects/CMakePackageConsumer/build/
 /SeedProject/CMakeUserPresets.json
 /.codex
 /SeedProject/CI/Docker/.tmp/

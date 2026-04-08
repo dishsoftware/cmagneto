@@ -1,7 +1,7 @@
 # Testing In CMagneto
 
-CMagneto configures the project's `./tests/` tree as part of the CMake project,
-but test targets are added with `EXCLUDE_FROM_ALL`.
+CMagneto configures the project's `./tests/native/` tree as part of the CMake
+project, but test targets are added with `EXCLUDE_FROM_ALL`.
 
 That means:
 - test targets are known to CMake;
@@ -17,17 +17,20 @@ Enabling tests in a CMagneto-based project does not, by itself, inject test code
 or extra test instructions into normal production binaries.
 
 The typical setup is:
-- application and library targets are defined under `./src/`;
-- test executables are defined separately under `./tests/`;
+- application and library targets are defined under `./sources/`;
+- native test executables are defined separately under `./tests/native/`;
 - the optional Python build frontend builds tests only when the `CompileTests`
-  or `RunTests` stages are requested.
+  or `RunNativeTests` stages are requested;
+- system-level workflow checks under `./tests/system/` are only run when the
+  `RunSystemTests` stage is requested.
 
 As a result:
 - runtime performance of the final application is not degraded just because
   tests are enabled in the project;
 - normal non-test builds are not forced to compile test executables;
-- enabling tests does add some configure-time overhead, because the `./tests/`
-  subtree is still processed by CMake and GoogleTest may be found or fetched.
+- enabling tests does add some configure-time overhead, because the
+  `./tests/native/` subtree is still processed by CMake and GoogleTest may be
+  found or fetched.
 
 ## What Actually Adds Overhead To Production Binaries?
 

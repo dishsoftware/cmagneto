@@ -45,13 +45,14 @@ endfunction()
 
     The function does the same as qt_add_resources, but the CMagneto__embed_QtRC_resources also
     - checks if all paths from the named arguments BIG_RESOURCES and FILES are under target QtRC directory;
+    - derives resource prefix automatically from the target source root mirrored under `${CMagneto__SUBDIR_SOURCES_SRC}`;
     - composes resource name as `${iTargetName}__${iResourceNamePostfix}`;
     - if Qt creates auxilliary resource targets, the targets are exported (added to *Config.cmake).
 
     Notes:
     - All paths from the named arguments BIG_RESOURCES and FILES
-      must be relative to the source root directory of the target (parent dir of the target's CMakeLists.txt).
-      The paths must reside under the QtRC directory of the target.
+      must be relative to the mirrored resource root of the target.
+      The paths must reside under the QtRC directory of the target resource root.
       The paths must not contain backslashes.
       It is made to keep source directories layout clean and relocatable.
 
@@ -73,7 +74,7 @@ endfunction()
 function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
     cmake_parse_arguments(ARG
         "" # Options (boolean flags).
-        "PREFIX;LANG;BASE;OUTPUT_TARGETS" # Single-value keywords (strings).
+        "LANG;OUTPUT_TARGETS" # Single-value keywords (strings).
         "BIG_RESOURCES;FILES;OPTIONS" # Multi-value keywords (lists).
         ${ARGN}
     )
@@ -82,36 +83,64 @@ function(CMagneto__embed_QtRC_resources iTargetName iResourceNamePostfix)
         CMagnetoInternal__message(FATAL_ERROR "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): iResourceNamePostfix is empty.")
     endif()
 
-    # Fail, if resource files to embed are not under target QtRC-dedicated subdirectory.
-    set(_QtRCSourceBaseDir "${CMAKE_CURRENT_SOURCE_DIR}/${CMagneto__SUBDIR_TARGET_RESOURCES}/${CMagneto__SUBDIR_QTRC}/")
+    CMagnetoInternal__get_target_resource_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetResourceRoot)
+    cmake_path(SET _QtRCSourceBaseDir NORMALIZE "${_targetResourceRoot}/${CMagneto__SUBDIR_QTRC}")
     set(_baseDirDescription "target \"${iTargetName}\" QtRC")
-    CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-    CMagnetoInternal__handle_source_paths("${_QtRCSourceBaseDir}" "${_baseDirDescription}" "${ARG_FILES}" IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
-
-    qt_add_resources(${iTargetName} "${iTargetName}__${iResourceNamePostfix}"
-        PREFIX "${ARG_PREFIX}"
-        LANG "${ARG_LANG}"
-        BASE "${ARG_BASE}"
-        BIG_RESOURCES ${ARG_BIG_RESOURCES}
-        OUTPUT_TARGETS _outputTargets
-        FILES ${ARG_FILES}
-        OPTIONS ${ARG_OPTIONS}
-    )
-
-    set(_resourceTargetNames "${_outputTargets}")
-    if (NOT _resourceTargetNames STREQUAL "")
-        CMagnetoInternal__message(STATUS "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): Qt created resource targets: ${_resourceTargetNames}.")
-        foreach(_resourceTargetName IN LISTS _resourceTargetNames)
-            install(TARGETS ${_resourceTargetName}
-                EXPORT ${PROJECT_NAME}Targets
-                ARCHIVE
-                    DESTINATION ${CMagneto__SUBDIR_STATIC}
-                    COMPONENT ${CMagneto__COMPONENT__DEVELOPMENT}
-                LIBRARY
-                    DESTINATION ${CMagneto__SUBDIR_SHARED}
-                    COMPONENT ${CMagneto__COMPONENT__RUNTIME}
-            )
-        endforeach()
+    CMagnetoInternal__handle_source_paths("${_targetResourceRoot}" "${_baseDirDescription}" "${ARG_BIG_RESOURCES}" OUTPUT_ABS_PATHS _absBigResources IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    CMagnetoInternal__handle_source_paths("${_targetResourceRoot}" "${_baseDirDescription}" "${ARG_FILES}" OUTPUT_ABS_PATHS _absFiles IF_PATH_OUTSIDE_SOURCE_BASE_DIR FAIL)
+    if("${_absBigResources};${_absFiles}" STREQUAL ";")
+        if(NOT ARG_OUTPUT_TARGETS STREQUAL "")
+            set(${ARG_OUTPUT_TARGETS} "" PARENT_SCOPE)
+        endif()
+        return()
     endif()
-    set(${ARG_OUTPUT_TARGETS} "${_resourceTargetNames}" PARENT_SCOPE)
+
+    foreach(_absResourcePath IN LISTS _absBigResources _absFiles)
+        CMagneto__is_path_under_dir("${_absResourcePath}" "${_QtRCSourceBaseDir}" _isUnderQtRCSourceRoot)
+        if(NOT _isUnderQtRCSourceRoot)
+            CMagnetoInternal__message(FATAL_ERROR "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): resource path \"${_absResourcePath}\" is outside of target QtRC source root \"${_QtRCSourceBaseDir}\".")
+        endif()
+    endforeach()
+
+    CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
+    if(_targetSourceRootRelativeToProjectSourcesSrcRoot STREQUAL "")
+        set(_qtRCPrefix "/")
+    else()
+        set(_qtRCPrefix "/${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
+    endif()
+
+    set(_generatedQtRCSources "")
+    set(_allQtRCFiles ${_absFiles} ${_absBigResources})
+
+    if(NOT "${_allQtRCFiles}" STREQUAL "")
+        set(_qrcPath "${CMAKE_CURRENT_BINARY_DIR}/${iTargetName}__${iResourceNamePostfix}.qrc")
+        set(_qrcContent "<RCC>\n  <qresource prefix=\"${_qtRCPrefix}\">\n")
+        foreach(_absFile IN LISTS _allQtRCFiles)
+            cmake_path(RELATIVE_PATH _absFile BASE_DIRECTORY "${_QtRCSourceBaseDir}" OUTPUT_VARIABLE _resourceAlias)
+            string(APPEND _qrcContent "    <file alias=\"${_resourceAlias}\">${_absFile}</file>\n")
+        endforeach()
+        string(APPEND _qrcContent "  </qresource>\n</RCC>\n")
+        file(WRITE "${_qrcPath}" "${_qrcContent}")
+
+        if(NOT "${_absBigResources}" STREQUAL "")
+            qt_add_big_resources(_generatedQtRCSources
+                "${_qrcPath}"
+                OPTIONS ${ARG_OPTIONS}
+            )
+        else()
+            qt_add_resources(_generatedQtRCSources
+                "${_qrcPath}"
+                OPTIONS ${ARG_OPTIONS}
+            )
+        endif()
+    endif()
+
+    if(NOT "${_generatedQtRCSources}" STREQUAL "")
+        target_sources(${iTargetName} PRIVATE ${_generatedQtRCSources})
+        CMagnetoInternal__message(STATUS "CMagneto__embed_QtRC_resources(\"${iTargetName}\" \"${iResourceNamePostfix}\"): generated Qt RCC sources: ${_generatedQtRCSources}.")
+    endif()
+
+    if(NOT ARG_OUTPUT_TARGETS STREQUAL "")
+        set(${ARG_OUTPUT_TARGETS} "" PARENT_SCOPE)
+    endif()
 endfunction()

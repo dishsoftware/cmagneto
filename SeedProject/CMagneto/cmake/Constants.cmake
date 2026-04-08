@@ -16,8 +16,17 @@ include_guard(GLOBAL)  # Ensures this file is included only once.
 
 
 # Build/install subdirectory names.
-## Under project root: project source dir.
-set(CMagneto__SUBDIR_SOURCE "src/")
+## Under project root: parent dir for all native source categories.
+set(CMagneto__SUBDIR_SOURCES "sources/")
+
+## Under project root: project implementation source dir tree.
+set(CMagneto__SUBDIR_SOURCES_SRC "${CMagneto__SUBDIR_SOURCES}src/")
+
+## Under project root: public/interface headers tree mirroring `${CMagneto__SUBDIR_SOURCES_SRC}`.
+set(CMagneto__SUBDIR_SOURCES_INCLUDE "${CMagneto__SUBDIR_SOURCES}include/")
+
+## Under project root: runtime resources tree mirroring `${CMagneto__SUBDIR_SOURCES_SRC}`.
+set(CMagneto__SUBDIR_SOURCES_RESOURCES "${CMagneto__SUBDIR_SOURCES}res/")
 
 ## Under project build and install dirs: parent for compiled static libs.
 set(CMagneto__SUBDIR_STATIC "lib/")
@@ -37,19 +46,19 @@ set(CMagneto__SUBDIR_INCLUDE "include/")
 ## Under project install dir: parent for CMake package configuration files of the project and all its library targets.
 set(CMagneto__SUBDIR_CMAKE "lib/cmake/")
 
-## Under target source dir: parent for all resources of a target.
-## Under project install dir: parent for all resources of all targets.
-set(CMagneto__SUBDIR_TARGET_RESOURCES "@resources/")
+## Under project build and install dirs: parent for all runtime resources of all targets.
+## The structure under this dir mirrors the runtime resource tree relative to `${CMagneto__SUBDIR_SOURCES_RESOURCES}`.
+set(CMagneto__SUBDIR_RESOURCES "res/")
 
 ## Under project install dir: parent for application menu helper assets such as launcher icons.
 set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")
 
-## Under target source dir: parent for target's resources, which must be embedded into the target's binary using Qt RCC.
-set(CMagneto__SUBDIR_QTRC "QtRC/")
+## Under target resource dir: reserved parent for target resources, which must be embedded into the target's binary using Qt RCC.
+set(CMagneto__SUBDIR_QTRC "@QtRC/")
 
-## Under target source dir: parent for target's Qt translation files (`*.ts`).
+## Under target resource dir: reserved parent for target Qt translation source files (`*.ts`).
 ## Under project install dir: parent for `*.qm` (compiled `*.ts`) resources of all targets.
-set(CMagneto__SUBDIR_QTTS "QtTS/")
+set(CMagneto__SUBDIR_QTTS "@QtTS/")
 
 ## Under project build dir: temporary files, created during `Generation` and `Build` stages.
 set(CMagneto__SUBDIR_TMP "TMP/")
@@ -57,15 +66,24 @@ set(CMagneto__SUBDIR_TMP "TMP/")
 ## Under project build and install dirs: parent for build and test reports.
 set(CMagneto__SUBDIR_SUMMARY "summary/")
 
-## Under project root: parent for unit and integration tests' code and resources.
-## Under project build dir: parent for `CTestTestfile.cmake` and built test files.
+## Under project root: parent for all test-related directories.
+## Under project build dir: parent for `CTestTestfile.cmake` and built native test files.
 set(CMagneto__SUBDIR_TESTS "tests/")
+
+## Under project root and build dir: parent for native CMake-managed test code and resources.
+set(CMagneto__SUBDIR_TESTS_NATIVE "${CMagneto__SUBDIR_TESTS}native/")
+
+## Under project root: parent for system-test drivers/scripts.
+set(CMagneto__SUBDIR_TESTS_SYSTEM "${CMagneto__SUBDIR_TESTS}system/")
+
+## Under project root: parent for external-style fixture projects used by system tests.
+set(CMagneto__SUBDIR_TESTS_TEST_PROJECTS "${CMagneto__SUBDIR_TESTS}@TestProjects/")
 
 ## Under project root: parent for `CPackConfig.cmake` and `{CMagneto__SUBDIR_PACKAGE_RESOURCES}`.
 set(CMagneto__SUBDIR_CPACKCONFIG "packaging/")
 
 ## Under `{CMagneto__SUBDIR_CPACKCONFIG}`: parent for package resources (e.g. license, user agreement, etc).
-set(CMagneto__SUBDIR_PACKAGE_RESOURCES "@resources/")
+set(CMagneto__SUBDIR_PACKAGE_RESOURCES "resources/")
 
 ## Under project root: parent for distributable license and notice files plus their manifests.
 set(CMagneto__SUBDIR_LICENSES "licenses/")

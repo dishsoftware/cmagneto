@@ -47,4 +47,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ## CMAKE_SOURCE_DIR, not CMAKE_CURRENT_SOURCE_DIR, is used to ensure the project is configured
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
 include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
+CMagneto__set_CMake_package_find_dependencies(
+    "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
+    "find_dependency(Boost CONFIG REQUIRED)"
+)
+add_subdirectory(
+    "${CMAKE_SOURCE_DIR}/CMagneto/cpp/CMagneto"
+    "${CMAKE_BINARY_DIR}/CMagneto/build/cpp/CMagneto"
+)
 CMagneto__set_up__project()

@@ -1,0 +1,65 @@
+{
+  "version": 10,
+  "include": [
+    "../../CMakePresets.common.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "Makefiles_GCC__base",
+      "hidden": true,
+      "inherits": "linux-host",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/Makefiles_GCC/$env{BuildType}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "$env{BuildType}",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__Debug",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "Debug"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__Release",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "Release"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__RelWithDebInfo",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "Makefiles_GCC__MinSizeRel",
+      "inherits": "Makefiles_GCC__base",
+      "environment": {
+        "BuildType": "MinSizeRel"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Makefiles_GCC__Debug",
+      "configurePreset": "Makefiles_GCC__Debug"
+    },
+    {
+      "name": "Makefiles_GCC__Release",
+      "configurePreset": "Makefiles_GCC__Release"
+    },
+    {
+      "name": "Makefiles_GCC__RelWithDebInfo",
+      "configurePreset": "Makefiles_GCC__RelWithDebInfo"
+    },
+    {
+      "name": "Makefiles_GCC__MinSizeRel",
+      "configurePreset": "Makefiles_GCC__MinSizeRel"
+    }
+  ]
+}
