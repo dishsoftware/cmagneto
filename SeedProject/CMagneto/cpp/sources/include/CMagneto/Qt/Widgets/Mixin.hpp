@@ -15,28 +15,29 @@ namespace CMagneto::Qt::Widgets {
     class Mixin {
     protected:
         explicit Mixin(
-            CMagneto::Core::HierarchicalID iID
-        );
+            CMagneto::Core::HierarchicalID iNestingID // TODO Perfect forwarding
+        ):
+            mNestingID{iNestingID}
+        {}
 
     public:
-        const std::string& nestingID();
+        const CMagneto::Core::HierarchicalID& nestingID() {
+            return mNestingID;
+        }
 
     private:
-        std::string mNestingID;
+        CMagneto::Core::HierarchicalID mNestingID;
     };
 
 
     class MixinWithGeometrySettings {
     protected:
         explicit MixinWithGeometrySettings(
-            const std::string& iParentNestingID,
-            const std::string& iNestingLeaf
+            CMagneto::Core::HierarchicalID iNestingID
         );
 
-        void loadWidgetGeometry(QWidget& iWidget) const;
-        void saveWidgetGeometry(const QWidget& iWidget) const;
-
-
+        virtual void loadWidgetGeometrySettings(QWidget& iWidget) const;
+        virtual void saveWidgetGeometrySettings(const QWidget& iWidget) const;
     };
 
 

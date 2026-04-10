@@ -2,7 +2,12 @@ set(_TARGET_NAME CMagneto_Core)
 
 set(_public_HEADERS
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/FrameworkInfo.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/extensions/StringLike.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/HierarchicalID.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/Logger.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/logger/sinks/Console.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/logger/sinks/File.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Core/logger/sinks/common.hpp"
 )
 
 set(_private_HEADERS
@@ -12,6 +17,9 @@ set(_private_HEADERS
 add_library(${_TARGET_NAME}
     FrameworkInfo.cpp
     HierarchicalID.cpp
+    Logger.cpp
+    logger/sinks/Console.cpp
+    logger/sinks/File.cpp
 )
 
 add_library(CMagneto::Core ALIAS ${_TARGET_NAME})
