@@ -9,28 +9,9 @@
 // but consumers may relocate it as needed.
 
 #include "CMagneto/Qt/Widgets/AppContext.hpp"
+#include "CMagneto/Qt/helpers/string.hpp"
 
 #include <utility>
-
-
-namespace {
-
-
-    [[nodiscard]] QString toQString(const std::filesystem::path& iPath) {
-#ifdef _WIN32
-        return QString::fromStdWString(iPath.native());
-#else
-        return QString::fromUtf8(iPath.c_str());
-#endif
-    }
-
-
-    [[nodiscard]] QString toQString(const std::string_view iString) {
-        return QString::fromUtf8(iString.data(), static_cast<qsizetype>(iString.size()));
-    }
-
-
-} // namespace
 
 
 namespace CMagneto::Qt::Widgets {
@@ -56,7 +37,7 @@ namespace CMagneto::Qt::Widgets {
 
 
     QString AppContext::qtWidgetSettingsFilePath(const AppIdentity& iAppIdentity) {
-        return toQString(
+        return CMagneto::Qt::helpers::toQString(
             ensureSettingsDirPath(iAppIdentity)
             / std::filesystem::path{kQtWidgetSettingsFileName}
         );

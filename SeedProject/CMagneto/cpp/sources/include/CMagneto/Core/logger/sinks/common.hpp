@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "CMagneto/Core/extensions/StringLike.hpp"
+#include "CMagneto/Core/helpers/stringLike.hpp"
 #include "CMagneto/Core/Logger.hpp"
 
 #include <array>
@@ -47,30 +47,30 @@ namespace CMagneto::Core::logger::sinks::common {
     }
 
 
-    [[nodiscard]] constexpr CMagneto::Core::extensions::StringLike::Color::Enum levelColor(
+    [[nodiscard]] constexpr CMagneto::Core::helpers::StringLike::Color::Enum levelColor(
         const CMagneto::Core::Logger::Level::Enum iLevel
     ) noexcept {
         switch (iLevel) {
             case CMagneto::Core::Logger::Level::Enum::kCritical:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kMagenta;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kMagenta;
 
             case CMagneto::Core::Logger::Level::Enum::kError:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kRed;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kRed;
 
             case CMagneto::Core::Logger::Level::Enum::kWarning:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kYellow;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kYellow;
 
             case CMagneto::Core::Logger::Level::Enum::kInfo:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kGreen;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kGreen;
 
             case CMagneto::Core::Logger::Level::Enum::kDebug:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kCyan;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kCyan;
 
             case CMagneto::Core::Logger::Level::Enum::kOff:
-                return CMagneto::Core::extensions::StringLike::Color::Enum::kBlue;
+                return CMagneto::Core::helpers::StringLike::Color::Enum::kBlue;
         }
 
-        return CMagneto::Core::extensions::StringLike::Color::Enum::kBlue;
+        return CMagneto::Core::helpers::StringLike::Color::Enum::kBlue;
     }
 
 
@@ -82,7 +82,7 @@ namespace CMagneto::Core::logger::sinks::common {
         if (!iColored)
             return std::string{plainLevelText};
 
-        return CMagneto::Core::extensions::StringLike::makeColored(plainLevelText, levelColor(iLevel));
+        return CMagneto::Core::helpers::StringLike::makeColored(plainLevelText, levelColor(iLevel));
     }
 
 

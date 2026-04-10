@@ -17,7 +17,7 @@
 #include <utility>
 
 
-namespace CMagneto::Core::extensions::StringLike {
+namespace CMagneto::Core::helpers::StringLike {
 
 
     namespace Color {
@@ -85,4 +85,4 @@ namespace CMagneto::Core::extensions::StringLike {
     }
 
 
-} // namespace CMagneto::Core::extensions::StringLike
+} // namespace CMagneto::Core::helpers::StringLike

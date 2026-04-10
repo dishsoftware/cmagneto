@@ -8,15 +8,21 @@ endif()
 set(_TARGET_NAME CMagneto_Qt)
 
 set(_public_HEADERS
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/helpers/string.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/helpers/settings/leafs.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/AppContext.hpp"
-    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/Mixin.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/MainWindow.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/mixins/Base.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/mixins/WithGeometryAndStateSettings.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/mixins/WithGeometrySettings.hpp"
 )
 
 set(_private_HEADERS)
 
 add_library(${_TARGET_NAME}
     Widgets/AppContext.cpp
-    Widgets/Mixin.cpp
+    Widgets/MainWindow.cpp
+    Widgets/mixins/WithGeometrySettings.cpp
 )
 
 add_library(CMagneto::Qt ALIAS ${_TARGET_NAME})
