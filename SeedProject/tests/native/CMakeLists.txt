@@ -28,4 +28,18 @@ endif()
 
 include(GoogleTest)
 
+option(
+    CMagneto__ENABLE_CPP_NATIVE_TESTS
+    "Compile native tests from ./CMagneto/cpp/tests/ as part of the project's native test suite."
+    OFF
+)
+
+if(CMagneto__ENABLE_CPP_NATIVE_TESTS)
+    add_subdirectory(
+        "${CMAKE_SOURCE_DIR}/CMagneto/cpp/tests"
+        "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_TESTS_NATIVE}/CMagneto/cpp"
+        EXCLUDE_FROM_ALL
+    )
+endif()
+
 add_subdirectory("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")

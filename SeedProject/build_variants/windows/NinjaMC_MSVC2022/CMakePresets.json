@@ -24,7 +24,8 @@
         "CMAKE_PREFIX_PATH": "$env{QT6_MSVC2022_DIR}/lib/cmake;$env{BOOST_MSVC2022_DIR}/cmake;$env{ZLIB_MSVC2022_DIR}/lib/cmake/zlib",
         "CMAKE_IGNORE_PATH": "C:/msys64/ucrt64/lib/cmake/GTest",
         "CMagneto__LICENSE_BUNDLE": "msvc2022",
-        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "Qt6::Core;Qt6::Gui;Qt6::Widgets;ZLIB::ZLIB"
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "Qt6::Core;Qt6::Gui;Qt6::Widgets;ZLIB::ZLIB",
+        "CMagneto__ENABLE_CPP_NATIVE_TESTS" : "ON"
       }
     },
     {

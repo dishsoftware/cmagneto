@@ -27,7 +27,8 @@
         "CMagneto__LICENSE_BUNDLE": "msvc2022",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "Qt6::Core;Qt6::Gui;Qt6::Widgets;ZLIB::ZLIB",
         "BUILD_SHARED_LIBS": "OFF",
-        "LIB_DISHSW_CONTACTHOLDER_CONTACTS_SHARED": "ON"
+        "LIB_DISHSW_CONTACTHOLDER_CONTACTS_SHARED": "ON",
+        "CMagneto__ENABLE_CPP_NATIVE_TESTS" : "ON"
       }
     },
     {

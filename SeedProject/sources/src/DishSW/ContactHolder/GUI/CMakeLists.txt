@@ -57,6 +57,7 @@ add_executable(${_TARGET_NAME})
 target_link_libraries(${_TARGET_NAME}
     PRIVATE
         CLI11::CLI11
+        CMagneto::Qt
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets

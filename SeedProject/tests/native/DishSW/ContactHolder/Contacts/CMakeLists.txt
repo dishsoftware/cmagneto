@@ -1,7 +1,7 @@
 set(_TESTS_TargetName "TESTS_${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}_Contacts")
 
 add_executable(${_TESTS_TargetName}
-    TEST_FieldTypeExtension.cpp
+    TEST_FieldType.cpp
 )
 
 target_link_libraries(${_TESTS_TargetName}

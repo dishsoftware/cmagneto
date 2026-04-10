@@ -39,7 +39,7 @@ project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON_
 
 # Set project-global options.
 ## Minimum language standard is bound by the project source code and GoogleTest CMake module.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -48,17 +48,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ## using top level directory, if the project is nested and is not added by a parent project using ExternalProject_Add().
 include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
 
+# Optional, if some C++ code of CMagneto is useful in this project.
+add_subdirectory(
+    "${CMAKE_SOURCE_DIR}/CMagneto/cpp/sources"
+    "${CMAKE_BINARY_DIR}/CMagneto/sources"
+)
+
 # Defines exact `find_dependency(...)` lines to be written into the generated `*Config.cmake` of the project.
 # Useful to ease life of consumer projects after call of `find_package(<THIS_PROJECT>)`.
 CMagneto__set_CMake_package_find_dependencies(
     "find_dependency(Qt6 REQUIRED COMPONENTS Core Gui Widgets)"
     "find_dependency(Boost CONFIG REQUIRED)"
-)
-
-# Optional, if some C++ code of CMagneto is useful in this project.
-add_subdirectory(
-    "${CMAKE_SOURCE_DIR}/CMagneto/cpp/CMagneto"
-    "${CMAKE_BINARY_DIR}/CMagneto/build"
 )
 
 CMagneto__set_up__project()

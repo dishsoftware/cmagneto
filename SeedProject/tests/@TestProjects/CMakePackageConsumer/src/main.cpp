@@ -5,7 +5,6 @@
 
 int main()
 {
-    DishSW::ContactHolder::Contacts::Contact contact;
-    (void)contact;
+    [[maybe_unused]] DishSW::ContactHolder::Contacts::Contact contact;
     return EXIT_SUCCESS;
 }

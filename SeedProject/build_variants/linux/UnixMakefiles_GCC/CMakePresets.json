@@ -25,7 +25,8 @@
         "CMAKE_CXX_COMPILER": "g++",
         "CMagneto__LICENSE_BUNDLE": "linux-gcc",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
-        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB",
+        "CMagneto__ENABLE_CPP_NATIVE_TESTS" : "ON"
       }
     },
     {
