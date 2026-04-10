@@ -9,19 +9,19 @@ set(_TARGET_NAME CMagneto_Qt)
 
 set(_public_HEADERS
     "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Qt/FrameworkInfo.hpp"
-    "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Qt/Widget.hpp"
+    "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Qt/Widgets/Mixin.hpp"
 )
 
 set(_private_HEADERS)
 
 add_library(${_TARGET_NAME}
     FrameworkInfo.cpp
-    Widget.cpp
+    Widgets/Mixin.cpp
 )
 
 add_library(CMagneto::Qt ALIAS ${_TARGET_NAME})
 
-target_compile_features(${_TARGET_NAME} PUBLIC cxx_std_17)
+target_compile_features(${_TARGET_NAME} PUBLIC cxx_std_20)
 
 target_link_libraries(${_TARGET_NAME}
     PUBLIC

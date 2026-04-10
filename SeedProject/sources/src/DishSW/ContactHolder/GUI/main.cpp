@@ -44,6 +44,7 @@ int main(int iArgumentsSize, char* iArguments[]) {
 
 
     QApplication qApplication(iArgumentsSize, iArguments);
+    // qApplication.setOrganizationName(QString::fromUtf8(DishSW::ContactHolder::compamyNameShort()));
 	qApplication.setApplicationName(QString::fromUtf8(DishSW::ContactHolder::projectNameForUI()));
 	qApplication.setApplicationVersion(QString::fromUtf8(DishSW::ContactHolder::version()));
 	qApplication.setWindowIcon(QIcon(QStringLiteral(":/DishSW/ContactHolder/GUI/icons/logo.svg")));

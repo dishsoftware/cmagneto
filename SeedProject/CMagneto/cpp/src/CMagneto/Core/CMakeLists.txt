@@ -2,6 +2,7 @@ set(_TARGET_NAME CMagneto_Core)
 
 set(_public_HEADERS
     "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Core/FrameworkInfo.hpp"
+    "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Core/HierarchicalID.hpp"
 )
 
 set(_private_HEADERS
@@ -10,11 +11,12 @@ set(_private_HEADERS
 
 add_library(${_TARGET_NAME}
     FrameworkInfo.cpp
+    HierarchicalID.cpp
 )
 
 add_library(CMagneto::Core ALIAS ${_TARGET_NAME})
 
-target_compile_features(${_TARGET_NAME} PUBLIC cxx_std_17)
+target_compile_features(${_TARGET_NAME} PUBLIC cxx_std_20)
 
 target_include_directories(${_TARGET_NAME}
     PUBLIC

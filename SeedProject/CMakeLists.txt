@@ -39,7 +39,7 @@ project("${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON_
 
 # Set project-global options.
 ## Minimum language standard is bound by the project source code and GoogleTest CMake module.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
