@@ -47,7 +47,8 @@ namespace CMagneto::Core::logger::sinks {
         EXPECT_TRUE(sink.write(makeTestRecord()));
 
         const std::string outputText = outputStream.str();
-        EXPECT_NE(outputText.find("[Error][Core] Test message"), std::string::npos);
+        EXPECT_EQ(outputText.front(), '[');
+        EXPECT_NE(outputText.find(" UTC][Error][Core] Test message"), std::string::npos);
     }
 
 
@@ -58,9 +59,25 @@ namespace CMagneto::Core::logger::sinks {
         ASSERT_TRUE(sink.write(makeTestRecord()));
 
         const std::string outputText = outputStream.str();
+        EXPECT_EQ(outputText.front(), '[');
+        EXPECT_NE(outputText.find(" UTC]["), std::string::npos);
         EXPECT_NE(outputText.find("\033["), std::string::npos);
         EXPECT_NE(outputText.find("\033[0m"), std::string::npos);
         EXPECT_NE(outputText.find("Error"), std::string::npos);
+    }
+
+
+    TEST(CMagneto_Core_logger_sinks_Console, CanPrintAppIdentityPrefix) {
+        std::ostringstream outputStream;
+        Console sink{outputStream, false, "DishSW::ContactHolder::GUI"};
+
+        ASSERT_TRUE(sink.write(makeTestRecord()));
+
+        const std::string outputText = outputStream.str();
+        EXPECT_NE(
+            outputText.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
+            std::string::npos
+        );
     }
 
 
@@ -75,7 +92,8 @@ namespace CMagneto::Core::logger::sinks {
 
         std::string fileContent;
         std::getline(inputFile, fileContent);
-        EXPECT_NE(fileContent.find("[Error][Core] Test message"), std::string::npos);
+        EXPECT_EQ(fileContent.front(), '[');
+        EXPECT_NE(fileContent.find(" UTC][Error][Core] Test message"), std::string::npos);
 
         std::filesystem::remove(filePath);
     }
@@ -92,6 +110,8 @@ namespace CMagneto::Core::logger::sinks {
 
         std::string fileContent;
         std::getline(inputFile, fileContent);
+        EXPECT_EQ(fileContent.front(), '[');
+        EXPECT_NE(fileContent.find(" UTC]["), std::string::npos);
         EXPECT_NE(fileContent.find("\033["), std::string::npos);
         EXPECT_NE(fileContent.find("\033[0m"), std::string::npos);
         EXPECT_NE(fileContent.find("Error"), std::string::npos);
@@ -100,16 +120,56 @@ namespace CMagneto::Core::logger::sinks {
     }
 
 
-    TEST(CMagneto_Core_logger_sinks_File, ExposesErrorMessageForMissingDirectory) {
+    TEST(CMagneto_Core_logger_sinks_File, CanPrintAppIdentityPrefix) {
+        const std::filesystem::path filePath = makeTemporaryFilePath();
+
+        File sink{filePath, false, "DishSW::ContactHolder::GUI"};
+        ASSERT_TRUE(sink.write(makeTestRecord()));
+
+        std::ifstream inputFile{filePath};
+        ASSERT_TRUE(inputFile.is_open());
+
+        std::string fileContent;
+        std::getline(inputFile, fileContent);
+        EXPECT_NE(
+            fileContent.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
+            std::string::npos
+        );
+
+        std::filesystem::remove(filePath);
+    }
+
+
+    TEST(CMagneto_Core_logger_sinks_File, CreatesMissingDirectoryAndWritesRecord) {
         const std::filesystem::path filePath =
             std::filesystem::temp_directory_path() /
             "CMagneto_Test_LoggerSinks_MissingDir" /
             "missing.log";
 
+        std::filesystem::remove_all(filePath.parent_path());
+
         File sink{filePath};
+        EXPECT_TRUE(sink.errorMessage().empty());
+        EXPECT_TRUE(sink.write(makeTestRecord()));
+        EXPECT_TRUE(std::filesystem::exists(filePath));
+
+        std::filesystem::remove_all(filePath.parent_path());
+    }
+
+
+    TEST(CMagneto_Core_logger_sinks_File, ExposesErrorMessageWhenFilePathIsADirectory) {
+        const std::filesystem::path directoryPath =
+            std::filesystem::temp_directory_path() /
+            "CMagneto_Test_LoggerSinks_DirectoryPath";
+
+        std::filesystem::create_directories(directoryPath);
+
+        File sink{directoryPath};
 
         EXPECT_FALSE(sink.write(makeTestRecord()));
         EXPECT_FALSE(sink.errorMessage().empty());
+
+        std::filesystem::remove_all(directoryPath);
     }
 
 

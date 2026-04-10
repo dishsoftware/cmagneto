@@ -14,20 +14,34 @@
 #include <exception>
 #include <fstream>
 #include <ostream>
+#include <system_error>
 #include <utility>
 
 
 namespace CMagneto::Core::logger::sinks {
 
 
-    File::File(std::filesystem::path iFilePath, const bool iColored)
-    :
+    File::File(
+        std::filesystem::path iFilePath,
+        const bool iColored,
+        std::string iAppIdentityString
+    ) :
         mFilePath{std::move(iFilePath)},
-        mOutputFile{mFilePath, std::ios::app},
-        mColored{iColored}
+        mColored{iColored},
+        mAppIdentityString{std::move(iAppIdentityString)}
     {
+        std::error_code createDirectoriesErrorCode;
+        std::filesystem::create_directories(mFilePath.parent_path(), createDirectoriesErrorCode);
+        if (createDirectoriesErrorCode) {
+            mErrorMessage = std::string{"Failed to create log file directory. "}
+                .append(createDirectoriesErrorCode.message())
+            ;
+            return;
+        }
+
+        mOutputFile.open(mFilePath, std::ios::app);
         if (!mOutputFile)
-            mErrorMessage = "Failed to open log file.";
+            mErrorMessage = std::string{"Failed to open log file: "}.append(mFilePath.string());
     }
 
 
@@ -42,7 +56,7 @@ namespace CMagneto::Core::logger::sinks {
         mErrorMessage.clear();
 
         try {
-            if (common::writeRecordToStream(mOutputFile, iRecord, mColored)) {
+            if (common::writeRecordToStream(mOutputFile, iRecord, mColored, mAppIdentityString)) {
                 mOutputFile.flush();
                 if (mOutputFile)
                     return true;

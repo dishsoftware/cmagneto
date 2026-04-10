@@ -15,6 +15,7 @@ set(_public_HEADERS
 set(_private_HEADERS)
 
 add_library(${_TARGET_NAME}
+    Widgets/AppContext.cpp
     Widgets/Mixin.cpp
 )
 

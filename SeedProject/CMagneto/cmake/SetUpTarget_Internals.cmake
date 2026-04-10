@@ -150,6 +150,11 @@ endfunction()
 
 
 function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderBlock)
+    set(_companyNameShortMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__COMPANY_NAME_SHORT")
+    set(_projectNameBaseMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__PROJECT_NAME_BASE")
+    string(TOUPPER "${_companyNameShortMacroName}" _companyNameShortMacroName)
+    string(TOUPPER "${_projectNameBaseMacroName}" _projectNameBaseMacroName)
+
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
@@ -164,6 +169,14 @@ function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderB
     )
 
     set(_projectDefsHeaderBlockTemplate [=[
+#ifndef @COMPANY_NAME_SHORT_MACRO_NAME@
+    #define @COMPANY_NAME_SHORT_MACRO_NAME@ "UnknownCompany"
+#endif
+
+#ifndef @PROJECT_NAME_BASE_MACRO_NAME@
+    #define @PROJECT_NAME_BASE_MACRO_NAME@ "UnknownProject"
+#endif
+
 #ifndef @PROJECT_NAME_FOR_UI_MACRO_NAME@
     #define @PROJECT_NAME_FOR_UI_MACRO_NAME@ "Unknown Project"
 #endif
@@ -193,6 +206,14 @@ function(CMagnetoInternal__compose_project_defs_header_block oProjectDefsHeaderB
 #endif
 
 namespace @PROJECT_NAMESPACE@ {
+    inline constexpr const char* companyNameShort() noexcept {
+        return @COMPANY_NAME_SHORT_MACRO_NAME@;
+    }
+
+    inline constexpr const char* projectNameBase() noexcept {
+        return @PROJECT_NAME_BASE_MACRO_NAME@;
+    }
+
     inline constexpr const char* projectNameForUI() noexcept {
         return @PROJECT_NAME_FOR_UI_MACRO_NAME@;
     }
@@ -222,6 +243,8 @@ namespace @PROJECT_NAMESPACE@ {
     }
 } // namespace @PROJECT_NAMESPACE@
 ]=])
+    set(COMPANY_NAME_SHORT_MACRO_NAME "${_companyNameShortMacroName}")
+    set(PROJECT_NAME_BASE_MACRO_NAME "${_projectNameBaseMacroName}")
     set(PROJECT_NAME_FOR_UI_MACRO_NAME "${_projectNameForUIMacroName}")
     set(PROJECT_DESCRIPTION_MACRO_NAME "${_projectDescriptionMacroName}")
     set(VERSION_MACRO_NAME "${_versionMacroName}")
@@ -297,6 +320,10 @@ endfunction()
 
 function(CMagnetoInternal__set_up_project_build_info_for_target iTargetName iVisibility)
     CMagnetoInternal__get_git_commit_sha(_gitCommitSha)
+    set(_companyNameShortMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__COMPANY_NAME_SHORT")
+    set(_projectNameBaseMacroName "${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}_${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}__PROJECT_NAME_BASE")
+    string(TOUPPER "${_companyNameShortMacroName}" _companyNameShortMacroName)
+    string(TOUPPER "${_projectNameBaseMacroName}" _projectNameBaseMacroName)
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
@@ -311,6 +338,8 @@ function(CMagnetoInternal__set_up_project_build_info_for_target iTargetName iVis
     )
 
     target_compile_definitions(${iTargetName} ${iVisibility}
+        ${_companyNameShortMacroName}="${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}"
+        ${_projectNameBaseMacroName}="${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}"
         ${_projectNameForUIMacroName}="${CMagneto__PROJECT_JSON__PROJECT_NAME_FOR_UI}"
         ${_projectDescriptionMacroName}="${CMagneto__PROJECT_JSON__PROJECT_DESCRIPTION}"
         ${_versionMacroName}="${PROJECT_VERSION}"
@@ -554,6 +583,7 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
     CMagnetoInternal__get_target_generated_headers_root("${CMAKE_CURRENT_SOURCE_DIR}" "${iGeneratedHeadersVisibility}" _defsHeaderDir)
     set(_defsHeaderAbsPath "${_defsHeaderDir}/${_defsHeaderFileName}")
     CMagneto__get_dir_relative_to_project_sources_src_root("${CMAKE_CURRENT_SOURCE_DIR}" _targetSourceRootRelativeToProjectSourcesSrcRoot)
+    string(REPLACE "/" "::" _targetNamespaceSuffix "${_targetSourceRootRelativeToProjectSourcesSrcRoot}")
     CMagnetoInternal__get_project_defs_header_info(
         _projectDefsHeaderAbsPath
         _projectDefsHeaderFileName
@@ -602,7 +632,13 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
         set(_defsHeaderTemplate [=[
 #pragma once
 
-@HEADER_PREAMBLE@#if defined(_DEBUG) || defined(DEBUG)
+@HEADER_PREAMBLE@namespace @PROJECT_NAMESPACE@::@TARGET_NAMESPACE_SUFFIX@ {
+    inline constexpr const char* targetName() noexcept {
+        return "@TARGET_LEAF_NAME@";
+    }
+} // namespace @PROJECT_NAMESPACE@::@TARGET_NAMESPACE_SUFFIX@
+
+#if defined(_DEBUG) || defined(DEBUG)
     #include <assert.h>
     #define @VERIFY_MACRO_NAME@(x) assert(x);
     #define @ASSERT_MACRO_NAME@(x) assert(x);
@@ -613,6 +649,9 @@ function(CMagnetoInternal__set_up_defs_header iTargetName iGeneratedHeadersVisib
 ]=])
 
         set(HEADER_PREAMBLE "${_headerPreamble}")
+        set(PROJECT_NAMESPACE "${_projectNamespace}")
+        set(TARGET_NAMESPACE_SUFFIX "${_targetNamespaceSuffix}")
+        set(TARGET_LEAF_NAME "${_targetLeafName}")
         set(VERIFY_MACRO_NAME "${_verifyMacroName}")
         set(ASSERT_MACRO_NAME "${_assertMacroName}")
         string(CONFIGURE "${_defsHeaderTemplate}" _defsHeaderContent @ONLY)

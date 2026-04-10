@@ -10,3 +10,14 @@
     #define DISHSW_CONTACTHOLDER_GUI_VERIFY(x) x
     #define DISHSW_CONTACTHOLDER_GUI_ASSERT(x)
 #endif
+
+
+namespace DishSW::ContactHolder::GUI {
+
+
+    inline constexpr const char* targetName() noexcept {
+        return "GUI";
+    }
+
+
+} // namespace DishSW::ContactHolder::GUI

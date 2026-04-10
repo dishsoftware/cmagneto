@@ -14,20 +14,22 @@
 
 #include <QSettings>
 
-#include <utility>
-
 
 namespace CMagneto::Qt::Widgets {
 
 
     class AppContext : public CMagneto::Core::AppContext {
     public:
-        AppContext() = default;
+        inline static constexpr std::string_view kQtWidgetSettingsFileName{"QtWidgetSettings.ini"};
 
-        explicit AppContext(CMagneto::Core::Logger iLogger) noexcept
-        :
-            CMagneto::Core::AppContext{std::move(iLogger)}
-        {}
+        AppContext() = delete;
+
+        explicit AppContext(const CMagneto::Core::AppContext::AppIdentity& iAppIdentity);
+
+        AppContext(
+            const CMagneto::Core::AppContext::AppIdentity& iAppIdentity,
+            CMagneto::Core::Logger iLogger
+        );
 
         ~AppContext() = default;
         AppContext(const AppContext& iOther) = delete;
@@ -35,15 +37,13 @@ namespace CMagneto::Qt::Widgets {
         AppContext& operator=(const AppContext& iOther) = delete;
         AppContext& operator=(AppContext&& iOther) noexcept = delete;
 
-        QSettings& qtWidgetSettings() noexcept {
-            return mQtWidgetSettings;
-        }
+        QSettings& qtWidgetSettings() noexcept;
 
-        [[nodiscard]] const QSettings& qtWidgetSettings() const noexcept {
-            return mQtWidgetSettings;
-        }
+        [[nodiscard]] const QSettings& qtWidgetSettings() const noexcept;
 
     private:
+        [[nodiscard]] static QString qtWidgetSettingsFilePath(const CMagneto::Core::AppContext::AppIdentity& iAppIdentity);
+
         QSettings mQtWidgetSettings;
     };
 

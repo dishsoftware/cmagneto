@@ -13,12 +13,38 @@
 #include "CMagneto/Core/extensions/StringLike.hpp"
 #include "CMagneto/Core/Logger.hpp"
 
+#include <array>
+#include <chrono>
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <ctime>
 
 
 namespace CMagneto::Core::logger::sinks::common {
+
+
+    [[nodiscard]] inline std::string utcTimestampString() {
+        const std::time_t nowTimeT = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+        // const std::tm* utcTime = std::gmtime(&nowTimeT);
+        // `std::gmtime` is not used here because it returns shared static
+        // storage. Another call can overwrite that shared `std::tm` before this
+        // log line is formatted, especially in multithreaded code.
+        //
+        // Use the thread-safe platform variants that write into local `std::tm utcTime` instead.
+        std::tm utcTime{};
+#if defined(_WIN32)
+        gmtime_s(&utcTime, &nowTimeT);
+#else
+        gmtime_r(&nowTimeT, &utcTime);
+#endif
+
+        std::array<char, 32> buffer{};
+        const std::size_t charsCount = std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d %H:%M:%S UTC", &utcTime);
+
+        return std::string{buffer.data(), charsCount};
+    }
 
 
     [[nodiscard]] constexpr CMagneto::Core::extensions::StringLike::Color::Enum levelColor(
@@ -63,11 +89,18 @@ namespace CMagneto::Core::logger::sinks::common {
     [[nodiscard]] inline bool writeRecordToStream(
         std::ostream& ioOutputStream,
         const CMagneto::Core::Logger::Record& iRecord,
-        const bool iColored
+        const bool iColored,
+        const std::string_view iAppIdentityString = {}
     ) {
         const std::string coloredLevelString = levelString(iRecord.mLevel, iColored);
         ioOutputStream
-            << '[' << coloredLevelString << ']'
+            << '[' << utcTimestampString() << ']'
+            << '[' << coloredLevelString << ']';
+
+        if (!iAppIdentityString.empty())
+            ioOutputStream << '[' << iAppIdentityString << ']';
+
+        ioOutputStream
             << '[' << iRecord.mCategory << "] "
             << iRecord.mText
             << " (" << iRecord.mSourceLocation.file_name() << ':' << iRecord.mSourceLocation.line()

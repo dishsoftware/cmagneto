@@ -14,22 +14,30 @@
 #include <exception>
 #include <iostream>
 #include <ostream>
+#include <utility>
 
 
 namespace CMagneto::Core::logger::sinks {
 
 
-    Console::Console(const bool iColored) noexcept
-    :
+    Console::Console(
+        const bool iColored,
+        std::string iAppIdentityString
+    ) noexcept :
         mOutputStream{&std::cerr},
-        mColored{iColored}
+        mColored{iColored},
+        mAppIdentityString{std::move(iAppIdentityString)}
     {}
 
 
-    Console::Console(std::ostream& iOutputStream, const bool iColored) noexcept
-    :
+    Console::Console(
+        std::ostream& iOutputStream,
+        const bool iColored,
+        std::string iAppIdentityString
+    ) noexcept :
         mOutputStream{&iOutputStream},
-        mColored{iColored}
+        mColored{iColored},
+        mAppIdentityString{std::move(iAppIdentityString)}
     {}
 
 
@@ -42,7 +50,7 @@ namespace CMagneto::Core::logger::sinks {
         }
 
         try {
-            if (common::writeRecordToStream(*mOutputStream, iRecord, mColored))
+            if (common::writeRecordToStream(*mOutputStream, iRecord, mColored, mAppIdentityString))
                 return true;
 
             mErrorMessage = "Failed to write to output stream.";

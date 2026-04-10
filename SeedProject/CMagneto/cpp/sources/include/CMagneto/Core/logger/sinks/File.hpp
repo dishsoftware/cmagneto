@@ -24,7 +24,12 @@ namespace CMagneto::Core::logger::sinks {
     /** Basic logger sink which appends records to a file. */
     class File : public CMagneto::Core::Logger::Sink {
     public:
-        explicit File(std::filesystem::path iFilePath, bool iColored = false);
+        explicit File(
+            std::filesystem::path iFilePath,
+            bool iColored = false,
+            std::string iAppIdentityString = {}
+        );
+
         ~File() override = default;
         File(const File& iOther) = delete;
         File(File&& iOther) noexcept = default;
@@ -40,6 +45,7 @@ namespace CMagneto::Core::logger::sinks {
         std::filesystem::path mFilePath;
         std::ofstream mOutputFile;
         bool mColored{false};
+        std::string mAppIdentityString;
         std::string mErrorMessage;
     };
 

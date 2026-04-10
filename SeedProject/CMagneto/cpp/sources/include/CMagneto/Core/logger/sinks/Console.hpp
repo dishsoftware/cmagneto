@@ -23,8 +23,17 @@ namespace CMagneto::Core::logger::sinks {
     /** Basic logger sink which writes records to a console stream. */
     class Console : public CMagneto::Core::Logger::Sink {
     public:
-        explicit Console(bool iColored = false) noexcept;
-        explicit Console(std::ostream& iOutputStream, bool iColored = false) noexcept;
+        explicit Console(
+            bool iColored = false,
+            std::string iAppIdentityString = {}
+        ) noexcept;
+
+        explicit Console(
+            std::ostream& iOutputStream,
+            bool iColored = false,
+            std::string iAppIdentityString = {}
+        ) noexcept;
+
         ~Console() override = default;
         Console(const Console& iOther) = default;
         Console(Console&& iOther) noexcept = default;
@@ -37,6 +46,7 @@ namespace CMagneto::Core::logger::sinks {
     private:
         std::ostream* mOutputStream{nullptr};
         bool mColored{false};
+        std::string mAppIdentityString;
         std::string mErrorMessage;
     };
 

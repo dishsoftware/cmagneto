@@ -1,5 +1,13 @@
 #pragma once
 
+#ifndef DISHSW_CONTACTHOLDER__COMPANY_NAME_SHORT
+    #define DISHSW_CONTACTHOLDER__COMPANY_NAME_SHORT "DishSW"
+#endif
+
+#ifndef DISHSW_CONTACTHOLDER__PROJECT_NAME_BASE
+    #define DISHSW_CONTACTHOLDER__PROJECT_NAME_BASE "ContactHolder"
+#endif
+
 #ifndef DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI
     #define DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI "Unknown Project"
 #endif
@@ -29,6 +37,14 @@
 #endif
 
 namespace DishSW::ContactHolder {
+    inline constexpr const char* companyNameShort() noexcept {
+        return DISHSW_CONTACTHOLDER__COMPANY_NAME_SHORT;
+    }
+
+    inline constexpr const char* projectNameBase() noexcept {
+        return DISHSW_CONTACTHOLDER__PROJECT_NAME_BASE;
+    }
+
     inline constexpr const char* projectNameForUI() noexcept {
         return DISHSW_CONTACTHOLDER__PROJECT_NAME_FOR_UI;
     }
@@ -57,4 +73,3 @@ namespace DishSW::ContactHolder {
         return DISHSW_CONTACTHOLDER__GIT_COMMIT_SHA;
     }
 } // namespace DishSW::ContactHolder
-
