@@ -11,6 +11,7 @@
 #include "CMagneto/Core/logger/sinks/Console.hpp"
 #include "CMagneto/Core/logger/sinks/File.hpp"
 #include "CMagneto/Qt/Widgets/AppContext.hpp"
+#include "CMagneto/Qt/Widgets/MainWindow.hpp"
 
 #include "DishSW/ContactHolder/Contacts/FieldType.hpp"
 #include "DishSW/ContactHolder/Contacts/FieldTypeExtension.hpp"
@@ -19,7 +20,6 @@
 #include <CLI/CLI.hpp>
 #include <QApplication>
 #include <QIcon>
-#include <QMainWindow>
 #include <QStyleFactory>
 #include <zlib.h>
 
@@ -248,10 +248,15 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
             } // Boilerplate output.
 
-            QMainWindow mainWindow;
+            CMagneto::Qt::Widgets::MainWindow mainWindow{
+                appContext,
+                CMagneto::Core::HierarchicalID{"/MainWindow"}
+            };
+            mainWindow.setObjectName(QStringLiteral("MainWindow"));
             mainWindow.setWindowTitle(QString::fromUtf8(appIdentity.mProjectNameForUI.data()));
             mainWindow.setWindowIcon(qApplication.windowIcon()); // Window instance may use non application-wide default window icon.
             mainWindow.resize(960, 640);
+            mainWindow.loadSettings();
             mainWindow.show();
 
             return qApplication.exec();
