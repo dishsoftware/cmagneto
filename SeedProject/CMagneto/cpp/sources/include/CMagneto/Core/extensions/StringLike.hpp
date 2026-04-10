@@ -47,7 +47,7 @@ namespace CMagneto::Core::extensions::StringLike {
             requires(TStringLike&& iText) {
                 std::string_view{std::forward<TStringLike>(iText)};
             }
-    [[nodiscard]] std::string colored(
+    [[nodiscard]] std::string makeColored(
         TStringLike&& iText,
         const std::uint8_t iColorCode
     ) {
@@ -77,11 +77,11 @@ namespace CMagneto::Core::extensions::StringLike {
             requires(TStringLike&& iText) {
                 std::string_view{std::forward<TStringLike>(iText)};
             }
-    [[nodiscard]] std::string colored(
+    [[nodiscard]] std::string makeColored(
         TStringLike&& iText,
         const Color::Enum iColor
     ) {
-        return colored(std::forward<TStringLike>(iText), Color::toCode(iColor));
+        return makeColored(std::forward<TStringLike>(iText), Color::toCode(iColor));
     }
 
 

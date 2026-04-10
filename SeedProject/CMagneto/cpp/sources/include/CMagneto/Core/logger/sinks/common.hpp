@@ -56,7 +56,7 @@ namespace CMagneto::Core::logger::sinks::common {
         if (!iColored)
             return std::string{plainLevelText};
 
-        return CMagneto::Core::extensions::StringLike::colored(plainLevelText, levelColor(iLevel));
+        return CMagneto::Core::extensions::StringLike::makeColored(plainLevelText, levelColor(iLevel));
     }
 
 
