@@ -9,6 +9,7 @@ set(_TARGET_NAME CMagneto_Qt)
 
 set(_public_HEADERS
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/FrameworkInfo.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/AppContext.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/Mixin.hpp"
 )
 

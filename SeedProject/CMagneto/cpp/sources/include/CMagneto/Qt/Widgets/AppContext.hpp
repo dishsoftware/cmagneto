@@ -10,21 +10,23 @@
 
 #pragma once
 
-#include "CMagneto/Core/Logger.hpp"
+#include "CMagneto/Core/AppContext.hpp"
+
+#include <QSettings>
 
 #include <utility>
 
 
-namespace CMagneto::Core {
+namespace CMagneto::Qt::Widgets {
 
 
-    class AppContext {
+    class AppContext : public CMagneto::Core::AppContext {
     public:
-        AppContext() noexcept = default;
+        AppContext() = default;
 
-        explicit AppContext(Logger iLogger) noexcept
+        explicit AppContext(CMagneto::Core::Logger iLogger) noexcept
         :
-            mLogger{std::move(iLogger)}
+            CMagneto::Core::AppContext{std::move(iLogger)}
         {}
 
         ~AppContext() = default;
@@ -33,17 +35,17 @@ namespace CMagneto::Core {
         AppContext& operator=(const AppContext& iOther) = delete;
         AppContext& operator=(AppContext&& iOther) noexcept = delete;
 
-        Logger& logger() noexcept {
-            return mLogger;
+        QSettings& qtWidgetSettings() noexcept {
+            return mQtWidgetSettings;
         }
 
-        [[nodiscard]] const Logger& logger() const noexcept {
-            return mLogger;
+        [[nodiscard]] const QSettings& qtWidgetSettings() const noexcept {
+            return mQtWidgetSettings;
         }
 
     private:
-        Logger mLogger;
+        QSettings mQtWidgetSettings;
     };
 
 
-} // namespace CMagneto::Core
+} // namespace CMagneto::Qt::Widgets
