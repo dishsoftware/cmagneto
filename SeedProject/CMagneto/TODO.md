@@ -30,3 +30,4 @@
 * Add support of Android and WebAssembly.
 * Add build stage with all the stages, but in Docker containers locally.
 * Assume a target A of the project does not use dependency D, and a target B of the project does use the D. If a consumer project links against A, will current setup of the project require the consumer project to `find_dependency(D)` ?
+* CMagneto must work without Qt at all.

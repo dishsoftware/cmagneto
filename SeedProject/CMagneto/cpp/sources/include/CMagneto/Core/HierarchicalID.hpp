@@ -100,6 +100,68 @@ namespace CMagneto::Core {
         HierarchicalID(const HierarchicalID& iParentID, const std::vector<std::string>& iLeafs);
         HierarchicalID(const HierarchicalID& iParentID, std::vector<std::string> iLeafs);
 
+        template <std::ranges::input_range LeafsRange>
+            requires
+                requires(const std::ranges::range_reference_t<LeafsRange> iLeaf) {
+                    std::string_view{iLeaf};
+                }
+        HierarchicalID(const HierarchicalID& iParentID, const LeafsRange& iLeafs)
+        :
+            HierarchicalID([&iParentID, &iLeafs]() {
+                UncheckedInitArgs uncheckedInitArgs;
+
+                if constexpr (std::ranges::forward_range<LeafsRange>) {
+                    // If the range is a `forward_range`, it can be safely iterated more than once.
+                    // That allows a first pass for sizing, then a second pass for filling.
+
+                    std::size_t totalSize = iParentID.mStringID.size();
+                    std::size_t numOfLeafs = 0;
+                    for (const std::string_view leaf : iLeafs) {
+                        if (!isLeafValid(leaf))
+                            throw std::invalid_argument("CMagneto::Core::HierarchicalID: iLeafs has invalid leaf.");
+
+                        totalSize += 1 + leaf.size();
+                        ++numOfLeafs;
+                    }
+
+                    uncheckedInitArgs.mStringID.reserve(totalSize);
+                    uncheckedInitArgs.mLeafs.reserve(iParentID.mLeafs.size() + numOfLeafs);
+                }
+                else if constexpr (std::ranges::sized_range<LeafsRange>) {
+                    // If the range is not a `forward_range`, but is a `sized_range`, at least it is known how many elements the range has.
+                    // Avoid a two-pass walk for string sizing, since a pure input range may not support that safely.
+
+                    uncheckedInitArgs.mLeafs.reserve(
+                        iParentID.mLeafs.size() + static_cast<std::size_t>(std::ranges::size(iLeafs))
+                    );
+                }
+
+                uncheckedInitArgs.mLeafs.insert(
+                    uncheckedInitArgs.mLeafs.end(),
+                    iParentID.mLeafs.begin(),
+                    iParentID.mLeafs.end()
+                );
+
+                uncheckedInitArgs.mStringID.append(iParentID.mStringID);
+                for (const std::string_view leaf : iLeafs) {
+                    // The filling pass over `iLeafs`.
+
+                    if constexpr (!std::ranges::forward_range<LeafsRange>) {
+                        // The check is already done for `forward_range`.
+
+                        if (!isLeafValid(leaf))
+                            throw std::invalid_argument("CMagneto::Core::HierarchicalID: iLeafs has invalid leaf.");
+                    }
+
+                    uncheckedInitArgs.mStringID.push_back(kLeafSeparator);
+                    uncheckedInitArgs.mStringID.append(leaf);
+                    uncheckedInitArgs.mLeafs.emplace_back(leaf);
+                }
+
+                return uncheckedInitArgs;
+            }())
+        {}
+
         [[nodiscard]] const std::string& stringID() const noexcept {
             return mStringID;
         }
@@ -113,10 +175,10 @@ namespace CMagneto::Core {
         /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. */
         [[nodiscard]] std::vector<std::string> relativeLeafs(const HierarchicalID& iOther) const;
 
-        /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. The string has no leading `/`. */
+        /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. The string has no leading `kLeafSeparator`. */
         [[nodiscard]] std::string relativeLeafsAsString(const HierarchicalID& iOther) const;
 
-        /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. The string has no leading `/`. */
+        /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. The string has no leading `kLeafSeparator`. */
         [[nodiscard]] std::string_view relativeLeafsAsStringView(const HierarchicalID& iOther) const noexcept;
 
         /** \returns Leafs of `this` relative to `iOther`. Empty, if `iOther` is not ancestor of `this`. */

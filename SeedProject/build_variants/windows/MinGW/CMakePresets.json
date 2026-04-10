@@ -30,7 +30,8 @@
         "CMagneto__PACKAGE_GENERATORS": "ZIP;IFW",
         "CMagneto__LICENSE_BUNDLE": "mingw-msys2-ucrt64",
         "CMagneto__EXTERNAL_SHARED_LIBRARIES__EXPECT_ON_TARGET_MACHINE": "Qt6::Core;Qt6::Gui;Qt6::Widgets",
-        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB"
+        "CMagneto__EXTERNAL_SHARED_LIBRARIES__BUNDLE_WITH_PACKAGE": "ZLIB::ZLIB",
+        "CMagneto__ENABLE_CPP_NATIVE_TESTS" : "ON"
       }
     },
     {

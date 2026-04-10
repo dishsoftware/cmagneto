@@ -50,8 +50,8 @@ include("${CMAKE_SOURCE_DIR}/CMagneto/cmake/Main.cmake")
 
 # Optional, if some C++ code of CMagneto is useful in this project.
 add_subdirectory(
-    "${CMAKE_SOURCE_DIR}/CMagneto/cpp"
-    "${CMAKE_BINARY_DIR}/CMagneto"
+    "${CMAKE_SOURCE_DIR}/CMagneto/cpp/sources"
+    "${CMAKE_BINARY_DIR}/CMagneto/sources"
 )
 
 # Defines exact `find_dependency(...)` lines to be written into the generated `*Config.cmake` of the project.

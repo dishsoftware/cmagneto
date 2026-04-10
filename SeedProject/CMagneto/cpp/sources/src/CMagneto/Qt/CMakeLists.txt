@@ -8,8 +8,8 @@ endif()
 set(_TARGET_NAME CMagneto_Qt)
 
 set(_public_HEADERS
-    "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Qt/FrameworkInfo.hpp"
-    "${CMagneto__CPP_INCLUDE_CMAGNETO__DIR}/Qt/Widgets/Mixin.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/FrameworkInfo.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/Mixin.hpp"
 )
 
 set(_private_HEADERS)
@@ -32,22 +32,22 @@ target_link_libraries(${_TARGET_NAME}
 
 target_include_directories(${_TARGET_NAME}
     PUBLIC
-        $<BUILD_INTERFACE:${CMagneto__CPP__DIR}/include>
+        $<BUILD_INTERFACE:${CMagneto__CPP_SOURCES_INCLUDE__DIR}>
         $<INSTALL_INTERFACE:include>
     PRIVATE
-        $<BUILD_INTERFACE:${CMagneto__CPP__DIR}>
+        $<BUILD_INTERFACE:${CMagneto__CPP_SOURCES__DIR}>
 )
 
 target_sources(${_TARGET_NAME}
     PUBLIC
         FILE_SET public_headers TYPE HEADERS
-        BASE_DIRS "${CMagneto__CPP__DIR}/include"
+        BASE_DIRS "${CMagneto__CPP_SOURCES_INCLUDE__DIR}"
         FILES ${_public_HEADERS}
 )
 
 target_sources(${_TARGET_NAME}
     PRIVATE
         FILE_SET private_headers TYPE HEADERS
-        BASE_DIRS "${CMagneto__CPP__DIR}"
+        BASE_DIRS "${CMagneto__CPP_SOURCES__DIR}"
         FILES ${_private_HEADERS}
 )
