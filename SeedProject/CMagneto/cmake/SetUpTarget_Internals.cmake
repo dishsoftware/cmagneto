@@ -889,6 +889,7 @@ function(CMagnetoInternal__set_up_other_resource_files iTargetName iAbsoluteTarg
     endforeach()
 
     add_custom_target("${iTargetName}__resources" ALL DEPENDS ${_absBuiltResourceFilePaths})
+    add_dependencies(${iTargetName} "${iTargetName}__resources")
 endfunction()
 
 
@@ -956,4 +957,5 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
     endforeach()
 
     add_custom_target("${iTargetName}__QtTS" ALL DEPENDS ${_absQMFilePaths})
+    add_dependencies(${iTargetName} "${iTargetName}__QtTS")
 endfunction()

@@ -12,7 +12,10 @@
 
 #include "CMagneto/Core/AppContext.hpp"
 
-#include <QSettings>
+#include <memory>
+
+
+class QSettings;
 
 
 namespace CMagneto::Qt::Widgets {
@@ -24,14 +27,20 @@ namespace CMagneto::Qt::Widgets {
 
         AppContext() = delete;
 
-        explicit AppContext(const CMagneto::Core::AppContext::AppIdentity& iAppIdentity);
+        explicit AppContext(const CMagneto::Core::AppContext::AppMetadata& iAppMetadata);
 
         AppContext(
-            const CMagneto::Core::AppContext::AppIdentity& iAppIdentity,
+            const CMagneto::Core::AppContext::AppMetadata& iAppMetadata,
             CMagneto::Core::Logger iLogger
         );
 
-        ~AppContext() = default;
+        /** Test seam mirroring `CMagneto::Core::AppContext(const AppMetadata&, std::filesystem::path)`. */
+        AppContext(
+            const CMagneto::Core::AppContext::AppMetadata& iAppMetadata,
+            std::filesystem::path iAppExecutableFilePath
+        );
+
+        ~AppContext();
         AppContext(const AppContext& iOther) = delete;
         AppContext(AppContext&& iOther) noexcept = delete;
         AppContext& operator=(const AppContext& iOther) = delete;
@@ -41,10 +50,7 @@ namespace CMagneto::Qt::Widgets {
 
         [[nodiscard]] const QSettings& qtWidgetSettings() const noexcept;
 
-    private:
-        [[nodiscard]] static QString qtWidgetSettingsFilePath(const CMagneto::Core::AppContext::AppIdentity& iAppIdentity);
-
-        QSettings mQtWidgetSettings;
+        std::unique_ptr<QSettings> mQtWidgetSettings;
     };
 
 

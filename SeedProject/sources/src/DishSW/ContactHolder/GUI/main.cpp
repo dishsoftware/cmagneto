@@ -7,9 +7,9 @@
 
 #include "GUI_DEFS.hpp"
 
-#include "CMagneto/Core/binaryTools/currentExecutableFilePath.hpp"
 #include "CMagneto/Core/logger/sinks/Console.hpp"
 #include "CMagneto/Core/logger/sinks/File.hpp"
+#include "CMagneto/Qt/helpers/string.hpp"
 #include "CMagneto/Qt/Widgets/AppContext.hpp"
 #include "CMagneto/Qt/Widgets/MainWindow.hpp"
 
@@ -20,6 +20,8 @@
 #include <CLI/CLI.hpp>
 #include <QApplication>
 #include <QIcon>
+#include <QLabel>
+#include <QPixmap>
 #include <QStyleFactory>
 #include <zlib.h>
 
@@ -102,27 +104,44 @@ namespace {
     };
 
 
+    [[nodiscard]] QPixmap loadRuntimeAppIconPixmap(const CMagneto::Qt::Widgets::AppContext& iAppContext) {
+        const std::filesystem::path resourceFilePath = iAppContext.runtimeResourceFilePath(
+            "GUI/AppIcon/ContactHolder.png"
+        );
+
+        QPixmap appIconPixmap;
+        if (!appIconPixmap.load(CMagneto::Qt::helpers::toQString(resourceFilePath))) {
+            throw std::runtime_error{
+                std::string{"Failed to load runtime image resource "}
+                    .append(resourceFilePath.string())
+                    .append(".")
+            };
+        }
+
+        return appIconPixmap;
+    }
+
+
 } // namespace
 
 
 int main(int iArgumentsSize, char* iArguments[]) {
-    const CMagneto::Core::AppContext::AppIdentity appIdentity{
+    const CMagneto::Core::AppContext::AppMetadata appMetadata{
         DishSW::ContactHolder::companyNameShort(),
         DishSW::ContactHolder::projectNameBase(),
-        DishSW::ContactHolder::projectNameForUI(),
-        DishSW::ContactHolder::projectDescription(),
         DishSW::ContactHolder::GUI::targetName(),
         DishSW::ContactHolder::version(),
         DishSW::ContactHolder::versionMajor(),
         DishSW::ContactHolder::versionMinor(),
         DishSW::ContactHolder::versionPatch(),
-        CMagneto::Core::binaryTools::currentExecutableFilePath()
+        DishSW::ContactHolder::projectNameForUI(),
+        DishSW::ContactHolder::projectDescription()
     };
 
 
     { // CLI application context.
-        CLI::App cliApp{std::string{appIdentity.mProjectNameForUI}.append(" ").append(appIdentity.mTargetName)};
-        cliApp.description(std::string{appIdentity.mProjectDescription});
+        CLI::App cliApp{std::string{appMetadata.mProjectNameForUI}.append(" ").append(appMetadata.mTargetName)};
+        cliApp.description(std::string{appMetadata.mProjectDescription});
         cliApp.allow_extras();
 
         bool cliVersionFlag = false;
@@ -136,14 +155,14 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 return EXIT_FAILURE;
             }
 
-            std::cout << appIdentity.mVersion << std::endl;
+            std::cout << appMetadata.mProjectVersionString << std::endl;
             return EXIT_SUCCESS;
         }
     } // CLI application context.
 
 
     { // QApplication context.
-        CMagneto::Qt::Widgets::AppContext appContext{appIdentity};
+        CMagneto::Qt::Widgets::AppContext appContext{appMetadata};
 
         { // Set up logging.
             const SinkLogLevels sinkLogLevels;
@@ -152,7 +171,7 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 SinkLogLevels::kConsoleSinkID.data(),
                 std::make_shared<CMagneto::Core::logger::sinks::Console>(
                     true,
-                    appContext.appIdentityString()
+                    appContext.appID()
                 ),
                 sinkLogLevels.level(SinkLogLevels::kConsoleSinkID)
             );
@@ -163,11 +182,11 @@ int main(int iArgumentsSize, char* iArguments[]) {
             ;
 
             if (fileLogLevel != CMagneto::Core::Logger::Level::Enum::kOff) {
-                const std::filesystem::path fileLogFilePath = appContext.settingsDirPath().parent_path() / "log.txt";
+                const std::filesystem::path fileLogFilePath = appContext.defaultAppLogsRootPath() / "log.txt";
                 const auto fileSink = std::make_shared<CMagneto::Core::logger::sinks::File>(
                     fileLogFilePath,
                     false,
-                    appContext.appIdentityString()
+                    appContext.appID()
                 );
 
                 if (!fileSink->errorMessage().empty()) {
@@ -201,23 +220,27 @@ int main(int iArgumentsSize, char* iArguments[]) {
         } // Set up logging.
 
         QApplication qApplication(iArgumentsSize, iArguments);
-        qApplication.setOrganizationName(QString::fromUtf8(appIdentity.mCompanyNameShort.data()));
+        qApplication.setOrganizationName(QString::fromUtf8(appMetadata.mCompanyNameShort.data()));
         qApplication.setApplicationName(
-            QString::fromUtf8(appIdentity.mProjectNameBase.data())
+            QString::fromUtf8(appMetadata.mProjectNameBase.data())
             + QLatin1Char('_')
-            + QString::fromUtf8(appIdentity.mTargetName.data())
+            + QString::fromUtf8(appMetadata.mTargetName.data())
         );
-        qApplication.setApplicationVersion(QString::fromUtf8(appIdentity.mVersion.data()));
+        qApplication.setApplicationVersion(QString::fromUtf8(appMetadata.mProjectVersionString.data()));
         qApplication.setWindowIcon(QIcon(QStringLiteral(":/DishSW/ContactHolder/GUI/icons/logo.svg")));
 
         try {
-            const std::string launchMode = appContext.isPortable() ? "portable" : "installed";
-            const std::string settingsDirPath = appContext.settingsDirPath().string();
+            const std::string launchMode = appContext.isProjectPortable() ? "portable" : "installed";
+            const std::string projectInstallationRootPath = appContext.projectInstallationRootPath().string();
+            const std::string projectRuntimeResourcesRootPath = appContext.projectRuntimeResourcesRootPath().string();
+            const std::string appSettingsRootPath = appContext.appSettingsRootPath().string();
+            const std::filesystem::path runtimeAppIconPath = appContext.runtimeResourceFilePath("GUI/AppIcon/ContactHolder.png");
+            const QPixmap runtimeAppIconPixmap = loadRuntimeAppIconPixmap(appContext);
 
             const bool startLogged = appContext.logger().log(
                 CMagneto::Core::Logger::Level::Enum::kInfo,
                 "Launch",
-                std::string{appIdentity.mProjectNameForUI}.append(" started.")
+                std::string{appMetadata.mProjectNameForUI}.append(" started.")
             );
 
             const bool launchModeLogged = appContext.logger().log(
@@ -226,10 +249,28 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 std::string{"Launch mode: "}.append(launchMode)
             );
 
+            const bool appRootDirLogged = appContext.logger().log(
+                CMagneto::Core::Logger::Level::Enum::kInfo,
+                "Launch",
+                std::string{"Project installation root directory: "}.append(projectInstallationRootPath)
+            );
+
+            const bool runtimeResourcesDirLogged = appContext.logger().log(
+                CMagneto::Core::Logger::Level::Enum::kInfo,
+                "Launch",
+                std::string{"Project runtime resources root directory: "}.append(projectRuntimeResourcesRootPath)
+            );
+
             const bool settingsDirLogged = appContext.logger().log(
                 CMagneto::Core::Logger::Level::Enum::kInfo,
                 "Launch",
-                std::string{"Settings directory: "}.append(settingsDirPath)
+                std::string{"App settings root directory: "}.append(appSettingsRootPath)
+            );
+
+            const bool runtimeAppIconLogged = appContext.logger().log(
+                CMagneto::Core::Logger::Level::Enum::kInfo,
+                "RuntimeResource",
+                std::string{"Loaded runtime image resource from "}.append(runtimeAppIconPath.string())
             );
 
             { // Boilerplate output.
@@ -246,13 +287,24 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 std::wcout << "Qt widget styles count: " << QStyleFactory::keys().size() << std::endl;
             } // Boilerplate output.
 
+            static_cast<void>(appRootDirLogged);
+            static_cast<void>(runtimeResourcesDirLogged);
+            static_cast<void>(runtimeAppIconLogged);
+
             CMagneto::Qt::Widgets::MainWindow mainWindow{
                 appContext,
                 CMagneto::Core::HierarchicalID{"/MainWindow"}
             };
             mainWindow.setObjectName(QStringLiteral("MainWindow"));
-            mainWindow.setWindowTitle(QString::fromUtf8(appIdentity.mProjectNameForUI.data()));
+            mainWindow.setWindowTitle(QString::fromUtf8(appMetadata.mProjectNameForUI.data()));
             mainWindow.setWindowIcon(qApplication.windowIcon()); // Window instance may use non application-wide default window icon.
+            {
+                auto imageLabel = std::make_unique<QLabel>(&mainWindow);
+                imageLabel->setObjectName(QStringLiteral("RuntimeAppIconLabel"));
+                imageLabel->setAlignment(Qt::AlignCenter);
+                imageLabel->setPixmap(runtimeAppIconPixmap);
+                mainWindow.setCentralWidget(imageLabel.release());
+            }
             mainWindow.resize(960, 640);
             mainWindow.loadSettings();
             mainWindow.show();
