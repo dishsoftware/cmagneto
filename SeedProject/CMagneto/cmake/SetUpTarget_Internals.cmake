@@ -905,8 +905,9 @@ endfunction()
     iQtTSFilePaths             - Paths of target *.ts files.
                                  Paths must be relative to the target resource root mirrored from iAbsoluteTargetSourceRoot.
                                  Paths must not contain backslashes.
-                                 Generated *.qm files preserve the mirrored source-resource subdirectory layout
-                                 under the runtime resource root `./${CMagneto__SUBDIR_RESOURCES}`.
+                                 Each `*.ts` file must live under a mirrored `@QtTS/` source-resource dir.
+                                 Generated `*.qm` files are placed under the sibling mirrored `@QtQM/`
+                                 runtime-resource dir under `./${CMagneto__SUBDIR_RESOURCES}`.
 ]]
 function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRoot iQtTSFilePaths)
     if(iQtTSFilePaths STREQUAL "")
@@ -933,9 +934,21 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
     CMagneto__find__Qt_lrelease_executable(QT_LRELEASE_EXECUTABLE)
     foreach(_absQtTSFilePath IN LISTS _absQtTSFilePaths)
         cmake_path(GET _absQtTSFilePath PARENT_PATH _absQtTSFileDir)
-        cmake_path(RELATIVE_PATH _absQtTSFileDir BASE_DIRECTORY "${_projectAbsoluteResourceRoot}" OUTPUT_VARIABLE _tsFileSubDir)
+        cmake_path(GET _absQtTSFileDir FILENAME _qtTSDirName)
+        if(NOT _qtTSDirName STREQUAL "@QtTS")
+            CMagnetoInternal__message(FATAL_ERROR "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path \"${_absQtTSFilePath}\" must be placed under a \"@QtTS\" dir.")
+        endif()
+
+        cmake_path(GET _absQtTSFileDir PARENT_PATH _absQtTSParentDir)
+        cmake_path(RELATIVE_PATH _absQtTSParentDir BASE_DIRECTORY "${_projectAbsoluteResourceRoot}" OUTPUT_VARIABLE _qtTSParentSubDir)
+        if(_qtTSParentSubDir STREQUAL "")
+            set(_qmFileSubDir "${CMagneto__SUBDIR_QTQM}")
+        else()
+            cmake_path(SET _qmFileSubDir NORMALIZE "${_qtTSParentSubDir}/${CMagneto__SUBDIR_QTQM}")
+        endif()
+
         cmake_path(GET _absQtTSFilePath STEM LAST_ONLY _QtTSFileNameWE)
-        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_RESOURCES}/${_tsFileSubDir}/")
+        cmake_path(SET _absQMFileDir NORMALIZE "${CMAKE_BINARY_DIR}/${CMagneto__SUBDIR_RESOURCES}/${_qmFileSubDir}/")
         cmake_path(SET _absQMFilePath NORMALIZE "${_absQMFileDir}/${_QtTSFileNameWE}.qm")
         CMagnetoInternal__message(TRACE "CMagnetoInternal__set_up_QtTS_files(${iTargetName}): path to compile *.qm file \"${_absQMFilePath}\".")
 
@@ -949,7 +962,7 @@ function(CMagnetoInternal__set_up_QtTS_files iTargetName iAbsoluteTargetSourceRo
         list(APPEND _absQMFilePaths "${_absQMFilePath}")
 
         # Install the *.qm file.
-        cmake_path(SET _destination NORMALIZE "${CMagneto__SUBDIR_RESOURCES}/${_tsFileSubDir}/")
+        cmake_path(SET _destination NORMALIZE "${CMagneto__SUBDIR_RESOURCES}/${_qmFileSubDir}/")
         install(FILES "${_absQMFilePath}"
             DESTINATION "${_destination}"
             COMPONENT ${CMagneto__COMPONENT__RUNTIME} # TODO

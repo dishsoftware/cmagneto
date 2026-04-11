@@ -174,9 +174,10 @@ SeedProject/
 │           └── {ProjectNameBase}/             # The nesting is mandated.
 │               └── TargetName/                # Target resource root.
 │                   ├── @QtRC/                 # Reserved CMagneto subdir. Resources to embed into target's binary using Qt RCC. Resources can be nested arbitrary under this dir.
-│                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt `*.ts` files to compile into external `*.qm` runtime resource files.
+│                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt translation source files (`*.ts`).
 │                   └── ...                    # Other external runtime resources.
 ├── res/                                       # Build/install runtime resources root. Mirrors `./sources/res/` for copied/generated runtime resources.
+│                                              # Compiled Qt translation files (`*.qm`) are generated here under mirrored `@QtQM/` dirs.
 ├── tests/                                     # Project tests' umbrella dir.
 │   ├── native/                                # Native CMake-managed test tree.
 │   │   ├── CMakeLists.txt                     # Native test framework setup lives here. No need to change the file in a basic setup.
@@ -447,6 +448,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     )
     ```
     Place Qt translation source files under the mirrored `./sources/res/.../@QtTS/` target subdirectory.
+    Note: CMagneto compiles them into runtime `*.qm` files under mirrored `@QtQM/` directories in build/install `./res/`.
 
 13) Keep [`./tests/native/CMakeLists.txt`](./../tests/native/CMakeLists.txt) as is.
     For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).
