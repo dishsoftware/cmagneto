@@ -82,8 +82,8 @@ namespace CMagneto::Core {
         );
         EXPECT_EQ(appContext.projectRuntimeResourcesRootPath(), std::filesystem::path("/opt/contact-holder/res"));
         EXPECT_EQ(
-            appContext.runtimeResourceFilePath("GUI/launch.json"),
-            std::filesystem::path("/opt/contact-holder/res/GUI/launch.json")
+            appContext.runtimeResourceFilePath("DishSW/ContactHolder/GUI/launch.json"),
+            std::filesystem::path("/opt/contact-holder/res/DishSW/ContactHolder/GUI/launch.json")
         );
     }
 
@@ -93,8 +93,8 @@ namespace CMagneto::Core {
         const AppContext appContext{appMetadata, "/opt/contact-holder/bin/ContactHolder_GUI"};
 
         EXPECT_EQ(
-            appContext.runtimeResourceFilePath("./GUI/./launch.json"),
-            std::filesystem::path("/opt/contact-holder/res/GUI/launch.json")
+            appContext.runtimeResourceFilePath("./DishSW/./ContactHolder/GUI/./launch.json"),
+            std::filesystem::path("/opt/contact-holder/res/DishSW/ContactHolder/GUI/launch.json")
         );
     }
 

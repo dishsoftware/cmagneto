@@ -106,7 +106,7 @@ namespace {
 
     [[nodiscard]] QPixmap loadRuntimeAppIconPixmap(const CMagneto::Qt::Widgets::AppContext& iAppContext) {
         const std::filesystem::path resourceFilePath = iAppContext.runtimeResourceFilePath(
-            "GUI/AppIcon/ContactHolder.png"
+            "DishSW/ContactHolder/GUI/AppIcon/ContactHolder.png"
         );
 
         QPixmap appIconPixmap;
@@ -234,7 +234,7 @@ int main(int iArgumentsSize, char* iArguments[]) {
             const std::string projectInstallationRootPath = appContext.projectInstallationRootPath().string();
             const std::string projectRuntimeResourcesRootPath = appContext.projectRuntimeResourcesRootPath().string();
             const std::string appSettingsRootPath = appContext.appSettingsRootPath().string();
-            const std::filesystem::path runtimeAppIconPath = appContext.runtimeResourceFilePath("GUI/AppIcon/ContactHolder.png");
+            const std::filesystem::path runtimeAppIconPath = appContext.runtimeResourceFilePath("DishSW/ContactHolder/GUI/AppIcon/ContactHolder.png");
             const QPixmap runtimeAppIconPixmap = loadRuntimeAppIconPixmap(appContext);
 
             const bool startLogged = appContext.logger().log(
