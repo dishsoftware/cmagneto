@@ -1,6 +1,7 @@
 set(_TESTS_TargetName "TESTS_CMagneto_Core")
 
 add_executable(${_TESTS_TargetName}
+    TEST_AppContext.cpp
     TEST_HierarchicalID.cpp
     TEST_Logger.cpp
     TEST_logger_sinks.cpp

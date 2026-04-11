@@ -10,13 +10,13 @@
 
 #pragma once
 
-#include "CMagneto/Core/HierarchicalID.hpp"
+#include "CMagneto/Qt/Widgets/IHasHierarchicalID.hpp"
 
 
 namespace CMagneto::Qt::Widgets::mixins {
 
 
-    class Base {
+    class Base : public CMagneto::Qt::Widgets::IHasHierarchicalID {
     protected:
         explicit Base(CMagneto::Core::HierarchicalID iNestingID)
         :
@@ -24,7 +24,7 @@ namespace CMagneto::Qt::Widgets::mixins {
         {}
 
     public:
-        [[nodiscard]] const CMagneto::Core::HierarchicalID& nestingID() const noexcept {
+        [[nodiscard]] const CMagneto::Core::HierarchicalID& nestingID() const noexcept override {
             return mNestingID;
         }
 

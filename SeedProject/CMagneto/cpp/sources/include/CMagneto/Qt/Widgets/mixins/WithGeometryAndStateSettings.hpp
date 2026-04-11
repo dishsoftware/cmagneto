@@ -15,6 +15,7 @@
 #include "CMagneto/Qt/Widgets/mixins/WithGeometrySettings.hpp"
 
 #include <QByteArray>
+#include <QSettings>
 
 #include <concepts>
 namespace CMagneto::Qt::Widgets::mixins {

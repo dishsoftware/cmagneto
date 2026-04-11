@@ -31,11 +31,11 @@ namespace CMagneto::Qt::helpers {
 
 
     [[nodiscard]] inline QString toQString(const std::filesystem::path& iPath) {
-#ifdef _WIN32
-        return QString::fromStdWString(iPath.native());
-#else
-        return QString::fromUtf8(iPath.c_str());
-#endif
+        #ifdef _WIN32
+            return QString::fromStdWString(iPath.native());
+        #else
+            return QString::fromUtf8(iPath.c_str());
+        #endif
     }
 
 

@@ -110,32 +110,32 @@ SeedProject/
 ├── build.py                                   # Optional project build frontend over committed CMake presets.
 ├── CMakeLists.txt                             # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
 ├── CMagneto/                                  # CMagneto framework core files.
-|   ├── LICENSE
-|   ├── README.md                              # This file.
-|   ├── TODO.md                                # Limitations and known issues.
-|   ├── cmake/                                 # CMagneto CMake modules root.
-|   |   ├── Main.cmake                         # CMagneto CMake entrypoint-module.
-|   |   ├── MetaLoader.cmake                   # The module must be loaded prior to Main.cmake.
-|   |   ├── Packager.cmake                     # Loaded separately.
-|   |   └── ...
-|   ├── doc/                                   # Other documentation.
-|   └── py/                                    # Coupled Python code.
+│   ├── LICENSE
+│   ├── README.md                              # This file.
+│   ├── TODO.md                                # Limitations and known issues.
+│   ├── cmake/                                 # CMagneto CMake modules root.
+│   │   ├── Main.cmake                         # CMagneto CMake entrypoint-module.
+│   │   ├── MetaLoader.cmake                   # The module must be loaded prior to Main.cmake.
+│   │   ├── Packager.cmake                     # Loaded separately.
+│   │   └── ...
+│   ├── doc/                                   # Other documentation.
+│   └── py/                                    # Coupled Python code.
 ├── meta/
 │   ├── Project.json
 │   ├── Packaging.json
 │   └── CI.json
 ├── licenses/                                  # Installed/package legal files configuration and checked-in legal resources.
-|   ├── bundles/                               # License bundle manifests selected by build variants.
-|   ├── components/                            # Reusable license component manifests.
-|   └── 3rd-party/                             # Optional checked-in third-party legal files.
+│   ├── bundles/                               # License bundle manifests selected by build variants.
+│   ├── components/                            # Reusable license component manifests.
+│   └── 3rd-party/                             # Optional checked-in third-party legal files.
 ├── CMakePresets.json                          # Root preset manifest that includes concrete variant files from ./build_variants/.
 ├── build_variants/                            # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
-|   |   ├── UnixMakefiles_GCC/
-|   |   |   ├── CMakePresets.json
-|   |   |   ├── Description.md
-|   |   |   └── ...
-|   |   └── ...
+│   │   ├── UnixMakefiles_GCC/
+│   │   │   ├── CMakePresets.json
+│   │   │   ├── Description.md
+│   │   │   └── ...
+│   │   └── ...
 │   └── ...
 ├── sources/                                   # Project native-source umbrella dir.
 │   ├── include/                               # Public/interface file tree.
@@ -174,21 +174,22 @@ SeedProject/
 │           └── {ProjectNameBase}/             # The nesting is mandated.
 │               └── TargetName/                # Target resource root.
 │                   ├── @QtRC/                 # Reserved CMagneto subdir. Resources to embed into target's binary using Qt RCC. Resources can be nested arbitrary under this dir.
-│                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt `*.ts` files to compile into external `*.qm` runtime resource files.
+│                   ├── @QtTS/                 # Reserved CMagneto subdir. Qt translation source files (`*.ts`).
 │                   └── ...                    # Other external runtime resources.
 ├── res/                                       # Build/install runtime resources root. Mirrors `./sources/res/` for copied/generated runtime resources.
+│                                              # Compiled Qt translation files (`*.qm`) are generated here under mirrored `@QtQM/` dirs.
 ├── tests/                                     # Project tests' umbrella dir.
 │   ├── native/                                # Native CMake-managed test tree.
-|   |   ├── CMakeLists.txt                     # Native test framework setup lives here. No need to change the file in a basic setup.
-│   |   ├── {CompanyName_SHORT}/               # The nesting is mandated.
-│   |   |   └── {ProjectNameBase}/             # The nesting is mandated.
-│   |   |       ├── TargetName/                # Test target source root.
-|   |   |       |   ├── CMakeLists.txt         # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
-|   |   |       |   |                          # ^ The naming of test targets is not mandated, but endorsed.
-|   |   |       |   ├── TEST_Header.hpp        # The naming is not mandated, but endorsed.
-|   |   |       |   ├── TEST_Source.cpp        # The naming is not mandated, but endorsed.
-│   |   |       |   └── ...
-│   |   |       └── ...
+│   │   ├── CMakeLists.txt                     # Native test framework setup lives here. No need to change the file in a basic setup.
+│   │   ├── {CompanyName_SHORT}/               # The nesting is mandated.
+│   │   │   └── {ProjectNameBase}/             # The nesting is mandated.
+│   │   │       ├── TargetName/                # Test target source root.
+│   │   │       │   ├── CMakeLists.txt         # Add test target TESTS_TargetName and call `CMagneto__register_test_target(TESTS_TargetName)` here.
+│   │   │       │   │                          # ^ The naming of test targets is not mandated, but endorsed.
+│   │   │       │   ├── TEST_Header.hpp        # The naming is not mandated, but endorsed.
+│   │   │       │   ├── TEST_Source.cpp        # The naming is not mandated, but endorsed.
+│   │   │       │   └── ...
+│   │   │       └── ...
 │   ├── system/                                # System-test drivers/scripts.
 │   └── @TestProjects/                         # Fixture projects used by system tests (for example package-consumer smoke projects).
 ├── packaging/
@@ -196,8 +197,8 @@ SeedProject/
 │   └── resources/                             # Package resources root. Under this dir, the resources can be nested arbitrary.
 ├── CI/
 │   ├── Docker/                                # Dockerfiles root. Under this dir Dockerfiles can be nested arbitrary.
-|   |   ├── build_image.py                     # One-command Docker image build script.
-│   |   └── ...
+│   │   ├── build_image.py                     # One-command Docker image build script.
+│   │   └── ...
 │   └── GitLab/                                # GitLab `*.yml` files root. Under this dir CI-pipeline-related files can be nested arbitrary.
 └── ...
 ```
@@ -447,6 +448,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     )
     ```
     Place Qt translation source files under the mirrored `./sources/res/.../@QtTS/` target subdirectory.
+    Note: CMagneto compiles them into runtime `*.qm` files under mirrored `@QtQM/` directories in build/install `./res/`.
 
 13) Keep [`./tests/native/CMakeLists.txt`](./../tests/native/CMakeLists.txt) as is.
     For how test configuration affects build time and production binaries, see [`./CMagneto/doc/Testing.md`](./doc/Testing.md).

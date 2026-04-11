@@ -32,7 +32,7 @@ set(_QtTS_RESOURCES
 
 ## Regular resource files.
 set(_other_RESOURCES
-    #resources/action_assets.json
+    AppIcon/ContactHolder.png
 )
 ####################################################################
 

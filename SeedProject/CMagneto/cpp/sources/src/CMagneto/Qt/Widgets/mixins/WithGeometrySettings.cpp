@@ -11,6 +11,8 @@
 #include "CMagneto/Qt/Widgets/mixins/WithGeometrySettings.hpp"
 #include "CMagneto/Qt/helpers/string.hpp"
 
+#include <QSettings>
+
 
 namespace CMagneto::Qt::Widgets::mixins {
 

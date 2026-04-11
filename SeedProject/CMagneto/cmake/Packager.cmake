@@ -120,7 +120,40 @@ list(REMOVE_DUPLICATES _packageGenerators)
 set(CPACK_GENERATOR "${_packageGenerators}")
 
 
+# Setup whether a package is portable or not.
+## Coupled with `CMagneto/cpp/sources/include/CMagneto/Core/AppContext.hpp`.
+
+# Add TGZ to this list, as soon as TGZ is supported.
+set(CMagnetoInternal__PORTABLE_PACKAGE_GENERATORS "ZIP")
+
+set(CMagnetoInternal__INJECT_PORTABLE_MARKER__SCRIPT_PATH
+    "${CMAKE_CURRENT_LIST_DIR}/Packager/InjectPortableMarker.cmake"
+)
+
+set(CMagnetoInternal__CPACK_PROJECT_CONFIG__PORTABLE_PACKAGE_BEHAVIOR__PATH
+    "${CMAKE_CURRENT_BINARY_DIR}/CMagneto_CPackProjectConfig_PortablePackageBehavior.cmake"
+)
+
+configure_file(
+    "${CMAKE_CURRENT_LIST_DIR}/Packager/CPackProjectConfig/PortablePackageBehavior.cmake.in"
+    "${CMagnetoInternal__CPACK_PROJECT_CONFIG__PORTABLE_PACKAGE_BEHAVIOR__PATH}"
+    @ONLY
+)
+
+
 # Generic setup for all package generators.
+
+set(CMagnetoInternal__CPACK_PROJECT_CONFIG__PATH
+    "${CMAKE_CURRENT_BINARY_DIR}/CMagneto_CPackProjectConfig.cmake"
+)
+
+configure_file(
+    "${CMAKE_CURRENT_LIST_DIR}/Packager/CPackProjectConfig.cmake.in"
+    "${CMagnetoInternal__CPACK_PROJECT_CONFIG__PATH}"
+    @ONLY
+)
+
+set(CPACK_PROJECT_CONFIG_FILE "${CMagnetoInternal__CPACK_PROJECT_CONFIG__PATH}")
 
 ## Ensures all content are passed to CPack exactly as it defined, without modification or escaping.
 set(CPACK_VERBATIM_VARIABLES YES)

@@ -34,11 +34,11 @@ namespace CMagneto::Core::logger::sinks::common {
         //
         // Use the thread-safe platform variants that write into local `std::tm utcTime` instead.
         std::tm utcTime{};
-#if defined(_WIN32)
-        gmtime_s(&utcTime, &nowTimeT);
-#else
-        gmtime_r(&nowTimeT, &utcTime);
-#endif
+        #if defined(_WIN32)
+            gmtime_s(&utcTime, &nowTimeT);
+        #else
+            gmtime_r(&nowTimeT, &utcTime);
+        #endif
 
         std::array<char, 32> buffer{};
         const std::size_t charsCount = std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d %H:%M:%S UTC", &utcTime);

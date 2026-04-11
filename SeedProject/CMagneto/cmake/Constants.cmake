@@ -57,8 +57,10 @@ set(CMagneto__SUBDIR_APPLICATION_MENU_ASSETS "share/application-menu/")
 set(CMagneto__SUBDIR_QTRC "@QtRC/")
 
 ## Under target resource dir: reserved parent for target Qt translation source files (`*.ts`).
-## Under project install dir: parent for `*.qm` (compiled `*.ts`) resources of all targets.
 set(CMagneto__SUBDIR_QTTS "@QtTS/")
+
+## Under project build and install runtime-resource dirs: reserved parent for compiled Qt translation files (`*.qm`).
+set(CMagneto__SUBDIR_QTQM "@QtQM/")
 
 ## Under project build dir: temporary files, created during `Generation` and `Build` stages.
 set(CMagneto__SUBDIR_TMP "TMP/")
