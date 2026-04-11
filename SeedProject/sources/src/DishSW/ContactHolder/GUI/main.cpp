@@ -97,6 +97,7 @@ namespace {
             }
         }
 
+        // {SinkID, LogLevel}[]
         std::map<std::string_view, CMagneto::Core::Logger::Level::Enum> mLevelsBySinkID;
     };
 
@@ -218,21 +219,18 @@ int main(int iArgumentsSize, char* iArguments[]) {
                 "Launch",
                 std::string{appIdentity.mProjectNameForUI}.append(" started.")
             );
-            DISHSW_CONTACTHOLDER_GUI_VERIFY(startLogged);
 
             const bool launchModeLogged = appContext.logger().log(
                 CMagneto::Core::Logger::Level::Enum::kInfo,
                 "Launch",
                 std::string{"Launch mode: "}.append(launchMode)
             );
-            DISHSW_CONTACTHOLDER_GUI_VERIFY(launchModeLogged);
 
             const bool settingsDirLogged = appContext.logger().log(
                 CMagneto::Core::Logger::Level::Enum::kInfo,
                 "Launch",
                 std::string{"Settings directory: "}.append(settingsDirPath)
             );
-            DISHSW_CONTACTHOLDER_GUI_VERIFY(settingsDirLogged);
 
             { // Boilerplate output.
                 std::wcout << QApplication::translate("DishSW::ContactHolder::GUI::main", "GREETING").toStdWString() << std::endl;

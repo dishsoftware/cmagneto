@@ -11,6 +11,7 @@ set(_public_HEADERS
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/helpers/string.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/helpers/settings/leafs.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/AppContext.hpp"
+    "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/IHasHierarchicalID.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/MainWindow.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/mixins/Base.hpp"
     "${CMagneto__CPP_SOURCES_INCLUDE__DIR}/CMagneto/Qt/Widgets/mixins/WithGeometryAndStateSettings.hpp"
