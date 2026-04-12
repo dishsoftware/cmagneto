@@ -84,16 +84,18 @@ namespace CMagneto::Core::logger::sinks {
     TEST(CMagneto_Core_logger_sinks_File, AppendsRecordsToFile) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
 
-        File sink{filePath};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_EQ(fileContent.front(), '[');
-        EXPECT_NE(fileContent.find(" UTC][Error][Core] Test message"), std::string::npos);
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_EQ(fileContent.front(), '[');
+            EXPECT_NE(fileContent.find(" UTC][Error][Core] Test message"), std::string::npos);
+        }
 
         std::filesystem::remove(filePath);
     }
@@ -102,19 +104,21 @@ namespace CMagneto::Core::logger::sinks {
     TEST(CMagneto_Core_logger_sinks_File, CanColorLevelSubstring) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
 
-        File sink{filePath, true};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath, true};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_EQ(fileContent.front(), '[');
-        EXPECT_NE(fileContent.find(" UTC]["), std::string::npos);
-        EXPECT_NE(fileContent.find("\033["), std::string::npos);
-        EXPECT_NE(fileContent.find("\033[0m"), std::string::npos);
-        EXPECT_NE(fileContent.find("Error"), std::string::npos);
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_EQ(fileContent.front(), '[');
+            EXPECT_NE(fileContent.find(" UTC]["), std::string::npos);
+            EXPECT_NE(fileContent.find("\033["), std::string::npos);
+            EXPECT_NE(fileContent.find("\033[0m"), std::string::npos);
+            EXPECT_NE(fileContent.find("Error"), std::string::npos);
+        }
 
         std::filesystem::remove(filePath);
     }
@@ -123,18 +127,20 @@ namespace CMagneto::Core::logger::sinks {
     TEST(CMagneto_Core_logger_sinks_File, CanPrintAppIdentityPrefix) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
 
-        File sink{filePath, false, "DishSW::ContactHolder::GUI"};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath, false, "DishSW::ContactHolder::GUI"};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_NE(
-            fileContent.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
-            std::string::npos
-        );
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_NE(
+                fileContent.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
+                std::string::npos
+            );
+        }
 
         std::filesystem::remove(filePath);
     }
@@ -148,10 +154,12 @@ namespace CMagneto::Core::logger::sinks {
 
         std::filesystem::remove_all(filePath.parent_path());
 
-        File sink{filePath};
-        EXPECT_TRUE(sink.errorMessage().empty());
-        EXPECT_TRUE(sink.write(makeTestRecord()));
-        EXPECT_TRUE(std::filesystem::exists(filePath));
+        {
+            File sink{filePath};
+            EXPECT_TRUE(sink.errorMessage().empty());
+            EXPECT_TRUE(sink.write(makeTestRecord()));
+            EXPECT_TRUE(std::filesystem::exists(filePath));
+        }
 
         std::filesystem::remove_all(filePath.parent_path());
     }
