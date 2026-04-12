@@ -3,17 +3,61 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#ifdef _WIN32
+    #include <io.h>
+#else
+    #include <unistd.h>
+#endif
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 
 
 namespace CMagneto::Core {
 
 
     namespace {
+        /** Duplicates an OS file descriptor so the original stream can be restored later. */
+        [[nodiscard]] int dupFD(const int iFileDescriptor) {
+            #ifdef _WIN32
+                return _dup(iFileDescriptor);
+            #else
+                return dup(iFileDescriptor);
+            #endif
+        }
+
+
+        /** Redirects one file descriptor to another, e.g. temporary stderr capture in tests. */
+        [[nodiscard]] int dup2FD(const int iSourceFileDescriptor, const int iTargetFileDescriptor) {
+            #ifdef _WIN32
+                return _dup2(iSourceFileDescriptor, iTargetFileDescriptor);
+            #else
+                return dup2(iSourceFileDescriptor, iTargetFileDescriptor);
+            #endif
+        }
+
+
+        /** Returns the OS file descriptor behind a C `FILE*` stream. */
+        [[nodiscard]] int fileNumber(FILE* iFile) {
+            #ifdef _WIN32
+                return _fileno(iFile);
+            #else
+                return fileno(iFile);
+            #endif
+        }
+
+
+        /** Closes an OS file descriptor using the platform-specific runtime call. */
+        void closeFD(const int iFileDescriptor) {
+            #ifdef _WIN32
+                _close(iFileDescriptor);
+            #else
+                close(iFileDescriptor);
+            #endif
+        }
+
+
         class TestSink : public Logger::Sink {
         public:
             explicit TestSink(const bool iShouldSucceed = true) noexcept
@@ -52,9 +96,9 @@ namespace CMagneto::Core {
             {
                 EXPECT_NE(mFile, nullptr);
 
-                mOriginalFD = dup(fileno(stderr));
+                mOriginalFD = dupFD(fileNumber(stderr));
                 EXPECT_NE(mOriginalFD, -1);
-                EXPECT_NE(dup2(fileno(mFile), fileno(stderr)), -1);
+                EXPECT_NE(dup2FD(fileNumber(mFile), fileNumber(stderr)), -1);
             }
 
             StderrCapture(const StderrCapture& iOther) = delete;
@@ -65,8 +109,8 @@ namespace CMagneto::Core {
             ~StderrCapture() {
                 if (mOriginalFD != -1) {
                     fflush(stderr);
-                    dup2(mOriginalFD, fileno(stderr));
-                    close(mOriginalFD);
+                    static_cast<void>(dup2FD(mOriginalFD, fileNumber(stderr)));
+                    closeFD(mOriginalFD);
                 }
 
                 if (mFile)
