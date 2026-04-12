@@ -3,17 +3,63 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <iostream>
+#ifdef _WIN32
+    #include <io.h>
+#else
+    #include <unistd.h>
+#endif
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 
 
 namespace CMagneto::Core {
 
 
     namespace {
+        /** Duplicates an OS file descriptor so the original stream can be restored later. */
+        [[nodiscard]] int dupFD(const int iFileDescriptor) {
+            #ifdef _WIN32
+                return _dup(iFileDescriptor);
+            #else
+                return dup(iFileDescriptor);
+            #endif
+        }
+
+
+        /** Redirects one file descriptor to another, e.g. temporary stderr capture in tests. */
+        [[nodiscard]] int dup2FD(const int iSourceFileDescriptor, const int iTargetFileDescriptor) {
+            #ifdef _WIN32
+                return _dup2(iSourceFileDescriptor, iTargetFileDescriptor);
+            #else
+                return dup2(iSourceFileDescriptor, iTargetFileDescriptor);
+            #endif
+        }
+
+
+        /** Returns the OS file descriptor behind a C `FILE*` stream. */
+        [[nodiscard]] int fileNumber(FILE* iFile) {
+            #ifdef _WIN32
+                return _fileno(iFile);
+            #else
+                return fileno(iFile);
+            #endif
+        }
+
+
+        /** Closes an OS file descriptor using the platform-specific runtime call. */
+        void closeFD(const int iFileDescriptor) {
+            #ifdef _WIN32
+                _close(iFileDescriptor);
+            #else
+                close(iFileDescriptor);
+            #endif
+        }
+
+
         class TestSink : public Logger::Sink {
         public:
             explicit TestSink(const bool iShouldSucceed = true) noexcept
@@ -44,6 +90,17 @@ namespace CMagneto::Core {
         };
 
 
+        /**
+         * Captures the process-level standard error destination by redirecting the OS file descriptor.
+         *
+         * Better:
+         *     - catches output that reaches the real stderr channel, including non-C++ writes
+         *     - closer to integration-style behavior of the whole process
+         *
+         * Worse:
+         *     - more complex and platform-specific
+         *     - harder to read and maintain than a pure C++ stream capture
+         */
         class StderrCapture {
         public:
             StderrCapture()
@@ -52,9 +109,9 @@ namespace CMagneto::Core {
             {
                 EXPECT_NE(mFile, nullptr);
 
-                mOriginalFD = dup(fileno(stderr));
+                mOriginalFD = dupFD(fileNumber(stderr));
                 EXPECT_NE(mOriginalFD, -1);
-                EXPECT_NE(dup2(fileno(mFile), fileno(stderr)), -1);
+                EXPECT_NE(dup2FD(fileNumber(mFile), fileNumber(stderr)), -1);
             }
 
             StderrCapture(const StderrCapture& iOther) = delete;
@@ -65,8 +122,8 @@ namespace CMagneto::Core {
             ~StderrCapture() {
                 if (mOriginalFD != -1) {
                     fflush(stderr);
-                    dup2(mOriginalFD, fileno(stderr));
-                    close(mOriginalFD);
+                    static_cast<void>(dup2FD(mOriginalFD, fileNumber(stderr)));
+                    closeFD(mOriginalFD);
                 }
 
                 if (mFile)
@@ -93,6 +150,44 @@ namespace CMagneto::Core {
         private:
             FILE* mFile{nullptr};
             int mOriginalFD{-1};
+        };
+
+
+        /**
+         * Captures only `std::cerr` by swapping its C++ stream buffer with an `std::ostringstream`.
+         *
+         * Better:
+         *     - simple, local, and fully C++-idiomatic
+         *     - easy to understand in unit tests
+         *
+         * Worse:
+         *     - only catches writes that go through `std::cerr`
+         *     - misses output written directly to `stderr` or lower-level file descriptors
+         */
+        class StdCerrCapture {
+        public:
+            StdCerrCapture()
+            :
+                mOriginalBuffer{std::cerr.rdbuf(mCapturedTextStream.rdbuf())}
+            {}
+
+            StdCerrCapture(const StdCerrCapture& iOther) = delete;
+            StdCerrCapture(StdCerrCapture&& iOther) noexcept = delete;
+            StdCerrCapture& operator=(const StdCerrCapture& iOther) = delete;
+            StdCerrCapture& operator=(StdCerrCapture&& iOther) noexcept = delete;
+
+            ~StdCerrCapture() {
+                std::cerr.flush();
+                std::cerr.rdbuf(mOriginalBuffer);
+            }
+
+            [[nodiscard]] std::string readCapturedText() const {
+                return mCapturedTextStream.str();
+            }
+
+        private:
+            std::ostringstream mCapturedTextStream;
+            std::streambuf* mOriginalBuffer{nullptr};
         };
     } // namespace
 
@@ -174,7 +269,9 @@ namespace CMagneto::Core {
     TEST(CMagneto_Core_Logger, LogReportsAndContinuesWhenFailingSinkPolicyIsReportAndContinue) {
         auto failingSink = std::make_shared<TestSink>(false);
         auto succeedingSink = std::make_shared<TestSink>(true);
+
         StderrCapture stderrCapture;
+        // StdCerrCapture stdCerrCapture;
 
         Logger logger;
         ASSERT_TRUE(
@@ -199,6 +296,8 @@ namespace CMagneto::Core {
         EXPECT_EQ(succeedingSink->mNumOfCalls, 1U);
 
         const std::string stderrText = stderrCapture.readCapturedText();
+        // const std::string stderrText = stdCerrCapture.readCapturedText();
+
         EXPECT_NE(stderrText.find("sink \"failing\" failed"), std::string::npos);
         EXPECT_NE(stderrText.find("Test sink failure."), std::string::npos);
     }

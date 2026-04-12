@@ -32,3 +32,5 @@
 * Assume a target A of the project does not use dependency D, and a target B of the project does use the D. If a consumer project links against A, will current setup of the project require the consumer project to `find_dependency(D)` ?
 * CMagneto must work without Qt at all.
 * ? Use `obj->setProperty()` to store nesting IDs of widgets instead of mixins.
+* Place installation packages into `./packages/` tree instead of `./build/` tree.
+* Do not print `MSVC Export`, etc.

@@ -70,7 +70,7 @@ endfunction()
 
 
 function(CMagnetoInternal__get_project_resource_root oProjectResourceRoot)
-    cmake_path(SET _projectResourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_RESOURCES}/${CMagneto__PROJECT_JSON__COMPANY_NAME_SHORT}/${CMagneto__PROJECT_JSON__PROJECT_NAME_BASE}")
+    cmake_path(SET _projectResourceRoot NORMALIZE "${CMAKE_SOURCE_DIR}/${CMagneto__SUBDIR_SOURCES_RESOURCES}")
     set(${oProjectResourceRoot} "${_projectResourceRoot}" PARENT_SCOPE)
 endfunction()
 

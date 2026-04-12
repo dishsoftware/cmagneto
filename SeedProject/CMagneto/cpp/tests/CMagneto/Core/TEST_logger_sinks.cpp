@@ -1,20 +1,24 @@
 #include "CMagneto/Core/logger/sinks/Console.hpp"
 #include "CMagneto/Core/logger/sinks/File.hpp"
+#include "common/helpers/path.hpp"
 
 #include <gtest/gtest.h>
 
-#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <unistd.h>
 
 
 namespace CMagneto::Core::logger::sinks {
 
 
     namespace {
+        inline static constexpr std::string_view kLoggerSinksTempDirectoryPrefix{
+            "CMagneto_Test_LoggerSinks"
+        };
+
+
         [[nodiscard]] CMagneto::Core::Logger::Record makeTestRecord() {
             return CMagneto::Core::Logger::Record{
                 .mLevel = CMagneto::Core::Logger::Level::Enum::kError,
@@ -26,16 +30,19 @@ namespace CMagneto::Core::logger::sinks {
 
 
         [[nodiscard]] std::filesystem::path makeTemporaryFilePath() {
-            const std::filesystem::path tempDirectoryPath = std::filesystem::temp_directory_path();
-            std::filesystem::path filePath = tempDirectoryPath / "CMagneto_Test_LoggerSinks_XXXXXX";
+            const std::filesystem::path tempDirectoryPath =
+                CMagneto::tests::common::helpers::path::createUniqueTempDirectory(
+                    kLoggerSinksTempDirectoryPrefix
+                )
+            ;
+            const std::filesystem::path filePath = tempDirectoryPath / "log.txt";
 
-            std::string filePathString = filePath.string();
-            const int fileDescriptor = mkstemp(filePathString.data());
-            EXPECT_NE(fileDescriptor, -1);
-            if (fileDescriptor != -1)
-                close(fileDescriptor);
+            std::ofstream outputFile{filePath};
+            EXPECT_TRUE(outputFile.is_open());
+            if (!outputFile.is_open())
+                return tempDirectoryPath / "log-fallback.txt";
 
-            return filePathString;
+            return filePath;
         }
     } // namespace
 
@@ -83,86 +90,100 @@ namespace CMagneto::Core::logger::sinks {
 
     TEST(CMagneto_Core_logger_sinks_File, AppendsRecordsToFile) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
+        const std::filesystem::path tempDirectoryPath = filePath.parent_path();
 
-        File sink{filePath};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_EQ(fileContent.front(), '[');
-        EXPECT_NE(fileContent.find(" UTC][Error][Core] Test message"), std::string::npos);
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_EQ(fileContent.front(), '[');
+            EXPECT_NE(fileContent.find(" UTC][Error][Core] Test message"), std::string::npos);
+        }
 
-        std::filesystem::remove(filePath);
+        std::filesystem::remove_all(tempDirectoryPath);
     }
 
 
     TEST(CMagneto_Core_logger_sinks_File, CanColorLevelSubstring) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
+        const std::filesystem::path tempDirectoryPath = filePath.parent_path();
 
-        File sink{filePath, true};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath, true};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_EQ(fileContent.front(), '[');
-        EXPECT_NE(fileContent.find(" UTC]["), std::string::npos);
-        EXPECT_NE(fileContent.find("\033["), std::string::npos);
-        EXPECT_NE(fileContent.find("\033[0m"), std::string::npos);
-        EXPECT_NE(fileContent.find("Error"), std::string::npos);
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_EQ(fileContent.front(), '[');
+            EXPECT_NE(fileContent.find(" UTC]["), std::string::npos);
+            EXPECT_NE(fileContent.find("\033["), std::string::npos);
+            EXPECT_NE(fileContent.find("\033[0m"), std::string::npos);
+            EXPECT_NE(fileContent.find("Error"), std::string::npos);
+        }
 
-        std::filesystem::remove(filePath);
+        std::filesystem::remove_all(tempDirectoryPath);
     }
 
 
     TEST(CMagneto_Core_logger_sinks_File, CanPrintAppIdentityPrefix) {
         const std::filesystem::path filePath = makeTemporaryFilePath();
+        const std::filesystem::path tempDirectoryPath = filePath.parent_path();
 
-        File sink{filePath, false, "DishSW::ContactHolder::GUI"};
-        ASSERT_TRUE(sink.write(makeTestRecord()));
+        {
+            File sink{filePath, false, "DishSW::ContactHolder::GUI"};
+            ASSERT_TRUE(sink.write(makeTestRecord()));
 
-        std::ifstream inputFile{filePath};
-        ASSERT_TRUE(inputFile.is_open());
+            std::ifstream inputFile{filePath};
+            ASSERT_TRUE(inputFile.is_open());
 
-        std::string fileContent;
-        std::getline(inputFile, fileContent);
-        EXPECT_NE(
-            fileContent.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
-            std::string::npos
-        );
+            std::string fileContent;
+            std::getline(inputFile, fileContent);
+            EXPECT_NE(
+                fileContent.find(" UTC][Error][DishSW::ContactHolder::GUI][Core] Test message"),
+                std::string::npos
+            );
+        }
 
-        std::filesystem::remove(filePath);
+        std::filesystem::remove_all(tempDirectoryPath);
     }
 
 
     TEST(CMagneto_Core_logger_sinks_File, CreatesMissingDirectoryAndWritesRecord) {
+        const std::filesystem::path tempDirectoryPath =
+            CMagneto::tests::common::helpers::path::createUniqueTempDirectory(
+                kLoggerSinksTempDirectoryPrefix
+            );
         const std::filesystem::path filePath =
-            std::filesystem::temp_directory_path() /
-            "CMagneto_Test_LoggerSinks_MissingDir" /
+            tempDirectoryPath /
+            "missing" /
             "missing.log";
 
         std::filesystem::remove_all(filePath.parent_path());
 
-        File sink{filePath};
-        EXPECT_TRUE(sink.errorMessage().empty());
-        EXPECT_TRUE(sink.write(makeTestRecord()));
-        EXPECT_TRUE(std::filesystem::exists(filePath));
+        {
+            File sink{filePath};
+            EXPECT_TRUE(sink.errorMessage().empty());
+            EXPECT_TRUE(sink.write(makeTestRecord()));
+            EXPECT_TRUE(std::filesystem::exists(filePath));
+        }
 
-        std::filesystem::remove_all(filePath.parent_path());
+        std::filesystem::remove_all(tempDirectoryPath);
     }
 
 
     TEST(CMagneto_Core_logger_sinks_File, ExposesErrorMessageWhenFilePathIsADirectory) {
         const std::filesystem::path directoryPath =
-            std::filesystem::temp_directory_path() /
-            "CMagneto_Test_LoggerSinks_DirectoryPath";
-
-        std::filesystem::create_directories(directoryPath);
+            CMagneto::tests::common::helpers::path::createUniqueTempDirectory(
+                kLoggerSinksTempDirectoryPrefix
+            );
 
         File sink{directoryPath};
 

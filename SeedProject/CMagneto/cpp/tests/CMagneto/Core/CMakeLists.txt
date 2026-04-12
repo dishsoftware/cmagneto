@@ -13,4 +13,9 @@ target_link_libraries(${_TESTS_TargetName}
         GTest::gtest_main
 )
 
+target_include_directories(${_TESTS_TargetName}
+    PRIVATE
+        $<BUILD_INTERFACE:${CMagneto__CPP_TESTS__DIR}>
+)
+
 CMagneto__register_test_target(${_TESTS_TargetName})
