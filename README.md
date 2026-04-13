@@ -100,6 +100,68 @@ The **CMagneto Framework** is embedded inside the **seed (template) project**:
 👉 See detailed explanation in [**CMagneto Framework** README.md](./SeedProject/CMagneto/README.md#1-how-to-use-the-cmagneto-framework).
 
 
+## Showcase
+
+### From zero to working project (`Ubuntu 24` / `Debian 12`).
+
+This is a minimal end-to-end example of creating and building a project using CMagneto.
+
+```bash
+# Install build tools and dependencies.
+sudo apt update && sudo apt install -y \
+  git \
+  python3 \
+  python-is-python3 \
+  build-essential \
+  qt6-base-dev \
+  qt6-tools-dev \
+  libboost-all-dev \
+  zlib1g-dev \
+  libgtest-dev \
+  dpkg-dev \
+  graphviz \
+  lcov \
+  wget
+
+# Clone CMagneto Project.
+git clone https://gitlab.com/dishsoftware/cmagneto.git CMagneto
+
+# Copy seed project into your new project.
+cp -r ./CMagneto/SeedProject ./MyApp
+
+cd MyApp
+
+# Build, test, package.
+python ./build.py --build_variant Makefiles_GCC --build_type Release
+```
+
+### Result
+
+- Build artifacts are generated;
+- Tests are executed.
+- A distributable `.deb` package is created and ready to install.
+
+### 📁 Resulting project structure
+
+```
+MyApp/
+├── CMagneto/              # Framework.
+├── meta/                  # New project metadata
+├── src/                   # New project code
+├── tests/                 # New project native (unit and integration) and system tests
+├── packaging/             # New project resources for distribution packages.
+├── build/
+│   └── Makefiles_GCC/
+│       └── Release/       # Build output.
+│           └── packages/  # Distribution package `*.deb`.
+│                          # ^ Can be installed: creates an icon in Start Menu, installed application is ready to run.
+├── install/
+│   └── Makefiles_GCC/
+│       └── Release/       # Install output.
+└── build.py               # build entry point
+```
+
+
 ## Structure Of The Repository
 
 ```text

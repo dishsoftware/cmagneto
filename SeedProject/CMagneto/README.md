@@ -196,7 +196,7 @@ SeedProject/
 ├── CMakePresets.json                          # Root preset manifest that includes concrete variant files from ./build_variants/.
 ├── build_variants/                            # Concrete build variants owned by per-variant CMakePresets files.
 │   ├── linux/
-│   │   ├── UnixMakefiles_GCC/
+│   │   ├── Makefiles_GCC/
 │   │   │   ├── CMakePresets.json
 │   │   │   ├── Description.md
 │   │   │   └── ...

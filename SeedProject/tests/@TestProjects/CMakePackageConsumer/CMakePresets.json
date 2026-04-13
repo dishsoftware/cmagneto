@@ -12,7 +12,7 @@
   },
   "include": [
     "build_variants/CMakePresets.common.json",
-    "build_variants/linux/UnixMakefiles_GCC/CMakePresets.json",
+    "build_variants/linux/Makefiles_GCC/CMakePresets.json",
     "build_variants/windows/MinGW/CMakePresets.json",
     "build_variants/windows/VS2022_MSVC/CMakePresets.json",
     "build_variants/windows/NinjaMC_MSVC2022/CMakePresets.json"
