@@ -9,7 +9,7 @@ Understand how Conan can complement (not replace) CMagneto for dependency manage
 - **Conan** → dependencies, toolchain, compiler settings, packaging support
 
 ### Tasks
-- Create a minimal CMagneto project with Conan
+- Create a minimal CMagneto-backed project with Conan
 - Test `CMakeToolchain` + `CMakeDeps`
 - Try real deps (e.g. Qt + zlib)
 - Check DLL/.so collection for deployment

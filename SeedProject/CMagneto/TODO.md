@@ -11,7 +11,7 @@
 * ? Use `InstallRequiredSystemLibraries`, `BundleUtilities`, `qt_generate_deploy_app_script()`, `qt_deploy_runtime_dependencies()`, `windeployqt`, `macdeployqt`.
 * Add system tests for transitive runtime-dependency bundling of external shared libraries. Recursive install-time dependency discovery is now used for bundled imported shared libraries, but the exclusion rules for system runtimes and libraries expected on the target machine should be validated on Linux and Windows with realistic dependency graphs.
 * Add instructions on when to use interface and object libraries.
-* Test coverage for code of CMagneto framework itself. Test coverage of SeedProject is already added.
+* Test coverage for code of CMagneto Framework itself. Test coverage of SeedProject is already added.
 * Add ignition switch to branding assets.
 * Adopt the Open Container Initiative (OCI) label schema for labeling Docker images.
 * Add option to run verbose build: `cmake --build . --config Release --verbose`.

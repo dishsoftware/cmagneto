@@ -17,21 +17,21 @@ from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
 from dataclasses import dataclass
 from itertools import chain
-from typing import cast
+from typing import TypeGuard, cast
 import os
 import shutil
 
 
 @dataclass
 class PushParams:
-    # Name of a branch or a tag of CMagneto project repo, from where to copy files of a test project.
+    # Name of a branch or a tag of CMagneto Project repo, from where to copy files of a test project.
     # push__testProjectRoot__to__testProjectRepo will commit to a branch with such name (even if it is tag).
     sourceGitReference: str
 
     # Set to True, if sourceGitReference is a tag.
     sourceIsTag: bool
 
-    # Dir inside the CMagneto project repo, from where to copy files of a test project.
+    # Dir inside the CMagneto Project repo, from where to copy files of a test project.
     # E.g. './SeedProject/' or './tests/system/testProjects/ProjectA/'.
     testProjectRootRelToCMagnetoProjectRoot: str
 
@@ -44,20 +44,20 @@ class PushParams:
     # For GitLab CI/CD it should be '{CMagneto__CI_COMMIT_SHA}\n\n{CMagneto__CI_COMMIT_MESSAGE}'.
     testProjectRepoCommitMessage: str
 
-    # Path to a python file in the CMagneto project repo relative to the CMagneto project root, with content:
+    # Path to a python file in the CMagneto Project repo relative to the CMagneto Project root, with content:
     # # The paths in the following sets must be relative and lead to dirs and files under ther test project root.
-    # # Dir structure of the test project repo and corresponding test project dir in CMagneto project repo must the same.
+    # # Dir structure of the test project repo and corresponding test project dir in CMagneto Project repo must the same.
 
     # # These files and dirs won't be deleted during cleanup of the test project repo
     # # by `push__testProjectRoot__to__testProjectRepo`
     # EXISTING_ITEMS_TO_RETAIN: set[GoodPath] = { ... }
 
-    # # These files and dirs won't be copied from a subdir of the test project inside the CMagneto project repo into the test project repo.
+    # # These files and dirs won't be copied from a subdir of the test project inside the CMagneto Project repo into the test project repo.
     # # by `push__testProjectRoot__to__testProjectRepo`
     # INCOMING_ITEMS_TO_IGNORE: set[GoodPath] = { ... }
 
     # # `./CI/GitLab/workflow.yml` is a special path in the test project repo: `push__testProjectRoot__to__testProjectRepo` always creates it with
-    # # the content of './CI/GitLab/test_project__workflow_replacement.yml` in the repo of CMagneto project.
+    # # the content of './CI/GitLab/test_project__workflow_replacement.yml` in the repo of CMagneto Project.
     specialItemSetsPyRelToCMagnetoProjectRoot: str | None
 
 
@@ -65,22 +65,22 @@ def push__testProjectRoot__to__testProjectRepo(
         iParams: PushParams
     ):
     """
-    CMagneto project repo can contain, aside from the seed project under "./SeedProject/", directories with files of other test projects, e.g. for system tests.
+    CMagneto Project repo can contain, aside from the seed project under "./SeedProject/", directories with files of other test projects, e.g. for system tests.
     To test such a project a developer must:
         A) Create a GitLab project for a test project repo.
         B) Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to "CI/GitLab/workflow.yml.
         C) Register a public SSH key as publicly availaible deploy key with write (push) access in the GitLab test project.
         D) Add private counterpart of the key as a masked protected hidden CI/CD variable.
-        E) During a CI job in a pipeline of the CMagneto project, add the private to an SSH-agent.
+        E) During a CI job in a pipeline of the CMagneto Project, add the private to an SSH-agent.
         D) Call this function, to mirror tag or last commit of the trigger-branch to the test project repo.
-        F) Wait in the pipeline of CMagneto project until a pipeline of the test project finishes.
+        F) Wait in the pipeline of CMagneto Project until a pipeline of the test project finishes.
 
     0) The script is meant to be executed under conditions:
-        A) CMagneto project repo is already cloned;
-        B) `cwd` is the root of the cloned CMagneto project repo.
+        A) CMagneto Project repo is already cloned;
+        B) `cwd` is the root of the cloned CMagneto Project repo.
     1) Clones a test project repo. Requires to Git LFS be installed on the machine/container.
-    2) Replaces its content with content of {iParams.testProjectRootRelToCMagnetoProjectRoot} of CMagneto project repo.
-    3) Copies `./CI/GitLab/test_project__workflow_replacement.yml` from the repo of CMagneto project
+    2) Replaces its content with content of {iParams.testProjectRootRelToCMagnetoProjectRoot} of CMagneto Project repo.
+    3) Copies `./CI/GitLab/test_project__workflow_replacement.yml` from the repo of CMagneto Project
        into `./CI/GitLab/workflow.yml` of the cloned test project repo dir.
     4) Pushes the changes into the test project repo into {iParams.sourceGitReference} branch
        with commit message {iParams.testProjectRepoCommitMessage}.
@@ -89,17 +89,17 @@ def push__testProjectRoot__to__testProjectRepo(
 
     CMagnetoProjectRoot = GoodPath(__file__, iForceDir=True).getAscendant(3)
     if CMagnetoProjectRoot is None:
-        Log.error(f"Probably error in logic of '{__file__}'. CMagneto project root is resolved above FS root.")
+        Log.error(f"Probably error in logic of '{__file__}'. CMagneto Project root is resolved above FS root.")
 
     CMagnetoProjectRootParent = CMagnetoProjectRoot.getParent()
     if CMagnetoProjectRootParent is None:
-        Log.error(f"CMagneto project root is in FS root. Nest the CMagneto project at least on level deeper.")
+        Log.error(f"CMagneto Project root is in FS root. Nest the CMagneto Project at least on level deeper.")
 
     testProjectRootRelToCMagnetoProjectRoot = GoodPath(iParams.testProjectRootRelToCMagnetoProjectRoot, iForceDir=True)
     testProjectRootRelToCMagnetoProjectRoot.checkIfRelativeAndDescendantAndGetAbsPath(
         "iTestProjectRelPathSrcStr",
         CMagnetoProjectRoot,
-        "the CMagneto project root",
+        "the CMagneto Project root",
         iExitNotRaise=True
     )
 
@@ -115,7 +115,7 @@ def push__testProjectRoot__to__testProjectRepo(
         specItemsPySrc = specialItemSetsPyRelToCMagnetoProjectRoot.checkIfRelativeAndDescendantAndGetAbsPath(
             "Special items py-file path",
             CMagnetoProjectRoot,
-            "the CMagneto project root",
+            "the CMagneto Project root",
             iExitNotRaise=True
         )
 
@@ -147,8 +147,8 @@ def push__testProjectRoot__to__testProjectRepo(
     Process.runCommand(["git", "config", "lfs.locksverify", "false"], testProjectRootDest) # Don't inform that locking is available.
 
     # Get special item sets.
-    INCOMING_ITEMS_TO_IGNORE: set[GoodPath] = set()
-    EXISTING_ITEMS_TO_RETAIN: set[GoodPath] = set()
+    incomingItemsToIgnore: set[GoodPath] = set()
+    existingItemsToRetain: set[GoodPath] = set()
     if specItemsPySrc is not None:
         Log.status(f"Importing INCOMING_ITEMS_TO_IGNORE and EXISTING_ITEMS_TO_RETAIN sets from '{specItemsPySrc}'...")
         sys.path.insert(0, str(specItemsPySrc))
@@ -165,7 +165,12 @@ def push__testProjectRoot__to__testProjectRepo(
         sys.modules[moduleName] = module
         spec.loader.exec_module(module)
 
-        isSetOfPaths = lambda iInstance: isinstance(iInstance, set) and all(isinstance(setIem, GoodPath) for setIem in iInstance)
+        def isSetOfPaths(iInstance: object) -> TypeGuard[set[GoodPath]]:
+            if not isinstance(iInstance, set):
+                return False
+
+            rawSet = cast(set[object], iInstance)
+            return all(isinstance(setItem, GoodPath) for setItem in rawSet)
 
         if not isSetOfPaths(module.EXISTING_ITEMS_TO_RETAIN):
             Log.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable EXISTING_ITEMS_TO_RETAIN. It must be of type `set[GoodPath]`.")
@@ -173,11 +178,11 @@ def push__testProjectRoot__to__testProjectRepo(
         if not isSetOfPaths(module.INCOMING_ITEMS_TO_IGNORE):
             Log.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable INCOMING_ITEMS_TO_IGNORE. It must be of type `set[GoodPath]`.")
 
-        EXISTING_ITEMS_TO_RETAIN = module.EXISTING_ITEMS_TO_RETAIN
-        INCOMING_ITEMS_TO_IGNORE = module.INCOMING_ITEMS_TO_IGNORE
+        existingItemsToRetain = module.EXISTING_ITEMS_TO_RETAIN
+        incomingItemsToIgnore = module.INCOMING_ITEMS_TO_IGNORE
 
         # Fail, if a special item path is not relative or not under test project root.
-        for item in chain(EXISTING_ITEMS_TO_RETAIN, INCOMING_ITEMS_TO_IGNORE):
+        for item in chain(existingItemsToRetain, incomingItemsToIgnore):
             item.checkIfRelativeAndDescendantAndGetAbsPath(
                 "Special item path",
                 testProjectRootSrc,
@@ -185,21 +190,22 @@ def push__testProjectRoot__to__testProjectRepo(
                 iExitNotRaise=True
             )
 
-    isPathUnderPathFromSet = lambda iPath, iBases: any(iPath.isDescendant(base) for base in iBases)
+    def isPathUnderPathFromSet(iPath: GoodPath, iBases: set[GoodPath]) -> bool:
+        return any(iPath.isDescendant(base) for base in iBases)
 
-    # Delete all content of the test project root, except `.git/` and EXISTING_ITEMS_TO_RETAIN.
+    # Delete all content of the test project root, except `.git/` and existingItemsToRetain.
     Log.status(f"Deleting old content from the cloned repo '{testProjectRootDest}' of the test project...")
     for itemDest in testProjectRootDest.iterdir():
         itemRel = cast(GoodPath, itemDest.getRelativeTo(testProjectRootDest))
-        if itemRel == ".git/" or isPathUnderPathFromSet(itemRel, EXISTING_ITEMS_TO_RETAIN):
+        if itemRel == ".git/" or isPathUnderPathFromSet(itemRel, existingItemsToRetain):
             continue # TODO Don't check content under skipped path.
         itemDest.delete()
 
-    # Copy from dir with the test project inside CMagneto project repo into the test project repo root.
-    Log.status(f"Copying content of '{testProjectRootSrc}' of the CMagneto project repo into the cloned repo '{testProjectRootDest}' of the test project...")
+    # Copy from dir with the test project inside CMagneto Project repo into the test project repo root.
+    Log.status(f"Copying content of '{testProjectRootSrc}' of the CMagneto Project repo into the cloned repo '{testProjectRootDest}' of the test project...")
     for itemSrc in testProjectRootSrc.rglob("*"): # Recursively walk all files and dirs.
         itemRel = cast(GoodPath, itemSrc.getRelativeTo(testProjectRootSrc))
-        if isPathUnderPathFromSet(itemRel, INCOMING_ITEMS_TO_IGNORE):
+        if isPathUnderPathFromSet(itemRel, incomingItemsToIgnore):
             continue # TODO Don't check content under skipped path.
 
         itemDest = testProjectRootDest / itemRel

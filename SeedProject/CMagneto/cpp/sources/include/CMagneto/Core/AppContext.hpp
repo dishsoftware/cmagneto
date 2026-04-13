@@ -1,11 +1,11 @@
 // Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 // SPDX-License-Identifier: MIT
 //
-// This file is part of the CMagneto framework.
+// This file is part of the CMagneto Framework.
 // It is licensed under the MIT license found in the LICENSE file
-// located at the root directory of the CMagneto framework.
+// located at the root directory of the CMagneto Framework.
 //
-// By default, the CMagneto framework root resides at the root of the project where it is used,
+// By default, the CMagneto Framework root resides at the root of the project where it is used,
 // but consumers may relocate it as needed.
 
 #pragma once
@@ -101,7 +101,7 @@ namespace CMagneto::Core {
         );
 
         /**
-         * Test seam for injecting a synthetic app executable path matching the CMagneto project layout.
+         * Test seam for injecting a synthetic app executable path matching the CMagneto Project layout.
          * Production code should prefer `AppContext(const AppMetadata&)`.
          */
         AppContext(
@@ -269,7 +269,7 @@ namespace CMagneto::Core {
         /**
          * \brief Builds the fully resolved executable context for this app.
          *
-         * Validates and normalizes the executable path according to the CMagneto project layout,
+         * Validates and normalizes the executable path according to the CMagneto Project layout,
          * detects project portability, and derives the cached project/app root paths.
          */
         [[nodiscard]] static ExecutableContext makeExecutableContext(
@@ -278,7 +278,7 @@ namespace CMagneto::Core {
         );
 
         /**
-         * \brief Validates and normalizes an app executable path according to the CMagneto project layout.
+         * \brief Validates and normalizes an app executable path according to the CMagneto Project layout.
          *
          * The path must be non-empty, identify a file under a `bin/` directory, and allow derivation
          * of the project installation root as the parent of that `bin/` directory.

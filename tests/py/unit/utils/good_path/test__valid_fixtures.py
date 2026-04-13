@@ -55,12 +55,12 @@ def test__validFixtures(request: pytest.FixtureRequest,
         f"{iPath.raw} → Expected name={name}, got {iPath.name}"
 
     dir_dirName_pathIsUnder_tuples: list[tuple[str, str, bool]] = [
-        (CMAGNETO_PROJECT_ROOT_STR, "CMagneto project root", isUnderCMagnetoProjectRoot),
+        (CMAGNETO_PROJECT_ROOT_STR, "CMagneto Project root", isUnderCMagnetoProjectRoot),
         (SEED_PROJECT_ROOT_STR    , "seed project root"    , isUnderSeedProjectRoot    )
     ]
 
     dir_dirName_expRelPath_tuples: list[tuple[str, str, str | None]] = [
-        (CMAGNETO_PROJECT_ROOT_STR, "CMagneto project root", relPathToCMagnetoProjectRoot),
+        (CMAGNETO_PROJECT_ROOT_STR, "CMagneto Project root", relPathToCMagnetoProjectRoot),
         (SEED_PROJECT_ROOT_STR    , "seed project root"    , relPathToSeedProjectRoot    ),
         ("./CI/"                  , "'./CI/'"              , relPathToRelDirCI           )
     ]

@@ -13,7 +13,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def dirCMagnetoProjectRoot() -> GoodPath:
-    """Returns the absolute path to the CMagneto project root."""
+    """Returns the absolute path to the CMagneto Project root."""
     return GoodPath(CMAGNETO_PROJECT_ROOT_STR)
 
 @pytest.fixture(scope="module")

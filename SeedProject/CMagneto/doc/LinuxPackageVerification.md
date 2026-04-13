@@ -2,17 +2,17 @@
 Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 SPDX-License-Identifier: MIT
 
-This file is part of the CMagneto framework.
+This file is part of the CMagneto Framework.
 It is licensed under the MIT license found in the LICENSE file
-located at the root directory of the CMagneto framework.
+located at the root directory of the CMagneto Framework.
 
-By default, the CMagneto framework root resides at the root of the project where it is used,
+By default, the CMagneto Framework root resides at the root of the project where it is used,
 but consumers may relocate it as needed.
 -->
 
 # Linux Package Verification
 ## 1. Purpose
-This document describes how verification of generated Linux installation packages is implemented in the CMagneto framework and the SeedProject.
+This document describes how verification of generated Linux installation packages is implemented in the CMagneto Framework and the SeedProject.
 
 The goal is to verify that every 3rd-party shared-library dependency is deployed according to the active build-variant policy:
 

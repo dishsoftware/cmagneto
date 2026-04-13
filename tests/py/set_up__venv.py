@@ -37,7 +37,7 @@ At first, call function '{create.__name__}' from module '{__name__}'.")
 
 def create() -> Path:
     """
-    Creates ./.venv/ in the root of CMagneto project and
+    Creates ./.venv/ in the root of CMagneto Project and
     returns a path to Python binary inside the venv directory.
     """
     print(f"Creating virtual environment in {VENV_PATH} ...")

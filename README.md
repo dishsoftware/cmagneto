@@ -9,19 +9,23 @@ LICENSE file in the root directory of this source tree.
 ![Framework Banner](./SeedProject/CMagneto/doc/assets/header/Header.jpg)
 # CMagneto Project
 
+[![CMagneto pipeline](https://gitlab.com/dishsoftware/cmagneto/badges/main/pipeline.svg)](https://gitlab.com/dishsoftware/cmagneto/-/pipelines)
+[![Seed project coverage (downstream)](https://gitlab.com/dishsoftware/contactholder/badges/main/coverage.svg)](https://gitlab.com/dishsoftware/contactholder)
+
 <!--
 Note For Developers
 
 Keep paragraphs of this file in sync with the same paragraphs in
-- CMagneto project root README.md;
-- CMagneto framework root README.md;
+- CMagneto Project root README.md;
+- CMagneto Framework root README.md;
 - project description on GitLab, GitHub, BitBucket etc.
 -->
 
-**CMagneto project** is a **CMagneto framework** and a **seed (template) project** <br>
+**CMagneto Project** is a **CMagneto Framework** and a **seed (template) project** <br>
 for bootstrapping **CMake**-backed **C++** projects.<br>
+It eliminates most of the repetitive setup required to start a production-ready C++ project.
 
-**CMagneto framework** covers the full lifecycle: <br>
+**CMagneto Framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
 third-party library deployment, legal file management, testing, packaging, and CI <br>
 — all pre-configured and ready to use.<br>
@@ -32,7 +36,7 @@ third-party library deployment, legal file management, testing, packaging, and C
 
 ## Platform Support
 
-**CMagneto framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
+**CMagneto Framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
 while providing out-of-the-box support for some of them.<br>
 
 Platform-specific code is still unavoidable, though:
@@ -86,23 +90,119 @@ One-command [`./build.py`](./SeedProject/build.py) script to run all build stage
 Easy to figure out what is going on both for protein- and silicon-based intelligence.
 
 
-## Structure of the repository
-- The framework code is mixed with the code of a seed (template) project under [`./SeedProject/`](./SeedProject/).
-- Core files of the CMagneto framework are in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
+## How To Use It
 
-This file is a proxy for the actual [CMagneto framework README.md](./SeedProject/CMagneto/README.md).
+The **CMagneto Framework** is embedded inside the **seed (template) project**:
+- [`SeedProject/`](./SeedProject/) → your starting point;
+- [`SeedProject/CMagneto/`](./SeedProject/CMagneto/) → reusable framework (keep unchanged).
+
+1. Copy content of [`./SeedProject/`](./SeedProject/) into the root of your new project.
+2. Do NOT modify content of [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) (code of **CMagneto Framework**).
+3. Modify the rest of seed project's code. Start with [`./SeedProject/meta/`](./SeedProject/meta/).
+
+👉 See detailed explanation in [**CMagneto Framework** README.md](./SeedProject/CMagneto/README.md#1-how-to-use-the-cmagneto-framework).
+
+
+## Showcase
+
+### From zero to working project (`Ubuntu 24` / `Debian 12`).
+
+This is a minimal end-to-end example of creating and building a project using CMagneto.
+
+```bash
+# Install build tools and dependencies.
+sudo apt update && sudo apt install -y \
+  git \
+  python3 \
+  python-is-python3 \
+  build-essential \
+  qt6-base-dev \
+  qt6-tools-dev \
+  libboost-all-dev \
+  zlib1g-dev \
+  libgtest-dev \
+  dpkg-dev \
+  graphviz \
+  lcov \
+  wget
+
+# Clone CMagneto Project.
+git clone https://gitlab.com/dishsoftware/cmagneto.git CMagneto
+
+# Copy seed project into your new project.
+cp -r ./CMagneto/SeedProject ./MyApp
+
+cd MyApp
+
+# Build, test, package.
+python ./build.py --build_variant Makefiles_GCC --build_type Release
+```
+
+### Result
+
+- Build artifacts are generated;
+- Tests are executed;
+- A distributable `.deb` package is created and ready to install.
+
+### 📁 Resulting project structure
+
+```
+MyApp/
+├── CMagneto/              # Framework.
+├── meta/                  # New project metadata
+├── src/                   # New project code
+├── tests/                 # New project native (unit and integration) and system tests
+├── packaging/             # New project resources for distribution packages.
+├── build/
+│   └── Makefiles_GCC/
+│       └── Release/       # Build output.
+│           └── packages/  # Distribution package `*.deb`.
+│                          # ^ Can be installed: creates an icon in Start Menu, installed application is ready to run.
+├── install/
+│   └── Makefiles_GCC/
+│       └── Release/       # Install output.
+└── build.py               # Build entry point.
+```
+
+
+## Structure Of The Repository
+
+```text
+<CMagneto Project root>/
+├── README.md          # This document.
+├── SeedProject/       # Seed (template) project root.
+│   ├── CMagneto/      # CMagneto Framework root.
+│   │   │              # ^ Its content is meant to be invariant and reused in all bootstrapped projects.
+│   │   │
+│   │   ├── README.md  # CMagneto Framework documentation entry point.
+│   │   └── ...        # Other files of the CMagneto Framework.
+│   │
+│   └── ...            # Files of the seed (template) project itself. Meant to be modified.
+│
+└── ...                # Files, required only for development of the CMagneto Project.
+```
 
 
 ## License
-Look into [`License` section of **CMagneto framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
+
+Look into [`License` section of **CMagneto Framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
 and into [`License` section of the **seed project** `README.md`](./SeedProject/README.md#license).<br>
-The license file [`./LICENSE`](./LICENSE) and the license file [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
+[`./LICENSE`](./LICENSE) and [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
+
+
+## CI Validation
+
+**CMagneto** is continuously validated against a downstream consumer project:
+[**ContactHolder**](https://gitlab.com/dishsoftware/contactholder).
+
+On each commit to **CMagneto**, CI synchronizes the content of [`./SeedProject/`](./SeedProject/) into the root of **ContactHolder** on a branch with the same name, then runs the downstream pipeline.
 
 
 ## Glossary
-- `CMagneto project root (dir)` - [this (`./`)](.) dir.
+
+- `CMagneto Project root (dir)` - [this (`./`)](.) dir.
 - `Seed project root (dir)` - [`./SeedProject/`](./SeedProject/) dir.
 - In all files under the [`seed project root`](./SeedProject/), that directory itself is referred to as `project root (dir)`.
-- `CMagneto framework root (dir)` - [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) dir.
+- `CMagneto Framework root (dir)` - [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) dir.
 - `Test project root (dir)` - [dir with a test project under `./tests/testProjects/`](./tests/testProjects/).
-- `CMagneto framework root (dir) of the project` in context of a test project is `./CMagneto/` subdir inside the `test project root`.
+- `CMagneto Framework root (dir) of the project` in context of a test project is `./CMagneto/` subdir inside the `test project root`.
