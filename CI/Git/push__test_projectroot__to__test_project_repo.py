@@ -17,7 +17,7 @@ from CMagneto.py.utils.log import Log
 from CMagneto.py.utils.process import Process
 from dataclasses import dataclass
 from itertools import chain
-from typing import cast
+from typing import TypeGuard, cast
 import os
 import shutil
 
@@ -147,8 +147,8 @@ def push__testProjectRoot__to__testProjectRepo(
     Process.runCommand(["git", "config", "lfs.locksverify", "false"], testProjectRootDest) # Don't inform that locking is available.
 
     # Get special item sets.
-    INCOMING_ITEMS_TO_IGNORE: set[GoodPath] = set()
-    EXISTING_ITEMS_TO_RETAIN: set[GoodPath] = set()
+    incomingItemsToIgnore: set[GoodPath] = set()
+    existingItemsToRetain: set[GoodPath] = set()
     if specItemsPySrc is not None:
         Log.status(f"Importing INCOMING_ITEMS_TO_IGNORE and EXISTING_ITEMS_TO_RETAIN sets from '{specItemsPySrc}'...")
         sys.path.insert(0, str(specItemsPySrc))
@@ -165,7 +165,12 @@ def push__testProjectRoot__to__testProjectRepo(
         sys.modules[moduleName] = module
         spec.loader.exec_module(module)
 
-        isSetOfPaths = lambda iInstance: isinstance(iInstance, set) and all(isinstance(setIem, GoodPath) for setIem in iInstance)
+        def isSetOfPaths(iInstance: object) -> TypeGuard[set[GoodPath]]:
+            if not isinstance(iInstance, set):
+                return False
+
+            rawSet = cast(set[object], iInstance)
+            return all(isinstance(setItem, GoodPath) for setItem in rawSet)
 
         if not isSetOfPaths(module.EXISTING_ITEMS_TO_RETAIN):
             Log.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable EXISTING_ITEMS_TO_RETAIN. It must be of type `set[GoodPath]`.")
@@ -173,11 +178,11 @@ def push__testProjectRoot__to__testProjectRepo(
         if not isSetOfPaths(module.INCOMING_ITEMS_TO_IGNORE):
             Log.error(f"`{iParams.specialItemSetsPyRelToCMagnetoProjectRoot}` contains invalid variable INCOMING_ITEMS_TO_IGNORE. It must be of type `set[GoodPath]`.")
 
-        EXISTING_ITEMS_TO_RETAIN = module.EXISTING_ITEMS_TO_RETAIN
-        INCOMING_ITEMS_TO_IGNORE = module.INCOMING_ITEMS_TO_IGNORE
+        existingItemsToRetain = module.EXISTING_ITEMS_TO_RETAIN
+        incomingItemsToIgnore = module.INCOMING_ITEMS_TO_IGNORE
 
         # Fail, if a special item path is not relative or not under test project root.
-        for item in chain(EXISTING_ITEMS_TO_RETAIN, INCOMING_ITEMS_TO_IGNORE):
+        for item in chain(existingItemsToRetain, incomingItemsToIgnore):
             item.checkIfRelativeAndDescendantAndGetAbsPath(
                 "Special item path",
                 testProjectRootSrc,
@@ -185,13 +190,14 @@ def push__testProjectRoot__to__testProjectRepo(
                 iExitNotRaise=True
             )
 
-    isPathUnderPathFromSet = lambda iPath, iBases: any(iPath.isDescendant(base) for base in iBases)
+    def isPathUnderPathFromSet(iPath: GoodPath, iBases: set[GoodPath]) -> bool:
+        return any(iPath.isDescendant(base) for base in iBases)
 
-    # Delete all content of the test project root, except `.git/` and EXISTING_ITEMS_TO_RETAIN.
+    # Delete all content of the test project root, except `.git/` and existingItemsToRetain.
     Log.status(f"Deleting old content from the cloned repo '{testProjectRootDest}' of the test project...")
     for itemDest in testProjectRootDest.iterdir():
         itemRel = cast(GoodPath, itemDest.getRelativeTo(testProjectRootDest))
-        if itemRel == ".git/" or isPathUnderPathFromSet(itemRel, EXISTING_ITEMS_TO_RETAIN):
+        if itemRel == ".git/" or isPathUnderPathFromSet(itemRel, existingItemsToRetain):
             continue # TODO Don't check content under skipped path.
         itemDest.delete()
 
@@ -199,7 +205,7 @@ def push__testProjectRoot__to__testProjectRepo(
     Log.status(f"Copying content of '{testProjectRootSrc}' of the CMagneto Project repo into the cloned repo '{testProjectRootDest}' of the test project...")
     for itemSrc in testProjectRootSrc.rglob("*"): # Recursively walk all files and dirs.
         itemRel = cast(GoodPath, itemSrc.getRelativeTo(testProjectRootSrc))
-        if isPathUnderPathFromSet(itemRel, INCOMING_ITEMS_TO_IGNORE):
+        if isPathUnderPathFromSet(itemRel, incomingItemsToIgnore):
             continue # TODO Don't check content under skipped path.
 
         itemDest = testProjectRootDest / itemRel
