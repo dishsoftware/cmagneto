@@ -9,6 +9,9 @@ LICENSE file in the root directory of this source tree.
 ![Framework Banner](./SeedProject/CMagneto/doc/assets/header/Header.jpg)
 # CMagneto Project
 
+[![CMagneto pipeline](https://gitlab.com/dishsoftware/cmagneto/badges/main/pipeline.svg)](https://gitlab.com/dishsoftware/cmagneto/-/pipelines)
+[![Seed project coverage (downstream)](https://gitlab.com/dishsoftware/contactholder/badges/main/coverage.svg)](https://gitlab.com/dishsoftware/contactholder)
+
 <!--
 Note For Developers
 
@@ -138,7 +141,7 @@ python ./build.py --build_variant Makefiles_GCC --build_type Release
 ### Result
 
 - Build artifacts are generated;
-- Tests are executed.
+- Tests are executed;
 - A distributable `.deb` package is created and ready to install.
 
 ### 📁 Resulting project structure
@@ -158,7 +161,7 @@ MyApp/
 ├── install/
 │   └── Makefiles_GCC/
 │       └── Release/       # Install output.
-└── build.py               # build entry point
+└── build.py               # Build entry point.
 ```
 
 
@@ -185,6 +188,14 @@ MyApp/
 Look into [`License` section of **CMagneto Framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
 and into [`License` section of the **seed project** `README.md`](./SeedProject/README.md#license).<br>
 [`./LICENSE`](./LICENSE) and [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
+
+
+## CI Validation
+
+**CMagneto** is continuously validated against a downstream consumer project:
+[**ContactHolder**](https://gitlab.com/dishsoftware/contactholder).
+
+On each commit to **CMagneto**, CI synchronizes the content of [`./SeedProject/`](./SeedProject/) into the root of **ContactHolder** on a branch with the same name, then runs the downstream pipeline.
 
 
 ## Glossary
