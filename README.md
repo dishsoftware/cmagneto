@@ -20,6 +20,7 @@ Keep paragraphs of this file in sync with the same paragraphs in
 
 **CMagneto Project** is a **CMagneto Framework** and a **seed (template) project** <br>
 for bootstrapping **CMake**-backed **C++** projects.<br>
+It eliminates most of the repetitive setup required to start a production-ready C++ project.
 
 **CMagneto Framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
@@ -86,31 +87,46 @@ One-command [`./build.py`](./SeedProject/build.py) script to run all build stage
 Easy to figure out what is going on both for protein- and silicon-based intelligence.
 
 
-## Structure of the repository
-- The framework code is mixed with the code of a seed (template) project under [`./SeedProject/`](./SeedProject/).
-- Core files of the CMagneto Framework are in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
+## How To Use It
 
-This file is a proxy for the actual [CMagneto Framework README.md](./SeedProject/CMagneto/README.md).
+The **CMagneto Framework** is embedded inside the **seed (template) project**:
+- [`SeedProject/`](./SeedProject/) → your starting point;
+- [`SeedProject/CMagneto/`](./SeedProject/CMagneto/) → reusable framework (keep unchanged).
+
+1. Copy content of [`./SeedProject/`](./SeedProject/) into the root of your new project.
+2. Do NOT modify content of [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) (code of **CMagneto Framework**).
+3. Modify the rest of seed project's code. Start with [`./SeedProject/meta/`](./SeedProject/meta/).
+
+👉 See detailed explanation in [**CMagneto Framework** README.md](./SeedProject/CMagneto/README.md#1-how-to-use-the-cmagneto-framework).
+
+
+## Structure Of The Repository
 
 ```text
 <CMagneto Project root>/
-├── README.md        # This document.
-├── SeedProject/     # Seed (template) project root.
-│   ├── CMagneto/    # CMagneto Framework root.
-│   │                # ^ Its content is meant to be invariant and reused in all projects.
+├── README.md          # This document.
+├── SeedProject/       # Seed (template) project root.
+│   ├── CMagneto/      # CMagneto Framework root.
+│   │   │              # ^ Its content is meant to be invariant and reused in all bootstrapped projects.
+│   │   │
+│   │   ├── README.md  # CMagneto Framework documentation entry point.
+│   │   └── ...        # Other files of the CMagneto Framework.
 │   │
-│   └── ...          # Files of the seed project itself. Meant to be modified.
+│   └── ...            # Files of the seed (template) project itself. Meant to be modified.
 │
-└── ...              # Files, required for development of the CMagneto Project.
+└── ...                # Files, required only for development of the CMagneto Project.
+```
 
 
 ## License
+
 Look into [`License` section of **CMagneto Framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
 and into [`License` section of the **seed project** `README.md`](./SeedProject/README.md#license).<br>
-The license file [`./LICENSE`](./LICENSE) and the license file [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
+[`./LICENSE`](./LICENSE) and [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
 
 
 ## Glossary
+
 - `CMagneto Project root (dir)` - [this (`./`)](.) dir.
 - `Seed project root (dir)` - [`./SeedProject/`](./SeedProject/) dir.
 - In all files under the [`seed project root`](./SeedProject/), that directory itself is referred to as `project root (dir)`.

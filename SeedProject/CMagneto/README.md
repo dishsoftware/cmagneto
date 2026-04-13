@@ -13,6 +13,11 @@ but consumers may relocate it as needed.
 ![Framework Banner](./doc/assets/header/Header.jpg)
 # CMagneto Framework
 
+*You are looking into **CMagneto Framework** documentation. <br>
+It either means the framework is used in the project you develop, <br>
+or you are within **CMagneto Project** repository, which contains <br>
+a **seed (template) project** with embedded code of the framework.*
+
 <!--
 Note For Developers
 
@@ -24,6 +29,7 @@ Keep paragraphs of this file in sync with the same paragraphs in
 
 **CMagneto Project** is a **CMagneto Framework** and a **seed (template) project** <br>
 for bootstrapping **CMake**-backed **C++** projects.<br>
+It eliminates most of the repetitive setup required to start a production-ready C++ project.
 
 **CMagneto Framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
