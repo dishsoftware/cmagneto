@@ -6,7 +6,7 @@ This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
 -->
 
-*This is a seed CMake C++ project, which is distributed as a part of the CMagneto framework repository.*<br>
+*This is a seed CMake C++ project, which is distributed as a part of the CMagneto Framework repository.*<br>
 *The seed project features:*
 - *Cross-platform development support;*
 - *Modular source layout;*
@@ -44,11 +44,11 @@ This project is licensed under the [MIT License](./LICENSE).
 
 
 ## Git History Policy
-The same as [CMagneto framework Git history policy](./CMagneto/README.md#git-history-policy)
+The same as [CMagneto Framework Git history policy](./CMagneto/README.md#git-history-policy)
 
 
 ## Documentation Conventions
-The same as [CMagneto framework documentation conventions](./CMagneto/README.md#documentation-conventions)
+The same as [CMagneto Framework documentation conventions](./CMagneto/README.md#documentation-conventions)
 
 
 ## Code Conventions
@@ -59,7 +59,7 @@ Look into [`./doc/CodeConventions.md`](./doc/CodeConventions.md) .
 
 ## 1. Build
 ### 1.1. Build Tools
-The same as in [`Project Build Tools` section the CMagneto framework doc](./CMagneto/README.md#project-build-tools).
+The same as in [`Project Build Tools` section the CMagneto Framework doc](./CMagneto/README.md#project-build-tools).
 
 
 ### 1.2. Dependencies
@@ -76,7 +76,7 @@ To see available options, run:
 ```bash
 python ./build.py --help
 ```
-For details look into [`1.3. Build Project` section the CMagneto framework doc](./CMagneto/README.md#13-build-project).
+For details look into [`1.3. Build Project` section the CMagneto Framework doc](./CMagneto/README.md#13-build-project).
 
 
 ## 2. Run
@@ -87,7 +87,7 @@ Runtime dependency policy is encoded in the active configure preset and related 
 Thus, built/installed binaries run on the build machine, <br>
 and binaries from distribution packages run on target machines without any issues.
 
-For a details look into [`1.4. Run Project` section the CMagneto framework doc](./CMagneto/README.md#14-run-project).
+For a details look into [`1.4. Run Project` section the CMagneto Framework doc](./CMagneto/README.md#14-run-project).
 
 The following legacy helper scripts are also created inside `bin/` subdirectories of `./build/`:
 - `set_env` prepends build-machine-specific dependency directories to the runtime environment;

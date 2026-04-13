@@ -13,15 +13,15 @@ LICENSE file in the root directory of this source tree.
 Note For Developers
 
 Keep paragraphs of this file in sync with the same paragraphs in
-- CMagneto project root README.md;
-- CMagneto framework root README.md;
+- CMagneto Project root README.md;
+- CMagneto Framework root README.md;
 - project description on GitLab, GitHub, BitBucket etc.
 -->
 
-**CMagneto project** is a **CMagneto framework** and a **seed (template) project** <br>
+**CMagneto Project** is a **CMagneto Framework** and a **seed (template) project** <br>
 for bootstrapping **CMake**-backed **C++** projects.<br>
 
-**CMagneto framework** covers the full lifecycle: <br>
+**CMagneto Framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
 third-party library deployment, legal file management, testing, packaging, and CI <br>
 — all pre-configured and ready to use.<br>
@@ -32,7 +32,7 @@ third-party library deployment, legal file management, testing, packaging, and C
 
 ## Platform Support
 
-**CMagneto framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
+**CMagneto Framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
 while providing out-of-the-box support for some of them.<br>
 
 Platform-specific code is still unavoidable, though:
@@ -88,21 +88,32 @@ Easy to figure out what is going on both for protein- and silicon-based intellig
 
 ## Structure of the repository
 - The framework code is mixed with the code of a seed (template) project under [`./SeedProject/`](./SeedProject/).
-- Core files of the CMagneto framework are in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
+- Core files of the CMagneto Framework are in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
 
-This file is a proxy for the actual [CMagneto framework README.md](./SeedProject/CMagneto/README.md).
+This file is a proxy for the actual [CMagneto Framework README.md](./SeedProject/CMagneto/README.md).
+
+```text
+<CMagneto Project root>/
+├── README.md        # This document.
+├── SeedProject/     # Seed (template) project root.
+│   ├── CMagneto/    # CMagneto Framework root.
+│   │                # ^ Its content is meant to be invariant and reused in all projects.
+│   │
+│   └── ...          # Files of the seed project itself. Meant to be modified.
+│
+└── ...              # Files, required for development of the CMagneto Project.
 
 
 ## License
-Look into [`License` section of **CMagneto framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
+Look into [`License` section of **CMagneto Framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
 and into [`License` section of the **seed project** `README.md`](./SeedProject/README.md#license).<br>
 The license file [`./LICENSE`](./LICENSE) and the license file [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
 
 
 ## Glossary
-- `CMagneto project root (dir)` - [this (`./`)](.) dir.
+- `CMagneto Project root (dir)` - [this (`./`)](.) dir.
 - `Seed project root (dir)` - [`./SeedProject/`](./SeedProject/) dir.
 - In all files under the [`seed project root`](./SeedProject/), that directory itself is referred to as `project root (dir)`.
-- `CMagneto framework root (dir)` - [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) dir.
+- `CMagneto Framework root (dir)` - [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/) dir.
 - `Test project root (dir)` - [dir with a test project under `./tests/testProjects/`](./tests/testProjects/).
-- `CMagneto framework root (dir) of the project` in context of a test project is `./CMagneto/` subdir inside the `test project root`.
+- `CMagneto Framework root (dir) of the project` in context of a test project is `./CMagneto/` subdir inside the `test project root`.

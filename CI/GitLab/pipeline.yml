@@ -1,5 +1,5 @@
 # There are GitLab projects, whose repos are not meant to be cloned.
-# Code in these repos is synched with corresponding subdirs of the [CMagneto project](https://gitlab.com/dishsoftware/cmagneto) repo
+# Code in these repos is synched with corresponding subdirs of the [CMagneto Project](https://gitlab.com/dishsoftware/cmagneto) repo
 # and is pushed by a CMagneto CI Bot.
 #
 # Each of these test projects serves just as:

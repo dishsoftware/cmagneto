@@ -2,11 +2,11 @@
 Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 SPDX-License-Identifier: MIT
 
-This file is part of the CMagneto framework.
+This file is part of the CMagneto Framework.
 It is licensed under the MIT license found in the LICENSE file
-located at the root directory of the CMagneto framework.
+located at the root directory of the CMagneto Framework.
 
-By default, the CMagneto framework root resides at the root of the project where it is used,
+By default, the CMagneto Framework root resides at the root of the project where it is used,
 but consumers may relocate it as needed.
 -->
 
@@ -17,15 +17,15 @@ but consumers may relocate it as needed.
 Note For Developers
 
 Keep paragraphs of this file in sync with the same paragraphs in
-- CMagneto project root README.md;
-- CMagneto framework root README.md;
+- CMagneto Project root README.md;
+- CMagneto Framework root README.md;
 - project description on GitLab, GitHub, BitBucket etc.
 -->
 
-**CMagneto project** is a **CMagneto framework** and a **seed (template) project** <br>
+**CMagneto Project** is a **CMagneto Framework** and a **seed (template) project** <br>
 for bootstrapping **CMake**-backed **C++** projects.<br>
 
-**CMagneto framework** covers the full lifecycle: <br>
+**CMagneto Framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
 3rd-party library deployment, legal file management, testing, packaging, and CI <br>
 — all pre-configured and ready to use.<br>
@@ -36,7 +36,7 @@ project structure, tooling and build setup, <br>
 
 ## Platform Support
 
-**CMagneto framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
+**CMagneto Framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
 while providing out-of-the-box support for some of them.<br>
 
 Platform-specific code is still unavoidable, though:
@@ -141,7 +141,7 @@ In short: **commit freely, but rewrite with caution**. Let the repo tell the who
 
 
 ## Project Build Tools
-The CMagneto framework needs on the following software to build your project:
+The CMagneto Framework needs on the following software to build your project:
 - CMake 3.31 or later. This is the project-wide minimum because the committed `CMakePresets.json` files use preset schema `version: 10` and declare `cmakeMinimumRequired` `3.31.0`.
 - C++ 20 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the optional CMagento C++ libraries.
 - Python 3.10 or later. Version is bound by the coupled Python code.
@@ -168,7 +168,7 @@ The framework mandates or endorses restrictions on locations of project files.
 SeedProject/
 ├── build.py                                   # Optional project build frontend over committed CMake presets.
 ├── CMakeLists.txt                             # [Project] top-level ([project] root) `CMakeLists.txt`. Define project (call `project()`) here.
-├── CMagneto/                                  # CMagneto framework core files.
+├── CMagneto/                                  # CMagneto Framework core files.
 │   ├── LICENSE
 │   ├── README.md                              # This file.
 │   ├── TODO.md                                # Limitations and known issues.
@@ -276,7 +276,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
 ## 1. How To Use The CMagneto Framework
 ### 1.1. Initialize Your Project
 1) Copy all content from the [root of the seed project](./../) into the root of your empty project repo.<br>
-    Open `./vscode/Project.code-workspace` from your project repository and close everything from the [`CMagneto framework repository`](./../../).<br>
+    Open `./vscode/Project.code-workspace` from your project repository and close everything from the [`CMagneto Framework repository`](./../../).<br>
     Open the copy of this file from your repo. <br>
     ⏳...<br>
     Now [this](./../) should be the root of your project.
@@ -299,7 +299,7 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
     A build variant is a named preset-driven build configuration that captures a concrete toolchain and workflow setup for the project.<br>
     Its presets define not only generator/compiler details, but also policies such as how to handle 3rd-party dependencies, which legal files to include, and which packaging settings to use.
 
-5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
+5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto Framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
 
 6) Proceed to writing code of the project. Adhere to the [project structure](#project-structure).<br>
 

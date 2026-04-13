@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # Add these paths to `sys.path`
-# to be able to import python scripts from CMagneto project repo.
+# to be able to import python scripts from CMagneto Project repo.
 from pathlib import Path
 CMAGNETO_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SEED_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent / "SeedProject"
