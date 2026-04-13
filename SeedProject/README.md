@@ -6,23 +6,18 @@ This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
 -->
 
-*This is a seed CMake C++ project, which is distributed as a part of the CMagneto Framework repository.*<br>
-*The seed project features:*
-- *Cross-platform development support;*
-- *Modular source layout;*
-- *Integrated unit testing;*
-- *Integrated packaging (CPack);*
-- *Docker support for reproducible environments;*
-- *GitLab CI integration;*
-- *Preconfigured Visual Studio Code settings.*
+> **This is a seed CMake C++ project distributed as part of the [CMagneto Project](https://gitlab.com/dishsoftware/cmagneto).**
+>
+> Everything in this directory — except [`./CMagneto/`](./CMagneto/) — is a **ready-to-use CMake C++ project template**.
+>
+> ⚠️ **Do not clone this repository directly.**
+> It is maintained by the CMagneto CI Bot for downstream validation.
+> The CI configuration (e.g. [`./CI/GitLab/workflow.yml`](./CI/GitLab/workflow.yml)) may be overwritten during synchronization.
 
-*Consider everything in the directory, except [`./CMagneto/`](./CMagneto/) and its contents,*<br>
-*as a **ready-to-use CMake C++ project template**.*
+---
 
 *Look into [`How To Use The CMagneto Framework`](./CMagneto/README.md#1-how-to-use-the-cmagneto-framework) section of CMagneto doc.*
 
----
----
 ---
 
 ![Project Banner](./doc/assets/header/Header.jpg)
