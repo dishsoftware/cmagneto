@@ -1,3 +1,10 @@
+# TODO
+
+> Source of truth:
+> - This file and referenced files from [`./TODO/`](./TODO/) are the source of truth for known issues and planned work.
+> - Describe every issue here.
+> - If an issue also exists in the issue tracking system, add a link to it here.
+
 * Tweak generation with MSVS to be able to run the whole build pipeline using the IDE's GUI only. ? Define `CMAKE_INSTALL_PREFIX_$<CONFIG>=CMAKE_INSTALL_PREFIX/$<CONFIG>` if generator is multi-config.
 * Check if there are always quotes around path variables in CMake. Add checks if lists are empty.
 * Write a check if there are 3rd-party shared libs with the same name, but in different directories.
@@ -20,7 +27,6 @@
 * When to throw (raise) and when to exit in the one-command-build-scripts?
 * Add possibility to add files to a target from a CMakeLists.txt in any subdir of the target using a path, relative to the lists file.
 * Use `os.PathLike` instead of `Path` or `str` in python code as widely as possible.
-* Add a description how to work with and `TODO.md` and sync it with task managers.
 * Sync test projects, while preserving CMagneto repo graph topology.
 * Add memory leaks checks.
 * ? In CI: change artifacts ouput path from `*/Branch_or_Tag/*` to `*/CommitSHA_or_TAG/*`.
@@ -32,5 +38,6 @@
 * Assume a target A of the project does not use dependency D, and a target B of the project does use the D. If a consumer project links against A, will current setup of the project require the consumer project to `find_dependency(D)` ?
 * CMagneto must work without Qt at all.
 * ? Use `obj->setProperty()` to store nesting IDs of widgets instead of mixins.
-* Place installation packages into `./packages/` tree instead of `./build/` tree.
+* ? Place installation packages into `./packages/` tree instead of `./build/` tree.
 * Do not print `MSVC Export`, etc.
+* [Investigate Conan integration in CMagneto](./TODO/Investigate%20Conan%20integration%20in%20CMagneto.md)

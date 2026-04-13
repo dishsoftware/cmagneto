@@ -10,7 +10,7 @@ LICENSE file in the root directory of this source tree.
 # CMagneto Project
 
 <!--
-Note for developers
+Note For Developers
 
 Keep paragraphs of this file in sync with the same paragraphs in
 - CMagneto project root README.md;
@@ -23,7 +23,7 @@ for bootstrapping **CMake**-backed **C++** projects.<br>
 
 **CMagneto framework** covers the full lifecycle: <br>
 project structure, tooling and build setup, <br>
-3rd-party library deployment, legal file management, testing, packaging, and CI <br>
+third-party library deployment, legal file management, testing, packaging, and CI <br>
 — all pre-configured and ready to use.<br>
 
 🔗 GitLab repository: [gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)<br>
@@ -41,21 +41,24 @@ Platform-specific code is still unavoidable, though:
 |----------|---------------|
 | Linux    | ✅ Supported |
 | Windows  | ✅ Supported |
-| macOS    | 🔜 Planned   |
-| WASM     | 🔜 Planned   |
-| Android  | 🔜 Planned   |
+| macOS    | 🕰️ Planned   |
+| WASM     | 🕰️ Planned   |
+| Android  | 🕰️ Planned   |
 
 
 ## What You Get
 
 **Project scaffold**<br>
 A ready-to-build CMake C++ project. <br>
-Copy [`./SeedProject/`](./SeedProject), fill in project metadata in [`./meta/`](./SeedProject/meta) JSON files, define your build variants, and start coding.
+Copy [`./SeedProject/`](./SeedProject), fill in project metadata in [`./meta/`](./SeedProject/meta) JSON files, define your build variants (preset-driven build configurations), and start coding.
 
 **CMake convenience functions for executable/library targets**<br>
 Definition helpers; source-location validation to enforce project structure and reproducible builds; generation of build stage reports and boilerplate C++ code.
 
-**3rd-party shared library deployment**<br>
+**Optional CMagneto C++ libraries**<br>
+Reusable code for common concerns such as logging, loading distributed resources (e.g. images and sounds), managing user settings, and Qt helpers for translations and embedded resources.
+
+**Third-party shared library deployment**<br>
 Per-build-variant policy to either bundle `.dll` / `.so` files with the package or expect them on the target machine. <br>
 Automatic `RPATH` configuration on Linux. Automatic DLL copying into the build tree on Windows. Explicit override patterns for edge cases.
 
@@ -83,16 +86,17 @@ One-command [`./build.py`](./SeedProject/build.py) script to run all build stage
 Easy to figure out what is going on both for protein- and silicon-based intelligence.
 
 
-## License
-Look into [`License` section of CMagneto framework `README.md`](./SeedProject/CMagneto/README.md#license).<br>
-The license file [`./LICENSE`](./LICENSE) and the license file [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
-
-
 ## Structure of the repository
 - The framework code is mixed with the code of a seed (template) project under [`./SeedProject/`](./SeedProject/).
 - Core files of the CMagneto framework are in [`./SeedProject/CMagneto/`](./SeedProject/CMagneto/).
 
 This file is a proxy for the actual [CMagneto framework README.md](./SeedProject/CMagneto/README.md).
+
+
+## License
+Look into [`License` section of **CMagneto framework** `README.md`](./SeedProject/CMagneto/README.md#license) <br>
+and into [`License` section of the **seed project** `README.md`](./SeedProject/README.md#license).<br>
+The license file [`./LICENSE`](./LICENSE) and the license file [`./SeedProject/CMagneto/LICENSE`](./SeedProject/CMagneto/LICENSE) are identical.
 
 
 ## Glossary

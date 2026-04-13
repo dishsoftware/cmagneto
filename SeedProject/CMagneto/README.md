@@ -14,19 +14,77 @@ but consumers may relocate it as needed.
 # CMagneto Framework
 
 <!--
-Note for developers
+Note For Developers
 
-Keep this snippet in sync with the same snippets in
+Keep paragraphs of this file in sync with the same paragraphs in
 - CMagneto project root README.md;
 - CMagneto framework root README.md;
-- project desciption on GitLab, GitHub, BitBucket etc.
+- project description on GitLab, GitHub, BitBucket etc.
 -->
-CMagneto is a framework for rapid initialization of C++ projects.<br>
-It is designed to set up CMake-backed projects with ease and enforce a unified modular structure, build logic, and tooling integration,<br>
-including VS Code, Graphviz, Qt, GoogleTest, LCOV, CPack, Docker and GitLab CI.
+
+**CMagneto project** is a **CMagneto framework** and a **seed (template) project** <br>
+for bootstrapping **CMake**-backed **C++** projects.<br>
+
+**CMagneto framework** covers the full lifecycle: <br>
+project structure, tooling and build setup, <br>
+3rd-party library deployment, legal file management, testing, packaging, and CI <br>
+— all pre-configured and ready to use.<br>
 
 🔗 GitLab repository: [gitlab.com/dishsoftware/cmagneto](https://gitlab.com/dishsoftware/cmagneto)<br>
 🔗 GitHub mirror: [github.com/dishsoftware/cmagneto](https://github.com/dishsoftware/cmagneto)
+
+
+## Platform Support
+
+**CMagneto framework** is agnostic to compilers, generators of build-system files, IDEs, and CI systems, <br>
+while providing out-of-the-box support for some of them.<br>
+
+Platform-specific code is still unavoidable, though:
+
+| Platform | Status        |
+|----------|---------------|
+| Linux    | ✅ Supported |
+| Windows  | ✅ Supported |
+| macOS    | 🕰️ Planned   |
+| WASM     | 🕰️ Planned   |
+| Android  | 🕰️ Planned   |
+
+
+## What You Get
+
+**Project scaffold**<br>
+A ready-to-build CMake C++ project. <br>
+Copy [`./SeedProject/`](./SeedProject), fill in project metadata in [`./meta/`](../meta) JSON files, define your build variants (preset-driven build configurations), and start coding.
+
+**CMake convenience functions for executable/library targets**<br>
+Definition helpers; source-location validation to enforce project structure and reproducible builds; generation of build stage reports and boilerplate C++ code.
+
+**3rd-party shared library deployment**<br>
+Per-build-variant policy to either bundle `.dll` / `.so` files with the package or expect them on the target machine. <br>
+Automatic `RPATH` configuration on Linux. Automatic DLL copying into the build tree on Windows. Explicit override patterns for edge cases.
+
+**Legal file management**<br>
+Structured license bundle manifests and reusable license component files. <br>
+Each build variant selects the right set of legal files to include in the package. Covered in [`LicenseManagement.md`](./doc/LicenseManagement.md).
+
+**Cross-platform packaging**<br>
+Integration of CPack with pre-configured Qt Installer Framework (IFW), DEB, and ZIP generators. <br>
+Creation of Start Menu shortcuts on Windows. `.desktop` launchers on Linux.
+
+**Testing pre-wired**<br>
+GoogleTest configured automatically during project generation. LCOV coverage support for GCC and Clang.
+
+**GitLab CI pipeline**<br>
+Pre-configured pipeline, Dockerfiles, and a one-command Docker image builder ([`./CI/Docker/build_image.py`](../CI/Docker/build_image.py)).
+
+**VS Code integration**<br>
+Pre-configured workspace, tasks, and settings in [`./.vscode/`](../.vscode).
+
+**Optional Python build frontend**<br>
+One-command [`./build.py`](../build.py) script to run all build stages: from generation of build system files to packaging and system tests.
+
+**Excellent documentation**
+Easy to figure out what is going on both for protein- and silicon-based intelligence.
 
 
 ---
@@ -36,7 +94,8 @@ The framework is shipped with the following major components:
 - [`CMagneto CMake modules`](./cmake/) and [`primary coupled Python scripts`](./py/) in the [`./CMagneto/`](.) directory;
     * The [`CMagneto CMake modules`](./cmake/) contain functions to conveniently define CMake targets, generate build stage reports, helper scripts, etc;
     * The [`primary coupled Python scripts`](./py/) provide an optional frontend for preset-driven build and workflow tasks;
-- Template configuration files in [`./meta/`](./../meta/);
+    * The [`CMagneto C++ libraries`](./cpp/) provide optional reusable code for common concerns such as logging, loading distributed resources (e.g. images and sounds), managing user settings, and Qt helpers for translations and embedded resources.
+- Project identity and configuration files in [`./meta/`](./../meta/);
 - Build-variant definitions and accompanying instructions in [`./build_variants/`](./../build_variants/), with one directory per build variant containing `CMakePresets.json` and `Description.md`;
 - Optional build frontend [`./build.py`](./../build.py);
 - Pre-configured native-test CTest files in [`./tests/native/`](./../tests/native/);
@@ -84,7 +143,7 @@ In short: **commit freely, but rewrite with caution**. Let the repo tell the who
 ## Project Build Tools
 The CMagneto framework needs on the following software to build your project:
 - CMake 3.31 or later. This is the project-wide minimum because the committed `CMakePresets.json` files use preset schema `version: 10` and declare `cmakeMinimumRequired` `3.31.0`.
-- C++ 20 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the GoogleTest CMake module.
+- C++ 20 (or later) compiler (e.g. GCC, MinGW, MSVC). Version is bound by the optional CMagento C++ libraries.
 - Python 3.10 or later. Version is bound by the coupled Python code.
 - Graphviz (optional, for target graph).
 - Qt lrelease 6.4.2 or later (if any target in the project has Qt `*.ts` files). Version is bound by the oldest tested version.
@@ -236,7 +295,9 @@ Look into [`./CMagneto/doc/LicenseManagement.md`](./doc/LicenseManagement.md).
 
     and installation package resources in [`./packaging/resources/`](./../packaging/resources/).
 
-4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `CMakePresets.json` and `Description.md`.
+4) Define build variants in [`./build_variants/`](./../build_variants/). Each build variant should live in its own directory named after the build variant and contain `CMakePresets.json` and `Description.md`.<br>
+    A build variant is a named preset-driven build configuration that captures a concrete toolchain and workflow setup for the project.<br>
+    Its presets define not only generator/compiler details, but also policies such as how to handle 3rd-party dependencies, which legal files to include, and which packaging settings to use.
 
 5) Change contents of the project's [`./LICENSE`](./../LICENSE), [`./README.md`](./../ReadMe.md), [`./TODO.md`](./../TODO.md) and [`./doc/`](./../doc/). Don't forget to mention the CMagneto framework and its [LICENSE (`./CMagneto/LICENSE`)](./LICENSE)!
 
@@ -523,51 +584,17 @@ CMagneto separates deployment policy from platform-specific runtime mechanics:
 - On Windows, runtime DLLs of a target are still copied next to the target binary in the build tree as a local-development convenience.
 - For Debian packages, [`CPACK_DEBIAN_PACKAGE_SHLIBDEPS`](./cmake/Packager/DEB/DEBConfig_before_include_CPack.cmake) is enabled, so package dependencies on system-installed shared libraries are computed automatically.
 
+For a detailed explanation of how imported 3rd-party shared libraries are deduced, classified, packaged, and resolved on Linux and Windows, see [`./doc/SharedLibraryDeployment.md`](./doc/SharedLibraryDeployment.md).
+
 CMagneto CMake function `CMagneto__set_up__project()` also creates helper scripts inside `bin/` subdirectories of `./build/`:
 - `set_env` is a legacy development helper for running build-tree binaries with imported shared libraries expected to be present on the target machine;
 - `run` executes `set_env` and then runs the project entrypoint executable.
 
-These helper scripts are not meant to be an installation or distribution mechanism. Installed and packaged applications should rely on the build-variant-selected dependency policy and the corresponding platform-specific runtime setup.
-
-For a detailed explanation of how imported 3rd-party shared libraries are deduced, classified, packaged, and resolved on Linux and Windows, see [`./doc/SharedLibraryDeployment.md`](./doc/SharedLibraryDeployment.md).
-
-On Linux, these scripts are usually redundant because build-tree and install-tree runtime lookup is expected to be configured by target properties such as runtime paths and bundled library locations. They are kept mainly for workflow consistency across platforms and for occasional local debugging or experiments.
-
-On Windows, these scripts may still be more useful during local development and debugging because runtime DLL lookup often depends more directly on process environment such as `PATH`.
+These files are only meant to be used for experiments and tests with binaries during development.
 
 
 ### 1.5. Engage Continuous Integration (CI)
-Adjust values in [`./meta/CI.json`](./../meta/CI.json) before any actions with [Docker images](./../CI/Docker/) and [CI workflow (pipeline triggering rules)](./../CI/GitLab/workflow.yml) and [pipeline](./../CI/GitLab/pipeline.yml).
-
-#### 1.5.1. Build Docker Images
-Use [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) or its proxy [`./CI/Docker/build_image.py`](./../CI/Docker/build_image.py) to build [Docker images](./../CI/Docker/):
-```bash
-python ./build_image.py --help
-```
-[`./CI/Docker/`](./../CI/Docker/) contains Dockerfiles. They must be fed to [`./CMagneto/py/docker/build_image.py`](./py/docker/build_image.py) every time they are changed before triggering CI pipeline.
-
-#### 1.5.2. GitLab
-Go to `GitLab Project Page` → `Settings` → `CI/CD` → `General Pipelines` and set `CI/CD configuration file` to \"[`CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml)\".
-
-##### 1.5.2.1. CI Triggers
-The [`./CI/GitLab/workflow.yml`](./../CI/GitLab/workflow.yml) instructs GitLab to trigger (create) a CI pipeline, if the `main` branch is involved or a tag is pushed.<br>
-To trigger a pipeline for an untagged commit to another branch, push the commit to the branch with a message, ending with `RUN_CI_PIPELINE`.
-
-##### 1.5.2.2. CI Artifact Output
-Packages produced during pipelines are stored at:<br>
-`https://gitlab.com/api/v4/projects/{CI_PROJECT_ID}/packages/generic/{DockerRegistrySuffix}/{BranchName_or_Tag}/{Platform}/{build_variant}/{PackageNamePrefix}-{ProjectVersion}.{PackageExtension}`,
-
-where:
-- `CI_PROJECT_ID` is a GitLab CI variable, which resolves to a number, e.g. `71534203`;
-- `DockerRegistrySuffix` is defined in [`./meta/CI.json`](./../meta/CI.json);
-- `BranchName_or_Tag` is name of a branch or a tag, which triggered the pipeline;
-- `Platform` is a substring of the Dockerfile name, which was used to build the used image; e.g. [`Dockerfile.Ubuntu24AMD__build`](./../CI/Docker/Dockerfile.Ubuntu24AMD__build) yields Platform=`Ubuntu24AMD`;
-- `build_variant` is the argument, passed to [`./build.py --build_variant`](./py/cmake/build.py);
-- `PackageNamePrefix` and `ProjectVersion` are defined in [`./meta/Packaging.json`](./../meta/Packaging.json) and [`./meta/Project.json`](./../meta/Project.json);
-- `PackageExtension` is determined by a used package generator. Set of package generators is defined in [`./CMagneto/cmake/Packager.cmake`](./cmake/Packager.cmake) and depends on platform and build variant.
-
-The resulting URL may look like:<br>
-[https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/DishSW_ContactHolder-0.0.1.deb](https://gitlab.com/api/v4/projects/71534203/packages/generic/dishsoftware/contactholder/v1.0.0/Ubuntu24AMD/Makefiles_GCC/DishSW_ContactHolder-0.0.1.deb) .
+Look into [`../CI/Docker/README.md`](../CI/Docker/README.md) and [`../CI/GitLab/README.md`](../CI/GitLab/README.md).
 
 
 ## 2. Knowledge Base
