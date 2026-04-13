@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2025 Dmitrii Shvydkoi ("Dim Shvydkoy")
+# Copyright (c) Dmitrii Shvydkoi ("Dim Shvydkoy")
 # SPDX-License-Identifier: MIT
 #
 # This source code is licensed under the MIT license found in the
