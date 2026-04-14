@@ -38,10 +38,14 @@ stages:
 
   script:
     - python3 ./tests/run_unit_and_integration_tests.py
+  coverage: '/Framework Python test coverage (\d+%|N/A)/'
   artifacts:
     when: always
     reports:
       junit: ./tests/summary/pytest-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: ./tests/summary/py-coverage.xml
     paths:
       - ./tests/summary/
 
@@ -59,6 +63,25 @@ run_unit_and_integration_tests__not_on_tag:
     when: always
     reports:
       junit: ./tests/summary/pytest-report.xml
+    paths:
+      - ./tests/summary/
+    expire_in: 30 days
+
+
+run_unit_and_integration_tests__on_default_branch:
+  extends:
+    - .run_unit_and_integration_tests__base
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: never
+  artifacts:
+    when: always
+    reports:
+      junit: ./tests/summary/pytest-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: ./tests/summary/py-coverage.xml
     paths:
       - ./tests/summary/
     expire_in: 30 days

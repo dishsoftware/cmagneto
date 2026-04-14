@@ -1,4 +1,5 @@
 /tests/summary/
+/.coverage
 /SeedProject/build/
 /SeedProject/install/
 /SeedProject/tests/@TestProjects/CMakePackageConsumer/build/

@@ -9,7 +9,11 @@ LICENSE file in the root directory of this source tree.
 ![Framework Banner](./SeedProject/CMagneto/doc/assets/header/Header.jpg)
 # CMagneto Project
 
+CI pipeline:
 [![CMagneto pipeline](https://gitlab.com/dishsoftware/cmagneto/badges/main/pipeline.svg)](https://gitlab.com/dishsoftware/cmagneto/-/pipelines)
+Framework Python test coverage:
+[![Framework Python test coverage](https://gitlab.com/dishsoftware/cmagneto/badges/main/coverage.svg?job=run_unit_and_integration_tests__on_default_branch&key_text=Framework+Python+coverage)](https://gitlab.com/dishsoftware/cmagneto/-/jobs/artifacts/main/file/tests/summary/py-coverage.xml?job=run_unit_and_integration_tests__on_default_branch)
+Test coverage for the seed project and framework C++ modules:
 [![Seed project coverage (downstream)](https://gitlab.com/dishsoftware/contactholder/badges/main/coverage.svg)](https://gitlab.com/dishsoftware/contactholder)
 
 <!--

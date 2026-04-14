@@ -53,7 +53,7 @@ def installPackages(iPythonBin: Path) -> None:
     print("Installing packages inside the virtual environment...")
     if not iPythonBin.exists():
         raise FileNotFoundError(f"Python binary is not found inside created `{str(VENV_PATH)}`.")
-    subprocess.check_call([str(iPythonBin), "-m", "pip", "install", "pytest"])
+    subprocess.check_call([str(iPythonBin), "-m", "pip", "install", "pytest", "coverage"])
 
 def setUpVEnv(iPrintVEnvActivationInstruction: bool) -> Path:
     pythonBinPath = create()
