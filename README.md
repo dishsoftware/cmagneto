@@ -129,6 +129,12 @@ sudo apt update && sudo apt install -y \
 # Clone CMagneto Project.
 git clone https://gitlab.com/dishsoftware/cmagneto.git CMagneto
 
+# Install a newer CMake without replacing the system one,
+# then activate it only in this shell.
+./CMagneto/SeedProject/scripts/Linux/install_cmake_into_opt.sh 4.3.1
+source ./CMagneto/SeedProject/scripts/Linux/switch_cmake_in_this_shell_instance.sh
+use_cmake 4.3.1
+
 # Copy seed project into your new project.
 cp -r ./CMagneto/SeedProject ./MyApp
 
