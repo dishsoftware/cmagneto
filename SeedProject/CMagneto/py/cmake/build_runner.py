@@ -311,10 +311,14 @@ class BuildRunner(ABC):
                 Log.warning("LCOV is not installed. Can't generate test coverage report.")
                 return
 
-            # 1. Generate code coverage report for source code files (under './sources/').
-            BuildRunner._LCOVRunner.__generateCoverageReport(
+            # 1. Generate one combined code coverage report for project source code
+            #    under './sources/' and './CMagneto/cpp/sources/'.
+            BuildRunner._LCOVRunner.__generateCombinedCoverageReport(
                 iBuildDir,
-                GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCES,
+                (
+                    GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCES,
+                    GoodPath.CMagnetoFrameworkRoot() / "cpp/sources",
+                ),
                 iSummaryDir,
                 BuildRunner.CMagneto__TEST_COVERAGE_REPORT__FILE_NAME_WE
             )
@@ -336,40 +340,110 @@ class BuildRunner(ABC):
             iTracefileNameWE: str
         ) -> None:
             tracefilePath = iSummaryDir / (iTracefileNameWE + ".info")
+            BuildRunner._LCOVRunner.__captureCoverageTracefile(iBuildDir, iBaseDir, tracefilePath)
+            BuildRunner._LCOVRunner.__finalizeCoverageReport(tracefilePath, iSummaryDir, iTracefileNameWE)
 
+        @staticmethod
+        def __generateCombinedCoverageReport(
+            iBuildDir: Path,
+            iBaseDirs: tuple[Path, ...],
+            iSummaryDir: Path,
+            iTracefileNameWE: str
+        ) -> None:
+            existingBaseDirs = tuple(
+                baseDir for baseDir in iBaseDirs
+                if baseDir.exists() and BuildRunner._LCOVRunner.__isCoverageBaseDirRepresentedInBuildTree(iBuildDir, baseDir)
+            )
+
+            if not existingBaseDirs:
+                Log.warning("No source directories found for combined coverage report. Coverage report will be marked as N/A.")
+                percentageFilePath = iSummaryDir / (iTracefileNameWE + BuildRunner.CMagneto__COVERAGE_REPORT_PERCENTAGE__FILE_NAME_SUFFIX)
+                with open(percentageFilePath, "w", encoding="utf-8") as percentageFile:
+                    percentageFile.write("N/A")
+                return
+
+            partialTracefilePaths: list[Path] = []
+            for index, baseDir in enumerate(existingBaseDirs):
+                partialTracefilePath = iSummaryDir / (f"{iTracefileNameWE}__part{index}.info")
+                BuildRunner._LCOVRunner.__captureCoverageTracefile(iBuildDir, baseDir, partialTracefilePath)
+                partialTracefilePaths.append(partialTracefilePath)
+
+            tracefilePath = iSummaryDir / (iTracefileNameWE + ".info")
+            mergeCommand = ["lcov"]
+            for partialTracefilePath in partialTracefilePaths:
+                mergeCommand.extend(["--add-tracefile", str(partialTracefilePath)])
+            mergeCommand.extend(["--output-file", str(tracefilePath), "--ignore-errors", "empty"])
+            Process.runCommand(mergeCommand)
+
+            for partialTracefilePath in partialTracefilePaths:
+                partialTracefilePath.unlink(missing_ok=True)
+
+            BuildRunner._LCOVRunner.__finalizeCoverageReport(tracefilePath, iSummaryDir, iTracefileNameWE)
+
+        @staticmethod
+        def __isCoverageBaseDirRepresentedInBuildTree(iBuildDir: Path, iBaseDir: Path) -> bool:
+            projectSourcesDir = GoodPath.projectRoot() / BuildRunner.CMagneto__SUBDIR_SOURCES
+            frameworkSourcesDir = GoodPath.CMagnetoFrameworkRoot() / "cpp/sources"
+
+            if iBaseDir == projectSourcesDir:
+                coverageBuildSubDir = iBuildDir / "sources"
+            elif iBaseDir == frameworkSourcesDir:
+                coverageBuildSubDir = iBuildDir / "CMagneto" / "sources"
+            else:
+                coverageBuildSubDir = iBuildDir
+
+            if not coverageBuildSubDir.exists():
+                return False
+
+            # `.gcno` means the source tree was compiled with coverage instrumentation.
+            # `.gcda` means the instrumented code was also executed.
+            return any(coverageBuildSubDir.rglob("*.gcno")) or any(coverageBuildSubDir.rglob("*.gcda"))
+
+        @staticmethod
+        def __captureCoverageTracefile(
+            iBuildDir: Path,
+            iBaseDir: Path,
+            iTracefilePath: Path
+        ) -> None:
             # 1. Generate coverage tracefile.
-            Process.runCommand(["lcov", "--capture",
+            command = ["lcov", "--capture",
                 "--directory", str(iBuildDir),
-                "--output-file", str(tracefilePath),
+                "--output-file", str(iTracefilePath),
                 "--base-directory", str(iBaseDir),
 
                 # "mismatch" -  Get rid of: `geninfo: ERROR: mismatched end line for <some cpp file of a test target> ...`,
                 #               which is, probably, due to a bug in GCC/GCOV (GCOV is called by LCOV under the hood).
+                #               Repeating "mismatch" suppresses the corresponding warning noise as suggested by `geninfo`.
                 # "unused"   -  Don't fail, if a pattern to include/exclude does not match to anything.
                 # "empty"    -  Don't fail, if no `.gcda` files found (no tests added).
-                "--ignore-errors", "mismatch,unused,empty",
+                "--ignore-errors", "mismatch,mismatch,unused,empty",
 
                 # Don't capture code coverage of source files, outside the base dir.
                 # It also excludes 3rd-party libs code, e.g. system or added using `target_link_libraries`,
                 "--no-external",
 
+                # Don't capture code coverage of Qt Resource Collection generated artifacts.
+                "--exclude", "*/qrc_*.cpp"
+            ]
+
+            depsDir = iBuildDir / "_deps"
+            if depsDir.exists():
                 # Don't capture code coverage of third-party dependencies like GoogleTest, fmt, etc.,
                 # that are typically pulled in `{buildDir}/_deps/` via FetchContent or ExternalProject.
-                "--exclude", str(iBuildDir) + "/_deps/*",
+                command.extend(["--exclude", str(depsDir) + "/*"])
 
-                # Don't capture code coverage of compiled Qt Resource Collection binaries.
-                "--exclude", "*.rcc"
-            ])
-            Log.message(
-"Most probably such LCOV-generated warnings should be ignored:\n\
-\t'geninfo: WARNING: ('mismatch') mismatched end line for ...'\n\
-It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
-            )
+            Process.runCommand(command)
 
+        @staticmethod
+        def __finalizeCoverageReport(
+            iTracefilePath: Path,
+            iSummaryDir: Path,
+            iTracefileNameWE: str
+        ) -> None:
             # 2. Generate short summary using the tracefile.
             # TODO Is it really required? Probably the next "genhtml" command generates the desired "lines......: X%" (overall, not per file).
             lcovSummaryOutput = Process.runCommand(
-                ["lcov", "--summary", str(tracefilePath), "--ignore-errors", "empty"],
+                ["lcov", "--summary", str(iTracefilePath), "--ignore-errors", "empty"],
                 iCaptureOutput=True, iCheck=False
             )
 
@@ -397,7 +471,7 @@ It seems, it is a bug in in GCC/GCOV (GCOV is called by LCOV under the hood)."
                 return
 
             ## `genhtml` is part of the `lcov` package.
-            Process.runCommand(["genhtml", str(tracefilePath),
+            Process.runCommand(["genhtml", str(iTracefilePath),
                 "--output-directory", str(iSummaryDir / (iTracefileNameWE + "_html/")),
                 "--ignore-errors", "empty"
             ])
